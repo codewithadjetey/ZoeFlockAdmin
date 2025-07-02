@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Serve existing files from /public folder
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # If file doesn't exist in root, rewrite to public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
