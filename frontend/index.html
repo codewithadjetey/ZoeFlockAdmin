@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZoeFlockAdmin UI Kit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#5b21b6',
+                            700: '#4338ca',
+                        },
+                        secondary: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                        },
+                        neutral: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .screen-divider {
+            border-bottom: 3px solid #e2e8f0;
+            margin: 4rem 0;
+        }
+        
+        .component-showcase {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        }
+    </style>
+</head>
+<body class="bg-neutral-50 text-neutral-800">
+    <!-- Navigation for UI Kit -->
+    <nav class="bg-white shadow-sm border-b border-neutral-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-primary-600">ZoeFlockAdmin UI Kit</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="scrollToSection('login')" class="text-neutral-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Login</button>
+                    <button onclick="scrollToSection('admin-dashboard')" class="text-neutral-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Admin Dashboard</button>
+                    <button onclick="scrollToSection('user-dashboard')" class="text-neutral-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">User Dashboard</button>
+                    <button onclick="scrollToSection('404-page')" class="text-neutral-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">404 Page</button>
+                    <button onclick="scrollToSection('components')" class="text-neutral-600 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">Components</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- Design System Overview -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-neutral-900 mb-4">ZoeFlockAdmin Design System</h1>
+            <p class="text-lg text-neutral-600 max-w-3xl mx-auto">A clean, minimal, and modern UI kit designed for church administration. Built with Tailwind CSS and optimized for Bootstrap 5 + React applications.</p>
+        </div>
+        <!-- Color Palette -->
+        <div class="mb-16">
+            <h2 class="text-2xl font-semibold text-neutral-800 mb-6">Color Palette</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="space-y-2">
+                    <div class="h-20 bg-primary-500 rounded-lg shadow-sm"></div>
+                    <p class="text-sm font-medium">Primary Blue</p>
+                    <p class="text-xs text-neutral-500">#6366f1</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-20 bg-secondary-500 rounded-lg shadow-sm"></div>
+                    <p class="text-sm font-medium">Secondary Green</p>
+                    <p class="text-xs text-neutral-500">#10b981</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-20 bg-neutral-100 rounded-lg shadow-sm border border-neutral-200"></div>
+                    <p class="text-sm font-medium">Light Background</p>
+                    <p class="text-xs text-neutral-500">#f1f5f9</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="h-20 bg-neutral-700 rounded-lg shadow-sm"></div>
+                    <p class="text-sm font-medium">Dark Text</p>
+                    <p class="text-xs text-neutral-500">#334155</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- LOGIN PAGE -->
+    <section id="login" class="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <!-- Logo/Brand -->
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-church text-white text-2xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-neutral-900">ZoeFlockAdmin</h1>
+                    <p class="text-neutral-600 mt-2">Welcome back! Please sign in to your account</p>
+                </div>
+                <!-- Login Form -->
+                <form class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-2">Email Address</label>
+                        <input type="email" 
+                               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+                               placeholder="Enter your email">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 mb-2">Password</label>
+                        <input type="password" 
+                               class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+                               placeholder="Enter your password">
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500">
+                            <span class="ml-2 text-sm text-neutral-600">Remember me</span>
+                        </label>
+                        <a href="#" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
+                            Forgot password?
+                        </a>
+                    </div>
+                    <button type="submit" 
+                            class="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
+                        Sign In
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+    <div class="screen-divider"></div>
+    <!-- ADMIN DASHBOARD -->
+    <section id="admin-dashboard" class="min-h-screen bg-neutral-50">
+        <div class="flex h-screen">
+            <!-- Sidebar -->
+            <div class="w-64 bg-white shadow-sm border-r border-neutral-200">
+                <!-- Logo -->
+                <div class="p-6 border-b border-neutral-200">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-church text-white"></i>
+                        </div>
+                        <span class="ml-3 text-lg font-semibold text-neutral-900">ZoeFlockAdmin</span>
+                    </div>
+                </div>
+                <!-- Navigation -->
+                <nav class="p-4 space-y-2">
+                    <a href="#" class="flex items-center px-4 py-3 text-primary-600 bg-primary-50 rounded-lg font-medium">
+                        <i class="fas fa-home w-5 h-5 mr-3"></i>
+                        Dashboard
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors">
+                        <i class="fas fa-users w-5 h-5 mr-3"></i>
+                        Members
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors">
+                        <i class="fas fa-calendar-alt w-5 h-5 mr-3"></i>
+                        Events
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors">
+                        <i class="fas fa-chart-bar w-5 h-5 mr-3"></i>
+                        Attendance
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors">
+                        <i class="fas fa-donate w-5 h-5 mr-3"></i>
+                        Donations
+                    </a>
+                    <a href="#" class="flex items-center px-4 py-3 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors">
+                        <i class="fas fa-cog w-5 h-5 mr-3"></i>
+                        Settings
+                    </a>
+                </nav>
+            </div>
+            <!-- Main Content -->
+            <div class="flex-1 flex flex-col overflow-hidden">
+                <!-- Top Bar -->
+                <header class="bg-white shadow-sm border-b border-neutral-200 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-2xl font-bold text-neutral-900">Dashboard</h1>
+                            <p class="text-neutral-600">Welcome back, Pastor John</p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <!-- Notifications -->
+                            <button class="relative p-2 text-neutral-400 hover:text-neutral-600 transition-colors">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                            </button>
+                            
+                            <!-- User Avatar -->
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
+                                    <span class="text-white font-medium">PJ</span>
+                                </div>
+                                <div class="hidden md:block">
+                                    <p class="text-sm font-medium text-neutral-900">Pastor John</p>
+                                    <p class="text-xs text-neutral-500">Administrator</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+                <!-- Dashboard Content -->
+                <main class="flex-1 overflow-y-auto p-6">
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Total Members -->
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-neutral-200 hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-neutral-600 text-sm font-medium">Total Members</p>
+                                    <p class="text-3xl font-bold text-neutral-900 mt-1">1,247</p>
+                                    <p class="text-secondary-600 text-sm mt-2">
+                                        <i class="fas fa-arrow-up mr-1"></i>
+                                        +12% from last month
+                                    </p>
+                                </div>
+                                <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-users text-primary-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Upcoming Events -->
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-neutral-200 hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-neutral-600 text-sm font-medium">Upcoming Events</p>
+                                    <p class="text-3xl font-bold text-neutral-900 mt-1">8</p>
+                                    <p class="text-secondary-600 text-sm mt-2">
+                                        <i class="fas fa-calendar mr-1"></i>
+                                        This month
+                                    </p>
+                                </div>
+                                <div class="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-calendar-alt text-secondary-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Attendance Summary -->
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-neutral-200 hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-neutral-600 text-sm font-medium">Avg. Attendance</p>
+                                    <p class="text-3xl font-bold text-neutral-900 mt-1">342</p>
+                                    <p class="text-secondary-600 text-sm mt-2">
+                                        <i class="fas fa-arrow-up mr-1"></i>
+                                        +5% this quarter
+                                    </p>
+                                </div>
+                                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-chart-bar text-yellow-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Donation Summary -->
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-neutral-200 hover:shadow-md transition-shadow">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-neutral-600 text-sm font-medium">Monthly Donations</p>
+                                    <p class="text-3xl font-bold text-neutral-900 mt-1">$24,580</p>
+                                    <p class="text-secondary-600 text-sm mt-2">
+                                        <i class="fas fa-arrow-up mr-1"></i>
+                                        +18% from last month
+                                    </p>
+                                </div>
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-donate text-green-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Recent Activity & Quick Actions -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Recent Activity -->
+                        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-neutral-200">
+                            <div class="p-6 border-b border-neutral-200">
+                                <h3 class="text-lg font-semibold text-neutral-900">Recent Activity</h3>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-user-plus text-primary-600"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-neutral-900 font-medium">New member registered</p>
+                                        <p class="text-neutral-600 text-sm">Sarah Johnson joined the community</p>
+                                        <p class="text-neutral-400 text-xs">2 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-secondary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-calendar text-secondary-600"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-neutral-900 font-medium">Youth Event created</p>
+                                        <p class="text-neutral-600 text-sm">Summer Camp 2025 scheduled</p>
+                                        <p class="text-neutral-400 text-xs">5 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-hand-holding-heart text-green-600"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-neutral-900 font-medium">Donation received</p>
+                                        <p class="text-neutral-600 text-sm">$500 donation for building fund</p>
+                                        <p class="text-neutral-400 text-xs">1 day ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Quick Actions -->
+                        <div class="bg-white rounded-xl shadow-sm border border-neutral-200">
+                            <div class="p-6 border-b border-neutral-200">
+                                <h3 class="text-lg font-semibold text-neutral-900">Quick Actions</h3>
+                            </div>
+                            <div class="p-6 space-y-3">
+                                <button class="w-full flex items-center justify-center px-4 py-3 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors">
+                                    <i class="fas fa-plus mr-2"></i>
+                                    Add New Member
+                                </button>
+                                <button class="w-full flex items-center justify-center px-4 py-3 bg-secondary-500 hover:bg-secondary-600 text-white rounded-lg transition-colors">
+                                    <i class="fas fa-calendar-plus mr-2"></i>
+                                    Create Event
+                                </button>
+                                <button class="w-full flex items-center justify-center px-4 py-3 bg-white hover:bg-neutral-50 text-neutral-700 border border-neutral-300 rounded-lg transition-colors">
+                                    <i class="fas fa-file-export mr-2"></i>
+                                    Export Reports
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </section>
+    <div class="screen-divider"></div>
+    <!-- USER DASHBOARD -->
+    <section id="user-dashboard" class="min-h-screen bg-neutral-50 p-6">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <div class="mb-8">
+                <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-16 h-16 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-semibold text-xl">JD</span>
+                            </div>
+                            <div>
+                                <h1 class="text-2xl font-bold text-neutral-900">Welcome, John Doe</h1>
+                                <p class="text-neutral-600">Member since January 2023</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-neutral-500">Next Service</p>
+                            <p class="text-lg font-semibold text-neutral-900">Sunday, 10:30 AM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Overview Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- My Group -->
+                <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-neutral-900">My Group</h3>
+                        <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-primary-600"></i>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-neutral-600 text-sm">Current Group</p>
+                            <p class="font-medium text-neutral-900">Young Adults Ministry</p>
+                        </div>
+                        <div>
+                            <p class="text-neutral-600 text-sm">Role</p>
+                            <p class="font-medium text-neutral-900">Group Leader</p>
+                        </div>
+                        <div>
+                            <p class="text-neutral-600 text-sm">Members</p>
+                            <p class="font-medium text-neutral-900">24 active members</p>
+                        </div>
+                    </div>
+                    <button class="w-full mt-4 bg-primary-50 hover:bg-primary-100 text-primary-600 py-2 rounded-lg transition-colors">
+                        View Group Details
+                    </button>
+                </div>
+                <!-- My Events -->
+                <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-neutral-900">My Events</h3>
+                        <div class="w-10 h-10 bg-secondary-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-calendar-alt text-secondary-600"></i>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="border-l-4 border-primary-500 pl-4">
+                            <p class="font-medium text-neutral-900">Bible Study</p>
+                            <p class="text-sm text-neutral-600">Wednesday, 7:00 PM</p>
+                        </div>
+                        <div class="border-l-4 border-secondary-500 pl-4">
+                            <p class="font-medium text-neutral-900">Youth Outreach</p>
+                            <p class="text-sm text-neutral-600">Saturday, 2:00 PM</p>
+                        </div>
+                        <div class="border-l-4 border-yellow-500 pl-4">
+                            <p class="font-medium text-neutral-900">Prayer Meeting</p>
+                            <p class="text-sm text-neutral-600">Friday, 6:30 PM</p>
+                        </div>
+                    </div>
+                    <button class="w-full mt-4 bg-secondary-50 hover:bg-secondary-100 text-secondary-600 py-2 rounded-lg transition-colors">
+                        View All Events
+                    </button>
+                </div>
+                <!-- My Attendance -->
+                <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-neutral-900">My Attendance</h3>
+                        <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-chart-line text-yellow-600"></i>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-neutral-600 text-sm">This Month</p>
+                            <p class="font-medium text-neutral-900">85% Attendance</p>
+                            <div class="w-full bg-neutral-200 rounded-full h-2 mt-1">
+                                <div class="bg-secondary-500 h-2 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-neutral-600 text-sm">Last Service</p>
+                            <p class="font-medium text-neutral-900">Present - Sunday Service</p>
+                        </div>
+                        <div>
+                            <p class="text-neutral-600 text-sm">Streak</p>
+                            <p class="font-medium text-neutral-900">4 weeks in a row</p>
+                        </div>
+                    </div>
+                    <button class="w-full mt-4 bg-yellow-50 hover:bg-yellow-100 text-yellow-700 py-2 rounded-lg transition-colors">
+                        View Attendance History
+                    </button>
+                </div>
+            </div>
+            <!-- Recent Updates & Announcements -->
+            <div class="bg-white rounded-xl shadow-sm border border-neutral-200">
+                <div class="p-6 border-b border-neutral-200">
+                    <h3 class="text-lg font-semibold text-neutral-900">Recent Updates & Announcements</h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex items-start space-x-4 p-4 bg-primary-50 rounded-lg">
+                        <div class="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-bullhorn text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-neutral-900">Summer Camp Registration Open</h4>
+                            <p class="text-neutral-600 text-sm mt-1">Registration for our annual summer camp is now open. Don't miss out on this amazing opportunity for fellowship and growth.</p>
+                            <p class="text-neutral-400 text-xs mt-2">Posted 3 days ago</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4 p-4 bg-secondary-50 rounded-lg">
+                        <div class="w-8 h-8 bg-secondary-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-calendar text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-neutral-900">Special Prayer Service</h4>
+                            <p class="text-neutral-600 text-sm mt-1">Join us for a special prayer service this Friday evening at 7:00 PM. We'll be praying for our community and upcoming missions.</p>
+                            <p class="text-neutral-400 text-xs mt-2">Posted 1 week ago</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4 p-4 bg-yellow-50 rounded-lg">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-heart text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-neutral-900">Community Outreach Program</h4>
+                            <p class="text-neutral-600 text-sm mt-1">We're launching a new community outreach program. Volunteers needed for food distribution and community support services.</p>
+                            <p class="text-neutral-400 text-xs mt-2">Posted 1 week ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <div class="screen-divider"></div>
+    <!-- 404 PAGE -->
+    <section id="404-page" class="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center p-4">
+        <div class="text-center max-w-md mx-auto">
+            <!-- 404 Illustration -->
+            <div class="w-48 h-48 mx-auto mb-8 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center">
+                <div class="text-center">
+                    <i class="fas fa-search text-6xl text-primary-500 mb-4"></i>
+                    <div class="text-4xl font-bold text-primary-600">404</div>
+                </div>
+            </div>
+            <!-- Error Message -->
+            <h1 class="text-3xl font-bold text-neutral-900 mb-4">Page Not Found</h1>
+            <p class="text-neutral-600 mb-8 leading-relaxed">
+                Oops! It looks like the page you're looking for doesn't exist. 
+                Don't worry, even the best shepherds sometimes lose their way.
+            </p>
+            <!-- Action Buttons -->
+            <div class="space-y-4">
+                <button class="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
+                    <i class="fas fa-home mr-2"></i>
+                    Go Back to Dashboard
+                </button>
+                <button class="w-full bg-white hover:bg-neutral-50 text-neutral-700 font-medium py-3 px-6 rounded-lg border border-neutral-300 transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Go Back
+                </button>
+            </div>
+            <!-- Additional Help -->
+            <div class="mt-8 p-4 bg-white rounded-lg border border-neutral-200">
+                <p class="text-sm text-neutral-600">
+                    Need help? Contact your system administrator or 
+                    <a href="#" class="text-primary-600 hover:text-primary-700 font-medium">visit our help center</a>
+                </p>
+            </div>
+        </div>
+    </section>
+    <div class="screen-divider"></div>
+    <!-- COMPONENT SHOWCASE -->
+    <section id="components" class="component-showcase py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-neutral-900 mb-4">Reusable Components</h2>
+                <p class="text-lg text-neutral-600">Core UI components for building consistent interfaces</p>
+            </div>
+            <!-- Buttons Section -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-semibold text-neutral-800 mb-8">Buttons</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Primary Buttons -->
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-neutral-700">Primary Buttons</h4>
+                            <button class="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                                Primary Button
+                            </button>
+                            <button class="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-3 rounded-lg transition-colors text-sm">
+                                Small Primary
+                            </button>
+                            <button class="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-4 px-6 rounded-lg transition-colors text-lg">
+                                Large Primary
+                            </button>
+                        </div>
+                        <!-- Secondary Buttons -->
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-neutral-700">Secondary Buttons</h4>
+                            <button class="w-full bg-white hover:bg-neutral-50 text-neutral-700 font-medium py-3 px-4 rounded-lg border border-neutral-300 transition-colors">
+                                Secondary Button
+                            </button>
+                            <button class="w-full bg-secondary-500 hover:bg-secondary-600 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                                Success Button
+                            </button>
+                            <button class="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                                Danger Button
+                            </button>
+                        </div>
+                        <!-- Icon Buttons -->
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-neutral-700">Icon Buttons</h4>
+                            <button class="w-full flex items-center justify-center bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+                                <i class="fas fa-plus mr-2"></i>
+                                Add New
+                            </button>
+                            <button class="w-full flex items-center justify-center bg-white hover:bg-neutral-50 text-neutral-700 font-medium py-3 px-4 rounded-lg border border-neutral-300 transition-colors">
+                                <i class="fas fa-download mr-2"></i>
+                                Download
+                            </button>
+                            <button class="w-12 h-12 bg-primary-500 hover:bg-primary-600 text-white rounded-lg transition-colors flex items-center justify-center">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Input Fields Section -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-semibold text-neutral-800 mb-8">Input Fields</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Text Input</label>
+                                <input type="text" placeholder="Enter text here..." 
+                                       class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Email Input</label>
+                                <input type="email" placeholder="Enter email address..." 
+                                       class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Password Input</label>
+                                <input type="password" placeholder="Enter password..." 
+                                       class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors">
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Select Dropdown</label>
+                                <select class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors bg-white shadow-sm focus:shadow-md appearance-none">
+                                    <option>Select an option...</option>
+                                    <option>Option 1</option>
+                                    <option>Option 2</option>
+                                    <option>Option 3</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-neutral-700 mb-2">Textarea</label>
+                                <textarea placeholder="Enter your message..." rows="4"
+                                          class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors resize-none"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Cards Section -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-semibold text-neutral-800 mb-8">Cards</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Basic Card -->
+                    <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
+                        <h4 class="text-lg font-semibold text-neutral-900 mb-2">Basic Card</h4>
+                        <p class="text-neutral-600 mb-4">This is a basic card component with some sample content.</p>
+                        <button class="bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                            Action
+                        </button>
+                    </div>
+                    <!-- Stats Card -->
+                    <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-neutral-900">Stats Card</h4>
+                            <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-chart-bar text-primary-600"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-bold text-neutral-900 mb-2">1,247</p>
+                        <p class="text-secondary-600 text-sm">
+                            <i class="fas fa-arrow-up mr-1"></i>
+                            +12% from last month
+                        </p>
+                    </div>
+                    <!-- Feature Card -->
+                    <div class="bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl shadow-sm p-6 text-white hover:shadow-md transition-shadow">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mb-4">
+                            <i class="fas fa-star text-white"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold mb-2">Feature Card</h4>
+                        <p class="text-primary-100 mb-4">This is a featured card with gradient background.</p>
+                        <button class="bg-white text-primary-600 font-medium py-2 px-4 rounded-lg hover:bg-primary-50 transition-colors">
+                            Learn More
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Navigation Components -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-semibold text-neutral-800 mb-8">Navigation</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8">
+                    <!-- Breadcrumb -->
+                    <div class="mb-8">
+                        <h4 class="font-semibold text-neutral-700 mb-4">Breadcrumb</h4>
+                        <nav class="flex" aria-label="Breadcrumb">
+                            <ol class="flex items-center space-x-2">
+                                <li>
+                                    <a href="#" class="text-neutral-500 hover:text-neutral-700">Dashboard</a>
+                                </li>
+                                <li>
+                                    <i class="fas fa-chevron-right text-neutral-400 text-sm"></i>
+                                </li>
+                                <li>
+                                    <a href="#" class="text-neutral-500 hover:text-neutral-700">Members</a>
+                                </li>
+                                <li>
+                                    <i class="fas fa-chevron-right text-neutral-400 text-sm"></i>
+                                </li>
+                                <li>
+                                    <span class="text-primary-600 font-medium">John Doe</span>
+                                </li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <!-- Tabs -->
+                    <div>
+                        <h4 class="font-semibold text-neutral-700 mb-4">Tabs</h4>
+                        <div class="border-b border-neutral-200">
+                            <nav class="-mb-px flex space-x-8">
+                                <a href="#" class="border-primary-500 text-primary-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                    Overview
+                                </a>
+                                <a href="#" class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                    Details
+                                </a>
+                                <a href="#" class="border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                                    Settings
+                                </a>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Alerts & Notifications -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-semibold text-neutral-800 mb-8">Alerts & Notifications</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8 space-y-4">
+                    <!-- Success Alert -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-green-800 font-medium">Success!</p>
+                            <p class="text-green-700 text-sm">Your changes have been saved successfully.</p>
+                        </div>
+                        <div class="ml-auto">
+                            <button class="text-green-600 hover:text-green-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Warning Alert -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-yellow-800 font-medium">Warning!</p>
+                            <p class="text-yellow-700 text-sm">Please review your information before proceeding.</p>
+                        </div>
+                        <div class="ml-auto">
+                            <button class="text-yellow-600 hover:text-yellow-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Error Alert -->
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-circle text-red-600"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-red-800 font-medium">Error!</p>
+                            <p class="text-red-700 text-sm">Something went wrong. Please try again.</p>
+                        </div>
+                        <div class="ml-auto">
+                            <button class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Info Alert -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-600"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-blue-800 font-medium">Information</p>
+                            <p class="text-blue-700 text-sm">Here's some helpful information for you.</p>
+                        </div>
+                        <div class="ml-auto">
+                            <button class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Loading & Progress -->
+            <div>
+                <h3 class="text-2xl font-semibold text-neutral-800 mb-8">Loading & Progress</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Loading Spinners -->
+                        <div>
+                            <h4 class="font-semibold text-neutral-700 mb-4">Loading Spinners</h4>
+                            <div class="flex items-center space-x-4">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-secondary-600"></div>
+                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
+                            </div>
+                        </div>
+                        <!-- Progress Bars -->
+                        <div>
+                            <h4 class="font-semibold text-neutral-700 mb-4">Progress Bars</h4>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-neutral-600">Progress</span>
+                                        <span class="text-neutral-600">75%</span>
+                                    </div>
+                                    <div class="w-full bg-neutral-200 rounded-full h-2">
+                                        <div class="bg-primary-600 h-2 rounded-full" style="width: 75%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-neutral-600">Success</span>
+                                        <span class="text-neutral-600">100%</span>
+                                    </div>
+                                    <div class="w-full bg-neutral-200 rounded-full h-2">
+                                        <div class="bg-secondary-600 h-2 rounded-full" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-neutral-200 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-neutral-600">ZoeFlockAdmin UI Kit - Built with Tailwind CSS</p>
+            <p class="text-neutral-500 text-sm mt-2">Designed for modern church administration systems</p>
+        </div>
+    </footer>
+    <script>
+        function scrollToSection(sectionId) {
+            document.getElementById(sectionId).scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+        // Add some interactivity for demo purposes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Simulate loading states
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (this.textContent.includes('Login') || this.textContent.includes('Sign In')) {
+                        e.preventDefault();
+                        const originalText = this.textContent;
+                        this.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Signing in...';
+                        this.disabled = true;
+                        
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                            this.disabled = false;
+                        }, 2000);
+                    }
+                });
+            });
+            // Add hover effects to cards
+            const cards = document.querySelectorAll('.card-custom, [class*="hover:shadow"]');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
