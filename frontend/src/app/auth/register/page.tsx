@@ -57,6 +57,10 @@ const RegisterPage = () => {
         >
           Register
         </button>
+        <div className="text-center mt-4">
+          <span className="text-sm text-neutral-600">Already have an account? </span>
+          <a href="/auth/login" className="text-primary-600 hover:text-primary-700 font-medium">Login</a>
+        </div>
       </form>
     </div>
   );

@@ -30,7 +30,7 @@ const LoginPage = () => {
                             <input type="checkbox" className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500"/>
                             <span className="ml-2 text-sm text-neutral-600">Remember me</span>
                         </label>
-                        <a href="#" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+                        <a href="/auth/password-reset" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
                             Forgot password?
                         </a>
                     </div>
@@ -39,6 +39,10 @@ const LoginPage = () => {
                         Sign In
                     </button>
                 </form>
+                <div className="text-center mt-4">
+                    <span className="text-sm text-neutral-600">Don't have an account? </span>
+                    <a href="/auth/register" className="text-primary-600 hover:text-primary-700 font-medium">Register</a>
+                </div>
             </div>
   )
 }
