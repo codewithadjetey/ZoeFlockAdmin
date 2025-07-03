@@ -1,5 +1,6 @@
 import React from 'react'
 import { Church } from 'lucide-react'
+import Button from '@/components/ui/Button'
 
 const LoginPage = () => {
   return (
@@ -34,10 +35,7 @@ const LoginPage = () => {
                             Forgot password?
                         </a>
                     </div>
-                    <button type="submit" 
-                            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md">
-                        Sign In
-                    </button>
+                    <Button type="submit" variant="primary" className="w-full">Sign In</Button>
                 </form>
                 <div className="text-center mt-4">
                     <span className="text-sm text-neutral-600">Don't have an account? </span>
