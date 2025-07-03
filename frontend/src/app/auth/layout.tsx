@@ -1,11 +1,18 @@
 import React from 'react'
 
-const layout = () => {
-  return (
-    <div
-    className='flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200'
-    >layout</div>
+import { ReactNode } from 'react';
+
+export const metadata = {
+  title: 'ZoeFlockAdmin',
+  description: 'Church Management System',
+};
+
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  return ( 
+    <section id="login" className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+                       {children}
+        </div>
+    </section>
   )
 }
-
-export default layout;
