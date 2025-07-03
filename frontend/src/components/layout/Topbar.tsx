@@ -46,6 +46,7 @@ const Topbar: React.FC = () => {
                 setNotifDropdownOpen(false);
               }, 200);
             }}
+            onClick={() => setNotifDropdownOpen((open) => !open)}
           >
             <button
               ref={notifRef}
@@ -86,6 +87,7 @@ const Topbar: React.FC = () => {
               setUserDropdownOpen(false);
             }, 200); // 200ms delay
           }}
+          onClick={() => setUserDropdownOpen((open) => !open)}
           tabIndex={0}
           onFocus={() => setUserDropdownOpen(true)}
           onBlur={() => setUserDropdownOpen(false)}
