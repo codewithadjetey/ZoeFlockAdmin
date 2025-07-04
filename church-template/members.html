@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Members - Church Admin Dashboard</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/custom.css">
+  <style>
+    body { 
+      font-family: 'Inter', sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .sidebar-gradient {
+      background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 100%);
+    }
+    .member-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      transition: all 0.3s ease;
+    }
+    .member-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    .search-input {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar-gradient w-64 hidden lg:flex flex-col border-r border-blue-800 transition-all duration-300 shadow-2xl">
+      <div class="flex items-center justify-center h-24 border-b border-blue-700">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-3 shadow-lg">
+            <i class="fas fa-church text-2xl text-blue-600"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white">Grace Church</h1>
+            <p class="text-xs text-blue-200">Admin Panel</p>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-1 px-6 py-8 space-y-3">
+        <a href="dashboard.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-home mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="members.html" class="flex items-center px-4 py-3 rounded-xl text-white bg-white bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-users mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Members</span>
+        </a>
+        <a href="events.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-calendar mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Events</span>
+        </a>
+        <a href="groups.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-layer-group mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Groups</span>
+        </a>
+        <a href="donations.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-donate mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Donations</span>
+        </a>
+        <a href="communication.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-envelope mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Communication</span>
+        </a>
+        
+        <a href="settings.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-cog mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Settings</span>
+        </a>
+      </nav>
+      <div class="p-6 border-t border-blue-700">
+        <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-all duration-200 group">
+          <i class="fas fa-sign-out-alt mr-3 group-hover:scale-110 transition-transform"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+    
+    <!-- Mobile Sidebar Toggle -->
+    <div class="lg:hidden fixed top-6 left-6 z-50">
+      <button onclick="toggleSidebar()" class="text-white bg-blue-600 p-3 rounded-xl shadow-lg hover:bg-blue-700 focus:outline-none transition-all duration-200">
+        <i class="fas fa-bars text-xl"></i>
+      </button>
+    </div>
+    
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 bg-gray-50">
+      <!-- Header -->
+      <header class="bg-white shadow-lg border-b border-gray-200 flex items-center justify-between px-8 h-20">
+        <div class="flex items-center space-x-6">
+          <button class="lg:hidden text-gray-600 focus:outline-none hover:text-blue-600 transition-colors" onclick="toggleSidebar()">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 font-['Poppins']">Members</h1>
+            <p class="hidden md:block text-sm text-gray-500">Manage your church community</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-6">
+          <button class="relative text-gray-600 hover:text-blue-600 focus:outline-none transition-colors">
+            <i class="fas fa-bell text-2xl"></i>
+            <span class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">3</span>
+          </button>
+          <div class="flex items-center space-x-3 bg-gray-50 rounded-xl px-4 py-2">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-md">
+            <div>
+              <p class="text-sm font-semibold text-gray-900">Admin User</p>
+              <p class="text-xs text-gray-500">Administrator</p>
+            </div>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Main Content -->
+      <main class="flex-1 overflow-y-auto p-8" id="main-content">
+        <!-- Page Header -->
+        <section class="mb-8">
+          <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+              <div>
+                <h2 class="text-3xl font-bold text-gray-900 font-['Poppins'] mb-2">Member Directory</h2>
+                <p class="text-gray-600">Manage and view all church members</p>
+              </div>
+              <button onclick="openModal('add-member-modal')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center mt-4 md:mt-0">
+                <i class="fas fa-user-plus mr-2"></i>Add New Member
+              </button>
+            </div>
+            
+            <!-- Search and Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div class="md:col-span-2">
+                <div class="relative">
+                  <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                  <input type="text" placeholder="Search members..." class="w-full pl-10 pr-4 py-3 search-input rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+              </div>
+              <div class="relative">
+                <select class="w-full px-4 py-3 appearance-none bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                  <option>All Status</option>
+                  <option>Active</option>
+                  <option>Inactive</option>
+                  <option>New</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+              </div>
+              <div class="relative">
+                <select class="w-full px-4 py-3 appearance-none bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                  <option>All Groups</option>
+                  <option>Youth Ministry</option>
+                  <option>Bible Study</option>
+                  <option>Choir</option>
+                </select>
+                <i class="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+              </div>
+            </div>
+            
+            <!-- View Toggle -->
+            <div class="flex items-center justify-between mt-6">
+              <div class="flex items-center space-x-2">
+                <span class="text-sm font-medium text-gray-700">View:</span>
+                <div class="flex bg-gray-100 rounded-lg p-1">
+                  <button id="grid-view-btn" onclick="toggleView('grid')" class="px-3 py-1 rounded-md bg-blue-600 text-white text-sm font-medium transition-all duration-200">
+                    <i class="fas fa-th mr-1"></i>Grid
+                  </button>
+                  <button id="list-view-btn" onclick="toggleView('list')" class="px-3 py-1 rounded-md text-gray-600 text-sm font-medium hover:bg-gray-200 transition-all duration-200">
+                    <i class="fas fa-list mr-1"></i>List
+                  </button>
+                </div>
+              </div>
+              <div class="text-sm text-gray-500">
+                <span id="member-count">6 members</span>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Members Grid -->
+        <section id="grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <!-- Member Card 1 -->
+          <div class="member-card rounded-2xl shadow-lg p-6 cursor-pointer" onclick="openModal('member-profile-modal')">
+            <div class="flex items-center mb-4">
+              <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop&crop=face" alt="Sarah Johnson" class="w-16 h-16 rounded-full border-2 border-white shadow-md">
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Sarah Johnson</h3>
+                <p class="text-sm text-gray-500">sarah@example.com</p>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-phone mr-2 text-gray-400"></i>
+                <span>(555) 123-4567</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-calendar mr-2 text-gray-400"></i>
+                <span>Joined: Jan 15, 2024</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-church mr-2 text-gray-400"></i>
+                <span>Last Visit: Jan 15, 2024</span>
+              </div>
+              <div class="flex items-center justify-between mt-4">
+                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                <div class="flex space-x-2">
+                  <button class="text-blue-600 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                  <button class="text-red-600 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Member Card 2 -->
+          <div class="member-card rounded-2xl shadow-lg p-6 cursor-pointer" onclick="openModal('member-profile-modal')">
+            <div class="flex items-center mb-4">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face" alt="John Smith" class="w-16 h-16 rounded-full border-2 border-white shadow-md">
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">John Smith</h3>
+                <p class="text-sm text-gray-500">john@example.com</p>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-phone mr-2 text-gray-400"></i>
+                <span>(555) 234-5678</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-calendar mr-2 text-gray-400"></i>
+                <span>Joined: Dec 10, 2023</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-church mr-2 text-gray-400"></i>
+                <span>Last Visit: Dec 10, 2023</span>
+              </div>
+              <div class="flex items-center justify-between mt-4">
+                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                <div class="flex space-x-2">
+                  <button class="text-blue-600 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                  <button class="text-red-600 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Member Card 3 -->
+          <div class="member-card rounded-2xl shadow-lg p-6 cursor-pointer" onclick="openModal('member-profile-modal')">
+            <div class="flex items-center mb-4">
+              <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face" alt="Emily Davis" class="w-16 h-16 rounded-full border-2 border-white shadow-md">
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Emily Davis</h3>
+                <p class="text-sm text-gray-500">emily@example.com</p>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-phone mr-2 text-gray-400"></i>
+                <span>(555) 345-6789</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-calendar mr-2 text-gray-400"></i>
+                <span>Joined: Feb 20, 2024</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-church mr-2 text-gray-400"></i>
+                <span>Last Visit: Feb 20, 2024</span>
+              </div>
+              <div class="flex items-center justify-between mt-4">
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">New</span>
+                <div class="flex space-x-2">
+                  <button class="text-blue-600 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                  <button class="text-red-600 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Member Card 4 -->
+          <div class="member-card rounded-2xl shadow-lg p-6 cursor-pointer" onclick="openModal('member-profile-modal')">
+            <div class="flex items-center mb-4">
+              <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face" alt="Michael Brown" class="w-16 h-16 rounded-full border-2 border-white shadow-md">
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Michael Brown</h3>
+                <p class="text-sm text-gray-500">michael@example.com</p>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-phone mr-2 text-gray-400"></i>
+                <span>(555) 456-7890</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-calendar mr-2 text-gray-400"></i>
+                <span>Joined: Nov 5, 2023</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-church mr-2 text-gray-400"></i>
+                <span>Last Visit: Nov 5, 2023</span>
+              </div>
+              <div class="flex items-center justify-between mt-4">
+                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                <div class="flex space-x-2">
+                  <button class="text-blue-600 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                  <button class="text-red-600 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Member Card 5 -->
+          <div class="member-card rounded-2xl shadow-lg p-6 cursor-pointer" onclick="openModal('member-profile-modal')">
+            <div class="flex items-center mb-4">
+              <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&crop=face" alt="Lisa Wilson" class="w-16 h-16 rounded-full border-2 border-white shadow-md">
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">Lisa Wilson</h3>
+                <p class="text-sm text-gray-500">lisa@example.com</p>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-phone mr-2 text-gray-400"></i>
+                <span>(555) 567-8901</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-calendar mr-2 text-gray-400"></i>
+                <span>Joined: Mar 12, 2024</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-church mr-2 text-gray-400"></i>
+                <span>Last Visit: Mar 12, 2024</span>
+              </div>
+              <div class="flex items-center justify-between mt-4">
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">New</span>
+                <div class="flex space-x-2">
+                  <button class="text-blue-600 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                  <button class="text-red-600 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Member Card 6 -->
+          <div class="member-card rounded-2xl shadow-lg p-6 cursor-pointer" onclick="openModal('member-profile-modal')">
+            <div class="flex items-center mb-4">
+              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&h=60&fit=crop&crop=face" alt="David Miller" class="w-16 h-16 rounded-full border-2 border-white shadow-md">
+              <div class="ml-4">
+                <h3 class="text-lg font-semibold text-gray-900">David Miller</h3>
+                <p class="text-sm text-gray-500">david@example.com</p>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-phone mr-2 text-gray-400"></i>
+                <span>(555) 678-9012</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-calendar mr-2 text-gray-400"></i>
+                <span>Joined: Jan 8, 2024</span>
+              </div>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-church mr-2 text-gray-400"></i>
+                <span>Last Visit: Jan 8, 2024</span>
+              </div>
+              <div class="flex items-center justify-between mt-4">
+                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                <div class="flex space-x-2">
+                  <button class="text-blue-600 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                  <button class="text-red-600 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Members List View -->
+        <section id="list-view" class="hidden">
+          <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-blue-50 border-b border-blue-200">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                      Member
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                      Contact
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                      Joined
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                      Groups
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                      Last Visit
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="openModal('member-profile-modal')">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face" alt="Sarah Johnson" class="w-10 h-10 rounded-full">
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">Sarah Johnson</div>
+                          <div class="text-sm text-gray-500">sarah@example.com</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">(555) 123-4567</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 15, 2024</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        Active
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Youth Ministry</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 15, 2024</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-900"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="openModal('member-profile-modal')">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face" alt="John Smith" class="w-10 h-10 rounded-full">
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">John Smith</div>
+                          <div class="text-sm text-gray-500">john@example.com</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">(555) 234-5678</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dec 10, 2023</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        Active
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Bible Study</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Dec 10, 2023</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-900"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="openModal('member-profile-modal')">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face" alt="Emily Davis" class="w-10 h-10 rounded-full">
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">Emily Davis</div>
+                          <div class="text-sm text-gray-500">emily@example.com</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">(555) 345-6789</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Feb 20, 2024</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        New
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Choir</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Feb 20, 2024</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-900"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="openModal('member-profile-modal')">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face" alt="Michael Brown" class="w-10 h-10 rounded-full">
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">Michael Brown</div>
+                          <div class="text-sm text-gray-500">michael@example.com</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">(555) 456-7890</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Nov 5, 2023</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        Active
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Youth Ministry</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Nov 5, 2023</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-900"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="openModal('member-profile-modal')">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=40&h=40&fit=crop&crop=face" alt="Lisa Wilson" class="w-10 h-10 rounded-full">
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">Lisa Wilson</div>
+                          <div class="text-sm text-gray-500">lisa@example.com</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">(555) 567-8901</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 12, 2024</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                        New
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Bible Study</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Mar 12, 2024</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-900"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="openModal('member-profile-modal')">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=40&h=40&fit=crop&crop=face" alt="David Miller" class="w-10 h-10 rounded-full">
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">David Miller</div>
+                          <div class="text-sm text-gray-500">david@example.com</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">(555) 678-9012</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 8, 2024</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        Active
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Choir</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 8, 2024</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex space-x-2">
+                        <button class="text-blue-600 hover:text-blue-900"><i class="fas fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+      
+      <!-- Footer -->
+      <footer class="bg-white border-t border-gray-200 text-center text-sm text-gray-500 py-4">
+        <p>&copy; 2024 Grace Church Admin Dashboard. All rights reserved.</p>
+      </footer>
+    </div>
+  </div>
+  
+  <!-- Add Member Modal -->
+  <div id="add-member-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Add New Member</h3>
+        <button class="text-gray-400 hover:text-gray-600" onclick="closeModal('add-member-modal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+          <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input type="email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+          <input type="tel" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+          <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button type="button" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400" onclick="closeModal('add-member-modal')">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Add Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Member Profile Modal -->
+  <div id="member-profile-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-10 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Member Profile</h3>
+        <button class="text-gray-400 hover:text-gray-600" onclick="closeModal('member-profile-modal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="text-center mb-4">
+        <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&crop=face" alt="Sarah Johnson" class="w-20 h-20 rounded-full mx-auto mb-3">
+        <h4 class="text-xl font-semibold text-gray-900">Sarah Johnson</h4>
+        <p class="text-gray-500">sarah@example.com</p>
+      </div>
+      <div class="space-y-3">
+        <div class="flex justify-between">
+          <span class="text-gray-600">Phone:</span>
+          <span class="text-gray-900">(555) 123-4567</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">Joined:</span>
+          <span class="text-gray-900">Jan 15, 2024</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">Status:</span>
+          <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Active</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">Groups:</span>
+          <span class="text-gray-900">Youth Ministry</span>
+        </div>
+      </div>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400" onclick="closeModal('member-profile-modal')">Close</button>
+        <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Edit Profile</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/main.js"></script>
+</body>
+</html>

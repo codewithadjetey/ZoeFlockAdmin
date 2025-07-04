@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile - Zoe Church Admin Dashboard</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/custom.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .sidebar-gradient { background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 100%); }
+    .glass-card { background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); border-radius: 1.5rem; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10); border: 1px solid rgba(255,255,255,0.18); transition: box-shadow 0.3s, transform 0.3s; }
+    .glass-card:hover { box-shadow: 0 16px 40px 0 rgba(31, 38, 135, 0.18); transform: translateY(-4px) scale(1.02); }
+    .avatar-upload { position: relative; width: 120px; height: 120px; margin: 0 auto; }
+    .avatar-upload input { display: none; }
+    .avatar-upload label { position: absolute; bottom: 0; right: 0; background: #3b82f6; color: #fff; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 3px solid #fff; box-shadow: 0 2px 8px rgba(59,130,246,0.15); }
+    .avatar-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar-gradient w-64 hidden lg:flex flex-col border-r border-blue-800 transition-all duration-300 shadow-2xl">
+      <div class="flex items-center justify-center h-24 border-b border-blue-700">
+        <div class="flex items-center">
+          <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-3 shadow-lg">
+            <i class="fas fa-church text-2xl text-blue-600"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-white">Zoe Church</h1>
+            <p class="text-xs text-blue-200">Admin Panel</p>
+          </div>
+        </div>
+      </div>
+      <nav class="flex-1 px-6 py-8 space-y-3">
+        <a href="dashboard.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-home mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Dashboard</span>
+        </a>
+        <a href="members.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-users mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Members</span>
+        </a>
+        <a href="events.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-calendar mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Events</span>
+        </a>
+        <a href="groups.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-layer-group mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Groups</span>
+        </a>
+        <a href="donations.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-donate mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Donations</span>
+        </a>
+        <a href="communication.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-envelope mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Communication</span>
+        </a>
+        <a href="settings.html" class="flex items-center px-4 py-3 rounded-xl text-blue-100 hover:bg-white hover:bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-cog mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Settings</span>
+        </a>
+        <a href="profile.html" class="flex items-center px-4 py-3 rounded-xl text-white bg-white bg-opacity-20 font-medium transition-all duration-200 group">
+          <i class="fas fa-user mr-4 text-lg group-hover:scale-110 transition-transform"></i>
+          <span>Profile</span>
+        </a>
+      </nav>
+      <div class="p-6 border-t border-blue-700">
+        <button onclick="logout()" class="w-full flex items-center justify-center px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-all duration-200 group">
+          <i class="fas fa-sign-out-alt mr-3 group-hover:scale-110 transition-transform"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 bg-gray-50">
+      <!-- Header -->
+      <header class="bg-white shadow-lg border-b border-gray-200 flex items-center justify-between px-8 h-20">
+        <div class="flex items-center space-x-6">
+          <button class="lg:hidden text-gray-600 focus:outline-none hover:text-blue-600 transition-colors" onclick="toggleSidebar()">
+            <i class="fas fa-bars text-2xl"></i>
+          </button>
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 font-['Poppins']">User Profile</h1>
+            <p class="hidden md:block text-sm text-gray-500">Manage your account details and preferences</p>
+          </div>
+        </div>
+      </header>
+      <!-- Main Content -->
+      <main class="flex-1 overflow-y-auto p-8" id="main-content">
+        <section class="max-w-3xl mx-auto">
+          <div class="glass-card p-8 mb-8">
+            <div class="flex flex-col items-center">
+              <div class="avatar-upload mb-4">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Avatar" class="avatar-img" id="profile-avatar">
+                <input type="file" id="avatar-upload-input" accept="image/*">
+                <label for="avatar-upload-input" title="Change avatar"><i class="fas fa-camera"></i></label>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900 mb-1">John Doe</h2>
+              <p class="text-gray-500 mb-2">Administrator</p>
+              <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-5 rounded-xl transition-all duration-200 mb-2"><i class="fas fa-save mr-2"></i>Save Profile</button>
+            </div>
+          </div>
+          <!-- Profile Details -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card p-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-user mr-3 text-blue-600"></i>Personal Details</h3>
+              <form class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input type="text" value="John Doe" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input type="email" value="john.doe@zoechurch.com" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input type="tel" value="(555) 987-6543" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <input type="text" value="Administrator" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" disabled>
+                </div>
+              </form>
+            </div>
+            <div class="glass-card p-8">
+              <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-key mr-3 text-red-600"></i>Change Password</h3>
+              <form class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                  <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                  <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                  <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-5 rounded-xl transition-all duration-200"><i class="fas fa-key mr-2"></i>Update Password</button>
+              </form>
+            </div>
+          </div>
+          <!-- Notification Preferences -->
+          <div class="glass-card p-8 mt-8">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center"><i class="fas fa-bell mr-3 text-green-600"></i>Notification Preferences</h3>
+            <form class="space-y-4 md:grid md:grid-cols-2 md:gap-8">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-medium text-gray-900">Email Notifications</h4>
+                  <p class="text-xs text-gray-500">Receive notifications via email</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-medium text-gray-900">SMS Notifications</h4>
+                  <p class="text-xs text-gray-500">Receive notifications via SMS</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-medium text-gray-900">WhatsApp Notifications</h4>
+                  <p class="text-xs text-gray-500">Receive notifications via WhatsApp</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-medium text-gray-900">Push Notifications</h4>
+                  <p class="text-xs text-gray-500">Receive browser push notifications</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+      <script src="js/main.js"></script>
+    </div>
+  </div>
+</body>
+</html> 

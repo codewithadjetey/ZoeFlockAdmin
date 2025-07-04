@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Component Library - Zoe Church Admin Dashboard</title>
+  <!-- Tailwind CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/custom.css">
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; }
+    .glass-card { background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); border-radius: 1.5rem; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10); border: 1px solid rgba(255,255,255,0.18); transition: box-shadow 0.3s, transform 0.3s; }
+    .glass-card:hover { box-shadow: 0 16px 40px 0 rgba(31, 38, 135, 0.18); transform: translateY(-4px) scale(1.02); }
+    .section-title { font-family: 'Poppins', sans-serif; font-size: 2rem; font-weight: 700; color: #1e293b; margin-bottom: 1.5rem; }
+    .component-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; }
+  </style>
+</head>
+<body class="min-h-screen p-8">
+  <h1 class="text-4xl font-bold text-white mb-8">Zoe Church Admin Dashboard Components</h1>
+
+  <!-- BUTTONS -->
+  <section class="mb-12">
+    <div class="section-title">Buttons</div>
+    <div class="component-grid">
+      <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center"><i class="fas fa-plus mr-2"></i>Primary Button</button>
+      <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center"><i class="fas fa-times mr-2"></i>Secondary Button</button>
+      <button class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center"><i class="fas fa-check mr-2"></i>Success Button</button>
+      <button class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center"><i class="fas fa-trash mr-2"></i>Danger Button</button>
+      <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center"><i class="fas fa-exclamation mr-2"></i>Warning Button</button>
+      <button class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center"><i class="fas fa-magic mr-2"></i>Info Button</button>
+      <button class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-lg"><i class="fas fa-plus"></i></button>
+      <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full w-14 h-14 flex items-center justify-center text-2xl shadow-lg"><i class="fas fa-user"></i></button>
+    </div>
+  </section>
+
+  <!-- FORM FIELDS -->
+  <section class="mb-12">
+    <div class="section-title">Form Fields</div>
+    <div class="component-grid">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Text Input</label>
+        <input type="text" placeholder="Enter text..." class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Email Input</label>
+        <input type="email" placeholder="you@email.com" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Password Input</label>
+        <input type="password" placeholder="••••••••" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Select</label>
+        <div class="relative">
+          <select class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white">
+            <option>Option 1</option>
+            <option>Option 2</option>
+            <option>Option 3</option>
+          </select>
+          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <i class="fas fa-chevron-down text-gray-400"></i>
+          </div>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Textarea</label>
+        <textarea rows="3" placeholder="Type here..." class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+      </div>
+      <div class="flex items-center space-x-3">
+        <input type="checkbox" id="checkbox1" class="form-checkbox h-5 w-5 text-blue-600">
+        <label for="checkbox1" class="text-gray-700">Checkbox</label>
+      </div>
+      <div class="flex items-center space-x-3">
+        <input type="radio" id="radio1" name="radio-group" class="form-radio h-5 w-5 text-blue-600">
+        <label for="radio1" class="text-gray-700">Radio</label>
+      </div>
+      <div class="flex items-center space-x-3">
+        <label class="toggle-switch">
+          <input type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="text-gray-700">Toggle Switch</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <label class="toggle-switch">
+          <input type="checkbox">
+          <span class="slider"></span>
+        </label>
+        <span class="text-gray-700">Switch Off</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <label class="toggle-switch">
+          <input type="checkbox" checked>
+          <span class="slider" style="background-color: #10b981;"></span>
+        </label>
+        <span class="text-gray-700">Green Switch</span>
+      </div>
+      <div class="flex items-center space-x-3">
+        <label class="toggle-switch">
+          <input type="checkbox" checked>
+          <span class="slider" style="background-color: #ef4444;"></span>
+        </label>
+        <span class="text-gray-700">Red Switch</span>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">File Upload</label>
+        <input type="file" class="w-full text-gray-700">
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- MODALS -->
+  <section class="mb-12">
+    <div class="section-title">Modals / Dialogs</div>
+    <div class="component-grid">
+      <div>
+        <button onclick="document.getElementById('demo-modal').classList.remove('hidden')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl">Open Modal</button>
+        <div id="demo-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+          <div class="glass-card relative top-20 mx-auto p-8 w-full max-w-md shadow-lg bg-white">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium text-gray-900">Demo Modal</h3>
+              <button class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('demo-modal').classList.add('hidden')">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <p class="mb-6 text-gray-700">This is a reusable modal/dialog component. You can use it for forms, confirmations, and more.</p>
+            <div class="flex justify-end space-x-2">
+              <button class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400" onclick="document.getElementById('demo-modal').classList.add('hidden')">Cancel</button>
+              <button class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Confirm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Toggle switch styling for demo
+    // (already handled in your main.js for real app)
+  </script>
+</body>
+</html>
