@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
 :root {
@@ -55,15 +56,18 @@ body {
 .chart-container {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .activity-item {
   transition: all 0.3s ease;
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .activity-item:hover {
   background: rgba(59, 130, 246, 0.05);
   transform: translateX(4px);
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 .quick-action-btn {
