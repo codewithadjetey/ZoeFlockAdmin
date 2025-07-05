@@ -37,7 +37,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
       type: "user",
       icon: "fas fa-user-plus",
       iconColor: "text-blue-600",
-      bgColor: "bg-blue-100",
+      bgColor: "bg-blue-100 dark:bg-blue-900/20",
       title: "New Member Registration",
       message: "Sarah Johnson has joined the church",
       time: "2 minutes ago",
@@ -47,7 +47,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
       type: "donation",
       icon: "fas fa-donate",
       iconColor: "text-green-600",
-      bgColor: "bg-green-100",
+      bgColor: "bg-green-100 dark:bg-green-900/20",
       title: "Donation Received",
       message: "$250 donation from John Smith",
       time: "30 minutes ago",
@@ -57,7 +57,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
       type: "event",
       icon: "fas fa-calendar",
       iconColor: "text-yellow-600",
-      bgColor: "bg-yellow-100",
+      bgColor: "bg-yellow-100 dark:bg-yellow-900/20",
       title: "Event Reminder",
       message: "Sunday Service starts in 2 hours",
       time: "1 hour ago",
@@ -65,16 +65,16 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
   ];
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-8 h-20 transition-colors duration-200">
+    <header className="bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-xl border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-8 h-20 transition-all duration-300">
       <div className="flex items-center space-x-6">
         <button 
           onClick={onSidebarToggle}
-          className="lg:hidden text-gray-600 dark:text-gray-300 focus:outline-none transition-colors hover:text-primary-500"
+          className="lg:hidden text-gray-600 dark:text-gray-300 focus:outline-none transition-all duration-300 hover:text-primary-500 hover:scale-110"
         >
           <i className="fas fa-bars text-2xl"></i>
         </button>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white font-['Poppins']">Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white font-['Poppins'] bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">Dashboard</h1>
           <p className="hidden md:block text-sm text-gray-500 dark:text-gray-400">Welcome to your church management system</p>
         </div>
       </div>
@@ -83,24 +83,24 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
         {/* Theme Switcher */}
         <ColorSwitcher showDarkMode={true} />
 
-        {/* Notifications Dropdown */}
+        {/* Modern Notifications Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => {
               setNotificationsOpen(!notificationsOpen);
               setProfileOpen(false);
             }}
-            className="relative text-gray-600 dark:text-gray-300 hover:text-primary-500 focus:outline-none transition-colors"
+            className="relative text-gray-600 dark:text-gray-300 hover:text-primary-500 focus:outline-none transition-all duration-300 hover:scale-110"
           >
             <i className="fas fa-bell text-2xl"></i>
-            <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+            <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-gradient-to-r from-red-500 to-red-600 rounded-full animate-pulse shadow-lg">
               {notifications.length}
             </span>
           </button>
 
-          {/* Notifications Dropdown Menu */}
+          {/* Modern Notifications Dropdown Menu */}
           {notificationsOpen && (
-            <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50">
+            <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
               <div className="p-4 border-b border-gray-100 dark:border-gray-700">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">You have {notifications.length} new notifications</p>
@@ -109,11 +109,11 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 cursor-pointer transition-colors"
+                    className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 cursor-pointer transition-all duration-300 hover:transform hover:scale-[1.02]"
                   >
                     <div className="flex items-start">
-                      <div className={`w-10 h-10 ${notification.bgColor} dark:bg-gray-600 rounded-full flex items-center justify-center mr-3`}>
-                        <i className={`${notification.icon} ${notification.iconColor} dark:text-gray-300`}></i>
+                      <div className={`w-10 h-10 ${notification.bgColor} rounded-xl flex items-center justify-center mr-3 shadow-lg`}>
+                        <i className={`${notification.icon} ${notification.iconColor}`}></i>
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900 dark:text-white">{notification.title}</p>
@@ -125,7 +125,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
                 ))}
               </div>
               <div className="p-3 border-t border-gray-100 dark:border-gray-700">
-                <button className="w-full text-center text-sm text-primary-500 hover:text-primary-600 font-medium">
+                <button className="w-full text-center text-sm text-primary-500 hover:text-primary-600 font-medium transition-colors duration-200">
                   View All Notifications
                 </button>
               </div>
@@ -133,14 +133,14 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
           )}
         </div>
 
-        {/* User Profile Dropdown */}
+        {/* Modern User Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => {
               setProfileOpen(!profileOpen);
               setNotificationsOpen(false);
             }}
-            className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 cursor-pointer"
+            className="flex items-center space-x-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 rounded-xl px-4 py-2 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             <img
               src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
@@ -151,12 +151,12 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
               <p className="text-sm font-semibold text-gray-900 dark:text-white">Admin User</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
             </div>
-            <i className="fas fa-chevron-down text-gray-400 dark:text-gray-500 text-xs"></i>
+            <i className="fas fa-chevron-down text-gray-400 dark:text-gray-500 text-xs transition-transform duration-300"></i>
           </button>
 
-          {/* Profile Dropdown Menu */}
+          {/* Modern Profile Dropdown Menu */}
           {profileOpen && (
-            <div className="absolute right-0 mt-3 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50">
+            <div className="absolute right-0 mt-3 w-48 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
               <div className="p-4 border-b border-gray-100 dark:border-gray-700">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">Admin User</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">admin@church.com</p>
@@ -164,14 +164,14 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
               <div className="p-2">
                 <Link
                   href="/dashboard/profile"
-                  className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 hover:transform hover:scale-[1.02]"
                 >
                   <i className="fas fa-user mr-3 text-gray-400 dark:text-gray-500"></i>
                   Profile
                 </Link>
                 <Link
                   href="/dashboard/settings"
-                  className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 hover:transform hover:scale-[1.02]"
                 >
                   <i className="fas fa-cog mr-3 text-gray-400 dark:text-gray-500"></i>
                   Settings
@@ -183,7 +183,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
                     localStorage.removeItem("userRole");
                     window.location.href = "/auth/login";
                   }}
-                  className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                  className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 hover:transform hover:scale-[1.02]"
                 >
                   <i className="fas fa-sign-out-alt mr-3"></i>
                   Logout

@@ -16,7 +16,7 @@ export default function DashboardPage() {
       description: "+12% this month",
       icon: "fas fa-users",
       iconColor: "text-blue-600",
-      iconBgColor: "bg-blue-100 dark:bg-blue-900/20",
+      iconBgColor: "bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/20 dark:to-blue-800/20",
     },
     {
       title: "Upcoming Events",
@@ -24,7 +24,7 @@ export default function DashboardPage() {
       description: "Next: Sunday Service",
       icon: "fas fa-calendar",
       iconColor: "text-indigo-600",
-      iconBgColor: "bg-indigo-100 dark:bg-indigo-900/20",
+      iconBgColor: "bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900/20 dark:to-indigo-800/20",
     },
     {
       title: "Monthly Donations",
@@ -32,7 +32,7 @@ export default function DashboardPage() {
       description: "+8% vs last month",
       icon: "fas fa-donate",
       iconColor: "text-green-600",
-      iconBgColor: "bg-green-100 dark:bg-green-900/20",
+      iconBgColor: "bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/20 dark:to-green-800/20",
     },
     {
       title: "Active Groups",
@@ -40,7 +40,7 @@ export default function DashboardPage() {
       description: "3 new this week",
       icon: "fas fa-layer-group",
       iconColor: "text-yellow-600",
-      iconBgColor: "bg-yellow-100 dark:bg-yellow-900/20",
+      iconBgColor: "bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/20 dark:to-yellow-800/20",
     },
   ];
 
@@ -63,7 +63,7 @@ export default function DashboardPage() {
       time: "2 min ago",
       icon: "fas fa-user-plus",
       color: "text-green-600",
-      bgColor: "bg-green-100 dark:bg-green-900/20",
+      bgColor: "bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/20 dark:to-green-800/20",
     },
     {
       id: 2,
@@ -73,7 +73,7 @@ export default function DashboardPage() {
       time: "10 min ago",
       icon: "fas fa-calendar-plus",
       color: "text-blue-600",
-      bgColor: "bg-blue-100 dark:bg-blue-900/20",
+      bgColor: "bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/20 dark:to-blue-800/20",
     },
     {
       id: 3,
@@ -83,7 +83,7 @@ export default function DashboardPage() {
       time: "30 min ago",
       icon: "fas fa-donate",
       color: "text-yellow-600",
-      bgColor: "bg-yellow-100 dark:bg-yellow-900/20",
+      bgColor: "bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/20 dark:to-yellow-800/20",
     },
     {
       id: 4,
@@ -93,7 +93,7 @@ export default function DashboardPage() {
       time: "1 hr ago",
       icon: "fas fa-user-edit",
       color: "text-purple-600",
-      bgColor: "bg-purple-100 dark:bg-purple-900/20",
+      bgColor: "bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/20 dark:to-purple-800/20",
     },
   ];
 
@@ -106,7 +106,7 @@ export default function DashboardPage() {
       location: "Main Sanctuary",
       attendees: 125,
       category: "Worship",
-      color: "bg-blue-500",
+      color: "bg-gradient-to-r from-blue-500 to-blue-600",
     },
     {
       id: 2,
@@ -116,7 +116,7 @@ export default function DashboardPage() {
       location: "Youth Room",
       attendees: 18,
       category: "Education",
-      color: "bg-green-500",
+      color: "bg-gradient-to-r from-green-500 to-green-600",
     },
     {
       id: 3,
@@ -126,7 +126,7 @@ export default function DashboardPage() {
       location: "Prayer Room",
       attendees: 12,
       category: "Prayer",
-      color: "bg-purple-500",
+      color: "bg-gradient-to-r from-purple-500 to-purple-600",
     },
     {
       id: 4,
@@ -136,7 +136,7 @@ export default function DashboardPage() {
       location: "Choir Room",
       attendees: 15,
       category: "Music",
-      color: "bg-orange-500",
+      color: "bg-gradient-to-r from-orange-500 to-orange-600",
     },
   ];
 
@@ -169,12 +169,13 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      {/* Welcome Section */}
+      {/* Modern Welcome Section */}
       <section className="mb-8">
-        <div className="welcome-gradient rounded-2xl shadow-2xl p-8 text-white">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div className="welcome-gradient rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20"></div>
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h2 className="text-4xl font-bold mb-3 font-['Poppins']">
+              <h2 className="text-4xl font-bold mb-3 font-['Poppins'] bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
                 Welcome back, <span className="text-yellow-300">Admin</span>! 👋
               </h2>
               <p className="text-blue-100 dark:text-blue-200 text-lg">
@@ -182,10 +183,10 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="mt-6 md:mt-0 flex space-x-4">
-              <button className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center">
+              <button className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105">
                 <i className="fas fa-plus mr-2"></i>Add Event
               </button>
-              <button className="bg-white text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-200 font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center">
+              <button className="bg-white text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-200 font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105">
                 <i className="fas fa-user-plus mr-2"></i>Add Member
               </button>
             </div>
@@ -193,11 +194,11 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Statistics Cards */}
+      {/* Modern Statistics Cards */}
       <section className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <div key={index} className="stat-card rounded-2xl shadow-lg p-6 flex items-center cursor-pointer transition-all duration-300 hover:transform hover:scale-105">
-            <div className={`w-16 h-16 ${stat.iconBgColor} rounded-2xl flex items-center justify-center mr-5`}>
+          <div key={index} className="stat-card rounded-3xl shadow-xl p-6 flex items-center cursor-pointer transition-all duration-300 hover:transform hover:scale-105">
+            <div className={`w-16 h-16 ${stat.iconBgColor} rounded-2xl flex items-center justify-center mr-5 shadow-lg`}>
               <i className={`${stat.icon} text-3xl ${stat.iconColor}`}></i>
             </div>
             <div>
@@ -209,15 +210,15 @@ export default function DashboardPage() {
         ))}
       </section>
 
-      {/* Charts & Quick Actions */}
+      {/* Modern Charts & Quick Actions */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Attendance Chart */}
-        <div className="chart-container rounded-2xl shadow-lg p-8 col-span-2">
+        {/* Modern Attendance Chart */}
+        <div className="chart-container rounded-3xl shadow-xl p-8 col-span-2">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-gray-800 dark:text-white font-['Poppins']">Attendance Overview</h3>
             <div className="flex space-x-2">
-              <button className="px-4 py-2 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium">This Month</button>
-              <button className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg text-sm font-medium">Last Month</button>
+              <button className="px-4 py-2 bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900/20 dark:to-blue-800/20 text-blue-600 dark:text-blue-400 rounded-xl text-sm font-medium shadow-lg">This Month</button>
+              <button className="px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-medium shadow-lg">Last Month</button>
             </div>
           </div>
           <div className="h-80">
@@ -244,8 +245,8 @@ export default function DashboardPage() {
                   contentStyle={{
                     backgroundColor: '#ffffff',
                     border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
                   }}
                   labelStyle={{ color: '#374151', fontWeight: '600' }}
                 />
@@ -271,14 +272,14 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        {/* Quick Actions */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+        {/* Modern Quick Actions */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
           <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 font-['Poppins']">Quick Actions</h3>
           <div className="grid grid-cols-1 gap-4">
             {quickActions.map((action, index) => (
               <button
                 key={index}
-                className="quick-action-btn text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-center transition-all duration-200 hover:transform hover:scale-105"
+                className="quick-action-btn text-white font-semibold py-4 px-6 rounded-2xl flex items-center justify-center transition-all duration-300 hover:transform hover:scale-105 shadow-lg hover:shadow-xl"
                 style={{ background: action.gradient }}
               >
                 <i className={`${action.icon} mr-3 text-lg`}></i>
@@ -289,19 +290,19 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Recent Activity & Upcoming Events */}
+      {/* Modern Recent Activity & Upcoming Events */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Recent Activity */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+        {/* Modern Recent Activity */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-gray-800 dark:text-white font-['Poppins']">Recent Activity</h3>
-            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">View All</button>
+            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">View All</button>
           </div>
           <div className="space-y-4">
             {recentActivities.map((activity) => (
-              <div key={activity.id} className="activity-item flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
+              <div key={activity.id} className="activity-item flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02]">
                 <div className="flex items-center">
-                  <div className={`w-12 h-12 ${activity.bgColor} rounded-full flex items-center justify-center mr-4`}>
+                  <div className={`w-12 h-12 ${activity.bgColor} rounded-2xl flex items-center justify-center mr-4 shadow-lg`}>
                     <i className={`${activity.icon} ${activity.color}`}></i>
                   </div>
                   <div>
@@ -315,17 +316,17 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Upcoming Events */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+        {/* Modern Upcoming Events */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-gray-800 dark:text-white font-['Poppins']">Upcoming Events</h3>
-            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">View All</button>
+            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200">View All</button>
           </div>
           <div className="space-y-4">
             {upcomingEvents.map((event) => (
-              <div key={event.id} className="event-item flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
+              <div key={event.id} className="event-item flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02]">
                 <div className="flex items-center">
-                  <div className={`w-12 h-12 ${event.color} rounded-full flex items-center justify-center mr-4`}>
+                  <div className={`w-12 h-12 ${event.color} rounded-2xl flex items-center justify-center mr-4 shadow-lg`}>
                     <i className={`fas fa-calendar text-white`}></i>
                   </div>
                   <div>

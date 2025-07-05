@@ -11,11 +11,11 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
   };
 
   return (
-    <div className="h-screen flex bg-gray-50 dark:bg-gray-900 overflow-hidden transition-colors duration-200">
+    <div className="h-screen flex bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 overflow-hidden transition-all duration-300">
       <Sidebar isOpen={isSidebarOpen} onToggle={handleSidebarToggle} />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar onSidebarToggle={handleSidebarToggle} />
-        <main className="flex-1 overflow-y-auto p-8 bg-gray-50 dark:bg-gray-900 transition-colors duration-200" id="main-content">
+        <main className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-all duration-300" id="main-content">
           {children}
         </main>
       </div>
