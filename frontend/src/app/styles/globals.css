@@ -9,6 +9,7 @@
 :root {
   --font-inter: 'Inter', sans-serif;
   --font-poppins: 'Poppins', sans-serif;
+  --theme-color: #3b82f6;
 }
 
 * {

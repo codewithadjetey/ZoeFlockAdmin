@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface TopbarProps {
   onSidebarToggle?: () => void;
@@ -10,6 +11,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { currentTheme } = useTheme();
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -66,7 +68,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
       <div className="flex items-center space-x-6">
         <button 
           onClick={onSidebarToggle}
-          className="lg:hidden text-gray-600 focus:outline-none hover:text-blue-600 transition-colors"
+          className="lg:hidden text-gray-600 focus:outline-none transition-colors hover:text-primary-500"
         >
           <i className="fas fa-bars text-2xl"></i>
         </button>
@@ -84,7 +86,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
               setNotificationsOpen(!notificationsOpen);
               setProfileOpen(false);
             }}
-            className="relative text-gray-600 hover:text-blue-600 focus:outline-none transition-colors"
+            className="relative text-gray-600 hover:text-primary-500 focus:outline-none transition-colors"
           >
             <i className="fas fa-bell text-2xl"></i>
             <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
@@ -119,7 +121,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
                 ))}
               </div>
               <div className="p-3 border-t border-gray-100">
-                <button className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium">
+                <button className="w-full text-center text-sm text-primary-500 hover:text-primary-600 font-medium">
                   View All Notifications
                 </button>
               </div>

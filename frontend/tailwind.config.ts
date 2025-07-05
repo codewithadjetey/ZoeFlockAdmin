@@ -11,9 +11,9 @@ export default {
         primary: {
           50: '#eef2ff',
           100: '#e0e7ff',
-          500: '#6366f1',
-          600: '#5b21b6',
-          700: '#4338ca',
+          500: 'var(--theme-color, #3b82f6)',
+          600: 'var(--theme-color, #3b82f6)',
+          700: 'var(--theme-color, #3b82f6)',
         },
         secondary: {
           50: '#ecfdf5',

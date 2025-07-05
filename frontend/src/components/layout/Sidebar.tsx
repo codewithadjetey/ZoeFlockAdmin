@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const navItems = [
   { label: "Dashboard", icon: "fas fa-home", href: "/dashboard" },
@@ -21,6 +22,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const pathname = usePathname();
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const { currentTheme } = useTheme();
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -72,19 +74,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
       {/* Sidebar */}
       <aside
         ref={sidebarRef}
-        className={`sidebar-gradient w-64 h-screen flex flex-col border-r border-blue-800 transition-all duration-300 shadow-2xl z-40 ${
+        className={`w-64 h-screen flex flex-col border-r transition-all duration-300 shadow-2xl z-40 ${
           isOpen ? "fixed translate-x-0" : "fixed lg:static -translate-x-full lg:translate-x-0"
         }`}
+        style={{
+          background: `linear-gradient(180deg, ${currentTheme === 'blue' ? '#1e3a8a' : '#1e293b'} 0%, var(--theme-color) 100%)`,
+          borderColor: currentTheme === 'blue' ? '#1e40af' : '#334155'
+        }}
       >
         {/* Logo/Brand Section */}
-        <div className="flex items-center justify-center h-24 border-b border-blue-700 flex-shrink-0">
+        <div className="flex items-center justify-center h-24 border-b flex-shrink-0" style={{ borderColor: currentTheme === 'blue' ? '#1e40af' : '#334155' }}>
           <div className="flex items-center">
             <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-3 shadow-lg">
-              <i className="fas fa-church text-2xl text-blue-600"></i>
+              <i className="fas fa-church text-2xl" style={{ color: 'var(--theme-color)' }}></i>
             </div>
             <div>
               <h1 className="text-xl font-bold text-white font-['Poppins']">Zoe Flock</h1>
-              <p className="text-xs text-blue-200">Admin Panel</p>
+              <p className="text-xs text-blue-200" style={{ color: currentTheme === 'blue' ? '#bfdbfe' : '#94a3b8' }}>Admin Panel</p>
             </div>
           </div>
         </div>
@@ -112,7 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-6 border-t border-blue-700 flex-shrink-0">
+        <div className="p-6 border-t flex-shrink-0" style={{ borderColor: currentTheme === 'blue' ? '#1e40af' : '#334155' }}>
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-all duration-200 group"

@@ -22,7 +22,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, description, actionButto
           {actionButton && (
             <button 
               onClick={actionButton.onClick}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center mt-4 md:mt-0"
+              className="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center mt-4 md:mt-0"
             >
               <i className={`${actionButton.icon} mr-2`}></i>
               {actionButton.text}

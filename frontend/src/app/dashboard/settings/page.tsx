@@ -9,8 +9,11 @@ import {
   TabNavigation,
   SelectInput
 } from "@/components/ui";
+import ColorSwitcher from "@/components/ui/ColorSwitcher";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function SettingsPage() {
+  const { currentTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("general");
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -130,7 +133,7 @@ export default function SettingsPage() {
           <h3 className="text-lg font-semibold text-gray-900">Password</h3>
           <p className="text-sm text-gray-600">Update your account password</p>
         </div>
-        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
+        <button className="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
           Change Password
         </button>
       </div>
@@ -140,7 +143,7 @@ export default function SettingsPage() {
           <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
           <p className="text-sm text-gray-600">Add an extra layer of security</p>
         </div>
-        <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
+        <button className="bg-secondary-500 hover:bg-secondary-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
           Enable 2FA
         </button>
       </div>
@@ -161,16 +164,11 @@ export default function SettingsPage() {
       </div>
       
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Theme Colors</h3>
-        <div className="grid grid-cols-5 gap-3">
-          {["blue", "green", "purple", "orange", "pink"].map((color) => (
-            <button
-              key={color}
-              className={`w-12 h-12 rounded-full bg-${color}-500 border-2 border-white shadow-md hover:scale-110 transition-transform duration-200`}
-              title={color.charAt(0).toUpperCase() + color.slice(1)}
-            ></button>
-          ))}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Theme Colors</h3>
+          <p className="text-sm text-gray-600 mb-4">Choose your preferred color theme</p>
         </div>
+        <ColorSwitcher />
       </div>
     </div>
   );
@@ -209,7 +207,7 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                     activeTab === tab.id
-                      ? "bg-blue-100 text-blue-700 font-medium"
+                      ? "bg-primary-100 text-primary-700 font-medium"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -233,7 +231,7 @@ export default function SettingsPage() {
                 <button className="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
                   Cancel
                 </button>
-                <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200">
+                <button className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-all duration-200">
                   Save Changes
                 </button>
               </div>
