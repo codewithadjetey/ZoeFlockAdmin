@@ -1,39 +1,33 @@
 "use client";
 import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { DEMO_CREDENTIALS } from "@/utils/constants";
+import { isValidEmail, cn } from "@/utils/helpers";
+import { LoadingSpinner, Modal } from "@/components/shared";
 
 export default function LoginPage() {
+  const { login, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetMessage, setResetMessage] = useState("");
-  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setErrorMessage("");
 
-    // Simulate API call
-    setTimeout(() => {
-      if (
-        (email === "admin@church.com" && password === "admin123") ||
-        (email === "pastor@church.com" && password === "pastor123") ||
-        (email === "member@church.com" && password === "member123")
-      ) {
-        localStorage.setItem("isAuthenticated", "true");
-        localStorage.setItem("userRole", email.split("@")[0]);
-        router.push("/dashboard");
-      } else {
-        setErrorMessage("Invalid email or password.");
-      }
-      setIsLoading(false);
-    }, 1000);
+    if (!isValidEmail(email)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
+
+    const success = await login(email, password);
+    if (!success) {
+      setErrorMessage("Invalid email or password.");
+    }
   };
 
   const handleResetPassword = (e: React.FormEvent) => {
@@ -52,10 +46,14 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 mx-4 transition-all duration-300">
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4 shadow-xl">
-            <i className="fas fa-church text-2xl text-white"></i>
+            <i className="fas fa-church text-2xl text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-['Poppins'] transition-colors duration-200">Zoe Flock Admin</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200">Church Management System</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white font-['Poppins'] transition-colors duration-200">
+            Zoe Flock Admin
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-colors duration-200">
+            Church Management System
+          </p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -127,10 +125,7 @@ export default function LoginPage() {
           >
             {isLoading ? (
               <>
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                </svg>
+                <LoadingSpinner size="sm" className="mr-3" />
                 Signing In...
               </>
             ) : (
@@ -141,68 +136,59 @@ export default function LoginPage() {
 
         <div className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500 transition-colors duration-200">
           <p className="mb-2">Demo Credentials:</p>
-          <p>admin@church.com / admin123</p>
-          <p>pastor@church.com / pastor123</p>
-          <p>member@church.com / member123</p>
+          {DEMO_CREDENTIALS.map((cred, index) => (
+            <p key={index}>{cred.email} / {cred.password}</p>
+          ))}
         </div>
       </div>
 
       {/* Forgot Password Modal */}
-      {showForgotModal && (
-        <div className="fixed inset-0 bg-gray-600/50 dark:bg-gray-900/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center transition-all duration-300">
-          <div className="relative mx-auto p-6 border border-gray-200 dark:border-gray-700 w-96 shadow-2xl rounded-3xl bg-white dark:bg-gray-800 transition-all duration-300">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white font-['Poppins'] transition-colors duration-200">Reset Password</h3>
-              <button
-                onClick={() => setShowForgotModal(false)}
-                className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-200"
-              >
-                <i className="fas fa-times text-xl"></i>
-              </button>
-            </div>
-
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div>
-                <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                  Email Address
-                </label>
-                <input
-                  id="reset-email"
-                  name="reset-email"
-                  type="email"
-                  required
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                />
-              </div>
-
-              {resetMessage && (
-                <div className="text-sm text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/20 rounded-xl p-3 border border-green-200 dark:border-green-800 transition-all duration-200">
-                  {resetMessage}
-                </div>
-              )}
-
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotModal(false)}
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-400 dark:hover:bg-gray-500 transition-all duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  Send Reset Link
-                </button>
-              </div>
-            </form>
+      <Modal
+        isOpen={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+        title="Reset Password"
+        size="md"
+      >
+        <form onSubmit={handleResetPassword} className="space-y-4">
+          <div>
+            <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+              Email Address
+            </label>
+            <input
+              id="reset-email"
+              name="reset-email"
+              type="email"
+              required
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              placeholder="Enter your email"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+            />
           </div>
-        </div>
-      )}
+
+          {resetMessage && (
+            <div className="text-sm text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/20 rounded-xl p-3 border border-green-200 dark:border-green-800 transition-all duration-200">
+              {resetMessage}
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-3">
+            <button
+              type="button"
+              onClick={() => setShowForgotModal(false)}
+              className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-400 dark:hover:bg-gray-500 transition-all duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Send Reset Link
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
