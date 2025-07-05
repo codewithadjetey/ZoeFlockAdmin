@@ -3,15 +3,7 @@ import React, { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("profile");
-  const [profileData, setProfileData] = useState({
-    name: "Admin User",
-    email: "admin@church.com",
-    phone: "+1 (555) 123-4567",
-    role: "Administrator",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-  });
-
+  const [activeTab, setActiveTab] = useState("notifications");
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
     smsNotifications: false,
@@ -30,18 +22,11 @@ export default function SettingsPage() {
   });
 
   const tabs = [
-    { id: "profile", label: "Profile", icon: "fas fa-user" },
     { id: "notifications", label: "Notifications", icon: "fas fa-bell" },
     { id: "security", label: "Security", icon: "fas fa-shield-alt" },
     { id: "appearance", label: "Appearance", icon: "fas fa-palette" },
     { id: "backup", label: "Backup", icon: "fas fa-download" },
   ];
-
-  const handleProfileUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle profile update
-    console.log("Profile updated");
-  };
 
   const handleNotificationToggle = (key: string) => {
     setNotifications(prev => ({
@@ -64,7 +49,7 @@ export default function SettingsPage() {
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div>
             <h2 className="text-3xl font-bold text-gray-900 font-['Poppins'] mb-2">Settings</h2>
-            <p className="text-gray-600">Manage your account preferences and system settings</p>
+            <p className="text-gray-600">Manage your system preferences and account settings</p>
           </div>
         </div>
       </section>
@@ -96,75 +81,6 @@ export default function SettingsPage() {
         {/* Main Content */}
         <div className="lg:col-span-3">
           <div className="bg-white rounded-2xl shadow-lg p-8">
-            {/* Profile Settings */}
-            {activeTab === "profile" && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 font-['Poppins'] mb-6">Profile Settings</h3>
-                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                  <div className="flex items-center space-x-6">
-                    <img
-                      src={profileData.avatar}
-                      alt="Profile"
-                      className="w-20 h-20 rounded-full border-2 border-gray-200"
-                    />
-                    <div>
-                      <button type="button" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-colors">
-                        Change Photo
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                      <input
-                        type="text"
-                        value={profileData.name}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                      <input
-                        type="email"
-                        value={profileData.email}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                      <input
-                        type="tel"
-                        value={profileData.phone}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, phone: e.target.value }))}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                      <input
-                        type="text"
-                        value={profileData.role}
-                        disabled
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-gray-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-colors"
-                    >
-                      Save Changes
-                    </button>
-                  </div>
-                </form>
-              </div>
-            )}
-
             {/* Notification Settings */}
             {activeTab === "notifications" && (
               <div>
