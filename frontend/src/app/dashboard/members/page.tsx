@@ -115,11 +115,11 @@ export default function MembersPage() {
         <img
           src={member.avatar}
           alt={member.name}
-          className="w-10 h-10 rounded-full"
+          className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-md"
         />
         <div className="ml-4">
-          <div className="text-sm font-medium text-gray-900">{member.name}</div>
-          <div className="text-sm text-gray-500">{member.email}</div>
+          <div className="text-sm font-medium text-gray-900 dark:text-white transition-colors duration-200">{member.name}</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">{member.email}</div>
         </div>
       </div>
     )},
@@ -129,37 +129,37 @@ export default function MembersPage() {
     { key: "joinDate", label: "Joined", render: (date: any) => new Date(date).toLocaleDateString() },
     { key: "actions", label: "Actions", render: () => (
       <div className="text-sm font-medium">
-        <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-        <button className="text-red-600 hover:text-red-900">Delete</button>
+        <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 mr-3 transition-colors duration-200">Edit</button>
+        <button className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 transition-colors duration-200">Delete</button>
       </div>
     )},
   ];
 
   const renderMemberCard = (member: any) => (
-    <div className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">
+    <div className="member-card rounded-3xl shadow-xl p-6 cursor-pointer transition-all duration-300 hover:transform hover:scale-105">
       <div className="flex items-center mb-4">
         <img
           src={member.avatar}
           alt={member.name}
-          className="w-16 h-16 rounded-full border-2 border-white shadow-md"
+          className="w-16 h-16 rounded-full border-2 border-white dark:border-gray-700 shadow-md"
         />
         <div className="ml-4">
-          <h3 className="text-lg font-semibold text-gray-900">{member.name}</h3>
-          <p className="text-sm text-gray-500">{member.email}</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white transition-colors duration-200">{member.name}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">{member.email}</p>
         </div>
       </div>
       <div className="space-y-2">
         <div className="flex items-center text-sm">
-          <i className="fas fa-phone text-gray-400 mr-2"></i>
-          <span className="text-gray-600">{member.phone}</span>
+          <i className="fas fa-phone text-gray-400 dark:text-gray-500 mr-2 transition-colors duration-200"></i>
+          <span className="text-gray-600 dark:text-gray-300 transition-colors duration-200">{member.phone}</span>
         </div>
         <div className="flex items-center text-sm">
-          <i className="fas fa-users text-gray-400 mr-2"></i>
-          <span className="text-gray-600">{member.group}</span>
+          <i className="fas fa-users text-gray-400 dark:text-gray-500 mr-2 transition-colors duration-200"></i>
+          <span className="text-gray-600 dark:text-gray-300 transition-colors duration-200">{member.group}</span>
         </div>
         <div className="flex items-center justify-between">
           <StatusBadge status={member.status} />
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-gray-500 transition-colors duration-200">
             Joined {new Date(member.joinDate).toLocaleDateString()}
           </span>
         </div>

@@ -26,9 +26,9 @@ const DataGrid: React.FC<DataGridProps> = ({
   };
 
   return (
-    <section className={`grid ${getGridCols(columns)} gap-6 ${className}`}>
+    <section className={`grid ${getGridCols(columns)} gap-6 transition-all duration-300 ${className}`}>
       {data.map((item, index) => (
-        <div key={index}>
+        <div key={index} className="transition-all duration-300">
           {renderCard(item)}
         </div>
       ))}

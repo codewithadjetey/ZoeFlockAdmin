@@ -9,6 +9,7 @@ interface PasswordInputProps {
   error?: string;
   name?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 const PasswordInput: React.FC<PasswordInputProps> = ({
@@ -19,6 +20,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   error,
   name,
   className = "",
+  disabled = false,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -27,7 +29,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   return (
     <div>
       {label && (
-        <label className="block text-sm font-medium text-neutral-700 mb-2">{label}</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">{label}</label>
       )}
       <div className="relative">
         <input
@@ -36,12 +38,18 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           value={value}
           onChange={onChange}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors pr-12 ${error ? 'border-red-500' : ''} ${className}`}
+          disabled={disabled}
+          className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 outline-none transition-all duration-300 pr-12 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm hover:shadow-md focus:shadow-lg ${
+            error ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' : ''
+          } ${
+            disabled ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''
+          } ${className}`}
         />
         <button
           type="button"
           onClick={toggleShowPassword}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 focus:outline-none"
+          disabled={disabled}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition-colors duration-200 disabled:opacity-50"
           tabIndex={0}
           aria-label={showPassword ? "Hide password" : "Show password"}
         >
@@ -52,7 +60,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           )}
         </button>
       </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-red-500 dark:text-red-400 text-xs mt-1 transition-colors duration-200">{error}</p>}
     </div>
   );
 };

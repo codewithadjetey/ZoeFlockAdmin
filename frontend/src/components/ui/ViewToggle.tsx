@@ -31,17 +31,17 @@ const ViewToggle: React.FC<ViewToggleProps> = ({
   return (
     <div className="flex items-center justify-between mt-6 relative z-10 view-toggle-container" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center space-x-2">
-        <span className="text-sm font-medium text-gray-700">View:</span>
-        <div className="flex bg-gray-100 rounded-lg p-1" onClick={(e) => e.stopPropagation()}>
+        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">View:</span>
+        <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 shadow-lg" onClick={(e) => e.stopPropagation()}>
           {options.map((option) => (
             <button
               key={option.value}
               data-view-toggle={option.value}
               onClick={(e) => handleViewModeChange(option.value, e)}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-all duration-300 ${
                 value === option.value
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-600 hover:bg-gray-200"
+                  ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
               <i className={`${option.icon} mr-1`}></i>
@@ -51,7 +51,7 @@ const ViewToggle: React.FC<ViewToggleProps> = ({
         </div>
       </div>
       {count !== undefined && (
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
           <span>{count} {countLabel}</span>
         </div>
       )}
