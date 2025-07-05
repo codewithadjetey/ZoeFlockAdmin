@@ -1,110 +1,188 @@
 "use client";
-import React, { useState, useRef } from "react";
-import { Bell, UserCircle } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 
-const Topbar: React.FC = () => {
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-  const userRef = useRef<HTMLDivElement>(null);
-  const notifRef = useRef<HTMLButtonElement>(null);
-  const userDropdownTimeout = useRef<NodeJS.Timeout | null>(null);
-  const notifDropdownTimeout = useRef<NodeJS.Timeout | null>(null);
+interface TopbarProps {
+  onSidebarToggle?: () => void;
+}
+
+const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdowns when clicking outside
-  React.useEffect(() => {
-    function handleClick(e: MouseEvent) {
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
       if (
-        userRef.current &&
-        !userRef.current.contains(e.target as Node) &&
-        notifRef.current &&
-        !notifRef.current.contains(e.target as Node)
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
       ) {
-        setUserDropdownOpen(false);
-        setNotifDropdownOpen(false);
+        setNotificationsOpen(false);
+        setProfileOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
+  const notifications = [
+    {
+      id: 1,
+      type: "user",
+      icon: "fas fa-user-plus",
+      iconColor: "text-blue-600",
+      bgColor: "bg-blue-100",
+      title: "New Member Registration",
+      message: "Sarah Johnson has joined the church",
+      time: "2 minutes ago",
+    },
+    {
+      id: 2,
+      type: "donation",
+      icon: "fas fa-donate",
+      iconColor: "text-green-600",
+      bgColor: "bg-green-100",
+      title: "Donation Received",
+      message: "$250 donation from John Smith",
+      time: "30 minutes ago",
+    },
+    {
+      id: 3,
+      type: "event",
+      icon: "fas fa-calendar",
+      iconColor: "text-yellow-600",
+      bgColor: "bg-yellow-100",
+      title: "Event Reminder",
+      message: "Sunday Service starts in 2 hours",
+      time: "1 hour ago",
+    },
+  ];
+
   return (
-    <header className="bg-white border-b border-neutral-200 px-4 md:px-8 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <span className="text-primary-600 font-bold text-lg">ZoeFlockAdmin</span>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="relative">
-          <div
-            onMouseEnter={() => {
-              if (notifDropdownTimeout.current) {
-                clearTimeout(notifDropdownTimeout.current);
-              }
-              setNotifDropdownOpen(true);
-            }}
-            onMouseLeave={() => {
-              notifDropdownTimeout.current = setTimeout(() => {
-                setNotifDropdownOpen(false);
-              }, 200);
-            }}
-            onClick={() => setNotifDropdownOpen((open) => !open)}
-          >
-            <button
-              ref={notifRef}
-              className="relative p-2 text-neutral-400 hover:text-neutral-600 transition-colors"
-              tabIndex={0}
-              onFocus={() => setNotifDropdownOpen(true)}
-              onBlur={() => setNotifDropdownOpen(false)}
-              aria-haspopup="true"
-              aria-expanded={notifDropdownOpen}
-            >
-              <Bell size={22} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
-            </button>
-            {notifDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-64 bg-white border border-neutral-200 rounded shadow-lg z-20">
-                <div className="p-3 text-sm text-neutral-700 font-medium border-b">Notifications</div>
-                <ul className="max-h-60 overflow-y-auto">
-                  <li className="px-4 py-2 hover:bg-neutral-100 cursor-pointer">New user registered</li>
-                  <li className="px-4 py-2 hover:bg-neutral-100 cursor-pointer">Server restarted</li>
-                  <li className="px-4 py-2 hover:bg-neutral-100 cursor-pointer">You have 3 new messages</li>
-                </ul>
-                <div className="p-2 text-xs text-center text-primary-600 hover:underline cursor-pointer">View all</div>
-              </div>
-            )}
-          </div>
-        </div>
-        <div
-          ref={userRef}
-          className="relative cursor-pointer"
-          onMouseEnter={() => {
-            if (userDropdownTimeout.current) {
-              clearTimeout(userDropdownTimeout.current);
-            }
-            setUserDropdownOpen(true);
-          }}
-          onMouseLeave={() => {
-            userDropdownTimeout.current = setTimeout(() => {
-              setUserDropdownOpen(false);
-            }, 200); // 200ms delay
-          }}
-          onClick={() => setUserDropdownOpen((open) => !open)}
-          tabIndex={0}
-          onFocus={() => setUserDropdownOpen(true)}
-          onBlur={() => setUserDropdownOpen(false)}
-          aria-haspopup="true"
-          aria-expanded={userDropdownOpen}
+    <header className="bg-white shadow-lg border-b border-gray-200 flex items-center justify-between px-8 h-20">
+      <div className="flex items-center space-x-6">
+        <button 
+          onClick={onSidebarToggle}
+          className="lg:hidden text-gray-600 focus:outline-none hover:text-blue-600 transition-colors"
         >
-          <div className="flex items-center gap-2">
-            <UserCircle size={32} className="text-primary-500" />
-            <span className="hidden md:inline text-neutral-900 font-medium">John Doe</span>
-          </div>
-          {userDropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 w-40 bg-white border border-neutral-200 rounded shadow-lg z-20">
-              <ul>
-                <li className="px-4 py-2 hover:bg-neutral-100 cursor-pointer">Profile</li>
-                <li className="px-4 py-2 hover:bg-neutral-100 cursor-pointer">Settings</li>
-                <li className="px-4 py-2 hover:bg-neutral-100 cursor-pointer text-red-500">Logout</li>
-              </ul>
+          <i className="fas fa-bars text-2xl"></i>
+        </button>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 font-['Poppins']">Dashboard</h1>
+          <p className="hidden md:block text-sm text-gray-500">Welcome to your church management system</p>
+        </div>
+      </div>
+
+      <div className="flex items-center space-x-6">
+        {/* Notifications Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => {
+              setNotificationsOpen(!notificationsOpen);
+              setProfileOpen(false);
+            }}
+            className="relative text-gray-600 hover:text-blue-600 focus:outline-none transition-colors"
+          >
+            <i className="fas fa-bell text-2xl"></i>
+            <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full animate-pulse">
+              {notifications.length}
+            </span>
+          </button>
+
+          {/* Notifications Dropdown Menu */}
+          {notificationsOpen && (
+            <div className="absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 z-50">
+              <div className="p-4 border-b border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+                <p className="text-sm text-gray-500">You have {notifications.length} new notifications</p>
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className="p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors"
+                  >
+                    <div className="flex items-start">
+                      <div className={`w-10 h-10 ${notification.bgColor} rounded-full flex items-center justify-center mr-3`}>
+                        <i className={`${notification.icon} ${notification.iconColor}`}></i>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                        <p className="text-xs text-gray-500">{notification.message}</p>
+                        <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="p-3 border-t border-gray-100">
+                <button className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  View All Notifications
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User Profile Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => {
+              setProfileOpen(!profileOpen);
+              setNotificationsOpen(false);
+            }}
+            className="flex items-center space-x-3 bg-gray-50 rounded-xl px-4 py-2 hover:bg-gray-100 transition-all duration-200 cursor-pointer"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
+              alt="User Avatar"
+              className="w-10 h-10 rounded-full border-2 border-white shadow-md"
+            />
+            <div className="text-left">
+              <p className="text-sm font-semibold text-gray-900">Admin User</p>
+              <p className="text-xs text-gray-500">Administrator</p>
+            </div>
+            <i className="fas fa-chevron-down text-gray-400 text-xs"></i>
+          </button>
+
+          {/* Profile Dropdown Menu */}
+          {profileOpen && (
+            <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 z-50">
+              <div className="p-4 border-b border-gray-100">
+                <p className="text-sm font-semibold text-gray-900">Admin User</p>
+                <p className="text-xs text-gray-500">admin@church.com</p>
+              </div>
+              <div className="p-2">
+                <Link
+                  href="/dashboard/profile"
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <i className="fas fa-user mr-3 text-gray-400"></i>
+                  Profile
+                </Link>
+                <Link
+                  href="/dashboard/settings"
+                  className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <i className="fas fa-cog mr-3 text-gray-400"></i>
+                  Settings
+                </Link>
+                <hr className="my-2" />
+                <button
+                  onClick={() => {
+                    localStorage.removeItem("isAuthenticated");
+                    localStorage.removeItem("userRole");
+                    window.location.href = "/auth/login";
+                  }}
+                  className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <i className="fas fa-sign-out-alt mr-3"></i>
+                  Logout
+                </button>
+              </div>
             </div>
           )}
         </div>

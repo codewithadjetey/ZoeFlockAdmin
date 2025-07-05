@@ -1,100 +1,136 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
-import { Home, Users, Calendar, BarChart2, HandCoins, Settings, User, Lock, Bell, ChevronRight } from "lucide-react";
+import React, { useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { label: "Dashboard", icon: <Home size={20} />, href: "/dashboard" },
-  { label: "Members", icon: <Users size={20} />, href: "/dashboard/members" },
-  { label: "Events", icon: <Calendar size={20} />, href: "/dashboard/events" },
-  { label: "Attendance", icon: <BarChart2 size={20} />, href: "/dashboard/attendance" },
-  { label: "Donations", icon: <HandCoins size={20} />, href: "/dashboard/donations" },
-  { label: "Settings", icon: <Settings size={20} />, href: "/dashboard/settings", children: [
-    { label: "Profile", icon: <User size={20} />, href: "/dashboard/settings/profile" },
-    { label: "Security", icon: <Lock size={20} />, href: "/dashboard/settings/security" },
-    { label: "Notifications", icon: <Bell size={20} />, href: "/dashboard/settings/notifications" },
-  ] },
+  { label: "Dashboard", icon: "fas fa-home", href: "/dashboard" },
+  { label: "Members", icon: "fas fa-users", href: "/dashboard/members" },
+  { label: "Events", icon: "fas fa-calendar", href: "/dashboard/events" },
+  { label: "Groups", icon: "fas fa-layer-group", href: "/dashboard/groups" },
+  { label: "Donations", icon: "fas fa-donate", href: "/dashboard/donations" },
+  { label: "Communication", icon: "fas fa-envelope", href: "/dashboard/communication" },
+  { label: "Settings", icon: "fas fa-cog", href: "/dashboard/settings" },
 ];
 
-const Sidebar: React.FC = () => {
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+interface SidebarProps {
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const pathname = usePathname();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
-  // Close submenu when clicking outside
+  // Close sidebar when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target as Node)
       ) {
-        setOpenMenu(null);
+        // Only close sidebar on mobile devices
+        if (window.innerWidth < 1024) {
+          // Check if the click is on an interactive element that shouldn't close the sidebar
+          const target = event.target as HTMLElement;
+          const isInteractiveElement = target.closest('button') || 
+                                     target.closest('input') || 
+                                     target.closest('select') || 
+                                     target.closest('textarea') ||
+                                     target.closest('a') ||
+                                     target.closest('[data-view-toggle]') || 
+                                     target.closest('.view-toggle-container');
+          
+          // Only close if it's not an interactive element or if it's a click on the overlay
+          if (!isInteractiveElement || target.closest('.mobile-overlay')) {
+            onToggle();
+          }
+        }
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [onToggle]);
 
-  const handleToggle = (label: string) => {
-    setOpenMenu((prev) => (prev === label ? null : label));
+  const handleLogout = () => {
+    localStorage.removeItem("isAuthenticated");
+    localStorage.removeItem("userRole");
+    window.location.href = "/auth/login";
+  };
+
+  const handleNavClick = () => {
+    // Only close sidebar on mobile devices
+    if (window.innerWidth < 1024) {
+      onToggle();
+    }
   };
 
   return (
-    <aside ref={sidebarRef} className="relative bg-white border-r border-neutral-200 w-16 md:w-64 flex flex-col transition-all duration-200">
-      <div className="flex flex-col gap-2 py-4">
-        {navItems.map((item) => {
-          const hasChildren = !!item.children;
-          return (
-            <div key={item.label} className="flex flex-col relative">
-              {hasChildren ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => handleToggle(item.label)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary-50 text-neutral-700 hover:text-primary-600 transition-colors group w-full text-left focus:outline-none"
-                  >
-                    <span className="flex-shrink-0">{item.icon}</span>
-                    <span className="hidden md:inline ml-2 flex-1">{item.label}</span>
-                    <ChevronRight className={`ml-auto transition-transform duration-200 ${openMenu === item.label ? 'rotate-90' : ''}`} size={18} />
-                  </button>
-                  {openMenu === item.label && (
-                    <div
-                      className="absolute left-full top-0 z-30 min-w-[180px] bg-white border border-neutral-200 rounded shadow-lg flex flex-col gap-1 mt-0 ml-2"
-                    >
-                      {item.children.map((child) => {
-                        const isActive = pathname === child.href;
-                        return (
-                          <Link
-                            key={child.label}
-                            href={child.href}
-                            className={`flex items-center gap-2 px-4 py-2 rounded hover:bg-primary-50 text-sm transition-colors
-                              ${isActive ? 'bg-primary-100 text-primary-700 font-semibold' : 'text-neutral-600 hover:text-primary-600'}`}
-                          >
-                            <span className="flex-shrink-0">{child.icon}</span>
-                            <span className="ml-2">{child.label}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <Link
-                  href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary-50 text-neutral-700 hover:text-primary-600 transition-colors group"
-                >
-                  <span className="flex-shrink-0">{item.icon}</span>
-                  <span className="hidden md:inline ml-2">{item.label}</span>
-                </Link>
-              )}
+    <>
+      {/* Sidebar */}
+      <aside
+        ref={sidebarRef}
+        className={`sidebar-gradient w-64 h-screen flex flex-col border-r border-blue-800 transition-all duration-300 shadow-2xl z-40 ${
+          isOpen ? "fixed translate-x-0" : "fixed lg:static -translate-x-full lg:translate-x-0"
+        }`}
+      >
+        {/* Logo/Brand Section */}
+        <div className="flex items-center justify-center h-24 border-b border-blue-700 flex-shrink-0">
+          <div className="flex items-center">
+            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-3 shadow-lg">
+              <i className="fas fa-church text-2xl text-blue-600"></i>
             </div>
-          );
-        })}
-      </div>
-    </aside>
+            <div>
+              <h1 className="text-xl font-bold text-white font-['Poppins']">Zoe Flock</h1>
+              <p className="text-xs text-blue-200">Admin Panel</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 px-6 py-8 space-y-3 overflow-y-auto">
+          {navItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={`flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-200 group ${
+                  isActive
+                    ? "text-white bg-white bg-opacity-20"
+                    : "text-blue-100 hover:bg-white hover:bg-opacity-20"
+                }`}
+                onClick={handleNavClick}
+              >
+                <i className={`${item.icon} mr-4 text-lg group-hover:scale-110 transition-transform`}></i>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Logout Button */}
+        <div className="p-6 border-t border-blue-700 flex-shrink-0">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-all duration-200 group"
+          >
+            <i className="fas fa-sign-out-alt mr-3 group-hover:scale-110 transition-transform"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30 mobile-overlay"
+          onClick={() => onToggle()}
+        ></div>
+      )}
+    </>
   );
 };
 

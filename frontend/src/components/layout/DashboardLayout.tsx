@@ -1,20 +1,23 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
-import Footer from "@/components/layout/Footer";
 
 const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const handleSidebarToggle = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-50">
-      <Topbar />
-      <div className="flex flex-1">
-        <Sidebar />
-        <div className="flex-1 flex flex-col">
-          <main className="flex-1 p-4 md:p-8 bg-neutral-50 overflow-auto">
-            {children}
-          </main>
-          <Footer />
-        </div>
+    <div className="h-screen flex bg-gray-50 overflow-hidden">
+      <Sidebar isOpen={isSidebarOpen} onToggle={handleSidebarToggle} />
+      <div className="flex-1 flex flex-col min-w-0">
+        <Topbar onSidebarToggle={handleSidebarToggle} />
+        <main className="flex-1 overflow-y-auto p-8" id="main-content">
+          {children}
+        </main>
       </div>
     </div>
   );
