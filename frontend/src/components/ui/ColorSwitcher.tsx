@@ -23,11 +23,11 @@ const ColorSwitcher: React.FC<ColorSwitcherProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const colors = [
-    { name: 'blue', value: '#3b82f6', icon: 'fas fa-palette' },
-    { name: 'green', value: '#10b981', icon: 'fas fa-leaf' },
-    { name: 'purple', value: '#8b5cf6', icon: 'fas fa-star' },
-    { name: 'orange', value: '#f59e0b', icon: 'fas fa-fire' },
-    { name: 'pink', value: '#ec4899', icon: 'fas fa-heart' },
+    { name: 'blue', value: '#3b82f6', icon: 'fas fa-palette', bgClass: 'bg-blue-500' },
+    { name: 'green', value: '#10b981', icon: 'fas fa-leaf', bgClass: 'bg-green-500' },
+    { name: 'purple', value: '#8b5cf6', icon: 'fas fa-star', bgClass: 'bg-purple-500' },
+    { name: 'orange', value: '#f59e0b', icon: 'fas fa-fire', bgClass: 'bg-orange-500' },
+    { name: 'pink', value: '#ec4899', icon: 'fas fa-heart', bgClass: 'bg-pink-500' },
   ];
 
   // Close dropdown when clicking outside
@@ -49,6 +49,11 @@ const ColorSwitcher: React.FC<ColorSwitcherProps> = ({
     return currentColor?.icon || 'fas fa-palette';
   };
 
+  const getCurrentThemeColor = () => {
+    const currentColor = colors.find(color => color.name === currentTheme);
+    return currentColor?.value || '#3b82f6';
+  };
+
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       {/* Single Theme Icon Button */}
@@ -58,7 +63,10 @@ const ColorSwitcher: React.FC<ColorSwitcherProps> = ({
         title="Theme Settings"
       >
         <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 opacity-0 hover:opacity-10 transition-opacity duration-300"></div>
-        <i className={`${getCurrentThemeIcon()} text-gray-600 dark:text-gray-300 text-lg transition-transform duration-300 hover:rotate-12`}></i>
+        <i 
+          className={`${getCurrentThemeIcon()} text-lg transition-all duration-300 hover:rotate-12 hover:scale-110`} 
+          style={{ color: getCurrentThemeColor() }}
+        ></i>
       </button>
 
       {/* Dropdown Menu */}
@@ -103,11 +111,14 @@ const ColorSwitcher: React.FC<ColorSwitcherProps> = ({
                     }`}
                   >
                     <div 
-                      className="w-6 h-6 rounded-lg border-2 border-gray-300 dark:border-gray-600"
+                      className={`w-6 h-6 rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-sm ${color.bgClass}`}
                       style={{ backgroundColor: color.value }}
                     ></div>
                     <div className="flex items-center space-x-2">
-                      <i className={`${color.icon} text-sm text-gray-600 dark:text-gray-400`}></i>
+                      <i 
+                        className={`${color.icon} text-sm transition-all duration-200 hover:scale-110`} 
+                        style={{ color: color.value }}
+                      ></i>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
                         {color.name}
                       </span>
@@ -124,8 +135,8 @@ const ColorSwitcher: React.FC<ColorSwitcherProps> = ({
             <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-3">
                 <div 
-                  className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600"
-                  style={{ backgroundColor: colors.find(c => c.name === currentTheme)?.value }}
+                  className="w-4 h-4 rounded border border-gray-300 dark:border-gray-600 shadow-sm"
+                  style={{ backgroundColor: getCurrentThemeColor() }}
                 ></div>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   Current: <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">{currentTheme}</span>
