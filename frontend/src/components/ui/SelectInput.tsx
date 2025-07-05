@@ -1,43 +1,42 @@
 import React from "react";
 
-interface SelectInputProps {
-  label?: string;
+interface SelectOption {
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: { label: string; value: string }[];
+  label: string;
+}
+
+interface SelectInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  options: SelectOption[];
   placeholder?: string;
-  error?: string;
-  name?: string;
   className?: string;
 }
 
-const SelectInput: React.FC<SelectInputProps> = ({
-  label,
-  value,
-  onChange,
-  options,
-  placeholder = "Select an option...",
-  error,
-  name,
-  className = "",
-}) => (
-  <div>
-    {label && (
-      <label className="block text-sm font-medium text-neutral-700 mb-2">{label}</label>
-    )}
-    <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      className={`w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors bg-white shadow-sm focus:shadow-md appearance-none ${error ? 'border-red-500' : ''} ${className}`}
-    >
-      <option value="" disabled>{placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>{opt.label}</option>
-      ))}
-    </select>
-    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-  </div>
-);
+const SelectInput: React.FC<SelectInputProps> = ({ 
+  value, 
+  onChange, 
+  options, 
+  placeholder = "Select an option",
+  className = "" 
+}) => {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`w-full px-4 py-3 appearance-none bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${className}`}
+      >
+        {placeholder && <option value="">{placeholder}</option>}
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <i className="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+    </div>
+  );
+};
 
 export default SelectInput; 
