@@ -125,15 +125,21 @@ export default function SettingsPage() {
         />
       </div>
       
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Password</h3>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Password</h3>
+          <p className="text-sm text-gray-600">Update your account password</p>
+        </div>
         <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
           Change Password
         </button>
       </div>
       
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
+          <p className="text-sm text-gray-600">Add an extra layer of security</p>
+        </div>
         <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
           Enable 2FA
         </button>
@@ -191,28 +197,50 @@ export default function SettingsPage() {
         description="Manage your account and application preferences"
       />
 
-      <ContentCard>
-        <TabNavigation
-          tabs={tabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-        
-        <div className="mt-8">
-          {renderTabContent()}
-        </div>
-        
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="flex justify-end space-x-4">
-            <button className="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
-              Cancel
-            </button>
-            <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200">
-              Save Changes
-            </button>
+      {/* Settings Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* Sidebar */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <nav className="space-y-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                    activeTab === tab.id
+                      ? "bg-blue-100 text-blue-700 font-medium"
+                      : "text-gray-600 hover:bg-gray-50"
+                  }`}
+                >
+                  <i className={`${tab.icon} mr-3 text-lg`}></i>
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
           </div>
         </div>
-      </ContentCard>
+
+        {/* Main Content */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-2xl shadow-lg p-8">
+            <div className="mb-8">
+              {renderTabContent()}
+            </div>
+            
+            <div className="pt-6 border-t border-gray-200">
+              <div className="flex justify-end space-x-4">
+                <button className="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
+                  Cancel
+                </button>
+                <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200">
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 } 
