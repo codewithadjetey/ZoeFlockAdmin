@@ -22,7 +22,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const pathname = usePathname();
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { currentTheme } = useTheme();
+  const { currentTheme, colorMode } = useTheme();
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -69,6 +69,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     }
   };
 
+  // Get sidebar background based on theme and color mode
+  const getSidebarBackground = () => {
+    if (colorMode === 'dark') {
+      return 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)';
+    }
+    return `linear-gradient(180deg, ${currentTheme === 'blue' ? '#1e3a8a' : '#1e293b'} 0%, var(--theme-color) 100%)`;
+  };
+
+  // Get border color based on theme and color mode
+  const getBorderColor = () => {
+    if (colorMode === 'dark') {
+      return '#334155';
+    }
+    return currentTheme === 'blue' ? '#1e40af' : '#334155';
+  };
+
+  // Get text color based on color mode
+  const getTextColor = () => {
+    return colorMode === 'dark' ? '#94a3b8' : '#bfdbfe';
+  };
+
   return (
     <>
       {/* Sidebar */}
@@ -78,19 +99,19 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           isOpen ? "fixed translate-x-0" : "fixed lg:static -translate-x-full lg:translate-x-0"
         }`}
         style={{
-          background: `linear-gradient(180deg, ${currentTheme === 'blue' ? '#1e3a8a' : '#1e293b'} 0%, var(--theme-color) 100%)`,
-          borderColor: currentTheme === 'blue' ? '#1e40af' : '#334155'
+          background: getSidebarBackground(),
+          borderColor: getBorderColor()
         }}
       >
         {/* Logo/Brand Section */}
-        <div className="flex items-center justify-center h-24 border-b flex-shrink-0" style={{ borderColor: currentTheme === 'blue' ? '#1e40af' : '#334155' }}>
+        <div className="flex items-center justify-center h-24 border-b flex-shrink-0" style={{ borderColor: getBorderColor() }}>
           <div className="flex items-center">
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-3 shadow-lg">
+            <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-full flex items-center justify-center mr-3 shadow-lg">
               <i className="fas fa-church text-2xl" style={{ color: 'var(--theme-color)' }}></i>
             </div>
             <div>
               <h1 className="text-xl font-bold text-white font-['Poppins']">Zoe Flock</h1>
-              <p className="text-xs text-blue-200" style={{ color: currentTheme === 'blue' ? '#bfdbfe' : '#94a3b8' }}>Admin Panel</p>
+              <p className="text-xs" style={{ color: getTextColor() }}>Admin Panel</p>
             </div>
           </div>
         </div>
@@ -118,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-6 border-t flex-shrink-0" style={{ borderColor: currentTheme === 'blue' ? '#1e40af' : '#334155' }}>
+        <div className="p-6 border-t flex-shrink-0" style={{ borderColor: getBorderColor() }}>
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-medium transition-all duration-200 group"

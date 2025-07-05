@@ -16,7 +16,7 @@ export default function DashboardPage() {
       description: "+12% this month",
       icon: "fas fa-users",
       iconColor: "text-blue-600",
-      iconBgColor: "bg-blue-100",
+      iconBgColor: "bg-blue-100 dark:bg-blue-900/20",
     },
     {
       title: "Upcoming Events",
@@ -24,7 +24,7 @@ export default function DashboardPage() {
       description: "Next: Sunday Service",
       icon: "fas fa-calendar",
       iconColor: "text-indigo-600",
-      iconBgColor: "bg-indigo-100",
+      iconBgColor: "bg-indigo-100 dark:bg-indigo-900/20",
     },
     {
       title: "Monthly Donations",
@@ -32,7 +32,7 @@ export default function DashboardPage() {
       description: "+8% vs last month",
       icon: "fas fa-donate",
       iconColor: "text-green-600",
-      iconBgColor: "bg-green-100",
+      iconBgColor: "bg-green-100 dark:bg-green-900/20",
     },
     {
       title: "Active Groups",
@@ -40,7 +40,7 @@ export default function DashboardPage() {
       description: "3 new this week",
       icon: "fas fa-layer-group",
       iconColor: "text-yellow-600",
-      iconBgColor: "bg-yellow-100",
+      iconBgColor: "bg-yellow-100 dark:bg-yellow-900/20",
     },
   ];
 
@@ -63,7 +63,7 @@ export default function DashboardPage() {
       time: "2 min ago",
       icon: "fas fa-user-plus",
       color: "text-green-600",
-      bgColor: "bg-green-100",
+      bgColor: "bg-green-100 dark:bg-green-900/20",
     },
     {
       id: 2,
@@ -73,7 +73,7 @@ export default function DashboardPage() {
       time: "10 min ago",
       icon: "fas fa-calendar-plus",
       color: "text-blue-600",
-      bgColor: "bg-blue-100",
+      bgColor: "bg-blue-100 dark:bg-blue-900/20",
     },
     {
       id: 3,
@@ -83,7 +83,7 @@ export default function DashboardPage() {
       time: "30 min ago",
       icon: "fas fa-donate",
       color: "text-yellow-600",
-      bgColor: "bg-yellow-100",
+      bgColor: "bg-yellow-100 dark:bg-yellow-900/20",
     },
     {
       id: 4,
@@ -93,7 +93,7 @@ export default function DashboardPage() {
       time: "1 hr ago",
       icon: "fas fa-user-edit",
       color: "text-purple-600",
-      bgColor: "bg-purple-100",
+      bgColor: "bg-purple-100 dark:bg-purple-900/20",
     },
   ];
 
@@ -177,7 +177,7 @@ export default function DashboardPage() {
               <h2 className="text-4xl font-bold mb-3 font-['Poppins']">
                 Welcome back, <span className="text-yellow-300">Admin</span>! 👋
               </h2>
-              <p className="text-blue-100 text-lg">
+              <p className="text-blue-100 dark:text-blue-200 text-lg">
                 Here's what's happening with your church community today.
               </p>
             </div>
@@ -185,7 +185,7 @@ export default function DashboardPage() {
               <button className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center">
                 <i className="fas fa-plus mr-2"></i>Add Event
               </button>
-              <button className="bg-white text-blue-600 hover:bg-gray-100 font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center">
+              <button className="bg-white text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-200 font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center">
                 <i className="fas fa-user-plus mr-2"></i>Add Member
               </button>
             </div>
@@ -201,9 +201,9 @@ export default function DashboardPage() {
               <i className={`${stat.icon} text-3xl ${stat.iconColor}`}></i>
             </div>
             <div>
-              <dt className="text-sm font-medium text-gray-500 mb-1">{stat.title}</dt>
-              <dd className="text-3xl font-bold text-gray-900">{stat.value}</dd>
-              <p className="text-xs text-green-600 mt-1">{stat.description}</p>
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{stat.title}</dt>
+              <dd className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</dd>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">{stat.description}</p>
             </div>
           </div>
         ))}
@@ -214,25 +214,27 @@ export default function DashboardPage() {
         {/* Attendance Chart */}
         <div className="chart-container rounded-2xl shadow-lg p-8 col-span-2">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 font-['Poppins']">Attendance Overview</h3>
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-white font-['Poppins']">Attendance Overview</h3>
             <div className="flex space-x-2">
-              <button className="px-4 py-2 bg-blue-100 text-blue-600 rounded-lg text-sm font-medium">This Month</button>
-              <button className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium">Last Month</button>
+              <button className="px-4 py-2 bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium">This Month</button>
+              <button className="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg text-sm font-medium">Last Month</button>
             </div>
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={attendanceData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
                 <XAxis 
                   dataKey="name" 
                   stroke="#6b7280"
+                  className="dark:stroke-gray-400"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis 
                   stroke="#6b7280"
+                  className="dark:stroke-gray-400"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -270,8 +272,8 @@ export default function DashboardPage() {
         </div>
         
         {/* Quick Actions */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6 font-['Poppins']">Quick Actions</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+          <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-6 font-['Poppins']">Quick Actions</h3>
           <div className="grid grid-cols-1 gap-4">
             {quickActions.map((action, index) => (
               <button
@@ -290,50 +292,50 @@ export default function DashboardPage() {
       {/* Recent Activity & Upcoming Events */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Recent Activity */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 font-['Poppins']">Recent Activity</h3>
-            <button className="text-blue-600 hover:text-blue-700 font-medium">View All</button>
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-white font-['Poppins']">Recent Activity</h3>
+            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">View All</button>
           </div>
           <div className="space-y-4">
             {recentActivities.map((activity) => (
-              <div key={activity.id} className="activity-item flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-all duration-200">
+              <div key={activity.id} className="activity-item flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
                 <div className="flex items-center">
                   <div className={`w-12 h-12 ${activity.bgColor} rounded-full flex items-center justify-center mr-4`}>
                     <i className={`${activity.icon} ${activity.color}`}></i>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{activity.title}</p>
-                    <p className="text-sm text-gray-500">{activity.description}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{activity.title}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{activity.description}</p>
                   </div>
                 </div>
-                <span className="text-xs text-gray-400">{activity.time}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{activity.time}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Upcoming Events */}
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-800 font-['Poppins']">Upcoming Events</h3>
-            <button className="text-blue-600 hover:text-blue-700 font-medium">View All</button>
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-white font-['Poppins']">Upcoming Events</h3>
+            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">View All</button>
           </div>
           <div className="space-y-4">
             {upcomingEvents.map((event) => (
-              <div key={event.id} className="event-item flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-all duration-200">
+              <div key={event.id} className="event-item flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200">
                 <div className="flex items-center">
                   <div className={`w-12 h-12 ${event.color} rounded-full flex items-center justify-center mr-4`}>
                     <i className={`fas fa-calendar text-white`}></i>
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-900">{event.title}</p>
-                    <p className="text-sm text-gray-500">{event.date} at {event.time}</p>
+                    <p className="font-semibold text-gray-900 dark:text-white">{event.title}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{event.date} at {event.time}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-gray-400">{event.location}</span>
-                  <p className="text-xs text-gray-500">{event.attendees} attending</p>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{event.location}</span>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{event.attendees} attending</p>
                 </div>
               </div>
             ))}

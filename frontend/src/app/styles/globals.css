@@ -28,6 +28,12 @@ body {
 body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+  transition: background 0.3s ease;
+}
+
+/* Dark mode body background */
+.dark body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
 /* Custom gradient classes */
@@ -35,8 +41,17 @@ body {
   background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 100%);
 }
 
+.dark .sidebar-gradient {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
 .card-gradient {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  transition: all 0.3s ease;
+}
+
+.dark .card-gradient {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
 }
 
 .stat-card {
@@ -45,19 +60,39 @@ body {
   transition: all 0.3s ease;
 }
 
+.dark .stat-card {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border: 1px solid rgba(71, 85, 105, 0.8);
+}
+
 .stat-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.dark .stat-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .welcome-gradient {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
 }
 
+.dark .welcome-gradient {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
 .chart-container {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dark .chart-container {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border: 1px solid rgba(71, 85, 105, 0.8);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
 .activity-item {
@@ -65,10 +100,19 @@ body {
   border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
+.dark .activity-item {
+  border: 1px solid rgba(71, 85, 105, 0.8);
+}
+
 .activity-item:hover {
   background: rgba(59, 130, 246, 0.05);
   transform: translateX(4px);
   border-color: rgba(59, 130, 246, 0.2);
+}
+
+.dark .activity-item:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .quick-action-btn {
@@ -87,14 +131,34 @@ body {
   transition: all 0.3s ease;
 }
 
+.dark .member-card {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border: 1px solid rgba(71, 85, 105, 0.8);
+}
+
 .member-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
+.dark .member-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
 .search-input {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s ease;
+}
+
+.dark .search-input {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border: 1px solid rgba(71, 85, 105, 0.8);
+  color: #f8fafc;
+}
+
+.dark .search-input::placeholder {
+  color: #94a3b8;
 }
 
 /* Custom animations */
@@ -121,11 +185,78 @@ body {
   border-radius: 3px;
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: #334155;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #64748b;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dark mode text colors */
+.dark {
+  color: #f8fafc;
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: #f8fafc;
+}
+
+.dark p {
+  color: #e2e8f0;
+}
+
+/* Dark mode form elements */
+.dark input, .dark textarea, .dark select {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f8fafc;
+}
+
+.dark input:focus, .dark textarea:focus, .dark select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Dark mode buttons */
+.dark .btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.dark .btn-secondary {
+  background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+  color: #f8fafc;
+}
+
+/* Dark mode tables */
+.dark table {
+  background-color: #1e293b;
+}
+
+.dark th {
+  background-color: #334155;
+  color: #f8fafc;
+}
+
+.dark td {
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.dark tr:hover {
+  background-color: #334155;
 }
