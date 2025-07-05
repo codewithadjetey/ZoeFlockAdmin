@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { DEMO_CREDENTIALS } from "@/utils/constants";
 import { isValidEmail, cn } from "@/utils/helpers";
 import { LoadingSpinner, Modal } from "@/components/shared";
+import Link from "next/link";
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
@@ -41,9 +42,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 dark:from-blue-600 dark:via-purple-700 dark:to-pink-700 transition-all duration-500">
+    <div className="w-full">
       {/* Login Form */}
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 mx-4 transition-all duration-300">
+      <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 mx-auto transition-all duration-300">
         <div className="flex flex-col items-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4 shadow-xl">
             <i className="fas fa-church text-2xl text-white" />
@@ -133,6 +134,22 @@ export default function LoginPage() {
             )}
           </button>
         </form>
+
+        {/* Navigation Links */}
+        <div className="mt-6 text-center space-y-2">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Don't have an account?{" "}
+            <Link href="/auth/register" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200">
+              Register here
+            </Link>
+          </div>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Need to verify your email?{" "}
+            <Link href="/auth/verify-email" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200">
+              Verify email
+            </Link>
+          </div>
+        </div>
 
         <div className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500 transition-colors duration-200">
           <p className="mb-2">Demo Credentials:</p>
