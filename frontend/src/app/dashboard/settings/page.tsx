@@ -1,284 +1,218 @@
 "use client";
 import React, { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { 
+  PageHeader, 
+  ContentCard,
+  ToggleSwitch,
+  FormField,
+  TabNavigation,
+  SelectInput
+} from "@/components/ui";
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState("notifications");
-  const [notifications, setNotifications] = useState({
+  const [activeTab, setActiveTab] = useState("general");
+  const [settings, setSettings] = useState({
     emailNotifications: true,
     smsNotifications: false,
-    pushNotifications: true,
     weeklyReports: true,
-    monthlyReports: true,
-    eventReminders: true,
-    donationReceipts: true,
+    autoBackup: true,
+    darkMode: false,
+    language: "English",
+    timezone: "UTC-5",
+    dateFormat: "MM/DD/YYYY",
   });
 
-  const [security, setSecurity] = useState({
-    twoFactorAuth: false,
-    sessionTimeout: "30",
-    passwordExpiry: "90",
-    loginAttempts: "5",
-  });
+  const handleSettingChange = (key: string, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+  };
 
   const tabs = [
+    { id: "general", label: "General", icon: "fas fa-cog" },
     { id: "notifications", label: "Notifications", icon: "fas fa-bell" },
     { id: "security", label: "Security", icon: "fas fa-shield-alt" },
     { id: "appearance", label: "Appearance", icon: "fas fa-palette" },
-    { id: "backup", label: "Backup", icon: "fas fa-download" },
   ];
 
-  const handleNotificationToggle = (key: string) => {
-    setNotifications(prev => ({
-      ...prev,
-      [key]: !prev[key as keyof typeof prev]
-    }));
-  };
+  const renderGeneralSettings = () => (
+    <div className="space-y-6">
+      <FormField label="Language">
+        <SelectInput
+          value={settings.language}
+          onChange={(value: string) => handleSettingChange("language", value)}
+          options={[
+            { value: "English", label: "English" },
+            { value: "Spanish", label: "Spanish" },
+            { value: "French", label: "French" },
+          ]}
+        />
+      </FormField>
+      
+      <FormField label="Timezone">
+        <SelectInput
+          value={settings.timezone}
+          onChange={(value: string) => handleSettingChange("timezone", value)}
+          options={[
+            { value: "UTC-5", label: "Eastern Time (UTC-5)" },
+            { value: "UTC-6", label: "Central Time (UTC-6)" },
+            { value: "UTC-7", label: "Mountain Time (UTC-7)" },
+            { value: "UTC-8", label: "Pacific Time (UTC-8)" },
+          ]}
+        />
+      </FormField>
+      
+      <FormField label="Date Format">
+        <SelectInput
+          value={settings.dateFormat}
+          onChange={(value: string) => handleSettingChange("dateFormat", value)}
+          options={[
+            { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
+            { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
+            { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
+          ]}
+        />
+      </FormField>
+    </div>
+  );
 
-  const handleSecurityChange = (key: string, value: string) => {
-    setSecurity(prev => ({
-      ...prev,
-      [key]: value
-    }));
+  const renderNotificationSettings = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Email Notifications</h3>
+          <p className="text-sm text-gray-600">Receive notifications via email</p>
+        </div>
+        <ToggleSwitch
+          checked={settings.emailNotifications}
+          onChange={(checked) => handleSettingChange("emailNotifications", checked)}
+        />
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">SMS Notifications</h3>
+          <p className="text-sm text-gray-600">Receive notifications via SMS</p>
+        </div>
+        <ToggleSwitch
+          checked={settings.smsNotifications}
+          onChange={(checked) => handleSettingChange("smsNotifications", checked)}
+        />
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Weekly Reports</h3>
+          <p className="text-sm text-gray-600">Receive weekly summary reports</p>
+        </div>
+        <ToggleSwitch
+          checked={settings.weeklyReports}
+          onChange={(checked) => handleSettingChange("weeklyReports", checked)}
+        />
+      </div>
+    </div>
+  );
+
+  const renderSecuritySettings = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Auto Backup</h3>
+          <p className="text-sm text-gray-600">Automatically backup data weekly</p>
+        </div>
+        <ToggleSwitch
+          checked={settings.autoBackup}
+          onChange={(checked) => handleSettingChange("autoBackup", checked)}
+        />
+      </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Password</h3>
+        <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
+          Change Password
+        </button>
+      </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
+        <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
+          Enable 2FA
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderAppearanceSettings = () => (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Dark Mode</h3>
+          <p className="text-sm text-gray-600">Switch to dark theme</p>
+        </div>
+        <ToggleSwitch
+          checked={settings.darkMode}
+          onChange={(checked) => handleSettingChange("darkMode", checked)}
+        />
+      </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900">Theme Colors</h3>
+        <div className="grid grid-cols-5 gap-3">
+          {["blue", "green", "purple", "orange", "pink"].map((color) => (
+            <button
+              key={color}
+              className={`w-12 h-12 rounded-full bg-${color}-500 border-2 border-white shadow-md hover:scale-110 transition-transform duration-200`}
+              title={color.charAt(0).toUpperCase() + color.slice(1)}
+            ></button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "general":
+        return renderGeneralSettings();
+      case "notifications":
+        return renderNotificationSettings();
+      case "security":
+        return renderSecuritySettings();
+      case "appearance":
+        return renderAppearanceSettings();
+      default:
+        return renderGeneralSettings();
+    }
   };
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <section className="mb-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 font-['Poppins'] mb-2">Settings</h2>
-            <p className="text-gray-600">Manage your system preferences and account settings</p>
+      <PageHeader
+        title="Settings"
+        description="Manage your account and application preferences"
+      />
+
+      <ContentCard>
+        <TabNavigation
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+        
+        <div className="mt-8">
+          {renderTabContent()}
+        </div>
+        
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-4">
+            <button className="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
+              Cancel
+            </button>
+            <button className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all duration-200">
+              Save Changes
+            </button>
           </div>
         </div>
-      </section>
-
-      {/* Settings Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <nav className="space-y-2">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                    activeTab === tab.id
-                      ? "bg-blue-100 text-blue-700 font-medium"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <i className={`${tab.icon} mr-3 text-lg`}></i>
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            {/* Notification Settings */}
-            {activeTab === "notifications" && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 font-['Poppins'] mb-6">Notification Preferences</h3>
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Email Notifications</h4>
-                        <p className="text-sm text-gray-500">Receive notifications via email</p>
-                      </div>
-                      <button
-                        onClick={() => handleNotificationToggle("emailNotifications")}
-                        className={`w-12 h-6 rounded-full transition-colors ${
-                          notifications.emailNotifications ? "bg-blue-600" : "bg-gray-300"
-                        }`}
-                      >
-                        <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                          notifications.emailNotifications ? "translate-x-6" : "translate-x-1"
-                        }`}></div>
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                      <div>
-                        <h4 className="font-medium text-gray-900">SMS Notifications</h4>
-                        <p className="text-sm text-gray-500">Receive notifications via SMS</p>
-                      </div>
-                      <button
-                        onClick={() => handleNotificationToggle("smsNotifications")}
-                        className={`w-12 h-6 rounded-full transition-colors ${
-                          notifications.smsNotifications ? "bg-blue-600" : "bg-gray-300"
-                        }`}
-                      >
-                        <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                          notifications.smsNotifications ? "translate-x-6" : "translate-x-1"
-                        }`}></div>
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Push Notifications</h4>
-                        <p className="text-sm text-gray-500">Receive push notifications</p>
-                      </div>
-                      <button
-                        onClick={() => handleNotificationToggle("pushNotifications")}
-                        className={`w-12 h-6 rounded-full transition-colors ${
-                          notifications.pushNotifications ? "bg-blue-600" : "bg-gray-300"
-                        }`}
-                      >
-                        <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                          notifications.pushNotifications ? "translate-x-6" : "translate-x-1"
-                        }`}></div>
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Event Reminders</h4>
-                        <p className="text-sm text-gray-500">Get reminded about upcoming events</p>
-                      </div>
-                      <button
-                        onClick={() => handleNotificationToggle("eventReminders")}
-                        className={`w-12 h-6 rounded-full transition-colors ${
-                          notifications.eventReminders ? "bg-blue-600" : "bg-gray-300"
-                        }`}
-                      >
-                        <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                          notifications.eventReminders ? "translate-x-6" : "translate-x-1"
-                        }`}></div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Security Settings */}
-            {activeTab === "security" && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 font-['Poppins'] mb-6">Security Settings</h3>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                    <div>
-                      <h4 className="font-medium text-gray-900">Two-Factor Authentication</h4>
-                      <p className="text-sm text-gray-500">Add an extra layer of security</p>
-                    </div>
-                    <button
-                      onClick={() => setSecurity(prev => ({ ...prev, twoFactorAuth: !prev.twoFactorAuth }))}
-                      className={`w-12 h-6 rounded-full transition-colors ${
-                        security.twoFactorAuth ? "bg-blue-600" : "bg-gray-300"
-                      }`}
-                    >
-                      <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                        security.twoFactorAuth ? "translate-x-6" : "translate-x-1"
-                      }`}></div>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Session Timeout (minutes)</label>
-                      <select
-                        value={security.sessionTimeout}
-                        onChange={(e) => handleSecurityChange("sessionTimeout", e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="15">15 minutes</option>
-                        <option value="30">30 minutes</option>
-                        <option value="60">1 hour</option>
-                        <option value="120">2 hours</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Password Expiry (days)</label>
-                      <select
-                        value={security.passwordExpiry}
-                        onChange={(e) => handleSecurityChange("passwordExpiry", e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="30">30 days</option>
-                        <option value="60">60 days</option>
-                        <option value="90">90 days</option>
-                        <option value="180">180 days</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl transition-colors">
-                      Save Security Settings
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Appearance Settings */}
-            {activeTab === "appearance" && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 font-['Poppins'] mb-6">Appearance Settings</h3>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Theme</label>
-                    <div className="grid grid-cols-3 gap-4">
-                      <button className="p-4 border-2 border-blue-500 rounded-xl bg-blue-50">
-                        <div className="w-full h-8 bg-blue-600 rounded mb-2"></div>
-                        <span className="text-sm font-medium">Light</span>
-                      </button>
-                      <button className="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500">
-                        <div className="w-full h-8 bg-gray-800 rounded mb-2"></div>
-                        <span className="text-sm font-medium">Dark</span>
-                      </button>
-                      <button className="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500">
-                        <div className="w-full h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded mb-2"></div>
-                        <span className="text-sm font-medium">Auto</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Backup Settings */}
-            {activeTab === "backup" && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 font-['Poppins'] mb-6">Backup & Export</h3>
-                <div className="space-y-6">
-                  <div className="p-6 border border-gray-200 rounded-xl">
-                    <h4 className="font-medium text-gray-900 mb-2">Export Data</h4>
-                    <p className="text-sm text-gray-500 mb-4">Download your church data in various formats</p>
-                    <div className="flex space-x-4">
-                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-colors">
-                        Export as CSV
-                      </button>
-                      <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl transition-colors">
-                        Export as JSON
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="p-6 border border-gray-200 rounded-xl">
-                    <h4 className="font-medium text-gray-900 mb-2">Backup Settings</h4>
-                    <p className="text-sm text-gray-500 mb-4">Configure automatic backup settings</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Auto backup every week</span>
-                      <button className="w-12 h-6 bg-blue-600 rounded-full">
-                        <div className="w-5 h-5 bg-white rounded-full translate-x-6"></div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      </ContentCard>
     </DashboardLayout>
   );
 } 

@@ -1,6 +1,16 @@
 "use client";
 import React, { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { 
+  PageHeader, 
+  SearchInput, 
+  SelectInput, 
+  ViewToggle, 
+  DataGrid, 
+  ContentCard,
+  StatusBadge,
+  CategoryBadge 
+} from "@/components/ui";
 
 export default function EventsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
@@ -86,7 +96,7 @@ export default function EventsPage() {
       time: "7:00 PM",
       duration: "1.5 hours",
       category: "Fellowship",
-      location: "Conference Room",
+      location: "Women's Room",
       attendees: 22,
       maxAttendees: 30,
       status: "Upcoming",
@@ -102,200 +112,127 @@ export default function EventsPage() {
     return matchesSearch && matchesCategory;
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Upcoming":
-        return "bg-blue-100 text-blue-800";
-      case "Completed":
-        return "bg-green-100 text-green-800";
-      case "Cancelled":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const categoryOptions = [
+    { value: "All Categories", label: "All Categories" },
+    { value: "Worship", label: "Worship" },
+    { value: "Education", label: "Education" },
+    { value: "Prayer", label: "Prayer" },
+    { value: "Music", label: "Music" },
+    { value: "Fellowship", label: "Fellowship" },
+  ];
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Worship":
-        return "bg-blue-100 text-blue-800";
-      case "Education":
-        return "bg-green-100 text-green-800";
-      case "Prayer":
-        return "bg-purple-100 text-purple-800";
-      case "Music":
-        return "bg-orange-100 text-orange-800";
-      case "Fellowship":
-        return "bg-pink-100 text-pink-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const viewToggleOptions = [
+    { value: "grid", label: "Grid", icon: "fas fa-th" },
+    { value: "calendar", label: "Calendar", icon: "fas fa-calendar" },
+  ];
 
-  const handleViewModeChange = (mode: "grid" | "calendar", e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setViewMode(mode);
+  const renderEventCard = (event: any) => (
+    <div className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-12 h-12 ${event.color} rounded-xl flex items-center justify-center`}>
+          <i className="fas fa-calendar text-white text-xl"></i>
+        </div>
+        <StatusBadge status={event.status} />
+      </div>
+      
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">{event.title}</h3>
+      <p className="text-sm text-gray-600 mb-4">{event.description}</p>
+      
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center text-sm">
+          <i className="fas fa-calendar-day text-gray-400 mr-2"></i>
+          <span className="text-gray-600">
+            {new Date(event.date).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+        </div>
+        <div className="flex items-center text-sm">
+          <i className="fas fa-clock text-gray-400 mr-2"></i>
+          <span className="text-gray-600">{event.time} ({event.duration})</span>
+        </div>
+        <div className="flex items-center text-sm">
+          <i className="fas fa-map-marker-alt text-gray-400 mr-2"></i>
+          <span className="text-gray-600">{event.location}</span>
+        </div>
+        <div className="flex items-center text-sm">
+          <i className="fas fa-users text-gray-400 mr-2"></i>
+          <span className="text-gray-600">
+            {event.attendees}/{event.maxAttendees} attendees
+          </span>
+        </div>
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <CategoryBadge category={event.category} />
+        <div className="flex space-x-2">
+          <button className="text-blue-600 hover:text-blue-700 text-sm">
+            <i className="fas fa-edit"></i>
+          </button>
+          <button className="text-red-600 hover:text-red-700 text-sm">
+            <i className="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const handleViewModeChange = (value: string) => {
+    setViewMode(value as "grid" | "calendar");
   };
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <section className="mb-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 font-['Poppins'] mb-2">Events</h2>
-              <p className="text-gray-600">Manage church events and activities</p>
-            </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center mt-4 md:mt-0">
-              <i className="fas fa-calendar-plus mr-2"></i>Create Event
-            </button>
-          </div>
+      <PageHeader
+        title="Events"
+        description="Manage church events and activities"
+        actionButton={{
+          text: "Create Event",
+          icon: "fas fa-calendar-plus",
+          onClick: () => console.log("Create event clicked")
+        }}
+      />
 
-          {/* Search and Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <div className="relative">
-                <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                <input
-                  type="text"
-                  placeholder="Search events..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 search-input rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="relative">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full px-4 py-3 appearance-none bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-              >
-                <option>All Categories</option>
-                <option>Worship</option>
-                <option>Education</option>
-                <option>Prayer</option>
-                <option>Music</option>
-                <option>Fellowship</option>
-              </select>
-              <i className="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-            </div>
-          </div>
-
-          {/* View Toggle */}
-          <div className="flex items-center justify-between mt-6 relative z-10 view-toggle-container" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">View:</span>
-              <div className="flex bg-gray-100 rounded-lg p-1" onClick={(e) => e.stopPropagation()}>
-                <button
-                  data-view-toggle="grid"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.nativeEvent.stopImmediatePropagation();
-                    setViewMode("grid");
-                  }}
-                  className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${
-                    viewMode === "grid"
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  <i className="fas fa-th mr-1"></i>Grid
-                </button>
-                <button
-                  data-view-toggle="calendar"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.nativeEvent.stopImmediatePropagation();
-                    setViewMode("calendar");
-                  }}
-                  className={`px-3 py-1 rounded-md text-sm font-medium transition-all duration-200 ${
-                    viewMode === "calendar"
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  <i className="fas fa-calendar mr-1"></i>Calendar
-                </button>
-              </div>
-            </div>
-            <div className="text-sm text-gray-500">
-              <span>{filteredEvents.length} events</span>
-            </div>
-          </div>
+      {/* Search and Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="md:col-span-2">
+          <SearchInput
+            placeholder="Search events..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
         </div>
-      </section>
+        <SelectInput
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+          options={categoryOptions}
+        />
+      </div>
+
+      {/* View Toggle */}
+      <ViewToggle
+        value={viewMode}
+        onChange={handleViewModeChange}
+        options={viewToggleOptions}
+        count={filteredEvents.length}
+        countLabel="events"
+      />
 
       {/* Events Grid */}
       {viewMode === "grid" && (
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => (
-            <div key={event.id} className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 ${event.color} rounded-xl flex items-center justify-center`}>
-                  <i className="fas fa-calendar text-white text-xl"></i>
-                </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(event.status)}`}>
-                  {event.status}
-                </span>
-              </div>
-              
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{event.title}</h3>
-              <p className="text-sm text-gray-600 mb-4">{event.description}</p>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex items-center text-sm">
-                  <i className="fas fa-calendar-day text-gray-400 mr-2"></i>
-                  <span className="text-gray-600">
-                    {new Date(event.date).toLocaleDateString("en-US", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <i className="fas fa-clock text-gray-400 mr-2"></i>
-                  <span className="text-gray-600">{event.time} ({event.duration})</span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <i className="fas fa-map-marker-alt text-gray-400 mr-2"></i>
-                  <span className="text-gray-600">{event.location}</span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <i className="fas fa-users text-gray-400 mr-2"></i>
-                  <span className="text-gray-600">
-                    {event.attendees}/{event.maxAttendees} attendees
-                  </span>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
-                  {event.category}
-                </span>
-                <div className="flex space-x-2">
-                  <button className="text-blue-600 hover:text-blue-700 text-sm">
-                    <i className="fas fa-edit"></i>
-                  </button>
-                  <button className="text-red-600 hover:text-red-700 text-sm">
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </section>
+        <DataGrid
+          data={filteredEvents}
+          renderCard={renderEventCard}
+          columns={3}
+        />
       )}
 
       {/* Calendar View */}
       {viewMode === "calendar" && (
-        <section className="bg-white rounded-2xl shadow-lg p-8">
+        <ContentCard>
           <div className="text-center mb-6">
             <h3 className="text-xl font-bold text-gray-900 font-['Poppins']">March 2024</h3>
           </div>
@@ -334,7 +271,7 @@ export default function EventsPage() {
               );
             })}
           </div>
-        </section>
+        </ContentCard>
       )}
     </DashboardLayout>
   );

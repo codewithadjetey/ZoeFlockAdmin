@@ -1,340 +1,299 @@
 "use client";
 import React, { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { 
+  PageHeader, 
+  SearchInput, 
+  SelectInput, 
+  ViewToggle, 
+  DataGrid, 
+  DataTable,
+  StatCard,
+  StatusBadge 
+} from "@/components/ui";
 
 export default function DonationsPage() {
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All Categories");
+  const [typeFilter, setTypeFilter] = useState("All Types");
   const [statusFilter, setStatusFilter] = useState("All Status");
 
   const donations = [
     {
       id: 1,
-      donor: "John Smith",
-      email: "john@example.com",
-      amount: 250.00,
-      category: "Tithe",
-      method: "Online",
-      date: "2024-03-20",
+      donor: "Sarah Johnson",
+      email: "sarah@example.com",
+      amount: 150.00,
+      type: "Tithe",
+      date: "2024-03-15",
       status: "Completed",
-      note: "Monthly tithe",
+      method: "Online",
+      reference: "TXN-001",
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=60&h=60&fit=crop&crop=face",
     },
     {
       id: 2,
-      donor: "Sarah Johnson",
-      email: "sarah@example.com",
-      amount: 100.00,
-      category: "Offering",
-      method: "Cash",
-      date: "2024-03-19",
+      donor: "John Smith",
+      email: "john@example.com",
+      amount: 75.50,
+      type: "Offering",
+      date: "2024-03-14",
       status: "Completed",
-      note: "Sunday offering",
+      method: "Cash",
+      reference: "TXN-002",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face",
     },
     {
       id: 3,
-      donor: "Michael Brown",
-      email: "michael@example.com",
-      amount: 500.00,
-      category: "Building Fund",
-      method: "Check",
-      date: "2024-03-18",
+      donor: "Emily Davis",
+      email: "emily@example.com",
+      amount: 200.00,
+      type: "Building Fund",
+      date: "2024-03-13",
       status: "Pending",
-      note: "Building fund contribution",
+      method: "Check",
+      reference: "TXN-003",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face",
     },
     {
       id: 4,
-      donor: "Emily Davis",
-      email: "emily@example.com",
-      amount: 75.00,
-      category: "Missions",
-      method: "Online",
-      date: "2024-03-17",
+      donor: "Michael Brown",
+      email: "michael@example.com",
+      amount: 50.00,
+      type: "Tithe",
+      date: "2024-03-12",
       status: "Completed",
-      note: "Missions support",
+      method: "Online",
+      reference: "TXN-004",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face",
     },
     {
       id: 5,
-      donor: "David Wilson",
-      email: "david@example.com",
-      amount: 150.00,
-      category: "Tithe",
-      method: "Cash",
-      date: "2024-03-16",
+      donor: "Lisa Wilson",
+      email: "lisa@example.com",
+      amount: 300.00,
+      type: "Missions",
+      date: "2024-03-11",
       status: "Completed",
-      note: "Weekly tithe",
+      method: "Online",
+      reference: "TXN-005",
+      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&crop=face",
     },
     {
       id: 6,
-      donor: "Lisa Miller",
-      email: "lisa@example.com",
-      amount: 300.00,
-      category: "Special Project",
+      donor: "David Miller",
+      email: "david@example.com",
+      amount: 125.75,
+      type: "Offering",
+      date: "2024-03-10",
+      status: "Failed",
       method: "Online",
-      date: "2024-03-15",
-      status: "Completed",
-      note: "Youth ministry support",
+      reference: "TXN-006",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&h=60&fit=crop&crop=face",
     },
   ];
 
   const filteredDonations = donations.filter((donation) => {
     const matchesSearch = donation.donor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         donation.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === "All Categories" || donation.category === categoryFilter;
+                         donation.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         donation.reference.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === "All Types" || donation.type === typeFilter;
     const matchesStatus = statusFilter === "All Status" || donation.status === statusFilter;
     
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesSearch && matchesType && matchesStatus;
   });
 
-  const totalDonations = filteredDonations.reduce((sum, donation) => sum + donation.amount, 0);
-  const completedDonations = filteredDonations.filter(d => d.status === "Completed").reduce((sum, donation) => sum + donation.amount, 0);
-  const pendingDonations = filteredDonations.filter(d => d.status === "Pending").reduce((sum, donation) => sum + donation.amount, 0);
+  const totalAmount = filteredDonations.reduce((sum, donation) => sum + donation.amount, 0);
+  const completedDonations = filteredDonations.filter(d => d.status === "Completed").length;
+  const pendingDonations = filteredDonations.filter(d => d.status === "Pending").length;
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-100 text-green-800";
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "Failed":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const typeOptions = [
+    { value: "All Types", label: "All Types" },
+    { value: "Tithe", label: "Tithe" },
+    { value: "Offering", label: "Offering" },
+    { value: "Building Fund", label: "Building Fund" },
+    { value: "Missions", label: "Missions" },
+  ];
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Tithe":
-        return "bg-blue-100 text-blue-800";
-      case "Offering":
-        return "bg-green-100 text-green-800";
-      case "Building Fund":
-        return "bg-purple-100 text-purple-800";
-      case "Missions":
-        return "bg-orange-100 text-orange-800";
-      case "Special Project":
-        return "bg-pink-100 text-pink-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  const statusOptions = [
+    { value: "All Status", label: "All Status" },
+    { value: "Completed", label: "Completed" },
+    { value: "Pending", label: "Pending" },
+    { value: "Failed", label: "Failed" },
+  ];
 
-  const getMethodColor = (method: string) => {
-    switch (method) {
-      case "Online":
-        return "bg-blue-100 text-blue-800";
-      case "Cash":
-        return "bg-green-100 text-green-800";
-      case "Check":
-        return "bg-purple-100 text-purple-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
+  const viewToggleOptions = [
+    { value: "grid", label: "Grid", icon: "fas fa-th" },
+    { value: "list", label: "List", icon: "fas fa-list" },
+  ];
+
+  const tableColumns = [
+    { key: "donor", label: "Donor", render: (_: any, donation: any) => (
+      <div className="flex items-center">
+        <img
+          src={donation.avatar}
+          alt={donation.donor}
+          className="w-10 h-10 rounded-full"
+        />
+        <div className="ml-4">
+          <div className="text-sm font-medium text-gray-900">{donation.donor}</div>
+          <div className="text-sm text-gray-500">{donation.email}</div>
+        </div>
+      </div>
+    )},
+    { key: "amount", label: "Amount", render: (amount: any) => `$${amount.toFixed(2)}` },
+    { key: "type", label: "Type" },
+    { key: "method", label: "Method" },
+    { key: "status", label: "Status", render: (status: any) => <StatusBadge status={status} /> },
+    { key: "date", label: "Date", render: (date: any) => new Date(date).toLocaleDateString() },
+    { key: "actions", label: "Actions", render: () => (
+      <div className="text-sm font-medium">
+        <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
+        <button className="text-red-600 hover:text-red-900">Delete</button>
+      </div>
+    )},
+  ];
+
+  const renderDonationCard = (donation: any) => (
+    <div className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <img
+            src={donation.avatar}
+            alt={donation.donor}
+            className="w-12 h-12 rounded-full border-2 border-white shadow-md"
+          />
+          <div className="ml-3">
+            <h3 className="text-lg font-semibold text-gray-900">{donation.donor}</h3>
+            <p className="text-sm text-gray-500">{donation.email}</p>
+          </div>
+        </div>
+        <StatusBadge status={donation.status} />
+      </div>
+      
+      <div className="space-y-3 mb-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Amount:</span>
+          <span className="text-lg font-bold text-green-600">${donation.amount.toFixed(2)}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Type:</span>
+          <span className="text-sm font-medium text-gray-900">{donation.type}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Method:</span>
+          <span className="text-sm text-gray-900">{donation.method}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Date:</span>
+          <span className="text-sm text-gray-900">
+            {new Date(donation.date).toLocaleDateString()}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Reference:</span>
+          <span className="text-xs text-gray-500 font-mono">{donation.reference}</span>
+        </div>
+      </div>
+      
+      <div className="flex justify-end space-x-2">
+        <button className="text-blue-600 hover:text-blue-700 text-sm">
+          <i className="fas fa-eye mr-1"></i>View
+        </button>
+        <button className="text-red-600 hover:text-red-700 text-sm">
+          <i className="fas fa-trash mr-1"></i>Delete
+        </button>
+      </div>
+    </div>
+  );
+
+  const handleViewModeChange = (value: string) => {
+    setViewMode(value as "grid" | "list");
   };
 
   return (
     <DashboardLayout>
-      {/* Page Header */}
-      <section className="mb-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 font-['Poppins'] mb-2">Donations</h2>
-              <p className="text-gray-600">Track and manage church donations</p>
-            </div>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center mt-4 md:mt-0">
-              <i className="fas fa-plus mr-2"></i>Record Donation
-            </button>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2">
-              <div className="relative">
-                <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                <input
-                  type="text"
-                  placeholder="Search donors..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 search-input rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="relative">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full px-4 py-3 appearance-none bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-              >
-                <option>All Categories</option>
-                <option>Tithe</option>
-                <option>Offering</option>
-                <option>Building Fund</option>
-                <option>Missions</option>
-                <option>Special Project</option>
-              </select>
-              <i className="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-            </div>
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-4 py-3 appearance-none bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-              >
-                <option>All Status</option>
-                <option>Completed</option>
-                <option>Pending</option>
-                <option>Failed</option>
-              </select>
-              <i className="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PageHeader
+        title="Donations"
+        description="Track and manage church donations"
+        actionButton={{
+          text: "Record Donation",
+          icon: "fas fa-plus",
+          onClick: () => console.log("Record donation clicked")
+        }}
+      />
 
       {/* Statistics Cards */}
-      <section className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card rounded-2xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <i className="fas fa-dollar-sign text-green-600 text-xl"></i>
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">${totalDonations.toFixed(2)}</h3>
-            <p className="text-sm text-gray-600">Total Donations</p>
-          </div>
-          
-          <div className="stat-card rounded-2xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                <i className="fas fa-check-circle text-blue-600 text-xl"></i>
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">${completedDonations.toFixed(2)}</h3>
-            <p className="text-sm text-gray-600">Completed</p>
-          </div>
-          
-          <div className="stat-card rounded-2xl shadow-lg p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
-                <i className="fas fa-clock text-yellow-600 text-xl"></i>
-              </div>
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">${pendingDonations.toFixed(2)}</h3>
-            <p className="text-sm text-gray-600">Pending</p>
-          </div>
-        </div>
-      </section>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <StatCard
+          title="Total Amount"
+          value={`$${totalAmount.toFixed(2)}`}
+          description="Total donations"
+          icon="fas fa-dollar-sign"
+          iconColor="text-green-600"
+          iconBgColor="bg-green-100"
+        />
+        <StatCard
+          title="Completed"
+          value={completedDonations.toString()}
+          description="Completed donations"
+          icon="fas fa-check-circle"
+          iconColor="text-blue-600"
+          iconBgColor="bg-blue-100"
+        />
+        <StatCard
+          title="Pending"
+          value={pendingDonations.toString()}
+          description="Pending donations"
+          icon="fas fa-clock"
+          iconColor="text-orange-600"
+          iconBgColor="bg-orange-100"
+        />
+      </div>
 
-      {/* Donations Table */}
-      <section className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Donor</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredDonations.map((donation) => (
-                <tr key={donation.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{donation.donor}</div>
-                      <div className="text-sm text-gray-500">{donation.email}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-gray-900">${donation.amount.toFixed(2)}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(donation.category)}`}>
-                      {donation.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getMethodColor(donation.method)}`}>
-                      {donation.method}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(donation.date).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(donation.status)}`}>
-                      {donation.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                    <button className="text-red-600 hover:text-red-900">Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Search and Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="md:col-span-2">
+          <SearchInput
+            placeholder="Search donations..."
+            value={searchTerm}
+            onChange={setSearchTerm}
+          />
         </div>
-      </section>
+        <SelectInput
+          value={typeFilter}
+          onChange={setTypeFilter}
+          options={typeOptions}
+        />
+        <SelectInput
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={statusOptions}
+        />
+      </div>
 
-      {/* Charts Section */}
-      <section className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Category Distribution */}
-        <div className="chart-container rounded-2xl shadow-lg p-8">
-          <h3 className="text-xl font-bold text-gray-900 font-['Poppins'] mb-6">Donations by Category</h3>
-          <div className="space-y-4">
-            {["Tithe", "Offering", "Building Fund", "Missions", "Special Project"].map((category) => {
-              const categoryTotal = filteredDonations
-                .filter(d => d.category === category)
-                .reduce((sum, d) => sum + d.amount, 0);
-              const percentage = totalDonations > 0 ? (categoryTotal / totalDonations) * 100 : 0;
-              
-              return (
-                <div key={category} className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className={`w-4 h-4 rounded-full mr-3 ${getCategoryColor(category).replace('text-', 'bg-').replace('800', '500')}`}></div>
-                    <span className="text-sm font-medium text-gray-700">{category}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-32 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm text-gray-600">${categoryTotal.toFixed(2)}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      {/* View Toggle */}
+      <ViewToggle
+        value={viewMode}
+        onChange={handleViewModeChange}
+        options={viewToggleOptions}
+        count={filteredDonations.length}
+        countLabel="donations"
+      />
 
-        {/* Monthly Trend */}
-        <div className="chart-container rounded-2xl shadow-lg p-8">
-          <h3 className="text-xl font-bold text-gray-900 font-['Poppins'] mb-6">Monthly Donations Trend</h3>
-          <div className="h-64 flex items-end justify-center space-x-4">
-            {[12000, 15000, 18000, 14000, 22000, 19000].map((value, index) => (
-              <div key={index} className="flex flex-col items-center">
-                <div
-                  className="w-10 bg-green-500 rounded-t"
-                  style={{ height: `${(value / 25000) * 200}px` }}
-                ></div>
-                <span className="text-xs text-gray-500 mt-2">
-                  {["Jan", "Feb", "Mar", "Apr", "May", "Jun"][index]}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Donations Grid/List */}
+      {viewMode === "grid" ? (
+        <DataGrid
+          data={filteredDonations}
+          renderCard={renderDonationCard}
+          columns={3}
+        />
+      ) : (
+        <DataTable
+          columns={tableColumns}
+          data={filteredDonations}
+        />
+      )}
     </DashboardLayout>
   );
 } 
