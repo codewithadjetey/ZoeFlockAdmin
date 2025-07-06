@@ -1,3 +1,4 @@
+import CryptoJS from 'crypto-js';
 import { config } from './config';
 
 /**
@@ -11,36 +12,91 @@ export interface EncryptionResult {
 }
 
 /**
+ * Encrypt data using AES encryption
+ * @param data - Data to encrypt
+ * @returns Encrypted data as string
+ */
+export const encrypt = (data: any): string => {
+  try {
+    const jsonString = JSON.stringify(data);
+    return CryptoJS.AES.encrypt(jsonString, config.encryption.key).toString();
+  } catch (error) {
+    console.error('Encryption error:', error);
+    throw new Error('Failed to encrypt data');
+  }
+};
+
+/**
+ * Decrypt data using AES encryption
+ * @param encryptedData - Encrypted data string
+ * @returns Decrypted data
+ */
+export const decrypt = <T = any>(encryptedData: string): T => {
+  try {
+    const bytes = CryptoJS.AES.decrypt(encryptedData, config.encryption.key);
+    const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
+    return JSON.parse(decryptedString);
+  } catch (error) {
+    console.error('Decryption error:', error);
+    throw new Error('Failed to decrypt data');
+  }
+};
+
+/**
+ * Encrypt and store data in localStorage
+ * @param key - Storage key
+ * @param data - Data to encrypt and store
+ */
+export const encryptAndStore = (key: string, data: any): void => {
+  try {
+    const encryptedData = encrypt(data);
+    localStorage.setItem(key, encryptedData);
+  } catch (error) {
+    console.error('Failed to encrypt and store data:', error);
+    throw error;
+  }
+};
+
+/**
+ * Retrieve and decrypt data from localStorage
+ * @param key - Storage key
+ * @returns Decrypted data or null if not found
+ */
+export const retrieveAndDecrypt = <T = any>(key: string): T | null => {
+  try {
+    const encryptedData = localStorage.getItem(key);
+    if (!encryptedData) return null;
+    return decrypt<T>(encryptedData);
+  } catch (error) {
+    console.error('Failed to retrieve and decrypt data:', error);
+    // Remove corrupted data
+    localStorage.removeItem(key);
+    return null;
+  }
+};
+
+/**
+ * Remove encrypted data from localStorage
+ * @param key - Storage key
+ */
+export const removeEncryptedData = (key: string): void => {
+  localStorage.removeItem(key);
+};
+
+/**
  * Encrypt data using the configured encryption key
  */
-export async function encrypt(data: string): Promise<EncryptionResult> {
+export async function encryptUsingCryptoJS(data: string): Promise<EncryptionResult> {
   if (!config.encryption.key) {
     throw new Error('Encryption key not configured');
   }
 
   try {
-    // Convert the encryption key to a CryptoKey
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(config.encryption.key),
-      { name: 'AES-GCM' },
-      false,
-      ['encrypt']
-    );
-
-    // Generate a random IV
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-
-    // Encrypt the data
-    const encrypted = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      keyMaterial,
-      new TextEncoder().encode(data)
-    );
-
+    const encrypted = CryptoJS.AES.encrypt(data, config.encryption.key).toString();
+    const iv = CryptoJS.lib.WordArray.random(16).toString();
     return {
-      encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
-      iv: btoa(String.fromCharCode(...iv)),
+      encrypted,
+      iv,
     };
   } catch (error) {
     console.error('Encryption failed:', error);
@@ -51,37 +107,14 @@ export async function encrypt(data: string): Promise<EncryptionResult> {
 /**
  * Decrypt data using the configured encryption key
  */
-export async function decrypt(encryptedData: string, iv: string): Promise<string> {
+export async function decryptUsingCryptoJS(encryptedData: string, iv: string): Promise<string> {
   if (!config.encryption.key) {
     throw new Error('Encryption key not configured');
   }
 
   try {
-    // Convert the encryption key to a CryptoKey
-    const keyMaterial = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(config.encryption.key),
-      { name: 'AES-GCM' },
-      false,
-      ['decrypt']
-    );
-
-    // Convert base64 strings back to Uint8Array
-    const encryptedBytes = new Uint8Array(
-      atob(encryptedData).split('').map(char => char.charCodeAt(0))
-    );
-    const ivBytes = new Uint8Array(
-      atob(iv).split('').map(char => char.charCodeAt(0))
-    );
-
-    // Decrypt the data
-    const decrypted = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: ivBytes },
-      keyMaterial,
-      encryptedBytes
-    );
-
-    return new TextDecoder().decode(decrypted);
+         const decrypted = CryptoJS.AES.decrypt(encryptedData, config.encryption.key).toString(CryptoJS.enc.Utf8);
+    return decrypted;
   } catch (error) {
     console.error('Decryption failed:', error);
     throw new Error('Failed to decrypt data');
@@ -92,7 +125,7 @@ export async function decrypt(encryptedData: string, iv: string): Promise<string
  * Encrypt data and return as a single string (encrypted + iv)
  */
 export async function encryptToString(data: string): Promise<string> {
-  const result = await encrypt(data);
+  const result = await encryptUsingCryptoJS(data);
   return `${result.encrypted}.${result.iv}`;
 }
 
@@ -104,7 +137,7 @@ export async function decryptFromString(encryptedString: string): Promise<string
   if (!encrypted || !iv) {
     throw new Error('Invalid encrypted string format');
   }
-  return decrypt(encrypted, iv);
+  return decryptUsingCryptoJS(encrypted, iv);
 }
 
 /**
