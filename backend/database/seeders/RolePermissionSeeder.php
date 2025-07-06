@@ -102,7 +102,6 @@ class RolePermissionSeeder extends Seeder
                 'display_name' => 'Member',
                 'description' => 'Regular church member',
                 'permissions' => [
-                    'view-members', 'view-groups', 'view-events', 'view-donations',
                 ],
             ],
         ];
