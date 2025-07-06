@@ -119,6 +119,11 @@ cp .env.example .env
 php artisan key:generate
 php artisan migrate
 php artisan db:seed --class=RolePermissionSeeder
+
+# Generate Swagger documentation
+php artisan l5-swagger:generate
+
+# Start the server
 php artisan serve
 ```
 
@@ -134,6 +139,24 @@ npm run dev
 - **Backend API**: http://localhost:8000/api/v1
 
 ## 📚 API Documentation
+
+### Swagger (OpenAPI) Docs
+- **Interactive API docs** are available via Swagger UI.
+- After running the backend server, visit:
+  - [http://localhost:8000/api/documentation](http://localhost:8000/api/documentation)
+- You can try out endpoints, view request/response schemas, and see authentication requirements.
+- The docs are auto-generated from code annotations using [L5 Swagger](https://github.com/DarkaOnLine/L5-Swagger).
+
+### API Information Endpoints
+- `GET /api/v1/info` - Get API information and features
+- `GET /api/v1/health` - Check API health status
+
+### Documentation Features
+- **Interactive Testing**: Try endpoints directly from the documentation
+- **Authentication Support**: Bearer token authentication
+- **Request/Response Examples**: Detailed examples for all endpoints
+- **Error Documentation**: Comprehensive error response documentation
+- **Dark Mode**: Modern UI with dark mode support
 
 ### Authentication Endpoints
 - `POST /api/v1/auth/register` - Register new user
