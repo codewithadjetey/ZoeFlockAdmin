@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-// Base API URL (adjust as needed)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://zoeflockadmin.org/api/v1';
+// Debug: Log the API base URL from environment
+console.log('API URL from env:', process.env.NEXT_PUBLIC_API_URL);
+
+// Base API URL from configuration
+import { config, getApiUrl } from './config';
+const API_BASE_URL = getApiUrl();
 
 // Create an axios instance
 export const api = axios.create({
