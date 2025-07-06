@@ -58,7 +58,7 @@ return [
             ],
             'servers' => [
                 [
-                    'url' => env('L5_SWAGGER_SERVER_URL', 'https://zoeflockadmin.org'),
+                    'url' => env('L5_SWAGGER_SERVER_URL', 'http://zoeflockadmin.org'),
                     'description' => 'API Server',
                 ],
             ],
