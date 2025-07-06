@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useRouter } from 'next/navigation';
 import { api } from '@/utils/api';
 import { config } from '@/utils/config';
+import { encryptAndStore, retrieveAndDecrypt, removeEncryptedData } from '@/utils/encryption';
 
 // API Response Types
 interface AuthResponse {
@@ -48,17 +49,16 @@ export interface AuthState {
 }
 
 export interface AuthContextType extends AuthState {
-  login: (credentials: LoginCredentials) => Promise<boolean>;
-  register: (data: RegisterData) => Promise<boolean>;
-  logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
-  clearError: () => void;
-  hasPermission: (permission: string) => boolean;
-  hasRole: (role: string) => boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  register: (userData: RegisterData) => Promise<void>;
+  updateProfile: (data: Partial<User>) => Promise<void>;
 }
 
 // Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const AUTH_STORAGE_KEY = 'zoe_flock_auth';
 
 // Provider component
 interface AuthProviderProps {
@@ -74,169 +74,127 @@ export function AuthProvider({ children }: AuthProviderProps) {
     error: null,
   });
 
-  // Check authentication status on mount
+  // Load user from encrypted localStorage on mount
   useEffect(() => {
-    checkAuthStatus();
+    const loadUser = () => {
+      try {
+        const storedUser = retrieveAndDecrypt<User>(AUTH_STORAGE_KEY);
+        if (storedUser) {
+          setState(prev => ({ ...prev, user: storedUser }));
+        }
+      } catch (error) {
+        console.error('Failed to load user from storage:', error);
+        // Clear corrupted data
+        removeEncryptedData(AUTH_STORAGE_KEY);
+      } finally {
+        setState(prev => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    loadUser();
   }, []);
 
-  const checkAuthStatus = async () => {
+  const login = async (email: string, password: string) => {
     try {
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        setState(prev => ({ ...prev, isLoading: false }));
-        return;
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      // TODO: Replace with actual API call
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
       }
 
-      // Set token in axios headers
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-      // Verify token and get user data
-      const response = await api.get<UserResponse>('/auth/me');
-      const user = response.data.user;
-
-      setState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      // Clear invalid token
-      localStorage.removeItem('auth_token');
-      api.defaults.headers.common['Authorization'] = '';
+      const userData: User = await response.json();
       
-      setState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      });
-    }
-  };
-
-  const login = async (credentials: LoginCredentials): Promise<boolean> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      const response = await api.post<AuthResponse>('/auth/login', credentials);
-      const { user, token } = response.data;
-
-      // Store token
-      localStorage.setItem('auth_token', token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-      setState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-
-      return true;
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Login failed';
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
-      return false;
-    }
-  };
-
-  const register = async (data: RegisterData): Promise<boolean> => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
-
-    try {
-      const response = await api.post<AuthResponse>('/auth/register', data);
-      const { user, token } = response.data;
-
-      // Store token
-      localStorage.setItem('auth_token', token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-      setState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-
-      return true;
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || 'Registration failed';
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
-      return false;
-    }
-  };
-
-  const logout = async (): Promise<void> => {
-    try {
-      // Call logout endpoint to invalidate token on server
-      await api.post('/auth/logout');
+      // Encrypt and store user data
+      encryptAndStore(AUTH_STORAGE_KEY, userData);
+      setState(prev => ({ ...prev, user: userData }));
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Login error:', error);
+      throw error;
     } finally {
-      // Clear local storage and state
-      localStorage.removeItem('auth_token');
-      api.defaults.headers.common['Authorization'] = '';
+      setState(prev => ({ ...prev, isLoading: false }));
+    }
+  };
 
-      setState({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
+  const logout = () => {
+    setState(prev => ({ ...prev, user: null }));
+    removeEncryptedData(AUTH_STORAGE_KEY);
+  };
+
+  const register = async (userData: RegisterData) => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      // TODO: Replace with actual API call
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
       });
 
-      router.push('/auth/login');
-    }
-  };
+      if (!response.ok) {
+        throw new Error('Registration failed');
+      }
 
-  const refreshUser = async (): Promise<void> => {
-    try {
-      const response = await api.get<UserResponse>('/auth/me');
-      const user = response.data.user;
-
-      setState(prev => ({
-        ...prev,
-        user,
-        error: null,
-      }));
+      const newUser: User = await response.json();
+      
+      // Encrypt and store user data
+      encryptAndStore(AUTH_STORAGE_KEY, newUser);
+      setState(prev => ({ ...prev, user: newUser }));
     } catch (error) {
-      console.error('Failed to refresh user:', error);
-      // If refresh fails, logout
-      await logout();
+      console.error('Registration error:', error);
+      throw error;
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
-  const clearError = (): void => {
-    setState(prev => ({ ...prev, error: null }));
-  };
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      // TODO: Replace with actual API call
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-  const hasPermission = (permission: string): boolean => {
-    if (!state.user) return false;
-    return state.user.permissions.includes(permission);
-  };
+      if (!response.ok) {
+        throw new Error('Profile update failed');
+      }
 
-  const hasRole = (role: string): boolean => {
-    if (!state.user) return false;
-    return state.user.role === role;
+      const updatedUser: User = await response.json();
+      
+      // Encrypt and store updated user data
+      encryptAndStore(AUTH_STORAGE_KEY, updatedUser);
+      setState(prev => ({ ...prev, user: updatedUser }));
+    } catch (error) {
+      console.error('Profile update error:', error);
+      throw error;
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }));
+    }
   };
 
   const value: AuthContextType = {
     ...state,
     login,
-    register,
     logout,
-    refreshUser,
-    clearError,
-    hasPermission,
-    hasRole,
+    register,
+    updateProfile,
   };
 
   return (
