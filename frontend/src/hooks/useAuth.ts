@@ -1,3 +1,6 @@
+// This hook is now deprecated. Use the AuthContext instead.
+// import { useAuth } from '@/contexts/AuthContext';
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocalStorage } from './useLocalStorage';
