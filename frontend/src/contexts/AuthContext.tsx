@@ -1,69 +1,22 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/utils/api';
 import { config } from '@/utils/config';
 import { encryptAndStore, retrieveAndDecrypt, removeEncryptedData } from '@/utils/encryption';
-
-// API Response Types
-interface AuthResponse {
-  user: User;
-  token: string;
-}
-
-interface UserResponse {
-  user: User;
-}
-
-// Types
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  email_verified_at?: string;
-  role: string;
-  permissions: string[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-  remember?: boolean;
-}
-
-export interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-}
-
-export interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
-export interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  register: (userData: RegisterData) => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
-}
+import { 
+  User, 
+  RegisterData, 
+  AuthState, 
+  AuthContextType, 
+  AuthProviderProps 
+} from '@/interfaces';
 
 // Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'zoe_flock_auth';
-
-// Provider component
-interface AuthProviderProps {
-  children: ReactNode;
-}
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
