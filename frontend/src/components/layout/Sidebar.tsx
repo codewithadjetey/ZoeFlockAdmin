@@ -59,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("userRole");
-    window.location.href = "/auth/login";
+    // window.location.href = "/auth/login";
   };
 
   const handleNavClick = () => {
