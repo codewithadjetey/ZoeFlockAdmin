@@ -122,11 +122,20 @@ class AuthController extends Controller
         // Assign default role (member)
         $user->assignRole('member');
 
+        // Send verification email
+        try {
+            $emailVerificationController = new \App\Http\Controllers\Api\V1\EmailVerificationController();
+            $emailVerificationController->sendVerificationEmail($request);
+        } catch (\Exception $e) {
+            // Log the error but don't fail registration
+            \Log::error('Failed to send verification email: ' . $e->getMessage());
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'success' => true,
-            'message' => 'User registered successfully',
+            'message' => 'User registered successfully. Please check your email to verify your account.',
             'data' => [
                 'user' => $user->load('roles'),
                 'token' => $token,
@@ -259,6 +268,15 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Account is deactivated'
+            ], 401);
+        }
+
+        // Check if email is verified
+        if (!$user->email_verified_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Please verify your email address before logging in. Check your inbox for a verification link.',
+                'email_verification_required' => true
             ], 401);
         }
 

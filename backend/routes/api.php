@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\DocumentationController;
 
@@ -30,6 +31,10 @@ Route::prefix($apiVersion)->group(function () {
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+        
+        // Email verification routes
+        Route::post('/send-verification-email', [EmailVerificationController::class, 'sendVerificationEmail']);
+        Route::post('/verify-email', [EmailVerificationController::class, 'verifyEmail']);
     });
 
     // Documentation routes
@@ -44,6 +49,7 @@ Route::prefix($apiVersion)->group(function () {
         Route::get('/profile', [AuthController::class, 'profile']);
         Route::put('/profile', [AuthController::class, 'updateProfile']);
         Route::put('/change-password', [AuthController::class, 'changePassword']);
+        Route::post('/resend-verification-email', [EmailVerificationController::class, 'resendVerificationEmail']);
     });
 
     // Member management routes

@@ -9,7 +9,7 @@ return [
     |
     | This value is the name of your application, which will be used when the
     | framework needs to place the application's name in a notification or
-    | other UI elements where an application name needs to be displayed.
+    | any other location as required by the application or its packages.
     |
     */
 
@@ -60,7 +60,7 @@ return [
     |
     | This URL is used by the console to properly generate URLs when using
     | the Artisan command line tool. You should set this to the root of
-    | the application so that it's available within Artisan commands.
+    | your application so that it is used when running Artisan tasks.
     |
     */
 
@@ -71,8 +71,8 @@ return [
     | Frontend URL
     |--------------------------------------------------------------------------
     |
-    | This URL is used to redirect users to the frontend application
-    | when they access backend routes that should be handled by the frontend.
+    | This URL is used for generating frontend URLs in email verification
+    | and other features that need to link back to the frontend.
     |
     */
 
@@ -84,8 +84,8 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | will be used by the PHP date and date-time functions. We have gone
+    | ahead and set this to a sensible default for you out of the box.
     |
     */
 

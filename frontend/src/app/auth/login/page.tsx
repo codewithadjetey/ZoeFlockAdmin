@@ -23,8 +23,12 @@ const LoginPage = () => {
     try {
       await login(email, password);
       router.push('/dashboard');
-    } catch (error) {
-      setErrorMessage('Invalid email or password. Please try again.');
+    } catch (error: any) {
+      if (error.response?.data?.email_verification_required) {
+        setErrorMessage('Please verify your email address before logging in. Check your inbox for a verification link.');
+      } else {
+        setErrorMessage('Invalid email or password. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -75,6 +79,13 @@ const LoginPage = () => {
             {errorMessage && (
               <div className="text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 rounded-xl p-3 border border-red-200 dark:border-red-800 transition-all duration-200">
                 {errorMessage}
+                {errorMessage.includes('verify your email') && (
+                  <div className="mt-2">
+                    <Link href="/auth/verify-email" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200">
+                      Resend verification email
+                    </Link>
+                  </div>
+                )}
               </div>
             )}
 

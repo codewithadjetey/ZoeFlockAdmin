@@ -30,6 +30,8 @@ class User extends Authenticatable
         'profile_picture',
         'is_active',
         'email_verified_at',
+        'email_verification_token',
+        'email_verification_expires_at',
     ];
 
     /**
@@ -40,6 +42,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'email_verification_token',
     ];
 
     /**
@@ -51,6 +54,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'email_verification_expires_at' => 'datetime',
             'password' => 'hashed',
             'date_of_birth' => 'date',
             'is_active' => 'boolean',
@@ -96,5 +100,13 @@ class User extends Authenticatable
     {
         $role = $this->roles()->first();
         return $role ? $role->display_name : 'No Role';
+    }
+
+    /**
+     * Check if email is verified
+     */
+    public function isEmailVerified()
+    {
+        return !is_null($this->email_verified_at);
     }
 }
