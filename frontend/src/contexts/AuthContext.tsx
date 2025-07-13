@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/utils/api';
-import { config } from '@/utils/config';
+import { config, getApiUrl } from '@/utils/config';
 import { encryptAndStore, retrieveAndDecrypt, removeEncryptedData } from '@/utils/encryption';
 import { 
   User, 
@@ -17,6 +17,27 @@ import {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'zoe_flock_auth';
+
+// API Response Types
+interface AuthResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: User;
+    token: string;
+    token_type: string;
+    expires_in: number;
+    refresh_token: string | null;
+  };
+}
+
+interface ProfileResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: User;
+  };
+}
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
@@ -32,13 +53,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const loadUser = () => {
       try {
         const storedUser = retrieveAndDecrypt<User>(AUTH_STORAGE_KEY);
-        if (storedUser) {
-          setState(prev => ({ ...prev, user: storedUser }));
+        const token = localStorage.getItem('auth_token');
+        
+        if (storedUser && token) {
+          // Set the token in API headers
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          setState(prev => ({ 
+            ...prev, 
+            user: storedUser, 
+            isAuthenticated: true 
+          }));
         }
       } catch (error) {
         console.error('Failed to load user from storage:', error);
         // Clear corrupted data
         removeEncryptedData(AUTH_STORAGE_KEY);
+        localStorage.removeItem('auth_token');
       } finally {
         setState(prev => ({ ...prev, isLoading: false }));
       }
@@ -51,62 +81,87 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const response = await api.post<AuthResponse>('/auth/login', {
+        email,
+        password,
       });
 
-      if (!response.ok) {
-        throw new Error('Login failed');
+      const responseData = response.data;
+
+      if (!responseData.success) {
+        throw new Error(responseData.message || 'Login failed');
       }
 
-      const userData: User = await response.json();
+      const { user: userData, token } = responseData.data;
+      
+      // Store token in localStorage and set in API headers
+      localStorage.setItem('auth_token', token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       // Encrypt and store user data
       encryptAndStore(AUTH_STORAGE_KEY, userData);
-      setState(prev => ({ ...prev, user: userData }));
-    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        user: userData, 
+        isAuthenticated: true 
+      }));
+    } catch (error: any) {
       console.error('Login error:', error);
-      throw error;
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
+      throw new Error(errorMessage);
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
   };
 
-  const logout = () => {
-    setState(prev => ({ ...prev, user: null }));
-    removeEncryptedData(AUTH_STORAGE_KEY);
+  const logout = async () => {
+    try {
+      // Call logout endpoint to revoke token
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local state regardless of API call success
+      setState(prev => ({ 
+        ...prev, 
+        user: null, 
+        isAuthenticated: false 
+      }));
+      removeEncryptedData(AUTH_STORAGE_KEY);
+      localStorage.removeItem('auth_token');
+      delete api.defaults.headers.common['Authorization'];
+    }
   };
 
   const register = async (userData: RegisterData) => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
+      const response = await api.post<AuthResponse>('/auth/register', userData);
 
-      if (!response.ok) {
-        throw new Error('Registration failed');
+      const responseData = response.data;
+
+      if (!responseData.success) {
+        throw new Error(responseData.message || 'Registration failed');
       }
 
-      const newUser: User = await response.json();
+      const { user: newUser, token } = responseData.data;
+      
+      // Store token in localStorage and set in API headers
+      localStorage.setItem('auth_token', token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       // Encrypt and store user data
       encryptAndStore(AUTH_STORAGE_KEY, newUser);
-      setState(prev => ({ ...prev, user: newUser }));
-    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        user: newUser, 
+        isAuthenticated: true 
+      }));
+    } catch (error: any) {
       console.error('Registration error:', error);
-      throw error;
+      const errorMessage = error.response?.data?.message || error.message || 'Registration failed';
+      throw new Error(errorMessage);
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
@@ -116,27 +171,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      // TODO: Replace with actual API call
-      const response = await fetch('/api/auth/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+      const response = await api.put<ProfileResponse>('/auth/profile', data);
 
-      if (!response.ok) {
-        throw new Error('Profile update failed');
+      const responseData = response.data;
+
+      if (!responseData.success) {
+        throw new Error(responseData.message || 'Profile update failed');
       }
 
-      const updatedUser: User = await response.json();
+      const updatedUser: User = responseData.data.user;
       
       // Encrypt and store updated user data
       encryptAndStore(AUTH_STORAGE_KEY, updatedUser);
       setState(prev => ({ ...prev, user: updatedUser }));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Profile update error:', error);
-      throw error;
+      const errorMessage = error.response?.data?.message || error.message || 'Profile update failed';
+      throw new Error(errorMessage);
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
