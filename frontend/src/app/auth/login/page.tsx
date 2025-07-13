@@ -1,103 +1,117 @@
 "use client";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
-import { TextInput, Button } from "@/components/ui";
-import LoadingSpinner from "@/components/shared/LoadingSpinner";
-import { DEMO_CREDENTIALS } from "@/utils/constants";
-import { isValidEmail, cn } from "@/utils/helpers";
-import Link from "next/link";
+import React, { useState } from 'react';
+import { Church } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import TextInput from '@/components/ui/TextInput';
+import PasswordInput from '@/components/ui/PasswordInput';
+import Link from 'next/link';
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const { login, isLoading, error, clearError } = useAuth();
+const LoginPage = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
-    const success = await login({ email, password, remember: rememberMe });
-    if (success) router.push("/dashboard");
+    setErrorMessage('');
+    setIsLoading(true);
+
+    try {
+      await login(email, password);
+      router.push('/dashboard');
+    } catch (error) {
+      setErrorMessage('Invalid email or password. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="h-fit flex items-center justify-center">
-      <div className="w-full max-w-md mx-auto p-8 rounded-3xl shadow-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-4 shadow-lg">
-            <i className="fas fa-church text-3xl text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-1 font-poppins">Welcome Back</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Sign in to ZoeFlock Admin</p>
-        </div>
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-md text-center">
-              {error}
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 rounded-2xl shadow-lg">
+              <Church className="h-8 w-8 text-white" />
             </div>
-          )}
-          <div className="space-y-4">
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                <i className="fas fa-envelope" />
-              </span>
-              <input
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Sign in to your Zoe Flock Admin account
+          </p>
+        </div>
+
+        {/* Login Form */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <TextInput
+                label="Email Address"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="Email address"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 outline-none transition-all duration-200 shadow-sm"
-                autoFocus
-                required
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                disabled={isLoading}
               />
             </div>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                <i className="fas fa-lock" />
-              </span>
-              <input
-                type="password"
+
+            <div>
+              <PasswordInput
+                label="Password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-600 outline-none transition-all duration-200 shadow-sm"
-                required
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                disabled={isLoading}
               />
             </div>
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <label className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={e => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2"
-              />
-              Remember me
-            </label>
-            <a href="/auth/password-reset" className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400 transition-colors">Forgot password?</a>
-          </div>
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold text-lg shadow-lg transition-all duration-200 flex items-center justify-center"
-          >
-            {isLoading ? (
-              <>
-                <LoadingSpinner size="sm" className="mr-2" /> Signing in...
-              </>
-            ) : (
-              'Sign In'
+
+            {errorMessage && (
+              <div className="text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/20 rounded-xl p-3 border border-red-200 dark:border-red-800 transition-all duration-200">
+                {errorMessage}
+              </div>
             )}
-          </Button>
-        </form>
-        <div className="mt-8 text-center">
-          <span className="text-gray-500 dark:text-gray-400 text-sm">Don't have an account? </span>
-          <a href="/auth/register" className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium transition-colors">Sign up</a>
+
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-blue-400 disabled:to-purple-400 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Signing In...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </form>
+
+          {/* Navigation Links */}
+          <div className="mt-6 text-center space-y-2">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              <Link href="/auth/forgot-password" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200">
+                Forgot your password?
+              </Link>
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Don't have an account?{" "}
+              <Link href="/auth/register" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200">
+                Sign up
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default LoginPage;
