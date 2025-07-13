@@ -161,9 +161,63 @@ class AuthController extends Controller
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
-     *                 @OA\Property(property="user", type="object"),
+     *                 @OA\Property(
+     *                     property="user",
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="john@example.com"),
+     *                     @OA\Property(property="phone", type="string", example="+1234567890"),
+     *                     @OA\Property(property="address", type="string", example="123 Church St"),
+     *                     @OA\Property(property="date_of_birth", type="string", format="date", example="1990-01-01"),
+     *                     @OA\Property(property="gender", type="string", enum={"male","female","other"}, example="male"),
+     *                     @OA\Property(property="profile_picture", type="string", example="https://example.com/avatar.jpg"),
+     *                     @OA\Property(property="is_active", type="boolean", example=true),
+     *                     @OA\Property(property="email_verified_at", type="string", format="date-time", example="2023-01-01T00:00:00Z"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2023-01-01T00:00:00Z"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time", example="2023-01-01T00:00:00Z"),
+     *                     @OA\Property(property="role_display_name", type="string", example="Administrator"),
+     *                     @OA\Property(property="is_admin", type="boolean", example=true),
+     *                     @OA\Property(property="is_pastor", type="boolean", example=false),
+     *                     @OA\Property(property="is_member", type="boolean", example=false),
+     *                     @OA\Property(
+     *                         property="roles",
+     *                         type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name", type="string", example="admin"),
+     *                             @OA\Property(property="display_name", type="string", example="Administrator"),
+     *                             @OA\Property(property="description", type="string", example="Full system access"),
+     *                             @OA\Property(
+     *                                 property="permissions",
+     *                                 type="array",
+     *                                 @OA\Items(
+     *                                     type="object",
+     *                                     @OA\Property(property="id", type="integer", example=1),
+     *                                     @OA\Property(property="name", type="string", example="manage_users"),
+     *                                     @OA\Property(property="display_name", type="string", example="Manage Users"),
+     *                                     @OA\Property(property="description", type="string", example="Can manage all users")
+     *                                 )
+     *                             )
+     *                         )
+     *                     ),
+     *                     @OA\Property(
+     *                         property="permissions",
+     *                         type="array",
+     *                         @OA\Items(
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name", type="string", example="manage_users"),
+     *                             @OA\Property(property="display_name", type="string", example="Manage Users"),
+     *                             @OA\Property(property="description", type="string", example="Can manage all users")
+     *                         )
+     *                     )
+     *                 ),
      *                 @OA\Property(property="token", type="string", example="1|abc123..."),
-     *                 @OA\Property(property="token_type", type="string", example="Bearer")
+     *                 @OA\Property(property="token_type", type="string", example="Bearer"),
+     *                 @OA\Property(property="expires_in", type="integer", example=3600),
+     *                 @OA\Property(property="refresh_token", type="string", nullable=true, example=null)
      *             )
      *         )
      *     ),
@@ -210,13 +264,62 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        // Load user with roles and permissions
+        $user->load(['roles.permissions']);
+
+        // Prepare user data with additional computed fields
+        $userData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'address' => $user->address,
+            'date_of_birth' => $user->date_of_birth,
+            'gender' => $user->gender,
+            'profile_picture' => $user->profile_picture,
+            'is_active' => $user->is_active,
+            'email_verified_at' => $user->email_verified_at,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+            'roles' => $user->roles->map(function ($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'display_name' => $role->display_name,
+                    'description' => $role->description,
+                    'permissions' => $role->permissions->map(function ($permission) {
+                        return [
+                            'id' => $permission->id,
+                            'name' => $permission->name,
+                            'display_name' => $permission->display_name,
+                            'description' => $permission->description
+                        ];
+                    })
+                ];
+            }),
+            'permissions' => $user->getAllPermissions()->map(function ($permission) {
+                return [
+                    'id' => $permission->id,
+                    'name' => $permission->name,
+                    'display_name' => $permission->display_name,
+                    'description' => $permission->description
+                ];
+            }),
+            'role_display_name' => $user->role_display_name,
+            'is_admin' => $user->isAdmin(),
+            'is_pastor' => $user->isPastor(),
+            'is_member' => $user->isMember(),
+        ];
+
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
             'data' => [
-                'user' => $user->load('roles'),
+                'user' => $userData,
                 'token' => $token,
-                'token_type' => 'Bearer'
+                'token_type' => 'Bearer',
+                'expires_in' => config('sanctum.expiration') * 60, // Convert to seconds
+                'refresh_token' => null // For future implementation
             ]
         ]);
     }
