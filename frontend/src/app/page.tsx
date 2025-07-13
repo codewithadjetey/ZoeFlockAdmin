@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 export default function Home() {
   const router = useRouter();
 
-  // useEffect(() => {
-  //   // Redirect to login page for now
-  //   router.push("/auth/login");
-  // }, [router]);
+  useEffect(() => {
+    // Redirect to login page for now
+    router.push("/auth/login");
+  }, [router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-all duration-500">

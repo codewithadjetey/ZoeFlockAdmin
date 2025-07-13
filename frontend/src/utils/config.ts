@@ -65,13 +65,13 @@ function getBoolEnvVar(key: string, fallback: boolean = false): boolean {
  */
 export const config: AppConfig = {
   api: {
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://zoeflockadmin.org/api',
+    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
     version: process.env.NEXT_PUBLIC_API_VERSION || 'v1',
   },
   
   assets: {
-    baseUrl: getEnvVar('NEXT_PUBLIC_ASSETS_URL', 'http://zoeflockadmin.org/assets'),
-    cdnUrl: getEnvVar('NEXT_PUBLIC_CDN_URL', 'http://cdn.zoeflockadmin.org'),
+    baseUrl: getEnvVar('NEXT_PUBLIC_ASSETS_URL', 'http://localhost:3002/assets'),
+    cdnUrl: getEnvVar('NEXT_PUBLIC_CDN_URL', 'http://localhost:3002'),
   },
   
   encryption: {

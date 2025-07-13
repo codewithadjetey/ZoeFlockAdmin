@@ -27,110 +27,132 @@ export function AuthGuard({
   const [shouldRender, setShouldRender] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  // Debug logging
   useEffect(() => {
-    // Don't do anything while loading
+    console.log('[AuthGuard Debug]', {
+      isAuthenticated,
+      isLoading,
+      user,
+      requireAuth,
+      requireGuest,
+      requiredPermissions,
+      requiredRoles
+    });
+  }, [isLoading, isAuthenticated, user, requireAuth, requireGuest, requiredPermissions, requiredRoles]);
+
+  useEffect(() => {
     if (isLoading) {
-      setShouldRender(false);
-      setIsRedirecting(false);
+      console.log('[AuthGuard] Still loading...');
       return;
     }
 
-    // If guest is required and user is authenticated, redirect to dashboard
-    if (requireGuest && isAuthenticated) {
-      setIsRedirecting(true);
-      router.push('/dashboard');
-      return;
-    }
+    console.log('[AuthGuard] Loading complete, checking authentication...');
 
-    // If auth is required and user is not authenticated, redirect to login
-    if (requireAuth && !isAuthenticated) {
-      setIsRedirecting(true);
-      router.push('/auth/login');
-      return;
-    }
-
-    // Check permissions if required
-    if (requireAuth && isAuthenticated && user && requiredPermissions.length > 0) {
-      const hasAllPermissions = requiredPermissions.every(permission =>
-        user.permissions.some(p => p.name === permission)
-      );
-      
-      if (!hasAllPermissions) {
+    // For guest routes (login, register, etc.)
+    if (requireGuest) {
+      if (isAuthenticated) {
+        console.log('[AuthGuard] User is authenticated, redirecting to dashboard');
         setIsRedirecting(true);
         router.push('/dashboard');
+        return;
+      } else {
+        console.log('[AuthGuard] User is not authenticated, allowing access to guest route');
+        setShouldRender(true);
         return;
       }
     }
 
-    // Check roles if required
-    if (requireAuth && isAuthenticated && user && requiredRoles.length > 0) {
-      const hasRequiredRole = user.roles.some(role => requiredRoles.includes(role.name));
-      
-      if (!hasRequiredRole) {
+    // For protected routes (dashboard, etc.)
+    if (requireAuth) {
+      if (!isAuthenticated) {
+        console.log('[AuthGuard] User is not authenticated, redirecting to login');
         setIsRedirecting(true);
-        router.push('/dashboard');
+        router.push('/auth/login');
+        return;
+      } else {
+        console.log('[AuthGuard] User is authenticated, checking permissions...');
+        
+        // Check role requirements
+        if (requiredRoles.length > 0) {
+          const userRoles = user?.roles?.map(role => role.name) || [];
+          const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
+          
+          if (!hasRequiredRole) {
+            console.log('[AuthGuard] User does not have required role');
+            setIsRedirecting(true);
+            router.push('/auth/login');
+            return;
+          }
+        }
+
+        // Check permission requirements
+        if (requiredPermissions.length > 0) {
+          const userPermissions = user?.permissions?.map(p => p.name) || [];
+          const hasRequiredPermission = requiredPermissions.some(permission => 
+            userPermissions.includes(permission)
+          );
+          
+          if (!hasRequiredPermission) {
+            console.log('[AuthGuard] User does not have required permission');
+            setIsRedirecting(true);
+            router.push('/auth/login');
+            return;
+          }
+        }
+
+        console.log('[AuthGuard] User has required permissions, allowing access');
+        setShouldRender(true);
         return;
       }
     }
 
-    // If we reach here, all conditions are met
+    // Default: allow access
+    console.log('[AuthGuard] No specific requirements, allowing access');
     setShouldRender(true);
-    setIsRedirecting(false);
   }, [isLoading, isAuthenticated, user, requireAuth, requireGuest, requiredPermissions, requiredRoles, router]);
 
-  // Show loading spinner while checking authentication or during redirects
-  if (isLoading || isRedirecting || !shouldRender) {
+  // Show loading spinner while checking authentication
+  if (isLoading || isRedirecting) {
+    console.log('[AuthGuard] Showing loading spinner');
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <LoadingSpinner size="lg" className="text-blue-600" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
 
-  // Show fallback if provided and conditions are not met
-  if (fallback && (
-    (requireAuth && !isAuthenticated) ||
-    (requireGuest && isAuthenticated) ||
-    (requireAuth && isAuthenticated && user && requiredPermissions.length > 0 && 
-     !requiredPermissions.every(permission => user.permissions.some(p => p.name === permission))) ||
-    (requireAuth && isAuthenticated && user && requiredRoles.length > 0 && 
-     !user.roles.some(role => requiredRoles.includes(role.name)))
-  )) {
+  // Show fallback if provided and not authenticated
+  if (fallback && !isAuthenticated) {
     return <>{fallback}</>;
   }
 
-  // Render children if all conditions are met
-  return <>{children}</>;
+  // Render children if authentication check passes
+  if (shouldRender) {
+    console.log('[AuthGuard] Rendering children');
+    return <>{children}</>;
+  }
+
+  // Default loading state
+  console.log('[AuthGuard] Default loading state');
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <LoadingSpinner size="lg" />
+    </div>
+  );
 }
 
-// Convenience components for common use cases
-export function ProtectedRoute({ children, ...props }: Omit<AuthGuardProps, 'requireAuth'>) {
+// Convenience components
+export function ProtectedRoute({ children }: { children: ReactNode }) {
   return (
-    <AuthGuard requireAuth={true} {...props}>
+    <AuthGuard requireAuth={true}>
       {children}
     </AuthGuard>
   );
 }
 
-export function GuestRoute({ children, ...props }: Omit<AuthGuardProps, 'requireGuest'>) {
+export function GuestRoute({ children }: { children: ReactNode }) {
   return (
-    <AuthGuard requireGuest={true} {...props}>
-      {children}
-    </AuthGuard>
-  );
-}
-
-export function AdminRoute({ children, ...props }: Omit<AuthGuardProps, 'requiredRoles'>) {
-  return (
-    <AuthGuard requireAuth={true} requiredRoles={['admin']} {...props}>
-      {children}
-    </AuthGuard>
-  );
-}
-
-export function PastorRoute({ children, ...props }: Omit<AuthGuardProps, 'requiredRoles'>) {
-  return (
-    <AuthGuard requireAuth={true} requiredRoles={['pastor', 'admin']} {...props}>
+    <AuthGuard requireGuest={true}>
       {children}
     </AuthGuard>
   );
