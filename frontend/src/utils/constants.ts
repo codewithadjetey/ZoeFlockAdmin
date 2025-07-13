@@ -33,11 +33,4 @@ export const GROUP_OPTIONS = [
   { value: "Bible Study", label: "Bible Study" },
   { value: "Choir", label: "Choir" },
   { value: "Prayer Group", label: "Prayer Group" },
-];
-
-// Demo Credentials
-export const DEMO_CREDENTIALS = [
-  { email: 'admin@church.com', password: 'admin123', role: 'admin', name: 'Administrator' },
-  { email: 'pastor@church.com', password: 'pastor123', role: 'pastor', name: 'Pastor' },
-  { email: 'member@church.com', password: 'member123', role: 'member', name: 'Member' },
 ]; 
