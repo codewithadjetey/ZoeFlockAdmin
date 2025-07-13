@@ -75,7 +75,7 @@ export const config: AppConfig = {
   },
   
   encryption: {
-    key: getEnvVar('NEXT_PUBLIC_ENCRYPTION_KEY', ''),
+    key: getEnvVar('NEXT_PUBLIC_ENCRYPTION_KEY', 'zoe-flock-admin-dev-key-2024'),
     algorithm: getEnvVar('NEXT_PUBLIC_ENCRYPTION_ALGORITHM', 'AES-256-GCM'),
   },
   
