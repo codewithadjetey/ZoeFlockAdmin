@@ -22,4 +22,8 @@ export { default as StatusBadge } from './StatusBadge';
 export { default as CategoryBadge } from './CategoryBadge';
 
 // Theme Components
-export { default as ColorSwitcher } from './ColorSwitcher'; 
+export { default as ColorSwitcher } from './ColorSwitcher';
+
+// Alert and Card Components
+export { default as Alert, AlertDescription } from './Alert';
+export { default as Card, CardHeader, CardTitle, CardDescription, CardContent } from './Card'; 
