@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\DocumentationController;
+use App\Http\Controllers\Api\V1\FileUploadController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -60,6 +61,15 @@ Route::prefix($apiVersion)->group(function () {
         Route::get('/{member}', [MemberController::class, 'show']);
         Route::put('/{member}', [MemberController::class, 'update']);
         Route::delete('/{member}', [MemberController::class, 'destroy']);
+    });
+
+    // File upload routes
+    Route::prefix('files')->group(function () {
+        Route::post('/upload', [FileUploadController::class, 'upload']);
+        Route::post('/upload-multiple', [FileUploadController::class, 'uploadMultiple']);
+        Route::get('/by-model', [FileUploadController::class, 'getByModel']);
+        Route::get('/{token}', [FileUploadController::class, 'show']);
+        Route::delete('/{token}', [FileUploadController::class, 'delete']);
     });
 
     // TODO: Add routes for other modules (Groups, Events, Donations, Communications, etc.)
