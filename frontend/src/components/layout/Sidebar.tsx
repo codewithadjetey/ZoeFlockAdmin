@@ -6,12 +6,12 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const navItems = [
   { label: "Dashboard", icon: "fas fa-home", href: "/dashboard" },
-  { label: "Members", icon: "fas fa-users", href: "/dashboard/members" },
-  { label: "Events", icon: "fas fa-calendar", href: "/dashboard/events" },
-  { label: "Groups", icon: "fas fa-layer-group", href: "/dashboard/groups" },
-  { label: "Donations", icon: "fas fa-donate", href: "/dashboard/donations" },
-  { label: "Communication", icon: "fas fa-envelope", href: "/dashboard/communication" },
-  { label: "Settings", icon: "fas fa-cog", href: "/dashboard/settings" },
+  { label: "Members", icon: "fas fa-users", href: "/members" },
+  { label: "Events", icon: "fas fa-calendar", href: "/events" },
+  { label: "Groups", icon: "fas fa-layer-group", href: "/groups" },
+  { label: "Donations", icon: "fas fa-donate", href: "/donations" },
+  { label: "Communication", icon: "fas fa-envelope", href: "/communication" },
+  { label: "Settings", icon: "fas fa-cog", href: "/settings" },
 ];
 
 interface SidebarProps {
