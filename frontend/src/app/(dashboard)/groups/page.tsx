@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GroupModal from "@/components/groups/GroupModal";
 import { GroupsService, Group } from "@/services/groups";
+import { toast } from 'react-toastify';
 import { 
   PageHeader, 
   SearchInput, 
@@ -11,7 +12,7 @@ import {
   DataGrid, 
   DataTable,
   StatusBadge,
-  CategoryBadge 
+  CategoryBadge
 } from "@/components/ui";
 
 export default function GroupsPage() {
@@ -24,8 +25,6 @@ export default function GroupsPage() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Load groups from API
   useEffect(() => {
@@ -44,10 +43,10 @@ export default function GroupsPage() {
       if (response.success) {
         setGroups(response.data);
       } else {
-        setError(response.message);
+        toast.error(response.message);
       }
     } catch (err) {
-      setError('Failed to load groups');
+      toast.error('Failed to load groups');
       console.error('Error loading groups:', err);
     } finally {
       setLoading(false);
@@ -190,30 +189,27 @@ export default function GroupsPage() {
 
   const handleSaveGroup = async (groupData: Group) => {
     try {
-      setError(null);
-      setSuccessMessage(null);
-      
       if (modalMode === 'create') {
         const response = await GroupsService.createGroup(groupData);
         if (response.success) {
-          setSuccessMessage('Group created successfully!');
+          toast.success('Group created successfully!');
           loadGroups(); // Reload groups
         } else {
-          setError(response.message || 'Failed to create group');
+          toast.error(response.message || 'Failed to create group');
         }
       } else {
         if (selectedGroup?.id) {
           const response = await GroupsService.updateGroup(selectedGroup.id, groupData);
           if (response.success) {
-            setSuccessMessage('Group updated successfully!');
+            toast.success('Group updated successfully!');
             loadGroups(); // Reload groups
           } else {
-            setError(response.message || 'Failed to update group');
+            toast.error(response.message || 'Failed to update group');
           }
         }
       }
     } catch (err) {
-      setError('An error occurred while saving the group');
+      toast.error('An error occurred while saving the group');
       console.error('Error saving group:', err);
     }
   };
@@ -224,18 +220,15 @@ export default function GroupsPage() {
     }
 
     try {
-      setError(null);
-      setSuccessMessage(null);
-      
       const response = await GroupsService.deleteGroup(groupId);
       if (response.success) {
-        setSuccessMessage('Group deleted successfully!');
+        toast.success('Group deleted successfully!');
         loadGroups(); // Reload groups
       } else {
-        setError(response.message || 'Failed to delete group');
+        toast.error(response.message || 'Failed to delete group');
       }
     } catch (err) {
-      setError('An error occurred while deleting the group');
+      toast.error('An error occurred while deleting the group');
       console.error('Error deleting group:', err);
     }
   };
@@ -252,48 +245,7 @@ export default function GroupsPage() {
         }}
       />
 
-      {/* Notifications */}
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <i className="fas fa-exclamation-circle text-red-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-            <div className="ml-auto pl-3">
-              <button
-                onClick={() => setError(null)}
-                className="text-red-400 hover:text-red-600"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {successMessage && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <i className="fas fa-check-circle text-green-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-green-800">{successMessage}</p>
-            </div>
-            <div className="ml-auto pl-3">
-              <button
-                onClick={() => setSuccessMessage(null)}
-                className="text-green-400 hover:text-green-600"
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Search and Filters */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -347,6 +299,7 @@ export default function GroupsPage() {
         onSave={handleSaveGroup}
         mode={modalMode}
       />
+
     </DashboardLayout>
   );
 } 
