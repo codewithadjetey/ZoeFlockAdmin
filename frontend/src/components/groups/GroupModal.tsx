@@ -3,19 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '@/components/shared/Modal';
 import { TextInput, Textarea, SelectInput, Button } from '@/components/ui';
-
-interface Group {
-  id?: number;
-  name: string;
-  description: string;
-  category: string;
-  leader: string;
-  maxMembers: number;
-  meetingDay: string;
-  meetingTime: string;
-  location: string;
-  status: string;
-}
+import { GroupsService, Group } from '@/services/groups';
 
 interface GroupModalProps {
   isOpen: boolean;
@@ -36,10 +24,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
     name: '',
     description: '',
     category: '',
-    leader: '',
-    maxMembers: 10,
-    meetingDay: '',
-    meetingTime: '',
+    max_members: 10,
+    meeting_day: '',
+    meeting_time: '',
     location: '',
     status: 'Active'
   });
@@ -54,10 +41,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
         name: '',
         description: '',
         category: '',
-        leader: '',
-        maxMembers: 10,
-        meetingDay: '',
-        meetingTime: '',
+        max_members: 10,
+        meeting_day: '',
+        meeting_time: '',
         location: '',
         status: 'Active'
       });
@@ -111,55 +97,30 @@ const GroupModal: React.FC<GroupModalProps> = ({
     { value: '8:00 PM', label: '8:00 PM' },
   ];
 
-  const validateForm = (): boolean => {
-    const newErrors: Partial<Group> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Group name is required';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
-
-    if (!formData.category) {
-      newErrors.category = 'Category is required';
-    }
-
-    if (!formData.leader.trim()) {
-      newErrors.leader = 'Leader is required';
-    }
-
-    if (!formData.meetingDay) {
-      newErrors.meetingDay = 'Meeting day is required';
-    }
-
-    if (!formData.meetingTime) {
-      newErrors.meetingTime = 'Meeting time is required';
-    }
-
-    if (!formData.location.trim()) {
-      newErrors.location = 'Location is required';
-    }
-
-    if (formData.maxMembers < 1) {
-      newErrors.maxMembers = 'Maximum members must be at least 1';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (validateForm()) {
       onSave(formData);
       onClose();
+  };
+
+  const handleInputChange = (field: keyof Group) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setFormData(prev => ({
+      ...prev,
+      [field]: field === 'max_members' ? parseInt(value) || 0 : value
+    }));
+    
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
     }
   };
 
-  const handleInputChange = (field: keyof Group, value: string | number) => {
+  const handleSelectChange = (field: keyof Group) => (value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -188,10 +149,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
             <TextInput
               label="Group Name"
               value={formData.name}
-              onChange={(value) => handleInputChange('name', value)}
+              onChange={handleInputChange('name')}
               placeholder="Enter group name"
               error={errors.name}
-              required
             />
           </div>
           
@@ -199,11 +159,10 @@ const GroupModal: React.FC<GroupModalProps> = ({
             <SelectInput
               label="Category"
               value={formData.category}
-              onChange={(value) => handleInputChange('category', value)}
+              onChange={handleSelectChange('category')}
               options={categoryOptions}
               placeholder="Select category"
               error={errors.category}
-              required
             />
           </div>
         </div>
@@ -212,39 +171,24 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <Textarea
             label="Description"
             value={formData.description}
-            onChange={(value) => handleInputChange('description', value)}
+            onChange={handleInputChange('description')}
             placeholder="Describe the group's purpose and activities"
             error={errors.description}
-            required
             rows={3}
           />
         </div>
 
-        {/* Leadership and Capacity */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <TextInput
-              label="Group Leader"
-              value={formData.leader}
-              onChange={(value) => handleInputChange('leader', value)}
-              placeholder="Enter leader's name"
-              error={errors.leader}
-              required
-            />
-          </div>
-          
-          <div>
-            <TextInput
-              label="Maximum Members"
-              type="number"
-              value={formData.maxMembers.toString()}
-              onChange={(value) => handleInputChange('maxMembers', parseInt(value) || 0)}
-              placeholder="Enter max members"
-              error={errors.maxMembers}
-              required
-              min={1}
-            />
-          </div>
+        {/* Capacity */}
+        <div>
+          <TextInput
+            label="Maximum Members"
+            type="number"
+            value={formData.max_members.toString()}
+            onChange={handleInputChange('max_members')}
+            placeholder="Enter max members"
+            error={errors.max_members}
+            min={1}
+          />
         </div>
 
         {/* Meeting Information */}
@@ -252,24 +196,22 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <div>
             <SelectInput
               label="Meeting Day"
-              value={formData.meetingDay}
-              onChange={(value) => handleInputChange('meetingDay', value)}
+              value={formData.meeting_day}
+              onChange={handleSelectChange('meeting_day')}
               options={dayOptions}
               placeholder="Select day"
-              error={errors.meetingDay}
-              required
+              error={errors.meeting_day}
             />
           </div>
           
           <div>
             <SelectInput
               label="Meeting Time"
-              value={formData.meetingTime}
-              onChange={(value) => handleInputChange('meetingTime', value)}
+              value={formData.meeting_time}
+              onChange={handleSelectChange('meeting_time')}
               options={timeOptions}
               placeholder="Select time"
-              error={errors.meetingTime}
-              required
+              error={errors.meeting_time}
             />
           </div>
           
@@ -277,10 +219,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
             <TextInput
               label="Location"
               value={formData.location}
-              onChange={(value) => handleInputChange('location', value)}
+              onChange={handleInputChange('location')}
               placeholder="Enter meeting location"
               error={errors.location}
-              required
             />
           </div>
         </div>
@@ -290,10 +231,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <SelectInput
             label="Status"
             value={formData.status}
-            onChange={(value) => handleInputChange('status', value)}
+            onChange={handleSelectChange('status')}
             options={statusOptions}
             placeholder="Select status"
-            required
           />
         </div>
 
