@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import GroupModal from "@/components/groups/GroupModal";
 import { 
   PageHeader, 
   SearchInput, 
@@ -17,6 +18,9 @@ export default function GroupsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All Categories");
   const [statusFilter, setStatusFilter] = useState("All Status");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
   const groups = [
     {
@@ -153,9 +157,14 @@ export default function GroupsPage() {
     { key: "members", label: "Members", render: (members: any, group: any) => `${members}/${group.maxMembers}` },
     { key: "status", label: "Status", render: (status: any) => <StatusBadge status={status} /> },
     { key: "meetingDay", label: "Meeting", render: (day: any, group: any) => `${day} ${group.meetingTime}` },
-    { key: "actions", label: "Actions", render: () => (
+    { key: "actions", label: "Actions", render: (_: any, group: any) => (
       <div className="text-sm font-medium">
-        <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+        <button 
+          className="text-blue-600 hover:text-blue-900 mr-3"
+          onClick={() => handleEditGroup(group)}
+        >
+          Edit
+        </button>
         <button className="text-red-600 hover:text-red-900">Delete</button>
       </div>
     )},
@@ -199,7 +208,10 @@ export default function GroupsPage() {
       <div className="flex items-center justify-between">
         <CategoryBadge category={group.category} />
         <div className="flex space-x-2">
-          <button className="text-blue-600 hover:text-blue-700 text-sm">
+          <button 
+            className="text-blue-600 hover:text-blue-700 text-sm"
+            onClick={() => handleEditGroup(group)}
+          >
             <i className="fas fa-edit"></i>
           </button>
           <button className="text-red-600 hover:text-red-700 text-sm">
@@ -214,6 +226,34 @@ export default function GroupsPage() {
     setViewMode(value as "grid" | "list");
   };
 
+  const handleCreateGroup = () => {
+    setModalMode('create');
+    setSelectedGroup(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditGroup = (group: any) => {
+    setModalMode('edit');
+    setSelectedGroup(group);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveGroup = (groupData: any) => {
+    if (modalMode === 'create') {
+      // Add new group to the list
+      const newGroup = {
+        ...groupData,
+        id: Math.max(...groups.map(g => g.id)) + 1,
+        members: 0,
+        avatar: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=60&h=60&fit=crop&crop=face"
+      };
+      console.log('Creating new group:', newGroup);
+    } else {
+      // Update existing group
+      console.log('Updating group:', groupData);
+    }
+  };
+
   return (
     <DashboardLayout>
       <PageHeader
@@ -222,7 +262,7 @@ export default function GroupsPage() {
         actionButton={{
           text: "Create Group",
           icon: "fas fa-plus",
-          onClick: () => console.log("Create group clicked")
+          onClick: handleCreateGroup
         }}
       />
 
@@ -269,6 +309,15 @@ export default function GroupsPage() {
           data={filteredGroups}
         />
       )}
+
+      {/* Group Modal */}
+      <GroupModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        group={selectedGroup}
+        onSave={handleSaveGroup}
+        mode={modalMode}
+      />
     </DashboardLayout>
   );
 } 
