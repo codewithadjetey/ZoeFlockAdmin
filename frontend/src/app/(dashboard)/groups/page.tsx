@@ -1,7 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GroupModal from "@/components/groups/GroupModal";
+import { GroupsService, Group } from "@/services/groups";
 import { 
   PageHeader, 
   SearchInput, 
@@ -20,99 +21,48 @@ export default function GroupsPage() {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [selectedGroup, setSelectedGroup] = useState<any>(null);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const groups = [
-    {
-      id: 1,
-      name: "Youth Ministry",
-      description: "Engaging young people in faith and community",
-      category: "Ministry",
-      leader: "Sarah Johnson",
-      members: 25,
-      maxMembers: 30,
-      status: "Active",
-      meetingDay: "Sunday",
-      meetingTime: "4:00 PM",
-      location: "Youth Room",
-      avatar: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=60&h=60&fit=crop&crop=face",
-    },
-    {
-      id: 2,
-      name: "Bible Study Group",
-      description: "Weekly Bible study and discussion",
-      category: "Education",
-      leader: "John Smith",
-      members: 12,
-      maxMembers: 15,
-      status: "Active",
-      meetingDay: "Wednesday",
-      meetingTime: "7:00 PM",
-      location: "Fellowship Hall",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=60&h=60&fit=crop&crop=face",
-    },
-    {
-      id: 3,
-      name: "Prayer Warriors",
-      description: "Dedicated prayer group for church needs",
-      category: "Prayer",
-      leader: "Emily Davis",
-      members: 8,
-      maxMembers: 12,
-      status: "Active",
-      meetingDay: "Tuesday",
-      meetingTime: "6:30 PM",
-      location: "Prayer Room",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=60&h=60&fit=crop&crop=face",
-    },
-    {
-      id: 4,
-      name: "Choir",
-      description: "Church choir for worship services",
-      category: "Music",
-      leader: "Michael Brown",
-      members: 18,
-      maxMembers: 20,
-      status: "Active",
-      meetingDay: "Thursday",
-      meetingTime: "7:30 PM",
-      location: "Choir Room",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face",
-    },
-    {
-      id: 5,
-      name: "Men's Fellowship",
-      description: "Monthly men's fellowship and Bible study",
-      category: "Fellowship",
-      leader: "David Wilson",
-      members: 10,
-      maxMembers: 15,
-      status: "Active",
-      meetingDay: "Saturday",
-      meetingTime: "8:00 AM",
-      location: "Conference Room",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=60&h=60&fit=crop&crop=face",
-    },
-    {
-      id: 6,
-      name: "Women's Ministry",
-      description: "Women's ministry and support group",
-      category: "Fellowship",
-      leader: "Lisa Miller",
-      members: 22,
-      maxMembers: 25,
-      status: "Active",
-      meetingDay: "Monday",
-      meetingTime: "7:00 PM",
-      location: "Women's Room",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&crop=face",
-    },
-  ];
+  // Load groups from API
+  useEffect(() => {
+    loadGroups();
+  }, []);
+
+  const loadGroups = async () => {
+    try {
+      setLoading(true);
+      const response = await GroupsService.getGroups({
+        search: searchTerm,
+        category: categoryFilter === "All Categories" ? undefined : categoryFilter,
+        status: statusFilter === "All Status" ? undefined : statusFilter,
+      });
+      
+      if (response.success) {
+        setGroups(response.data);
+      } else {
+        setError(response.message);
+      }
+    } catch (err) {
+      setError('Failed to load groups');
+      console.error('Error loading groups:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reload groups when filters change
+  useEffect(() => {
+    loadGroups();
+  }, [searchTerm, categoryFilter, statusFilter]);
+
+
 
   const filteredGroups = groups.filter((group) => {
     const matchesSearch = group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         group.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         group.leader.toLowerCase().includes(searchTerm.toLowerCase());
+                         group.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === "All Categories" || group.category === categoryFilter;
     const matchesStatus = statusFilter === "All Status" || group.status === statusFilter;
     
@@ -152,11 +102,11 @@ export default function GroupsPage() {
         </div>
       </div>
     )},
-    { key: "leader", label: "Leader" },
+
     { key: "category", label: "Category", render: (category: any) => <CategoryBadge category={category} /> },
-    { key: "members", label: "Members", render: (members: any, group: any) => `${members}/${group.maxMembers}` },
+    { key: "member_count", label: "Members", render: (member_count: any, group: any) => `${member_count || 0}/${group.max_members}` },
     { key: "status", label: "Status", render: (status: any) => <StatusBadge status={status} /> },
-    { key: "meetingDay", label: "Meeting", render: (day: any, group: any) => `${day} ${group.meetingTime}` },
+    { key: "meeting_day", label: "Meeting", render: (day: any, group: any) => `${day} ${group.meeting_time}` },
     { key: "actions", label: "Actions", render: (_: any, group: any) => (
       <div className="text-sm font-medium">
         <button 
@@ -183,20 +133,11 @@ export default function GroupsPage() {
       <p className="text-sm text-gray-600 mb-4">{group.description}</p>
       
       <div className="space-y-2 mb-4">
-        <div className="flex items-center text-sm">
-          <i className="fas fa-user text-gray-400 mr-2"></i>
-          <span className="text-gray-600">Leader: {group.leader}</span>
-        </div>
-        <div className="flex items-center text-sm">
-          <i className="fas fa-users text-gray-400 mr-2"></i>
-          <span className="text-gray-600">
-            {group.members}/{group.maxMembers} members
-          </span>
-        </div>
+
         <div className="flex items-center text-sm">
           <i className="fas fa-calendar text-gray-400 mr-2"></i>
           <span className="text-gray-600">
-            {group.meetingDay} {group.meetingTime}
+            {group.meeting_day} {group.meeting_time}
           </span>
         </div>
         <div className="flex items-center text-sm">
@@ -238,19 +179,29 @@ export default function GroupsPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveGroup = (groupData: any) => {
-    if (modalMode === 'create') {
-      // Add new group to the list
-      const newGroup = {
-        ...groupData,
-        id: Math.max(...groups.map(g => g.id)) + 1,
-        members: 0,
-        avatar: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=60&h=60&fit=crop&crop=face"
-      };
-      console.log('Creating new group:', newGroup);
-    } else {
-      // Update existing group
-      console.log('Updating group:', groupData);
+  const handleSaveGroup = async (groupData: Group) => {
+    try {
+      if (modalMode === 'create') {
+        const response = await GroupsService.createGroup(groupData);
+        if (response.success) {
+          console.log('Group created successfully:', response.data);
+          loadGroups(); // Reload groups
+        } else {
+          console.error('Failed to create group:', response.message);
+        }
+      } else {
+        if (selectedGroup?.id) {
+          const response = await GroupsService.updateGroup(selectedGroup.id, groupData);
+          if (response.success) {
+            console.log('Group updated successfully:', response.data);
+            loadGroups(); // Reload groups
+          } else {
+            console.error('Failed to update group:', response.message);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error saving group:', err);
     }
   };
 
