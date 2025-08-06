@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\EmailVerificationController;
 use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\DocumentationController;
 use App\Http\Controllers\Api\V1\FileUploadController;
+use App\Http\Controllers\Api\V1\GroupController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -72,14 +73,17 @@ Route::prefix($apiVersion)->group(function () {
         Route::delete('/{token}', [FileUploadController::class, 'delete']);
     });
 
-    // TODO: Add routes for other modules (Groups, Events, Donations, Communications, etc.)
-    // Route::prefix('groups')->group(function () {
-    //     Route::get('/', [GroupController::class, 'index']);
-    //     Route::post('/', [GroupController::class, 'store']);
-    //     Route::get('/{group}', [GroupController::class, 'show']);
-    //     Route::put('/{group}', [GroupController::class, 'update']);
-    //     Route::delete('/{group}', [GroupController::class, 'destroy']);
-    // });
+    // Groups management routes
+    Route::prefix('groups')->group(function () {
+        Route::get('/', [GroupController::class, 'index']);
+        Route::post('/', [GroupController::class, 'store']);
+        Route::get('/{id}', [GroupController::class, 'show']);
+        Route::put('/{id}', [GroupController::class, 'update']);
+        Route::delete('/{id}', [GroupController::class, 'destroy']);
+
+    });
+
+    // TODO: Add routes for other modules (Events, Donations, Communications, etc.)
 
     // Route::prefix('events')->group(function () {
     //     Route::get('/', [EventController::class, 'index']);
@@ -104,7 +108,7 @@ Route::prefix($apiVersion)->group(function () {
     //     Route::put('/{communication}', [CommunicationController::class, 'update']);
     //     Route::delete('/{communication}', [CommunicationController::class, 'destroy']);
     // });
-});
+    });
 
     // Test route
     Route::get('/test', function () {
