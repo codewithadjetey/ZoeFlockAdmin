@@ -29,7 +29,7 @@ const ViewToggle: React.FC<ViewToggleProps> = ({
   };
 
   return (
-    <div className="flex items-center justify-between mt-6 relative z-10 view-toggle-container" onClick={(e) => e.stopPropagation()}>
+    <div className="flex items-center justify-between my-4 md:my-6 relative z-10 view-toggle-container" onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center space-x-2">
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">View:</span>
         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1 shadow-lg" onClick={(e) => e.stopPropagation()}>
