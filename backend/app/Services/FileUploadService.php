@@ -104,4 +104,22 @@ class FileUploadService
     {
         return FileUpload::where('upload_token', $token)->first();
     }
+
+    //attach file to model using token
+    public function attachFileToModel(string $token, string $modelType, int $modelId): bool
+    {
+        $file = $this->getFileByToken($token);
+        if (!$file) {
+            return false;
+        }
+
+        if ($file->model_type && $file->model_id) {
+            return false;
+        }
+
+        $file->model_type = $modelType;
+        $file->model_id = $modelId;
+        $file->save();
+        return true;
+    }
 } 

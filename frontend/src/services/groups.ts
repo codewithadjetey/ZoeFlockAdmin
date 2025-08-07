@@ -12,6 +12,16 @@ export interface Group {
   status: string;
   created_at?: string;
   updated_at?: string;
+  uploadedFiles?: FileUpload[];
+  files?: FileUpload[];
+}
+
+export interface FileUpload {
+  upload_token: string;
+  filename: string;
+  url: string;
+  size: string;
+  mime_type: string;
 }
 
 export interface GroupsResponse {
@@ -34,12 +44,14 @@ export class GroupsService {
     search?: string;
     category?: string;
     status?: string;
+    include_files?: boolean;
   } = {}): Promise<GroupsResponse> {
     const params = new URLSearchParams();
     
     if (filters.search) params.append('search', filters.search);
     if (filters.category) params.append('category', filters.category);
     if (filters.status) params.append('status', filters.status);
+    if (filters.include_files) params.append('include_files', 'true');
 
     const response = await http({ method: 'get', url: `/groups?${params.toString()}` });
     return response.data;

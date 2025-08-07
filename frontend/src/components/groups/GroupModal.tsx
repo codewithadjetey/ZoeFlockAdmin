@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '@/components/shared/Modal';
 import { TextInput, Textarea, SelectInput, Button } from '@/components/ui';
-import { GroupsService, Group } from '@/services/groups';
+import { GroupsService, Group, FileUpload } from '@/services/groups';
+import FileUploader from '../shared/FileUploader';
 
 interface GroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   group?: Group | null;
-  onSave: (group: Group) => void;
+  onSave: (group: Group & { upload_token?: string }) => void;
   mode: 'create' | 'edit';
 }
 
@@ -20,7 +21,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
   onSave,
   mode
 }) => {
-  const [formData, setFormData] = useState<Group>({
+  const [formData, setFormData] = useState<Group & { upload_token?: string }>({
     name: '',
     description: '',
     category: '',
@@ -28,14 +29,18 @@ const GroupModal: React.FC<GroupModalProps> = ({
     meeting_day: '',
     meeting_time: '',
     location: '',
-    status: 'Active'
+    status: 'Active',
+    upload_token: undefined
   });
 
   const [errors, setErrors] = useState<Partial<Group>>({});
 
   useEffect(() => {
     if (group && mode === 'edit') {
-      setFormData(group);
+      setFormData({
+        ...group,
+        upload_token: undefined // Will be set when user uploads a new image
+      });
     } else {
       setFormData({
         name: '',
@@ -45,7 +50,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
         meeting_day: '',
         meeting_time: '',
         location: '',
-        status: 'Active'
+        status: 'Active',
+        upload_token: undefined
       });
     }
     setErrors({});
@@ -100,8 +106,9 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-      onSave(formData);
-      onClose();
+    // Send form data with upload_token if an image was uploaded
+    onSave(formData);
+    onClose();
   };
 
   const handleInputChange = (field: keyof Group) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -133,6 +140,21 @@ const GroupModal: React.FC<GroupModalProps> = ({
         [field]: undefined
       }));
     }
+  };
+
+  const handleFileUpload = (files: FileUpload[]) => {
+    // Since we only allow one image, take the first file
+    if (files.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        upload_token: files[0].upload_token
+      }));
+    }
+  };
+
+  const handleFileError = (error: string) => {
+    console.error('File upload error:', error);
+    // You can add toast notification here if needed
   };
 
   return (
@@ -235,6 +257,27 @@ const GroupModal: React.FC<GroupModalProps> = ({
             options={statusOptions}
             placeholder="Select status"
           />
+        </div>
+
+        {/* Image Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Group Image
+          </label>
+          <FileUploader
+            multiple={false}
+            maxFiles={1}
+            maxSize={5}
+            acceptedTypes={['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']}
+            onUpload={handleFileUpload}
+            onError={handleFileError}
+            modelType="App\\Models\\Group"
+            modelId={mode === 'edit' ? group?.id : undefined}
+            className="mt-1"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Upload a single image for the group (max 5MB, JPG, PNG, GIF, WebP)
+          </p>
         </div>
 
         {/* Action Buttons */}

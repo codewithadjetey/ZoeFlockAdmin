@@ -242,6 +242,15 @@ class GroupController extends Controller
             'updated_by' => Auth::id(),
         ]);
 
+        // Handle file upload if an image was uploaded
+        if ($request->has('upload_token') && !empty($request->upload_token)) {
+            $this->fileUploadService->attachFileToModel(
+                $request->upload_token, 
+                Group::class, 
+                $group->id
+            );
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Group created successfully',
@@ -417,6 +426,15 @@ class GroupController extends Controller
             'updated_by' => Auth::id()
         ]));
 
+        // Handle file upload if an image was uploaded
+        if ($request->has('upload_token') && !empty($request->upload_token)) {
+            $this->fileUploadService->attachFileToModel(
+                $request->upload_token, 
+                Group::class, 
+                $group->id
+            );
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Group updated successfully',
@@ -545,7 +563,7 @@ class GroupController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'file' => 'required|file|max:10240', // 10MB max
+            'file' => 'required|file|max:5120|mimes:jpeg,jpg,png,gif,webp', // 5MB max, images only
         ]);
 
         if ($validator->fails()) {
@@ -657,7 +675,7 @@ class GroupController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'files.*' => 'required|file|max:10240', // 10MB max per file
+            'files.*' => 'required|file|max:5120|mimes:jpeg,jpg,png,gif,webp', // 5MB max per file, images only
         ]);
 
         if ($validator->fails()) {

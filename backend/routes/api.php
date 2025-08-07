@@ -44,7 +44,7 @@ Route::prefix($apiVersion)->group(function () {
     Route::get('/health', [DocumentationController::class, 'health']);
 
     // Protected routes (authentication required)
-    Route::middleware('auth.api')->group(function () {
+    Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);

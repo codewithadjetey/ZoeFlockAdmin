@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GroupModal from "@/components/groups/GroupModal";
-import { GroupsService, Group } from "@/services/groups";
+import { GroupsService, Group, FileUpload } from "@/services/groups";
 import { toast } from 'react-toastify';
 import { 
   PageHeader, 
@@ -38,6 +38,7 @@ export default function GroupsPage() {
         search: searchTerm,
         category: categoryFilter === "All Categories" ? undefined : categoryFilter,
         status: statusFilter === "All Status" ? undefined : statusFilter,
+        include_files: true,
       });
       
       if (response.success) {
@@ -91,7 +92,7 @@ export default function GroupsPage() {
   ];
 
   const tableColumns = [
-    { key: "group", label: "Group", render: (_, group: any) => (
+    { key: "group", label: "Group", render: (_: any, group: any) => (
       <div className="flex items-center">
         <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
           <i className="fas fa-users text-white"></i>
@@ -125,19 +126,33 @@ export default function GroupsPage() {
     )},
   ];
 
-  const renderGroupCard = (group: any) => (
-    <div className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">
-      <div className="flex items-start justify-between mb-4">
-        <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-          <i className="fas fa-users text-white text-xl"></i>
+  const renderGroupCard = (group: any) => {
+    // Get the first image file if available
+    const imageFile = group.files?.find((file: any) => file.is_image);
+    
+    return (
+      <div className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">
+        <div className="flex items-start justify-between mb-4">
+          {imageFile ? (
+            <div className="w-12 h-12 rounded-xl overflow-hidden">
+              <img 
+                src={imageFile.url} 
+                alt={group.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+              <i className="fas fa-users text-white text-xl"></i>
+            </div>
+          )}
+          <StatusBadge status={group.status} />
         </div>
-        <StatusBadge status={group.status} />
-      </div>
+        
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{group.name}</h3>
+        <p className="text-sm text-gray-600 mb-4">{group.description}</p>
       
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{group.name}</h3>
-      <p className="text-sm text-gray-600 mb-4">{group.description}</p>
-      
-      <div className="space-y-2 mb-4">
+              <div className="space-y-2 mb-4">
 
         <div className="flex items-center text-sm">
           <i className="fas fa-calendar text-gray-400 mr-2"></i>
@@ -169,7 +184,8 @@ export default function GroupsPage() {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const handleViewModeChange = (value: string) => {
     setViewMode(value as "grid" | "list");
@@ -187,7 +203,7 @@ export default function GroupsPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveGroup = async (groupData: Group) => {
+  const handleSaveGroup = async (groupData: Group & { upload_token?: string }) => {
     try {
       if (modalMode === 'create') {
         const response = await GroupsService.createGroup(groupData);
