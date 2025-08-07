@@ -44,7 +44,7 @@ Route::prefix($apiVersion)->group(function () {
     Route::get('/health', [DocumentationController::class, 'health']);
 
     // Protected routes (authentication required)
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth.api')->group(function () {
     // Auth routes
     Route::prefix('auth')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -81,6 +81,13 @@ Route::prefix($apiVersion)->group(function () {
         Route::put('/{id}', [GroupController::class, 'update']);
         Route::delete('/{id}', [GroupController::class, 'destroy']);
 
+        // Group file upload routes
+        Route::prefix('{id}/files')->group(function () {
+            Route::post('/upload', [GroupController::class, 'uploadFile']);
+            Route::post('/upload-multiple', [GroupController::class, 'uploadMultipleFiles']);
+            Route::get('/', [GroupController::class, 'getFiles']);
+            Route::delete('/{token}', [GroupController::class, 'deleteFile']);
+        });
     });
 
     // TODO: Add routes for other modules (Events, Donations, Communications, etc.)

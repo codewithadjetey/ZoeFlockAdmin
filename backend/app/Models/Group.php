@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Group extends Model
 {
@@ -43,6 +44,14 @@ class Group extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Get all file uploads for this group
+     */
+    public function fileUploads(): MorphMany
+    {
+        return $this->morphMany(FileUpload::class, 'uploadable', 'model_type', 'model_id');
     }
 
     /**
