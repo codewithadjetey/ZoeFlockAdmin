@@ -36,7 +36,7 @@ class GroupController extends Controller
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Search term for group name, description, or leader",
+     *         description="Search term for group name or description",
      *         required=false,
      *         @OA\Schema(type="string")
      *     ),
@@ -54,6 +54,20 @@ class GroupController extends Controller
      *         required=false,
      *         @OA\Schema(type="string", enum={"Active", "Inactive", "Full"})
      *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Items per page (default 10)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Groups retrieved successfully",
@@ -61,23 +75,42 @@ class GroupController extends Controller
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Groups retrieved successfully"),
      *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="id", type="integer", example=1),
-     *                     @OA\Property(property="name", type="string", example="Youth Ministry"),
-     *                     @OA\Property(property="description", type="string", example="Engaging young people in faith"),
-     *                     @OA\Property(property="category", type="string", example="Ministry"),
-     *                     @OA\Property(property="leader_name", type="string", example="Sarah Johnson"),
-     *                     @OA\Property(property="max_members", type="integer", example=30),
-     *                     @OA\Property(property="member_count", type="integer", example=25),
-     *                     @OA\Property(property="meeting_day", type="string", example="Sunday"),
-     *                     @OA\Property(property="meeting_time", type="string", example="4:00 PM"),
-     *                     @OA\Property(property="location", type="string", example="Youth Room"),
-     *                     @OA\Property(property="status", type="string", example="Active"),
-     *                     @OA\Property(property="created_at", type="string", format="date-time"),
-     *                     @OA\Property(property="updated_at", type="string", format="date-time")
-     *                 )
+     *                 property="groups",
+     *                 type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="data", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="name", type="string", example="Youth Ministry"),
+     *                         @OA\Property(property="description", type="string", example="Engaging young people in faith"),
+     *                         @OA\Property(property="category", type="string", example="Ministry"),
+     *                         @OA\Property(property="max_members", type="integer", example=30),
+     *                         @OA\Property(property="meeting_day", type="string", example="Sunday"),
+     *                         @OA\Property(property="meeting_time", type="string", example="4:00 PM"),
+     *                         @OA\Property(property="location", type="string", example="Youth Room"),
+     *                         @OA\Property(property="status", type="string", example="Active"),
+     *                         @OA\Property(property="img_path", type="string", nullable=true, example="uploads/2025/08/07/abc123.jpg"),
+     *                         @OA\Property(property="created_at", type="string", format="date-time"),
+     *                         @OA\Property(property="updated_at", type="string", format="date-time")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="first_page_url", type="string"),
+     *                 @OA\Property(property="from", type="integer", nullable=true),
+     *                 @OA\Property(property="last_page", type="integer"),
+     *                 @OA\Property(property="last_page_url", type="string"),
+     *                 @OA\Property(property="links", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="url", type="string", nullable=true),
+     *                         @OA\Property(property="label", type="string"),
+     *                         @OA\Property(property="active", type="boolean")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="next_page_url", type="string", nullable=true),
+     *                 @OA\Property(property="path", type="string"),
+     *                 @OA\Property(property="per_page", type="integer"),
+     *                 @OA\Property(property="prev_page_url", type="string", nullable=true),
+     *                 @OA\Property(property="to", type="integer", nullable=true),
+     *                 @OA\Property(property="total", type="integer")
      *             )
      *         )
      *     ),
@@ -131,17 +164,16 @@ class GroupController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "description", "category", "leader_name", "max_members", "meeting_day", "meeting_time", "location"},
+     *             required={"name", "description", "category", "max_members", "meeting_day", "meeting_time", "location"},
      *             @OA\Property(property="name", type="string", example="Youth Ministry"),
      *             @OA\Property(property="description", type="string", example="Engaging young people in faith"),
      *             @OA\Property(property="category", type="string", example="Ministry"),
-     *             @OA\Property(property="leader_id", type="integer", example=1),
-     *             @OA\Property(property="leader_name", type="string", example="Sarah Johnson"),
      *             @OA\Property(property="max_members", type="integer", example=30),
      *             @OA\Property(property="meeting_day", type="string", example="Sunday"),
      *             @OA\Property(property="meeting_time", type="string", example="4:00 PM"),
      *             @OA\Property(property="location", type="string", example="Youth Room"),
-     *             @OA\Property(property="status", type="string", example="Active")
+     *             @OA\Property(property="status", type="string", example="Active"),
+     *             @OA\Property(property="upload_token", type="string", nullable=true, example="abc123def456")
      *         )
      *     ),
      *     @OA\Response(
@@ -154,16 +186,15 @@ class GroupController extends Controller
      *                 property="data",
      *                 type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="name", type="string", example="Youth Ministry"),
-     *                 @OA\Property(property="description", type="string", example="Engaging young people in faith"),
-     *                 @OA\Property(property="category", type="string", example="Ministry"),
-     *                 @OA\Property(property="leader_name", type="string", example="Sarah Johnson"),
-     *                 @OA\Property(property="max_members", type="integer", example=30),
-     *                 @OA\Property(property="member_count", type="integer", example=0),
-     *                 @OA\Property(property="meeting_day", type="string", example="Sunday"),
-     *                 @OA\Property(property="meeting_time", type="string", example="4:00 PM"),
-     *                 @OA\Property(property="location", type="string", example="Youth Room"),
-     *                 @OA\Property(property="status", type="string", example="Active"),
+     *                 @OA\Property(property="name", type="string"),
+     *                 @OA\Property(property="description", type="string"),
+     *                 @OA\Property(property="category", type="string"),
+     *                 @OA\Property(property="max_members", type="integer"),
+     *                 @OA\Property(property="meeting_day", type="string"),
+     *                 @OA\Property(property="meeting_time", type="string"),
+     *                 @OA\Property(property="location", type="string"),
+     *                 @OA\Property(property="status", type="string"),
+     *                 @OA\Property(property="img_path", type="string", nullable=true),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time")
      *             )
@@ -171,12 +202,7 @@ class GroupController extends Controller
      *     ),
      *     @OA\Response(
      *         response=422,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Validation failed"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
+     *         description="Validation error"
      *     ),
      *     @OA\Response(
      *         response=401,
@@ -258,16 +284,15 @@ class GroupController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", example="Youth Ministry"),
-     *             @OA\Property(property="description", type="string", example="Engaging young people in faith"),
-     *             @OA\Property(property="category", type="string", example="Ministry"),
-     *             @OA\Property(property="leader_id", type="integer", example=1),
-     *             @OA\Property(property="leader_name", type="string", example="Sarah Johnson"),
-     *             @OA\Property(property="max_members", type="integer", example=30),
-     *             @OA\Property(property="meeting_day", type="string", example="Sunday"),
-     *             @OA\Property(property="meeting_time", type="string", example="4:00 PM"),
-     *             @OA\Property(property="location", type="string", example="Youth Room"),
-     *             @OA\Property(property="status", type="string", example="Active")
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="description", type="string"),
+     *             @OA\Property(property="category", type="string"),
+     *             @OA\Property(property="max_members", type="integer"),
+     *             @OA\Property(property="meeting_day", type="string"),
+     *             @OA\Property(property="meeting_time", type="string"),
+     *             @OA\Property(property="location", type="string"),
+     *             @OA\Property(property="status", type="string"),
+     *             @OA\Property(property="upload_token", type="string", nullable=true, example="abc123def456")
      *         )
      *     ),
      *     @OA\Response(
