@@ -226,23 +226,17 @@ class GroupController extends Controller
                 $group->id
             );
 
-            $group->img_path = $attachedFile->path;
-            $group->save();
+            if ($attachedFile) {
+                $group->img_path = $attachedFile->path;
+                $group->save();
+            }
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Group created successfully',
-            'data' => array_merge($group->load(['creator'])->toArray(), [
-                'uploaded_file' => $attachedFile ? [
-                    'upload_token' => $attachedFile->upload_token,
-                    'filename' => $attachedFile->filename,
-                    'url' => $attachedFile->url,
-                    'size' => $attachedFile->human_size,
-                    'mime_type' => $attachedFile->mime_type,
-                    'is_image' => $attachedFile->isImage(),
-                ] : null,
-            ]),
+            'data' => $group->load(['creator']),
+            'uploaded_file' => $attachedFile ? "File uploaded successfully" : "No file uploaded",
         ], 201);
     }
 
@@ -422,13 +416,17 @@ class GroupController extends Controller
                 $group->id
             );
 
-            $group->img_path = $attachedFile->path;
-            $group->save();
+
+            if ($attachedFile) {
+                $group->img_path = $attachedFile->path;
+                $group->save();
+            }
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Group updated successfully',
+            "uploaded_file" => $attachedFile ? "File uploaded successfully" : "No file uploaded",
             'data' => $group->load(['creator'])
         ]);
     }
@@ -481,232 +479,6 @@ class GroupController extends Controller
             'success' => true,
             'message' => 'Group deleted successfully'
         ]);
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/v1/groups/{id}/files/upload",
-     *     summary="Upload files for a group",
-     *     tags={"Groups"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="Group ID",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 required={"file"},
-     *                 @OA\Property(
-     *                     property="file",
-     *                     type="string",
-     *                     format="binary",
-     *                     description="The file to upload (max 10MB)"
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="File uploaded successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="File uploaded successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="upload_token", type="string", example="abc123def456..."),
-     *                 @OA\Property(property="filename", type="string", example="group-document.pdf"),
-     *                 @OA\Property(property="url", type="string", example="http://example.com/storage/uploads/2024/01/15/abc123.pdf"),
-     *                 @OA\Property(property="size", type="string", example="2.5 MB"),
-     *                 @OA\Property(property="mime_type", type="string", example="application/pdf")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Group not found"
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation failed"
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     )
-     * )
-     */
-    public function uploadFile(Request $request, int $id): JsonResponse
-    {
-        // Check if group exists
-        $group = Group::find($id);
-        if (!$group) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Group not found'
-            ], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'file' => 'required|file|max:5120|mimes:jpeg,jpg,png,gif,webp', // 5MB max, images only
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        try {
-            $fileUpload = $this->fileUploadService->uploadFile(
-                $request->file('file'),
-                Group::class,
-                $group->id
-            );
-
-            return response()->json([
-                'success' => true,
-                'message' => 'File uploaded successfully',
-                'data' => [
-                    'upload_token' => $fileUpload->upload_token,
-                    'filename' => $fileUpload->filename,
-                    'url' => $fileUpload->url,
-                    'size' => $fileUpload->human_size,
-                    'mime_type' => $fileUpload->mime_type,
-                ],
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'File upload failed',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/v1/groups/{id}/files/upload-multiple",
-     *     summary="Upload multiple files for a group",
-     *     tags={"Groups"},
-     *     security={{"sanctum":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="Group ID",
-     *         required=true,
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 required={"files"},
-     *                 @OA\Property(
-     *                     property="files",
-     *                     type="array",
-     *                     @OA\Items(type="string", format="binary"),
-     *                     description="Array of files to upload (max 10MB each)"
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Files uploaded successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="3 files uploaded successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="object",
-     *                     @OA\Property(property="upload_token", type="string", example="abc123def456..."),
-     *                     @OA\Property(property="filename", type="string", example="image1.jpg"),
-     *                     @OA\Property(property="url", type="string", example="http://example.com/storage/uploads/2024/01/15/abc123.jpg"),
-     *                     @OA\Property(property="size", type="string", example="1.2 MB"),
-     *                     @OA\Property(property="mime_type", type="string", example="image/jpeg")
-     *                 )
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="Group not found"
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation failed"
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized"
-     *     )
-     * )
-     */
-    public function uploadMultipleFiles(Request $request, int $id): JsonResponse
-    {
-        // Check if group exists
-        $group = Group::find($id);
-        if (!$group) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Group not found'
-            ], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'files.*' => 'required|file|max:5120|mimes:jpeg,jpg,png,gif,webp', // 5MB max per file, images only
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        try {
-            $files = $request->file('files');
-            $uploads = $this->fileUploadService->uploadMultipleFiles(
-                $files,
-                Group::class,
-                $group->id
-            );
-
-            $uploadData = collect($uploads)->map(function ($upload) {
-                return [
-                    'upload_token' => $upload->upload_token,
-                    'filename' => $upload->filename,
-                    'url' => $upload->url,
-                    'size' => $upload->human_size,
-                    'mime_type' => $upload->mime_type,
-                ];
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => count($uploads) . ' files uploaded successfully',
-                'data' => $uploadData,
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'File upload failed',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
     }
 
     /**

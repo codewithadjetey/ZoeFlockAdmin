@@ -14,7 +14,7 @@ import {
   StatusBadge,
   CategoryBadge
 } from "@/components/ui";
-import { getImageUrl } from "@/utils";
+import { getImageUrl } from "@/utils/helpers";
 
 export default function GroupsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -96,7 +96,7 @@ export default function GroupsPage() {
       <div className="flex items-center">
         <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center">
           {group.img_path ? (
-            <img src={group.img_path} alt={group.name} className="w-full h-full object-cover" />
+            <img src={getImageUrl(group.img_path) || ''} alt={group.name} className="w-full h-full object-cover" />
           ) : (
             <i className="fas fa-users text-white"></i>
           )}
@@ -130,8 +130,8 @@ export default function GroupsPage() {
     )},
   ];
 
-  const renderGroupCard = (group: Group) => {
-    const imageUrl = getImageUrl(group.img_path || null);
+  const renderGroupCard = (group: any) => {
+    const imageUrl = getImageUrl(group.img_path) || group.files?.find((file: any) => file.is_image)?.url;
     
     return (
       <div className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">

@@ -89,8 +89,12 @@ export const cn = (...classes: (string | undefined | null | false)[]): string =>
   return classes.filter(Boolean).join(' ');
 }; 
 
-//NEXT_PUBLIC_ASSETS_URL getImageUrl
+// NEXT_PUBLIC_ASSETS_URL getImageUrl
 export const getImageUrl = (path: string | null): string | null => {
   if (!path) return null;
-  return `${process.env.NEXT_PUBLIC_ASSETS_URL}/${path}`;
+  // If already absolute URL, return as-is
+  if (/^https?:\/\//i.test(path)) return path;
+  const base = (process.env.NEXT_PUBLIC_ASSETS_URL || '').replace(/\/$/, '');
+  const clean = path.replace(/^\/+/, '');
+  return `${base}/${clean}`;
 };
