@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Group;
+use App\Models\FileUpload; // added
 use App\Services\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -408,17 +409,15 @@ class GroupController extends Controller
             'updated_by' => Auth::id()
         ]));
 
-        $attachedFile = null;
-        if ($request->has('upload_token') && !empty($request->upload_token)) {
-            $attachedFile = $this->fileUploadService->attachFileToModel(
-                $request->upload_token,
-                Group::class,
-                $group->id
-            );
-
-
-            if ($attachedFile) {
-                $group->img_path = $attachedFile->path;
+    
+        // Fallback: if a file is attached to this group but img_path is empty, set it to the latest file path
+        if (empty($group->img_path)) {
+            $latest = FileUpload::where('model_type', Group::class)
+                ->where('model_id', $group->id)
+                ->latest('id')
+                ->first();
+            if ($latest) {
+                $group->img_path = $latest->path;
                 $group->save();
             }
         }
@@ -426,8 +425,7 @@ class GroupController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Group updated successfully',
-            "uploaded_file" => $attachedFile ? "File uploaded successfully" : "No file uploaded",
-            'data' => $group->load(['creator'])
+            'data' => $group->load(['creator']),
         ]);
     }
 
