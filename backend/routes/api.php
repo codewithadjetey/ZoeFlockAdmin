@@ -77,17 +77,8 @@ Route::prefix($apiVersion)->group(function () {
     Route::prefix('groups')->group(function () {
         Route::get('/', [GroupController::class, 'index']);
         Route::post('/', [GroupController::class, 'store']);
-        Route::get('/{id}', [GroupController::class, 'show']);
         Route::put('/{id}', [GroupController::class, 'update']);
         Route::delete('/{id}', [GroupController::class, 'destroy']);
-
-        // Group file upload routes
-        Route::prefix('{id}/files')->group(function () {
-            Route::post('/upload', [GroupController::class, 'uploadFile']);
-            Route::post('/upload-multiple', [GroupController::class, 'uploadMultipleFiles']);
-            Route::get('/', [GroupController::class, 'getFiles']);
-            Route::delete('/{token}', [GroupController::class, 'deleteFile']);
-        });
     });
 
     // TODO: Add routes for other modules (Events, Donations, Communications, etc.)
