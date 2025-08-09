@@ -115,7 +115,7 @@ class FileUploadService
 
         // If already attached to some model, do not re-attach
         if ($file->model_type && $file->model_id) {
-            return null;
+            return $file;
         }
 
         $file->model_type = $modelType;

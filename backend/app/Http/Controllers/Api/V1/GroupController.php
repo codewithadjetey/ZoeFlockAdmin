@@ -405,22 +405,30 @@ class GroupController extends Controller
             ], 422);
         }
 
-        $group->update(array_merge($request->all(), [
-            'updated_by' => Auth::id()
-        ]));
+        //check if has upload_token
+        if ($request->has('upload_token') && !empty($request->upload_token)) {
+            $attachedFile = $this->fileUploadService->attachFileToModel(
+                $request->upload_token,
+                Group::class,
+                $group->id
+            );
 
-    
-        // Fallback: if a file is attached to this group but img_path is empty, set it to the latest file path
-        if (empty($group->img_path)) {
-            $latest = FileUpload::where('model_type', Group::class)
-                ->where('model_id', $group->id)
-                ->latest('id')
-                ->first();
-            if ($latest) {
-                $group->img_path = $latest->path;
-                $group->save();
+            if ($attachedFile) {
+                $group->img_path = $attachedFile->path;
             }
         }
+
+        $group->name = $request->name;
+        $group->description = $request->description;
+        $group->category = $request->category;
+        $group->max_members = $request->max_members;
+        $group->meeting_day = $request->meeting_day;
+        $group->meeting_time = $request->meeting_time;
+        $group->location = $request->location;
+        $group->status = $request->status;
+        $group->updated_by = Auth::id();
+        $group->save();
+
 
         return response()->json([
             'success' => true,
