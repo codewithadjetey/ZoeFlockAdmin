@@ -431,6 +431,191 @@ class GroupController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/v1/groups/{id}/members",
+     *     summary="Add a member to a group",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Group ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"member_id"},
+     *             @OA\Property(property="member_id", type="integer", example=1),
+     *             @OA\Property(property="role", type="string", enum={"member", "leader", "coordinator", "mentor"}, example="member"),
+     *             @OA\Property(property="notes", type="string", example="New member")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Member added to group successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Member added to group successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Group or member not found"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error"
+     *     )
+     * )
+     */
+    public function addMember(Request $request, int $id): JsonResponse
+    {
+        $group = Group::find($id);
+        if (!$group) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Group not found'
+            ], 404);
+        }
 
+        $validator = Validator::make($request->all(), [
+            'member_id' => 'required|integer|exists:members,id',
+            'role' => 'nullable|string|in:member,leader,coordinator,mentor',
+            'notes' => 'nullable|string|max:1000',
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Check if member is already in the group
+        if ($group->members()->where('member_id', $request->member_id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member is already in this group'
+            ], 422);
+        }
+
+        // Check if group is full
+        if ($group->is_full) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Group is full'
+            ], 422);
+        }
+
+        $group->members()->attach($request->member_id, [
+            'role' => $request->role ?? 'member',
+            'notes' => $request->notes,
+            'joined_at' => now(),
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Member added to group successfully'
+        ]);
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/v1/groups/{id}/members/{member_id}",
+     *     summary="Remove a member from a group",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Group ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="member_id",
+     *         in="path",
+     *         description="Member ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Member removed from group successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Member removed from group successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Group or member not found"
+     *     )
+     * )
+     */
+    public function removeMember(int $id, int $member_id): JsonResponse
+    {
+        $group = Group::find($id);
+        if (!$group) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Group not found'
+            ], 404);
+        }
+
+        $group->members()->detach($member_id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Member removed from group successfully'
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/groups/{id}/members",
+     *     summary="Get group members",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Group ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Group members retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Group members retrieved successfully"),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     )
+     * )
+     */
+    public function getMembers(int $id): JsonResponse
+    {
+        $group = Group::find($id);
+        if (!$group) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Group not found'
+            ], 404);
+        }
+
+        $members = $group->members()->with(['creator'])->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Group members retrieved successfully',
+            'data' => $members
+        ]);
+    }
 }

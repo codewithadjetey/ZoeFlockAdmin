@@ -79,6 +79,11 @@ Route::prefix($apiVersion)->group(function () {
         Route::post('/', [GroupController::class, 'store']);
         Route::put('/{id}', [GroupController::class, 'update']);
         Route::delete('/{id}', [GroupController::class, 'destroy']);
+        
+        // Group member management routes
+        Route::get('/{id}/members', [GroupController::class, 'getMembers']);
+        Route::post('/{id}/members', [GroupController::class, 'addMember']);
+        Route::delete('/{id}/members/{member_id}', [GroupController::class, 'removeMember']);
     });
 
     // TODO: Add routes for other modules (Events, Donations, Communications, etc.)
