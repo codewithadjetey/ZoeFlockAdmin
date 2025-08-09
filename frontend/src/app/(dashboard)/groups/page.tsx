@@ -211,7 +211,7 @@ export default function GroupsPage() {
         const response = await GroupsService.createGroup(groupData);
         if (response.success) {
           toast.success('Group created successfully!');
-          loadGroups(); // Reload groups
+          setGroups([response.data, ...groups ]);
         } else {
           toast.error(response.message || 'Failed to create group');
         }
@@ -220,7 +220,7 @@ export default function GroupsPage() {
           const response = await GroupsService.updateGroup(selectedGroup.id, groupData);
           if (response.success) {
             toast.success('Group updated successfully!');
-            loadGroups(); // Reload groups
+            setGroups(groups.map(group => group.id === selectedGroup.id ? response.data : group));
           } else {
             toast.error(response.message || 'Failed to update group');
           }
@@ -241,7 +241,7 @@ export default function GroupsPage() {
       const response = await GroupsService.deleteGroup(groupId);
       if (response.success) {
         toast.success('Group deleted successfully!');
-        loadGroups(); // Reload groups
+        setGroups(groups.filter(group => group.id !== groupId));
       } else {
         toast.error(response.message || 'Failed to delete group');
       }
