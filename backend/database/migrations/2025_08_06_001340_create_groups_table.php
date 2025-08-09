@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('meeting_time');
             $table->string('location');
             $table->enum('status', ['Active', 'Inactive', 'Full'])->default('Active');
+            $table->string('img_path')->nullable();
             $table->unsignedBigInteger('created_by');
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Group extends Model
@@ -19,6 +20,7 @@ class Group extends Model
         'meeting_day',
         'meeting_time',
         'location',
+        'img_path',
         'status',
         'created_by',
         'updated_by',
@@ -44,14 +46,6 @@ class Group extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    /**
-     * Get all file uploads for this group
-     */
-    public function fileUploads(): MorphMany
-    {
-        return $this->morphMany(FileUpload::class, 'uploadable', 'model_type', 'model_id');
     }
 
     /**
@@ -84,5 +78,12 @@ class Group extends Model
     public function scopeByCategory($query, $category)
     {
         return $query->where('category', $category);
+    }
+
+    public function image(): HasOne
+    {
+        return $this->hasOne(FileUpload::class, 'model_id', 'id')
+            ->where('model_type', Group::class)
+            ->orderBy('id', 'desc');
     }
 } 

@@ -1,4 +1,5 @@
 import { http } from '@/utils';
+import type { Paginated } from '@/interfaces/api';
 
 export interface Group {
   id?: number;
@@ -12,8 +13,7 @@ export interface Group {
   status: string;
   created_at?: string;
   updated_at?: string;
-  uploadedFiles?: FileUpload[];
-  files?: FileUpload[];
+  img_path?: string | null;
 }
 
 export interface FileUpload {
@@ -27,7 +27,7 @@ export interface FileUpload {
 export interface GroupsResponse {
   success: boolean;
   message: string;
-  data: Group[];
+  groups: Paginated<Group>;
 }
 
 export interface GroupResponse {
@@ -38,23 +38,34 @@ export interface GroupResponse {
 
 export class GroupsService {
   /**
-   * Get all groups with optional filters
+   * Get groups with optional filters and pagination
    */
   static async getGroups(filters: {
     search?: string;
     category?: string;
     status?: string;
     include_files?: boolean;
+    page?: number;
+    per_page?: number;
   } = {}): Promise<GroupsResponse> {
     const params = new URLSearchParams();
-    
     if (filters.search) params.append('search', filters.search);
     if (filters.category) params.append('category', filters.category);
     if (filters.status) params.append('status', filters.status);
     if (filters.include_files) params.append('include_files', 'true');
+    if (filters.page) params.append('page', String(filters.page));
+    if (filters.per_page) params.append('per_page', String(filters.per_page));
 
     const response = await http({ method: 'get', url: `/groups?${params.toString()}` });
-    return response.data;
+    return response.data as GroupsResponse;
+  }
+
+  /**
+   * Follow a pagination URL returned by the API
+   */
+  static async getByPageUrl(url: string): Promise<GroupsResponse> {
+    const response = await http({ method: 'get', url });
+    return response.data as GroupsResponse;
   }
 
   /**
@@ -88,8 +99,6 @@ export class GroupsService {
     const response = await http({ method: 'delete', url: `/groups/${id}` });
     return response.data;
   }
-
-
 
   /**
    * Get available categories

@@ -88,20 +88,17 @@ class GroupController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+
+        $perPage = $request->per_page ?? 10;
         $query = Group::with(['creator']);
 
-        // Include files if requested
-        if ($request->has('include_files') && $request->include_files) {
-            $query->with(['fileUploads']);
-        }
 
         // Search filter
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('leader_name', 'like', "%{$search}%");
+                  ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -115,33 +112,12 @@ class GroupController extends Controller
             $query->where('status', $request->status);
         }
 
-        $groups = $query->orderBy('created_at', 'desc')->get();
-
-        // Transform groups to include file information if requested
-        if ($request->has('include_files') && $request->include_files) {
-            $groups = $groups->map(function ($group) {
-                $groupData = $group->toArray();
-                $groupData['files'] = $group->fileUploads->map(function ($file) {
-                    return [
-                        'id' => $file->id,
-                        'upload_token' => $file->upload_token,
-                        'filename' => $file->filename,
-                        'url' => $file->url,
-                        'size' => $file->human_size,
-                        'mime_type' => $file->mime_type,
-                        'is_image' => $file->isImage(),
-                        'is_document' => $file->isDocument(),
-                        'created_at' => $file->created_at,
-                    ];
-                });
-                return $groupData;
-            });
-        }
+        $groups = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
             'message' => 'Groups retrieved successfully',
-            'data' => $groups
+            'groups' => $groups
         ]);
     }
 
@@ -242,19 +218,31 @@ class GroupController extends Controller
             'updated_by' => Auth::id(),
         ]);
 
-        // Handle file upload if an image was uploaded
+        $attachedFile = null;
         if ($request->has('upload_token') && !empty($request->upload_token)) {
-            $this->fileUploadService->attachFileToModel(
-                $request->upload_token, 
-                Group::class, 
+            $attachedFile = $this->fileUploadService->attachFileToModel(
+                $request->upload_token,
+                Group::class,
                 $group->id
             );
+
+            $group->img_path = $attachedFile->path;
+            $group->save();
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Group created successfully',
-            'data' => $group->load(['creator'])
+            'data' => array_merge($group->load(['creator'])->toArray(), [
+                'uploaded_file' => $attachedFile ? [
+                    'upload_token' => $attachedFile->upload_token,
+                    'filename' => $attachedFile->filename,
+                    'url' => $attachedFile->url,
+                    'size' => $attachedFile->human_size,
+                    'mime_type' => $attachedFile->mime_type,
+                    'is_image' => $attachedFile->isImage(),
+                ] : null,
+            ]),
         ], 201);
     }
 
@@ -426,13 +414,16 @@ class GroupController extends Controller
             'updated_by' => Auth::id()
         ]));
 
-        // Handle file upload if an image was uploaded
+        $attachedFile = null;
         if ($request->has('upload_token') && !empty($request->upload_token)) {
-            $this->fileUploadService->attachFileToModel(
-                $request->upload_token, 
-                Group::class, 
+            $attachedFile = $this->fileUploadService->attachFileToModel(
+                $request->upload_token,
+                Group::class,
                 $group->id
             );
+
+            $group->img_path = $attachedFile->path;
+            $group->save();
         }
 
         return response()->json([
