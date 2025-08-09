@@ -104,4 +104,23 @@ class FileUploadService
     {
         return FileUpload::where('upload_token', $token)->first();
     }
+
+    // Attach file to model using token. Returns the FileUpload on success, or null on failure
+    public function attachFileToModel(string $token, string $modelType, int $modelId): ?FileUpload
+    {
+        $file = $this->getFileByToken($token);
+        if (!$file) {
+            return null;
+        }
+
+        // If already attached to some model, do not re-attach
+        if ($file->model_type && $file->model_id) {
+            return $file;
+        }
+
+        $file->model_type = $modelType;
+        $file->model_id = $modelId;
+        $file->save();
+        return $file;
+    }
 } 
