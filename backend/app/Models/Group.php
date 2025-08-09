@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -46,6 +47,43 @@ class Group extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Get the members of this group
+     */
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(Member::class, 'group_members')
+            ->withPivot('role', 'joined_at', 'is_active')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the active members of this group
+     */
+    public function activeMembers(): BelongsToMany
+    {
+        return $this->belongsToMany(Member::class, 'group_members')
+            ->withPivot('role', 'joined_at', 'is_active')
+            ->wherePivot('is_active', true)
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the member count for this group
+     */
+    public function getMemberCountAttribute(): int
+    {
+        return $this->activeMembers()->count();
+    }
+
+    /**
+     * Check if the group is full
+     */
+    public function getIsFullAttribute(): bool
+    {
+        return $this->member_count >= $this->max_members;
     }
 
     /**
