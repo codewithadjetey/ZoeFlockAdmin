@@ -165,4 +165,40 @@ export class GroupsService {
       '8:00 PM',
     ];
   }
+
+  /**
+   * Get group members
+   */
+  static async getGroupMembers(groupId: number): Promise<{ success: boolean; message: string; data: any[] }> {
+    const response = await http({ method: 'get', url: `/groups/${groupId}/members` });
+    return response.data;
+  }
+
+  /**
+   * Add member to group
+   */
+  static async addMemberToGroup(groupId: number, memberId: number, data: { role?: string; notes?: string } = {}): Promise<{ success: boolean; message: string }> {
+    const response = await http({ method: 'post', url: `/groups/${groupId}/members`, data: { member_id: memberId, ...data } });
+    return response.data;
+  }
+
+  /**
+   * Remove member from group
+   */
+  static async removeMemberFromGroup(groupId: number, memberId: number): Promise<{ success: boolean; message: string }> {
+    const response = await http({ method: 'delete', url: `/groups/${groupId}/members/${memberId}` });
+    return response.data;
+  }
+
+  /**
+   * Get available member roles
+   */
+  static getMemberRoles(): string[] {
+    return [
+      'member',
+      'leader',
+      'coordinator',
+      'mentor',
+    ];
+  }
 } 
