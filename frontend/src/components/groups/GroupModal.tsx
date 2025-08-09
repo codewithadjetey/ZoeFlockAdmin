@@ -33,7 +33,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
     upload_token: undefined
   });
 
-  const [errors, setErrors] = useState<Partial<Group>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof Group, string>>>({});
 
   useEffect(() => {
     if (group && mode === 'edit') {
@@ -209,7 +209,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
             onChange={handleInputChange('max_members')}
             placeholder="Enter max members"
             error={errors.max_members}
-            min={1}
           />
         </div>
 

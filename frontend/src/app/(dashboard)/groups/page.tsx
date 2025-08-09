@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GroupModal from "@/components/groups/GroupModal";
+import { GroupMembersModal } from "@/components/groups/GroupMembersModal";
 import { GroupsService, Group } from "@/services/groups";
 import { toast } from 'react-toastify';
 import { 
@@ -24,6 +25,8 @@ export default function GroupsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [selectedGroupForMembers, setSelectedGroupForMembers] = useState<Group | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState<number>(1);
@@ -121,6 +124,12 @@ export default function GroupsPage() {
           Edit
         </button>
         <button 
+          className="text-green-600 hover:text-green-900 mr-3"
+          onClick={() => handleManageMembers(group)}
+        >
+          Members
+        </button>
+        <button 
           className="text-red-600 hover:text-red-900"
           onClick={() => handleDeleteGroup(group.id)}
         >
@@ -203,6 +212,11 @@ export default function GroupsPage() {
     setModalMode('edit');
     setSelectedGroup(group);
     setIsModalOpen(true);
+  };
+
+  const handleManageMembers = (group: any) => {
+    setSelectedGroupForMembers(group);
+    setIsMemberModalOpen(true);
   };
 
   const handleSaveGroup = async (groupData: Group & { upload_token?: string }) => {
@@ -383,6 +397,15 @@ export default function GroupsPage() {
         onSave={handleSaveGroup}
         mode={modalMode}
       />
+
+      {/* Group Members Modal */}
+      {selectedGroupForMembers && (
+        <GroupMembersModal
+          isOpen={isMemberModalOpen}
+          onClose={() => setIsMemberModalOpen(false)}
+          group={selectedGroupForMembers}
+        />
+      )}
 
     </DashboardLayout>
   );
