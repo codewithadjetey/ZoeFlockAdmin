@@ -11,6 +11,7 @@ import {
 } from '@/components/ui';
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/interfaces/events';
 import { EventsService } from '@/services/events';
+import { EntitiesService } from '@/services/entities';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface EventModalProps {
@@ -18,8 +19,6 @@ interface EventModalProps {
   onClose: () => void;
   event?: Event;
   onSuccess: (event: Event) => void;
-  groups?: Array<{ id: number; name: string }>;
-  families?: Array<{ id: number; name: string }>;
 }
 
 interface EventFormData extends Omit<CreateEventRequest, 'recurrence_pattern' | 'recurrence_settings'> {
@@ -31,12 +30,13 @@ export default function EventModal({
   isOpen, 
   onClose, 
   event, 
-  onSuccess, 
-  groups = [], 
-  families = [] 
+  onSuccess
 }: EventModalProps) {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [groups, setGroups] = useState<Array<{ id: number; name: string }>>([]);
+  const [families, setFamilies] = useState<Array<{ id: number; name: string }>>([]);
+  const [isLoadingEntities, setIsLoadingEntities] = useState(false);
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
@@ -56,6 +56,13 @@ export default function EventModal({
   const [errors, setErrors] = useState<{
     [key: string]: string | Record<string, string>;
   }>({});
+
+  // Fetch entities when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchEntities();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (event) {
@@ -98,6 +105,19 @@ export default function EventModal({
     }
     setErrors({});
   }, [event]);
+
+  const fetchEntities = async () => {
+    setIsLoadingEntities(true);
+    try {
+      const result = await EntitiesService.getGroupsAndFamilies();
+      setGroups(result.groups);
+      setFamilies(result.families);
+    } catch (error) {
+      console.error('Error fetching entities:', error);
+    } finally {
+      setIsLoadingEntities(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -370,47 +390,59 @@ export default function EventModal({
           {/* Group and Family Associations */}
           {(formData.type === 'group' || formData.type === 'family') && (
             <div className="border-t pt-6">
-              {formData.type === 'group' && groups.length > 0 && (
+              {formData.type === 'group' && (
                 <FormField label="Associated Groups" error={errors.group_ids}>
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {groups.map(group => (
-                      <label key={group.id} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.group_ids?.includes(group.id)}
-                          onChange={(e) => {
-                            const newGroupIds = e.target.checked
-                              ? [...(formData.group_ids || []), group.id]
-                              : (formData.group_ids || []).filter(id => id !== group.id);
-                            handleInputChange('group_ids', newGroupIds);
-                          }}
-                        />
-                        {group.name}
-                      </label>
-                    ))}
-                  </div>
+                  {isLoadingEntities ? (
+                    <div className="text-gray-500 text-sm">Loading groups...</div>
+                  ) : groups.length > 0 ? (
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {groups.map(group => (
+                        <label key={group.id} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={formData.group_ids?.includes(group.id)}
+                            onChange={(e) => {
+                              const newGroupIds = e.target.checked
+                                ? [...(formData.group_ids || []), group.id]
+                                : (formData.group_ids || []).filter(id => id !== group.id);
+                              handleInputChange('group_ids', newGroupIds);
+                            }}
+                          />
+                          {group.name}
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">No groups available</div>
+                  )}
                 </FormField>
               )}
 
-              {formData.type === 'family' && families.length > 0 && (
+              {formData.type === 'family' && (
                 <FormField label="Associated Families" error={errors.family_ids}>
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {families.map(family => (
-                      <label key={family.id} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.family_ids?.includes(family.id)}
-                          onChange={(e) => {
-                            const newFamilyIds = e.target.checked
-                              ? [...(formData.family_ids || []), family.id]
-                              : (formData.family_ids || []).filter(id => id !== family.id);
-                            handleInputChange('family_ids', newFamilyIds);
-                          }}
-                        />
-                        {family.name}
-                      </label>
-                    ))}
-                  </div>
+                  {isLoadingEntities ? (
+                    <div className="text-gray-500 text-sm">Loading families...</div>
+                  ) : families.length > 0 ? (
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {families.map(family => (
+                        <label key={family.id} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={formData.family_ids?.includes(family.id)}
+                            onChange={(e) => {
+                              const newFamilyIds = e.target.checked
+                                ? [...(formData.family_ids || []), family.id]
+                                : (formData.family_ids || []).filter(id => id !== family.id);
+                              handleInputChange('family_ids', newFamilyIds);
+                            }}
+                          />
+                          {family.name}
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-sm">No families available</div>
+                  )}
                 </FormField>
               )}
             </div>

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\FileUploadController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\FamilyController;
 use App\Http\Controllers\Api\V1\EventController;
+use App\Http\Controllers\Api\V1\EntityController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -119,6 +120,9 @@ Route::prefix($apiVersion)->group(function () {
         // Get family statistics
         Route::get('/statistics', [FamilyController::class, 'getStatistics']);
     });
+
+    // Entities endpoint for form data
+    Route::get('/entities', [EntityController::class, 'index']);
 
     // Events management routes
     Route::prefix('events')->group(function () {

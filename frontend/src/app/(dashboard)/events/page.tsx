@@ -15,6 +15,7 @@ import {
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { Event, EventFilters } from "@/interfaces/events";
 import { EventsService } from "@/services/events";
+import { EntitiesService } from "@/services/entities";
 import EventModal from "@/components/events/EventModal";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -29,8 +30,6 @@ export default function EventsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | undefined>();
-  const [groups, setGroups] = useState<Array<{ id: number; name: string }>>([]);
-  const [families, setFamilies] = useState<Array<{ id: number; name: string }>>([]);
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -40,7 +39,6 @@ export default function EventsPage() {
 
   useEffect(() => {
     loadEvents();
-    loadGroupsAndFamilies();
   }, [statusFilter, typeFilter, pagination.current_page]);
 
   const loadEvents = async () => {
@@ -80,24 +78,7 @@ export default function EventsPage() {
     }
   };
 
-  const loadGroupsAndFamilies = async () => {
-    try {
-      // Load groups and families for the modal
-      // In a real implementation, you'd have services for these
-      setGroups([
-        { id: 1, name: "Youth Group" },
-        { id: 2, name: "Choir" },
-        { id: 3, name: "Prayer Team" }
-      ]);
-      setFamilies([
-        { id: 1, name: "Smith Family" },
-        { id: 2, name: "Johnson Family" },
-        { id: 3, name: "Williams Family" }
-      ]);
-    } catch (error) {
-      console.error('Error loading groups and families:', error);
-    }
-  };
+
 
   const handleCreateEvent = () => {
     setEditingEvent(undefined);
@@ -380,8 +361,6 @@ export default function EventsPage() {
         onClose={() => setIsModalOpen(false)}
         event={editingEvent}
         onSuccess={handleEventSuccess}
-        groups={groups}
-        families={families}
       />
     </DashboardLayout>
   );
