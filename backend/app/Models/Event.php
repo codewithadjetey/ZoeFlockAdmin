@@ -108,6 +108,22 @@ class Event extends Model
     }
 
     /**
+     * Get the individual attendance records for this event
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Get the general attendance record for this event
+     */
+    public function generalAttendance(): HasOne
+    {
+        return $this->hasOne(GeneralAttendance::class);
+    }
+
+    /**
      * Scope for active events (not cancelled or deleted)
      */
     public function scopeActive($query)

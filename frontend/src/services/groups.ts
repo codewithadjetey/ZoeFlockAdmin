@@ -7,6 +7,7 @@ export interface Group {
   description: string;
   category: string;
   max_members: number;
+  member_count?: number;
   meeting_day: string;
   meeting_time: string;
   location: string;
@@ -191,14 +192,33 @@ export class GroupsService {
   }
 
   /**
-   * Get available member roles
+   * Get member roles
    */
   static getMemberRoles(): string[] {
-    return [
-      'member',
-      'leader',
-      'coordinator',
-      'mentor',
-    ];
+    return ['member', 'leader', 'coordinator', 'mentor'];
+  }
+
+  /**
+   * Get overall groups statistics
+   */
+  static async getOverallStats(): Promise<{ success: boolean; message: string; data: any }> {
+    const response = await http({ method: 'get', url: '/groups/statistics/overall' });
+    return response.data;
+  }
+
+  /**
+   * Get groups that need attention
+   */
+  static async getGroupsNeedingAttention(): Promise<{ success: boolean; message: string; data: any[] }> {
+    const response = await http({ method: 'get', url: '/groups/statistics/needing-attention' });
+    return response.data;
+  }
+
+  /**
+   * Get group statistics
+   */
+  static async getGroupStats(groupId: number): Promise<{ success: boolean; message: string; data: any }> {
+    const response = await http({ method: 'get', url: `/groups/${groupId}/statistics` });
+    return response.data;
   }
 } 

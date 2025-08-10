@@ -8,12 +8,13 @@ interface SelectOption {
 interface SelectInputProps {
   value: string;
   onChange: (value: string) => void;
-  options: SelectOption[];
+  options?: SelectOption[];
   placeholder?: string;
   className?: string;
   label?: string;
   error?: string;
   disabled?: boolean;
+  children?: React.ReactNode;
 }
 
 const SelectInput: React.FC<SelectInputProps> = ({ 
@@ -24,7 +25,8 @@ const SelectInput: React.FC<SelectInputProps> = ({
   className = "",
   label,
   error,
-  disabled = false
+  disabled = false,
+  children
 }) => {
   return (
     <div className="relative">
@@ -42,11 +44,15 @@ const SelectInput: React.FC<SelectInputProps> = ({
         } ${className}`}
       >
         {placeholder && <option value="" className="text-gray-500 dark:text-gray-400">{placeholder}</option>}
-        {options.map((option) => (
-          <option key={option.value} value={option.value} className="text-gray-900 dark:text-white">
-            {option.label}
-          </option>
-        ))}
+        {children ? (
+          children
+        ) : options ? (
+          options.map((option) => (
+            <option key={option.value} value={option.value} className="text-gray-900 dark:text-white">
+              {option.label}
+            </option>
+          ))
+        ) : null}
       </select>
       <i className="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none transition-colors duration-200"></i>
       {error && <p className="text-red-500 dark:text-red-400 text-xs mt-1 transition-colors duration-200">{error}</p>}

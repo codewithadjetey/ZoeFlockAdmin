@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB; // Added for DB facade
 
 /**
  * @OA\Tag(
@@ -433,6 +434,52 @@ class GroupController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/v1/groups/{id}",
+     *     summary="Get a specific group",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Group ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Group retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Group retrieved successfully"),
+     *             @OA\Property(property="group", ref="#/components/schemas/Group")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Group not found"
+     *     )
+     * )
+     */
+    public function show(int $id): JsonResponse
+    {
+        $group = Group::with(['creator', 'members'])->find($id);
+
+        if (!$group || $group->deleted) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Group not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Group retrieved successfully',
+            'group' => $group
+        ]);
+    }
+
+    /**
      * @OA\Post(
      *     path="/api/v1/groups/{id}/members",
      *     summary="Add a member to a group",
@@ -617,6 +664,357 @@ class GroupController extends Controller
             'success' => true,
             'message' => 'Group members retrieved successfully',
             'data' => $members
+        ]);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/v1/groups/{id}/members/{member_id}/role",
+     *     summary="Update member role in group",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Group ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="member_id",
+     *         in="path",
+     *         description="Member ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"role"},
+     *             @OA\Property(property="role", type="string", enum={"member", "leader", "coordinator", "mentor", "assistant", "secretary", "treasurer"}, example="leader")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Member role updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Member role updated successfully")
+     *         )
+     *     )
+     * )
+     */
+    public function updateMemberRole(Request $request, int $id, int $member_id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'role' => 'required|string|in:member,leader,coordinator,mentor,assistant,secretary,treasurer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $group = Group::find($id);
+        if (!$group) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Group not found'
+            ], 404);
+        }
+
+        $group->members()->updateExistingPivot($member_id, [
+            'role' => $request->role,
+            'updated_at' => now()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Member role updated successfully'
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/groups/{id}/statistics",
+     *     summary="Get group statistics",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Group ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Group statistics retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Group statistics retrieved successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function getGroupStats(int $id): JsonResponse
+    {
+        $group = Group::with(['members', 'events'])->find($id);
+        
+        if (!$group || $group->deleted) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Group not found'
+            ], 404);
+        }
+
+        $stats = [
+            'total_members' => $group->member_count,
+            'available_spots' => $group->available_spots,
+            'is_full' => $group->is_full,
+            'total_events_count' => $group->events()->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Group statistics retrieved successfully',
+            'data' => $stats
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/groups/statistics/overall",
+     *     summary="Get overall groups statistics",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Overall statistics retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Overall statistics retrieved successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function getOverallStats(): JsonResponse
+    {
+        $stats = [
+            'total_groups' => Group::where('deleted', 0)->count(),
+            'active_groups' => Group::where('deleted', 0)->active()->count(),
+            'full_groups' => Group::where('deleted', 0)->full()->count(),
+            'groups_by_category' => Group::where('deleted', 0)
+                ->selectRaw('category, COUNT(*) as count')
+                ->groupBy('category')
+                ->pluck('count', 'category')
+                ->toArray(),
+            'total_members_across_groups' => DB::table('group_members')
+                ->where('is_active', true)
+                ->distinct('member_id')
+                ->count('member_id'),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Overall statistics retrieved successfully',
+            'data' => $stats
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/groups/statistics/needing-attention",
+     *     summary="Get groups that need attention",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Groups needing attention retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Groups needing attention retrieved successfully"),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     )
+     * )
+     */
+    public function getGroupsNeedingAttention(): JsonResponse
+    {
+        $groups = Group::where('deleted', 0)
+            ->where(function ($query) {
+                $query->where('status', 'Full')
+                      ->orWhere('status', 'Inactive')
+                      ->orWhereRaw('(SELECT COUNT(*) FROM group_members WHERE group_members.group_id = groups.id AND group_members.is_active = 1) = 0');
+            })
+            ->with(['creator'])
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Groups needing attention retrieved successfully',
+            'data' => $groups
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/groups/search",
+     *     summary="Search groups with advanced filters",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="search", type="string", example="youth"),
+     *             @OA\Property(property="category", type="string", example="Ministry"),
+     *             @OA\Property(property="status", type="string", example="Active"),
+     *             @OA\Property(property="min_members", type="integer", example=5),
+     *             @OA\Property(property="max_members", type="integer", example=20),
+     *             @OA\Property(property="meeting_day", type="string", example="Sunday"),
+     *             @OA\Property(property="with_available_spots", type="boolean", example=true),
+     *             @OA\Property(property="sort_by", type="string", example="name"),
+     *             @OA\Property(property="sort_order", type="string", example="asc"),
+     *             @OA\Property(property="per_page", type="integer", example=15)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Groups search completed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Groups search completed successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function searchGroups(Request $request): JsonResponse
+    {
+        $filters = $request->only([
+            'search', 'category', 'status', 'min_members', 'max_members',
+            'meeting_day', 'with_available_spots', 'sort_by', 'sort_order'
+        ]);
+
+        $perPage = $request->per_page ?? 15;
+        $query = Group::with(['creator'])->where('deleted', 0);
+
+        // Text search
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%");
+            });
+        }
+
+        // Category filter
+        if (!empty($filters['category'])) {
+            $query->byCategory($filters['category']);
+        }
+
+        // Status filter
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        // Member count filter
+        if (!empty($filters['min_members'])) {
+            $query->whereRaw('(SELECT COUNT(*) FROM group_members WHERE group_members.group_id = groups.id AND group_members.is_active = 1) >= ?', [$filters['min_members']]);
+        }
+
+        if (!empty($filters['max_members'])) {
+            $query->whereRaw('(SELECT COUNT(*) FROM group_members WHERE group_members.group_id = groups.id AND group_members.is_active = 1) <= ?', [$filters['max_members']]);
+        }
+
+        // Meeting day filter
+        if (!empty($filters['meeting_day'])) {
+            $query->where('meeting_day', $filters['meeting_day']);
+        }
+
+        // Available spots filter
+        if (!empty($filters['with_available_spots'])) {
+            $query->withAvailableSpots();
+        }
+
+        // Sort options
+        $sortBy = $filters['sort_by'] ?? 'created_at';
+        $sortOrder = $filters['sort_order'] ?? 'desc';
+        
+        if (in_array($sortBy, ['name', 'created_at', 'updated_at', 'max_members'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $groups = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Groups search completed successfully',
+            'data' => $groups
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/groups/bulk-update-status",
+     *     summary="Bulk update group statuses",
+     *     tags={"Groups"},
+     *     security={{"sanctum":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"group_ids", "status"},
+     *             @OA\Property(property="group_ids", type="array", @OA\Items(type="integer"), example={1,2,3}),
+     *             @OA\Property(property="status", type="string", enum={"Active", "Inactive", "Full", "Suspended", "Archived"}, example="Active")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Groups updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Updated 3 groups successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function bulkUpdateStatus(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'group_ids' => 'required|array|min:1',
+            'group_ids.*' => 'integer|exists:groups,id',
+            'status' => 'required|string|in:Active,Inactive,Full,Suspended,Archived',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $updatedCount = Group::whereIn('id', $request->group_ids)
+            ->where('deleted', 0)
+            ->update([
+                'status' => $request->status,
+                'updated_by' => Auth::id()
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Updated {$updatedCount} groups successfully",
+            'data' => ['updated_count' => $updatedCount]
         ]);
     }
 }

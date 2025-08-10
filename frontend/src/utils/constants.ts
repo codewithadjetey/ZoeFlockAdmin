@@ -14,6 +14,7 @@ export const NAVIGATION_ITEMS = [
   { name: 'Events', href: '/dashboard/events', icon: 'fas fa-calendar' },
   { name: 'Donations', href: '/dashboard/donations', icon: 'fas fa-hand-holding-heart' },
   { name: 'Groups', href: '/dashboard/groups', icon: 'fas fa-layer-group' },
+  { name: 'Attendance', href: '/dashboard/attendance', icon: 'fas fa-clipboard-check' },
   { name: 'Communication', href: '/dashboard/communication', icon: 'fas fa-comments' },
   { name: 'Settings', href: '/dashboard/settings', icon: 'fas fa-cog' },
 ];

@@ -17,6 +17,12 @@ import {
   Avatar
 } from "@/components/ui";
 import { getImageUrl } from "@/utils/helpers";
+import { 
+  StatCard,
+  ContentCard,
+  Button
+} from "@/components/ui";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 
 export default function GroupsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -34,10 +40,13 @@ export default function GroupsPage() {
   const [perPage, setPerPage] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
   const [links, setLinks] = useState<{ url: string | null; label: string; active: boolean }[]>([]);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
   // Load groups from API
   useEffect(() => {
     loadGroups();
+    loadAnalytics();
   }, [page, perPage]);
 
   const loadGroups = async () => {
@@ -72,6 +81,27 @@ export default function GroupsPage() {
     setPage(1);
     loadGroups();
   }, [searchTerm, categoryFilter, statusFilter]);
+
+  const loadAnalytics = async () => {
+    try {
+      setAnalyticsLoading(true);
+      const [overallStats, groupsNeedingAttention] = await Promise.all([
+        GroupsService.getOverallStats(),
+        GroupsService.getGroupsNeedingAttention()
+      ]);
+
+      if (overallStats.success && groupsNeedingAttention.success) {
+        setAnalytics({
+          overall: overallStats.data,
+          needingAttention: groupsNeedingAttention.data
+        });
+      }
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
 
   const categoryOptions = [
     { value: "All Categories", label: "All Categories" },
@@ -310,70 +340,293 @@ export default function GroupsPage() {
   const prevLink = links.find(l => l.label.includes('Previous'));
   const nextLink = links.find(l => l.label.includes('Next'));
 
+  // Add analytics data for charts
+  const getChartData = () => {
+    if (!analytics?.overall) return [];
+
+    const categoryData = Object.entries(analytics.overall.groups_by_category || {}).map(([category, count]) => ({
+      name: category,
+      value: count,
+      fill: getRandomColor()
+    }));
+
+    return categoryData;
+  };
+
+  const getRandomColor = () => {
+    const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
+  const getPerformanceData = () => {
+    if (!groups.length) return [];
+
+    return groups.slice(0, 8).map(group => ({
+      name: group.name.substring(0, 15) + (group.name.length > 15 ? '...' : ''),
+      members: group.member_count || 0,
+      capacity: group.max_members || 0,
+      utilization: group.max_members ? Math.round(((group.member_count || 0) / group.max_members) * 100) : 0
+    }));
+  };
+
   return (
     <DashboardLayout>
       <PageHeader
-        title="Groups"
-        description="Manage church groups and ministries"
-        actionButton={{
-          text: "Create Group",
-          icon: "fas fa-plus",
-          onClick: handleCreateGroup
-        }}
+        title="Groups Management"
+        description="Manage church groups, members, and activities"
+        actions={
+          <div className="flex space-x-3">
+            <Button
+              onClick={() => handleCreateGroup()}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <i className="fas fa-plus mr-2"></i>
+              Create Group
+            </Button>
+          </div>
+        }
       />
 
-      {/* Search and Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="md:col-span-2">
-          <SearchInput
-            placeholder="Search groups..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-          />
-        </div>
-        <SelectInput
-          value={categoryFilter}
-          onChange={(val: string) => { setCategoryFilter(val); setPage(1); }}
-          options={categoryOptions}
-        />
-        <SelectInput
-          value={statusFilter}
-          onChange={(val: string) => { setStatusFilter(val); setPage(1); }}
-          options={statusOptions}
-        />
-      </div>
+      {/* Analytics Dashboard */}
+      {!analyticsLoading && analytics && (
+        <section className="mb-8">
+          <ContentCard>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Total Groups"
+                value={analytics.overall.total_groups || 0}
+                description="All groups in the system"
+                icon="fas fa-layer-group"
+                iconColor="text-blue-600"
+                iconBgColor="bg-blue-100"
+              />
+              <StatCard
+                title="Active Groups"
+                value={analytics.overall.active_groups || 0}
+                description="Currently active groups"
+                icon="fas fa-check-circle"
+                iconColor="text-green-600"
+                iconBgColor="bg-green-100"
+              />
+              <StatCard
+                title="Full Groups"
+                value={analytics.overall.full_groups || 0}
+                description="Groups at capacity"
+                icon="fas fa-exclamation-triangle"
+                iconColor="text-yellow-600"
+                iconBgColor="bg-yellow-100"
+              />
+              <StatCard
+                title="Total Members"
+                value={analytics.overall.total_members_across_groups || 0}
+                description="Members across all groups"
+                icon="fas fa-users"
+                iconColor="text-purple-600"
+                iconBgColor="bg-purple-100"
+              />
+            </div>
 
-      {/* View Toggle and Per Page */}
-      <div className="flex items-center justify-between mb-4">
-        <ViewToggle
-          value={viewMode}
-          onChange={handleViewModeChange}
-          options={[{ value: "grid", label: "Grid", icon: "fas fa-th" }, { value: "list", label: "List", icon: "fas fa-list" }]}
-          count={total}
-          countLabel="groups"
-        />
-        <div className="w-40">
-          <SelectInput
-            value={String(perPage)}
-            onChange={(val: string) => { setPerPage(Number(val)); setPage(1); }}
-            options={perPageOptions.map(p => ({ value: String(p.value), label: p.label }))}
-          />
-        </div>
-      </div>
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Category Distribution */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Groups by Category</h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={getChartData()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {getChartData().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
 
-      {/* Groups Grid/List */}
-      {viewMode === "grid" ? (
-        <DataGrid
-          data={groups}
-          renderCard={renderGroupCard}
-          columns={3}
-        />
-      ) : (
-        <DataTable
-          columns={tableColumns}
-          data={groups}
-        />
+              {/* Group Performance */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Group Utilization</h3>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={getPerformanceData()}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="utilization" fill="#3B82F6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* Groups Needing Attention */}
+            {analytics.needingAttention && analytics.needingAttention.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Groups Needing Attention</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {analytics.needingAttention.slice(0, 6).map((group: any) => (
+                    <div key={group.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-yellow-800">{group.name}</h4>
+                        <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full">
+                          {group.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-yellow-700 mt-2">{group.description}</p>
+                      <div className="mt-3">
+                        <button
+                          onClick={() => handleEditGroup(group)}
+                          className="text-sm text-yellow-700 hover:text-yellow-900 underline"
+                        >
+                          Review Group
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </ContentCard>
+        </section>
       )}
+
+      {/* Search and Filters */}
+      <section className="mb-6">
+        <ContentCard>
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-4 flex-1">
+              <SearchInput
+                placeholder="Search groups..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full md:w-64"
+              />
+              <SelectInput
+                value={categoryFilter}
+                onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+                className="w-full md:w-40"
+              >
+                <option value="">All Categories</option>
+                <option value="youth">Youth</option>
+                <option value="adults">Adults</option>
+                <option value="seniors">Seniors</option>
+                <option value="bible_study">Bible Study</option>
+                <option value="prayer">Prayer</option>
+                <option value="worship">Worship</option>
+                <option value="outreach">Outreach</option>
+              </SelectInput>
+              <SelectInput
+                value={statusFilter}
+                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                className="w-full md:w-40"
+              >
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="full">Full</option>
+                <option value="forming">Forming</option>
+              </SelectInput>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <i className="fas fa-table mr-2"></i>
+                Table
+              </button>
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  viewMode === 'cards'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <i className="fas fa-th-large mr-2"></i>
+                Cards
+              </button>
+            </div>
+          </div>
+        </ContentCard>
+      </section>
+
+      {/* Groups List */}
+      <section>
+        <ContentCard>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            </div>
+          ) : groups.length === 0 ? (
+            <div className="text-center py-12">
+              <i className="fas fa-layer-group text-6xl text-gray-300 mb-4"></i>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No groups found</h3>
+              <p className="text-gray-500 mb-4">Get started by creating your first group.</p>
+              <Button
+                onClick={() => handleCreateGroup()}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Create Group
+              </Button>
+            </div>
+          ) : (
+            <>
+              {viewMode === 'table' ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {tableColumns.map((column) => (
+                          <th
+                            key={column.key}
+                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            {column.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {groups.map((group) => (
+                        <tr key={group.id} className="hover:bg-gray-50">
+                          {tableColumns.map((column) => (
+                            <td key={column.key} className="px-6 py-4 whitespace-nowrap">
+                              {column.render
+                                ? column.render(group[column.key as keyof Group], group)
+                                : group[column.key as keyof Group]}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {groups.map((group) => renderGroupCard(group))}
+                </div>
+              )}
+            </>
+          )}
+        </ContentCard>
+      </section>
 
       {/* Pagination Links */}
       <div className="mt-6 flex items-center justify-center space-x-2">
