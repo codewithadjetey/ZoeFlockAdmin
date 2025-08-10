@@ -50,9 +50,8 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
     try {
       const response = await MembersService.getMembers();
       if (response.success) {
-        // Filter out members who are already in families
-        const available = response.members.data.filter((member: Member) => !member.family);
-        setAvailableMembers(available);
+        // For now, show all members since family information is not available in the API response
+        setAvailableMembers(response.members.data);
       }
     } catch (error) {
       console.error('Error loading available members:', error);
@@ -216,7 +215,7 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
                 >
                   <div className="flex items-center space-x-3">
                     <Avatar
-                      src={member.profile_image}
+                      src={undefined}
                       alt={`${member.name}`}
                       size="sm"
                     />
