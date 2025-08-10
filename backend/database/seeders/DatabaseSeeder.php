@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             FamilySeeder::class,
             EventSeeder::class,
+            AttendanceSeeder::class,
         ]);
 
         // Create additional test users if needed
