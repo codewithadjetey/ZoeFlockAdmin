@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\FamilyController;
 use App\Http\Controllers\Api\V1\EventController;
 use App\Http\Controllers\Api\V1\EntityController;
+use App\Http\Controllers\Api\V1\AttendanceController;
+use App\Http\Controllers\Api\V1\GeneralAttendanceController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -89,13 +91,28 @@ Route::prefix($apiVersion)->group(function () {
     Route::prefix('groups')->group(function () {
         Route::get('/', [GroupController::class, 'index']);
         Route::post('/', [GroupController::class, 'store']);
+        Route::get('/{id}', [GroupController::class, 'show']);
         Route::put('/{id}', [GroupController::class, 'update']);
         Route::delete('/{id}', [GroupController::class, 'destroy']);
+        
+        // Group statistics and analytics
+        Route::get('/statistics/overall', [GroupController::class, 'getOverallStats']);
+        Route::get('/statistics/needing-attention', [GroupController::class, 'getGroupsNeedingAttention']);
+        
+        // Advanced search
+        Route::post('/search', [GroupController::class, 'searchGroups']);
+        
+        // Bulk operations
+        Route::post('/bulk-update-status', [GroupController::class, 'bulkUpdateStatus']);
         
         // Group member management routes
         Route::get('/{id}/members', [GroupController::class, 'getMembers']);
         Route::post('/{id}/members', [GroupController::class, 'addMember']);
         Route::delete('/{id}/members/{member_id}', [GroupController::class, 'removeMember']);
+        Route::put('/{id}/members/{member_id}/role', [GroupController::class, 'updateMemberRole']);
+        
+        // Group statistics
+        Route::get('/{id}/statistics', [GroupController::class, 'getGroupStats']);
     });
 
     // Families management routes
@@ -150,6 +167,24 @@ Route::prefix($apiVersion)->group(function () {
         
         // Member-specific events
         Route::get('/member/{memberId}', [EventController::class, 'getMemberEvents']);
+        
+        // Attendance management routes
+        Route::prefix('{event}/attendance')->group(function () {
+            Route::get('/', [AttendanceController::class, 'getEventAttendance']);
+            Route::get('/eligible-members', [AttendanceController::class, 'getEligibleMembers']);
+            Route::put('/{memberId}/status', [AttendanceController::class, 'updateAttendanceStatus']);
+            Route::post('/{memberId}/check-in', [AttendanceController::class, 'markCheckIn']);
+            Route::post('/{memberId}/check-out', [AttendanceController::class, 'markCheckOut']);
+            Route::post('/bulk-update', [AttendanceController::class, 'bulkUpdateAttendance']);
+        });
+    });
+
+    // General attendance routes
+    Route::prefix('general-attendance')->group(function () {
+        Route::get('/event/{eventId}', [GeneralAttendanceController::class, 'getEventGeneralAttendance']);
+        Route::post('/event/{eventId}', [GeneralAttendanceController::class, 'updateGeneralAttendance']);
+        Route::get('/analytics', [GeneralAttendanceController::class, 'getAttendanceAnalytics']);
+        Route::get('/summary', [GeneralAttendanceController::class, 'getGeneralAttendanceSummary']);
     });
 
     // Route::prefix('donations')->group(function () {
