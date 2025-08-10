@@ -111,6 +111,32 @@ class Member extends Model
     }
 
     /**
+     * Get the family this member belongs to
+     */
+    public function families(): BelongsToMany
+    {
+        return $this->belongsToMany(Family::class, 'family_members')
+            ->withPivot('joined_at', 'role', 'is_active', 'notes')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the family this member belongs to (single relationship since one member = one family)
+     */
+    public function family()
+    {
+        return $this->families()->wherePivot('is_active', true);
+    }
+
+    /**
+     * Get the family this member belongs to as a single model instance
+     */
+    public function getFamilyAttribute()
+    {
+        return $this->families()->wherePivot('is_active', true)->first();
+    }
+
+    /**
      * Get the file uploads associated with this member
      */
     public function files(): HasMany
@@ -239,5 +265,54 @@ class Member extends Model
     public function getPrimaryGroupAttribute()
     {
         return $this->groups()->where('is_active', true)->first();
+    }
+
+    /**
+     * Check if member is in a specific family
+     */
+    public function isInFamily($familyId): bool
+    {
+        return $this->families()->where('family_id', $familyId)->where('is_active', true)->exists();
+    }
+
+    /**
+     * Get member's role in a specific family
+     */
+    public function getRoleInFamily($familyId): ?string
+    {
+        $familyMembership = $this->families()->where('family_id', $familyId)->first();
+        return $familyMembership ? $familyMembership->pivot->role : null;
+    }
+
+    /**
+     * Check if member is a family head
+     */
+    public function isFamilyHead(): bool
+    {
+        return $this->families()->where('role', 'head')->where('is_active', true)->exists();
+    }
+
+    /**
+     * Check if member is a family deputy
+     */
+    public function isFamilyDeputy(): bool
+    {
+        return $this->families()->where('role', 'deputy')->where('is_active', true)->exists();
+    }
+
+    /**
+     * Check if member can manage their family
+     */
+    public function canManageFamily(): bool
+    {
+        return $this->isFamilyHead() || $this->isFamilyDeputy();
+    }
+
+    /**
+     * Get member's family count (should always be 0 or 1)
+     */
+    public function getFamilyCountAttribute(): int
+    {
+        return $this->families()->where('is_active', true)->count();
     }
 } 
