@@ -174,18 +174,39 @@ export default function GroupsPage() {
           <CategoryBadge category={group.category} />
           <div className="flex space-x-2">
             <button 
-              className="text-blue-600 hover:text-blue-700 text-sm"
-              onClick={() => handleEditGroup(group)}
+              className="text-blue-600 hover:text-blue-700 text-sm p-1 rounded hover:bg-blue-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditGroup(group);
+              }}
+              title="Edit Group"
             >
               <i className="fas fa-edit"></i>
             </button>
             <button 
-              className="text-red-600 hover:text-red-700 text-sm"
-              onClick={() => handleDeleteGroup(group.id!)}
+              className="text-red-600 hover:text-red-700 text-sm p-1 rounded hover:bg-red-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteGroup(group.id!);
+              }}
+              title="Delete Group"
             >
               <i className="fas fa-trash"></i>
             </button>
           </div>
+        </div>
+        <div className="flex items-center justify-between pt-2">
+          <button 
+            className="text-green-600 hover:text-green-700 text-sm flex items-center hover:bg-green-50 px-2 py-1 rounded"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleManageMembers(group);
+            }}
+            title="Manage Members"
+          >
+            <i className="fas fa-users mr-1"></i>
+            Manage Members
+          </button>
         </div>
       </div>
     );
