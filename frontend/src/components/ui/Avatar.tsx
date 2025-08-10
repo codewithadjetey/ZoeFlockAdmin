@@ -18,7 +18,7 @@ const sizeClasses = {
   '2xl': 'w-20 h-20 text-xl'
 };
 
-export const Avatar: React.FC<AvatarProps> = ({
+const Avatar: React.FC<AvatarProps> = ({
   src,
   alt = '',
   fallback = '',

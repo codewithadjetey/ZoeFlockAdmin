@@ -12,7 +12,7 @@ export { default as FormField } from './FormField';
 export { default as StatCard } from './StatCard';
 export { default as ContentCard } from './ContentCard';
 export { default as PageHeader } from './PageHeader';
-export { default as DataTable } from './DataTable';
+export { default as DataTable, type Column, type Filter, type SortConfig, type DataTableProps } from './DataTable';
 export { default as DataGrid } from './DataGrid';
 export { default as ViewToggle } from './ViewToggle';
 export { default as TabNavigation } from './TabNavigation';
