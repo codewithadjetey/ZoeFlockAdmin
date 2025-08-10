@@ -89,7 +89,7 @@ class Member extends Model
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'group_members')
-            ->withPivot('joined_at', 'role', 'is_active')
+            ->withPivot('joined_at', 'role', 'is_active', 'notes')
             ->withTimestamps();
     }
 
@@ -146,5 +146,78 @@ class Member extends Model
               ->orWhere('email', 'like', "%{$search}%")
               ->orWhere('phone', 'like', "%{$search}%");
         });
+    }
+
+    /**
+     * Scope to get members by group
+     */
+    public function scopeByGroup($query, $groupId)
+    {
+        return $query->whereHas('groups', function ($q) use ($groupId) {
+            $q->where('group_id', $groupId)->where('is_active', true);
+        });
+    }
+
+    /**
+     * Scope to get members by group category
+     */
+    public function scopeByGroupCategory($query, $category)
+    {
+        return $query->whereHas('groups', function ($q) use ($category) {
+            $q->whereHas('group', function ($groupQuery) use ($category) {
+                $groupQuery->where('category', $category);
+            })->where('is_active', true);
+        });
+    }
+
+    /**
+     * Scope to get members with specific group role
+     */
+    public function scopeByGroupRole($query, $role)
+    {
+        return $query->whereHas('groups', function ($q) use ($role) {
+            $q->where('role', $role)->where('is_active', true);
+        });
+    }
+
+    /**
+     * Check if member is in a specific group
+     */
+    public function isInGroup($groupId): bool
+    {
+        return $this->groups()->where('group_id', $groupId)->where('is_active', true)->exists();
+    }
+
+    /**
+     * Get member's role in a specific group
+     */
+    public function getRoleInGroup($groupId): ?string
+    {
+        $groupMembership = $this->groups()->where('group_id', $groupId)->first();
+        return $groupMembership ? $groupMembership->pivot->role : null;
+    }
+
+    /**
+     * Get member's active groups count
+     */
+    public function getActiveGroupsCountAttribute(): int
+    {
+        return $this->groups()->where('is_active', true)->count();
+    }
+
+    /**
+     * Get member's total groups count (including inactive)
+     */
+    public function getGroupsCountAttribute(): int
+    {
+        return $this->groups()->count();
+    }
+
+    /**
+     * Get member's primary group (first active group)
+     */
+    public function getPrimaryGroupAttribute()
+    {
+        return $this->groups()->where('is_active', true)->first();
     }
 } 

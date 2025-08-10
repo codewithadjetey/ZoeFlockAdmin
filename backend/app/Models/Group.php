@@ -55,7 +55,7 @@ class Group extends Model
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(Member::class, 'group_members')
-            ->withPivot('role', 'joined_at', 'is_active')
+            ->withPivot('role', 'joined_at', 'is_active', 'notes')
             ->withTimestamps();
     }
 
@@ -65,7 +65,7 @@ class Group extends Model
     public function activeMembers(): BelongsToMany
     {
         return $this->belongsToMany(Member::class, 'group_members')
-            ->withPivot('role', 'joined_at', 'is_active')
+            ->withPivot('role', 'joined_at', 'is_active', 'notes')
             ->wherePivot('is_active', true)
             ->withTimestamps();
     }
@@ -123,5 +123,77 @@ class Group extends Model
         return $this->hasOne(FileUpload::class, 'model_id', 'id')
             ->where('model_type', Group::class)
             ->orderBy('id', 'desc');
+    }
+
+    /**
+     * Scope to get groups by member
+     */
+    public function scopeByMember($query, $memberId)
+    {
+        return $query->whereHas('members', function ($q) use ($memberId) {
+            $q->where('member_id', $memberId)->where('is_active', true);
+        });
+    }
+
+    /**
+     * Scope to get groups with available spots
+     */
+    public function scopeWithAvailableSpots($query)
+    {
+        return $query->whereRaw('(SELECT COUNT(*) FROM group_members WHERE group_members.group_id = groups.id AND group_members.is_active = 1) < max_members');
+    }
+
+    /**
+     * Get available spots count
+     */
+    public function getAvailableSpotsAttribute(): int
+    {
+        return max(0, $this->max_members - $this->member_count);
+    }
+
+    /**
+     * Check if a specific member can join this group
+     */
+    public function canMemberJoin($memberId): bool
+    {
+        // Check if member is already in the group
+        if ($this->members()->where('member_id', $memberId)->exists()) {
+            return false;
+        }
+
+        // Check if group is full
+        return !$this->is_full;
+    }
+
+    /**
+     * Get members by role
+     */
+    public function getMembersByRole($role)
+    {
+        return $this->members()->wherePivot('role', $role)->wherePivot('is_active', true)->get();
+    }
+
+    /**
+     * Get group leaders
+     */
+    public function getLeadersAttribute()
+    {
+        return $this->getMembersByRole('leader');
+    }
+
+    /**
+     * Get group coordinators
+     */
+    public function getCoordinatorsAttribute()
+    {
+        return $this->getMembersByRole('coordinator');
+    }
+
+    /**
+     * Get group mentors
+     */
+    public function getMentorsAttribute()
+    {
+        return $this->getMembersByRole('mentor');
     }
 } 
