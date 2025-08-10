@@ -29,11 +29,20 @@ export async function httpFile<T = any>(
   data: FormData,
   config: any = {}
 ): Promise<any> {
+  // Get the auth token from localStorage
+  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  
+  // Debug logging
+  console.log('httpFile called with:', { url, token: !!token, baseURL: API_BASE_URL });
+  console.log('Full URL will be:', `${API_BASE_URL}/${url}`);
+  
   return api.post<T>(url, data, {
     ...config,
     headers: {
       ...(config.headers || {}),
       'Content-Type': 'multipart/form-data',
+      // Include Authorization header if token exists
+      ...(token && { 'Authorization': `Bearer ${token}` }),
     },
   });
 }

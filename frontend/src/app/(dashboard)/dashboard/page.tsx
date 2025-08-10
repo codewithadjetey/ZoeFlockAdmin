@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   PageHeader, 
@@ -7,42 +7,98 @@ import {
   ContentCard 
 } from "@/components/ui";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { FamiliesService } from "@/services/families";
+import { GroupsService } from "@/services/groups";
+import { MembersService } from "@/services/members";
 
 export default function DashboardPage() {
-  const stats = [
+  const [stats, setStats] = useState([
     {
       title: "Total Members",
-      value: "1,234",
-      description: "+12% this month",
+      value: "0",
+      description: "Loading...",
       icon: "fas fa-users",
       iconColor: "text-blue-600",
       iconBgColor: "bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/20 dark:to-blue-800/20",
     },
     {
-      title: "Upcoming Events",
-      value: "8",
-      description: "Next: Sunday Service",
-      icon: "fas fa-calendar",
-      iconColor: "text-indigo-600",
-      iconBgColor: "bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900/20 dark:to-indigo-800/20",
-    },
-    {
-      title: "Monthly Donations",
-      value: "$5,200",
-      description: "+8% vs last month",
-      icon: "fas fa-donate",
-      iconColor: "text-green-600",
-      iconBgColor: "bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/20 dark:to-green-800/20",
+      title: "Total Families",
+      value: "0",
+      description: "Loading...",
+      icon: "fas fa-home",
+      iconColor: "text-purple-600",
+      iconBgColor: "bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900/20 dark:to-purple-800/20",
     },
     {
       title: "Active Groups",
-      value: "12",
-      description: "3 new this week",
+      value: "0",
+      description: "Loading...",
       icon: "fas fa-layer-group",
       iconColor: "text-yellow-600",
       iconBgColor: "bg-gradient-to-br from-yellow-100 to-yellow-200 dark:from-yellow-900/20 dark:to-yellow-800/20",
     },
-  ];
+    {
+      title: "Upcoming Events",
+      value: "0",
+      description: "Loading...",
+      icon: "fas fa-calendar",
+      iconColor: "text-indigo-600",
+      iconBgColor: "bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900/20 dark:to-indigo-800/20",
+    },
+  ]);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch family statistics
+        const familyStats = await FamiliesService.getStatistics();
+        
+        // Fetch member count
+        const membersResponse = await MembersService.getMembers();
+        
+        // Fetch group count
+        const groupsResponse = await GroupsService.getGroups();
+        
+        if (familyStats.success && familyStats.data) {
+          const data = familyStats.data;
+          setStats(prevStats => prevStats.map(stat => {
+            if (stat.title === "Total Families") {
+              return {
+                ...stat,
+                value: data.total_families?.toString() || "0",
+                description: `${data.active_families || 0} active families`
+              };
+            }
+            if (stat.title === "Total Members") {
+              return {
+                ...stat,
+                value: data.total_members?.toString() || "0",
+                description: `${data.active_members || 0} active members`
+              };
+            }
+            if (stat.title === "Active Groups") {
+              return {
+                ...stat,
+                value: groupsResponse.success ? groupsResponse.groups?.data?.length?.toString() || "0" : "0",
+                description: "Groups in the system"
+              };
+            }
+            return stat;
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const attendanceData = [
     { name: 'Sun', attendance: 120, target: 150 },
@@ -154,15 +210,15 @@ export default function DashboardPage() {
       href: "/dashboard/members",
     },
     {
-      title: "Record Donation",
-      icon: "fas fa-donate",
-      gradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-      href: "/dashboard/donations",
+      title: "Manage Families",
+      icon: "fas fa-home",
+      gradient: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+      href: "/dashboard/families",
     },
     {
       title: "Send Message",
       icon: "fas fa-envelope",
-      gradient: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+      gradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
       href: "/dashboard/communication",
     },
   ];
@@ -197,18 +253,91 @@ export default function DashboardPage() {
       {/* Modern Statistics Cards */}
       <section className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <div key={index} className="stat-card rounded-3xl shadow-xl p-6 flex items-center cursor-pointer transition-all duration-300 hover:transform hover:scale-105">
+          <div 
+            key={index} 
+            className={`stat-card rounded-3xl shadow-xl p-6 flex items-center cursor-pointer transition-all duration-300 hover:transform hover:scale-105 ${loading ? 'opacity-75' : ''}`}
+            onClick={() => {
+              if (!loading) {
+                switch (stat.title) {
+                  case 'Total Members':
+                    window.location.href = '/dashboard/members';
+                    break;
+                  case 'Total Families':
+                    window.location.href = '/dashboard/families';
+                    break;
+                  case 'Active Groups':
+                    window.location.href = '/dashboard/groups';
+                    break;
+                  case 'Upcoming Events':
+                    window.location.href = '/dashboard/events';
+                    break;
+                }
+              }
+            }}
+          >
             <div className={`w-16 h-16 ${stat.iconBgColor} rounded-2xl flex items-center justify-center mr-5 shadow-lg`}>
               <i className={`${stat.icon} text-3xl ${stat.iconColor}`}></i>
             </div>
             <div>
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{stat.title}</dt>
-              <dd className="text-3xl font-bold text-gray-900 dark:text-white">{stat.value}</dd>
-              <p className="text-xs text-green-600 dark:text-green-400 mt-1">{stat.description}</p>
+              <dd className="text-3xl font-bold text-gray-900 dark:text-white">
+                {loading ? (
+                  <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-8 w-16 rounded"></div>
+                ) : (
+                  stat.value
+                )}
+              </dd>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                {loading ? (
+                  <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-3 w-20 rounded"></div>
+                ) : (
+                  stat.description
+                )}
+              </p>
             </div>
           </div>
         ))}
       </section>
+
+      {/* Family Statistics Overview */}
+      {!loading && (
+        <section className="mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-white font-['Poppins']">Family Overview</h3>
+              <button 
+                onClick={() => window.location.href = '/dashboard/families'}
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors duration-200"
+              >
+                View All Families
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl">
+                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-home text-white text-2xl"></i>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Total Families</h4>
+                <p className="text-3xl font-bold text-blue-600">{stats.find(s => s.title === 'Total Families')?.value || '0'}</p>
+              </div>
+              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl">
+                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-users text-white text-2xl"></i>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Family Members</h4>
+                <p className="text-3xl font-bold text-green-600">{stats.find(s => s.title === 'Total Members')?.value || '0'}</p>
+              </div>
+              <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-2xl">
+                <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-layer-group text-white text-2xl"></i>
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Active Groups</h4>
+                <p className="text-3xl font-bold text-purple-600">{stats.find(s => s.title === 'Active Groups')?.value || '0'}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Modern Charts & Quick Actions */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\MemberController;
 use App\Http\Controllers\Api\V1\DocumentationController;
 use App\Http\Controllers\Api\V1\FileUploadController;
 use App\Http\Controllers\Api\V1\GroupController;
+use App\Http\Controllers\Api\V1\FamilyController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -93,6 +94,26 @@ Route::prefix($apiVersion)->group(function () {
         Route::get('/{id}/members', [GroupController::class, 'getMembers']);
         Route::post('/{id}/members', [GroupController::class, 'addMember']);
         Route::delete('/{id}/members/{member_id}', [GroupController::class, 'removeMember']);
+    });
+
+    // Families management routes
+    Route::prefix('families')->group(function () {
+        Route::get('/', [FamilyController::class, 'index']);
+        Route::post('/', [FamilyController::class, 'store']);
+        Route::get('/{id}', [FamilyController::class, 'show']);
+        Route::put('/{id}', [FamilyController::class, 'update']);
+        Route::delete('/{id}', [FamilyController::class, 'destroy']);
+        
+        // Family member management routes
+        Route::get('/{id}/members', [FamilyController::class, 'getMembers']);
+        Route::post('/{id}/members', [FamilyController::class, 'addMember']);
+        Route::delete('/{id}/members/{member_id}', [FamilyController::class, 'removeMember']);
+        
+        // Get current user's family
+        Route::get('/my-family', [FamilyController::class, 'getMyFamily']);
+        
+        // Get family statistics
+        Route::get('/statistics', [FamilyController::class, 'getStatistics']);
     });
 
     // TODO: Add routes for other modules (Events, Donations, Communications, etc.)

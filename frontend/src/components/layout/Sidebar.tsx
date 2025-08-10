@@ -7,6 +7,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 const navItems = [
   { label: "Dashboard", icon: "fas fa-home", href: "/dashboard" },
   { label: "Members", icon: "fas fa-users", href: "/members" },
+  { label: "Families", icon: "fas fa-house-user", href: "/families" },
   { label: "Events", icon: "fas fa-calendar", href: "/events" },
   { label: "Groups", icon: "fas fa-layer-group", href: "/groups" },
   { label: "Donations", icon: "fas fa-donate", href: "/donations" },
