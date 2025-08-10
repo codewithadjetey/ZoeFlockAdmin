@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import GroupModal from "@/components/groups/GroupModal";
+import { GroupMembersModal } from "@/components/groups/GroupMembersModal";
 import { GroupsService, Group } from "@/services/groups";
 import { toast } from 'react-toastify';
 import { 
@@ -12,7 +13,8 @@ import {
   DataGrid, 
   DataTable,
   StatusBadge,
-  CategoryBadge
+  CategoryBadge,
+  Avatar
 } from "@/components/ui";
 import { getImageUrl } from "@/utils/helpers";
 
@@ -24,6 +26,8 @@ export default function GroupsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [selectedGroupForMembers, setSelectedGroupForMembers] = useState<Group | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState<number>(1);
@@ -94,13 +98,12 @@ export default function GroupsPage() {
   const tableColumns = [
     { key: "group", label: "Group", render: (_: any, group: any) => (
       <div className="flex items-center">
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center">
-          {group.img_path ? (
-            <img src={getImageUrl(group.img_path) || ''} alt={group.name} className="w-full h-full object-cover" />
-          ) : (
-            <i className="fas fa-users text-white"></i>
-          )}
-        </div>
+        <Avatar 
+          src={group.img_path}
+          fallback={group.name}
+          size="md"
+          alt={group.name}
+        />
         <div className="ml-4">
           <div className="text-sm font-medium text-gray-900">{group.name}</div>
           <div className="text-sm text-gray-500">{group.description}</div>
@@ -121,6 +124,12 @@ export default function GroupsPage() {
           Edit
         </button>
         <button 
+          className="text-green-600 hover:text-green-900 mr-3"
+          onClick={() => handleManageMembers(group)}
+        >
+          Members
+        </button>
+        <button 
           className="text-red-600 hover:text-red-900"
           onClick={() => handleDeleteGroup(group.id)}
         >
@@ -136,19 +145,12 @@ export default function GroupsPage() {
     return (
       <div className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">
         <div className="flex items-start justify-between mb-4">
-          {imageUrl ? (
-            <div className="w-12 h-12 rounded-xl overflow-hidden">
-              <img 
-                src={imageUrl} 
-                alt={group.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-              <i className="fas fa-users text-white text-xl"></i>
-            </div>
-          )}
+          <Avatar 
+            src={group.img_path}
+            fallback={group.name}
+            size="lg"
+            alt={group.name}
+          />
           <StatusBadge status={group.status} />
         </div>
         
@@ -172,18 +174,39 @@ export default function GroupsPage() {
           <CategoryBadge category={group.category} />
           <div className="flex space-x-2">
             <button 
-              className="text-blue-600 hover:text-blue-700 text-sm"
-              onClick={() => handleEditGroup(group)}
+              className="text-blue-600 hover:text-blue-700 text-sm p-1 rounded hover:bg-blue-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditGroup(group);
+              }}
+              title="Edit Group"
             >
               <i className="fas fa-edit"></i>
             </button>
             <button 
-              className="text-red-600 hover:text-red-700 text-sm"
-              onClick={() => handleDeleteGroup(group.id!)}
+              className="text-red-600 hover:text-red-700 text-sm p-1 rounded hover:bg-red-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteGroup(group.id!);
+              }}
+              title="Delete Group"
             >
               <i className="fas fa-trash"></i>
             </button>
           </div>
+        </div>
+        <div className="flex items-center justify-between pt-2">
+          <button 
+            className="text-green-600 hover:text-green-700 text-sm flex items-center hover:bg-green-50 px-2 py-1 rounded"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleManageMembers(group);
+            }}
+            title="Manage Members"
+          >
+            <i className="fas fa-users mr-1"></i>
+            Manage Members
+          </button>
         </div>
       </div>
     );
@@ -203,6 +226,11 @@ export default function GroupsPage() {
     setModalMode('edit');
     setSelectedGroup(group);
     setIsModalOpen(true);
+  };
+
+  const handleManageMembers = (group: any) => {
+    setSelectedGroupForMembers(group);
+    setIsMemberModalOpen(true);
   };
 
   const handleSaveGroup = async (groupData: Group & { upload_token?: string }) => {
@@ -383,6 +411,15 @@ export default function GroupsPage() {
         onSave={handleSaveGroup}
         mode={modalMode}
       />
+
+      {/* Group Members Modal */}
+      {selectedGroupForMembers && (
+        <GroupMembersModal
+          isOpen={isMemberModalOpen}
+          onClose={() => setIsMemberModalOpen(false)}
+          group={selectedGroupForMembers}
+        />
+      )}
 
     </DashboardLayout>
   );

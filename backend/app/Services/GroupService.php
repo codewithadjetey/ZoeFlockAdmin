@@ -201,4 +201,124 @@ class GroupService
             'Full',
         ];
     }
+
+    /**
+     * Get group members
+     */
+    public function getGroupMembers(int $groupId): array
+    {
+        try {
+            $group = Group::with(['members.creator'])->find($groupId);
+
+            if (!$group) {
+                return [
+                    'success' => false,
+                    'message' => 'Group not found'
+                ];
+            }
+
+            return [
+                'success' => true,
+                'message' => 'Group members retrieved successfully',
+                'data' => $group->members
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to retrieve group members: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Add member to group
+     */
+    public function addMemberToGroup(int $groupId, int $memberId, array $data = []): array
+    {
+        try {
+            $group = Group::find($groupId);
+
+            if (!$group) {
+                return [
+                    'success' => false,
+                    'message' => 'Group not found'
+                ];
+            }
+
+            // Check if member is already in the group
+            if ($group->members()->where('member_id', $memberId)->exists()) {
+                return [
+                    'success' => false,
+                    'message' => 'Member is already in this group'
+                ];
+            }
+
+            // Check if group is full
+            if ($group->is_full) {
+                return [
+                    'success' => false,
+                    'message' => 'Group is full'
+                ];
+            }
+
+            $group->members()->attach($memberId, [
+                'role' => $data['role'] ?? 'member',
+                'notes' => $data['notes'] ?? null,
+                'joined_at' => now(),
+                'is_active' => true,
+            ]);
+
+            return [
+                'success' => true,
+                'message' => 'Member added to group successfully'
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to add member to group: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Remove member from group
+     */
+    public function removeMemberFromGroup(int $groupId, int $memberId): array
+    {
+        try {
+            $group = Group::find($groupId);
+
+            if (!$group) {
+                return [
+                    'success' => false,
+                    'message' => 'Group not found'
+                ];
+            }
+
+            $group->members()->detach($memberId);
+
+            return [
+                'success' => true,
+                'message' => 'Member removed from group successfully'
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to remove member from group: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Get available member roles
+     */
+    public function getMemberRoles(): array
+    {
+        return [
+            'member',
+            'leader',
+            'coordinator',
+            'mentor',
+        ];
+    }
 } 

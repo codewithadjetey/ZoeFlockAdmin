@@ -5,6 +5,7 @@ import Modal from '@/components/shared/Modal';
 import { TextInput, Textarea, SelectInput, Button } from '@/components/ui';
 import { GroupsService, Group, FileUpload } from '@/services/groups';
 import FileUploader from '../shared/FileUploader';
+import { getImageUrl } from '@/utils/helpers';
 
 interface GroupModalProps {
   isOpen: boolean;
@@ -33,7 +34,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
     upload_token: undefined
   });
 
-  const [errors, setErrors] = useState<Partial<Group>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof Group, string>>>({});
+  const [groupImagePreview, setGroupImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (group && mode === 'edit') {
@@ -41,6 +43,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
         ...group,
         upload_token: undefined // Will be set when user uploads a new image
       });
+      // Set image preview for existing group
+      setGroupImagePreview(group.img_path ? getImageUrl(group.img_path) : null);
     } else {
       setFormData({
         name: '',
@@ -53,6 +57,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
         status: 'Active',
         upload_token: undefined
       });
+      setGroupImagePreview(null);
     }
     setErrors({});
   }, [group, mode, isOpen]);
@@ -209,7 +214,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
             onChange={handleInputChange('max_members')}
             placeholder="Enter max members"
             error={errors.max_members}
-            min={1}
           />
         </div>
 
@@ -264,17 +268,28 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Group Image
           </label>
-          <FileUploader
-            multiple={false}
-            maxFiles={1}
-            maxSize={5}
-            acceptedTypes={['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']}
-            onUpload={handleFileUpload}
-            onError={handleFileError}
-            modelType="App\\Models\\Group"
-            modelId={mode === 'edit' ? group?.id : undefined}
-            className="mt-1"
-          />
+          <div className="flex items-center space-x-4">
+            {groupImagePreview && (
+              <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200">
+                <img
+                  src={groupImagePreview}
+                  alt="Group image preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <FileUploader
+              multiple={false}
+              maxFiles={1}
+              maxSize={5}
+              acceptedTypes={['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']}
+              onUpload={handleFileUpload}
+              onError={handleFileError}
+              modelType="App\\Models\\Group"
+              modelId={mode === 'edit' ? group?.id : undefined}
+              className="flex-1"
+            />
+          </div>
           <p className="text-xs text-gray-500 mt-1">
             Upload a single image for the group (max 5MB, JPG, PNG, GIF, WebP)
           </p>

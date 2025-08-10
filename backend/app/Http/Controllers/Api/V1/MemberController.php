@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Member;
+use App\Services\FileUploadService;
+use App\Services\MemberService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Exception;
 
 /**
  * @OA\Tag(
@@ -16,20 +20,29 @@ use Illuminate\Support\Facades\Validator;
  */
 class MemberController extends Controller
 {
+    protected FileUploadService $fileUploadService;
+    protected MemberService $memberService;
+
+    public function __construct(FileUploadService $fileUploadService, MemberService $memberService)
+    {
+        $this->fileUploadService = $fileUploadService;
+        $this->memberService = $memberService;
+    }
+
     /**
      * Display a listing of members
      * 
      * @OA\Get(
-     *     path="/members",
+     *     path="/api/v1/members",
      *     operationId="getMembers",
      *     tags={"Members"},
      *     summary="Get all members",
      *     description="Returns a paginated list of all members with search and filtering capabilities",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Search term for name, email, or phone",
+     *         description="Search term for first name, last name, email, or phone",
      *         required=false,
      *         @OA\Schema(type="string")
      *     ),
@@ -41,11 +54,32 @@ class MemberController extends Controller
      *         @OA\Schema(type="string", enum={"active", "inactive"})
      *     ),
      *     @OA\Parameter(
+     *         name="group_id",
+     *         in="query",
+     *         description="Filter by group membership",
+     *         required=false,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="group_category",
+     *         in="query",
+     *         description="Filter by group category",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="include_groups",
+     *         in="query",
+     *         description="Include group information in response",
+     *         required=false,
+     *         @OA\Schema(type="boolean", default=false)
+     *     ),
+     *     @OA\Parameter(
      *         name="sort_by",
      *         in="query",
      *         description="Sort field",
      *         required=false,
-     *         @OA\Schema(type="string", default="name")
+     *         @OA\Schema(type="string", default="first_name")
      *     ),
      *     @OA\Parameter(
      *         name="sort_order",
@@ -57,66 +91,123 @@ class MemberController extends Controller
      *     @OA\Parameter(
      *         name="per_page",
      *         in="query",
-     *         description="Number of items per page",
+     *         description="Items per page (default 10)",
      *         required=false,
-     *         @OA\Schema(type="integer", default=15)
+     *         @OA\Schema(type="integer", example=10)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
      *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Members retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Members retrieved successfully"),
      *             @OA\Property(
-     *                 property="data",
+     *                 property="members",
      *                 type="object",
      *                 @OA\Property(property="current_page", type="integer", example=1),
-     *                 @OA\Property(property="data", type="array", @OA\Items(type="object")),
-     *                 @OA\Property(property="total", type="integer", example=50)
+     *                 @OA\Property(property="data", type="array", 
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="id", type="integer", example=1),
+     *                         @OA\Property(property="first_name", type="string", example="John"),
+     *                         @OA\Property(property="last_name", type="string", example="Doe"),
+     *                         @OA\Property(property="email", type="string", example="john@example.com"),
+     *                         @OA\Property(property="phone", type="string", example="+1234567890"),
+     *                         @OA\Property(property="is_active", type="boolean", example=true),
+     *                         @OA\Property(property="profile_image_path", type="string", nullable=true),
+     *                         @OA\Property(property="created_at", type="string", format="date-time"),
+     *                         @OA\Property(property="updated_at", type="string", format="date-time")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="first_page_url", type="string"),
+     *                 @OA\Property(property="from", type="integer", nullable=true),
+     *                 @OA\Property(property="last_page", type="integer"),
+     *                 @OA\Property(property="last_page_url", type="string"),
+     *                 @OA\Property(property="links", type="array",
+     *                     @OA\Items(type="object",
+     *                         @OA\Property(property="url", type="string", nullable=true),
+     *                         @OA\Property(property="label", type="string"),
+     *                         @OA\Property(property="active", type="boolean")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="total", type="integer"),
+     *                 @OA\Property(property="per_page", type="integer"),
+     *                 @OA\Property(property="current_page", type="integer")
      *             )
      *         )
      *     ),
      *     @OA\Response(
-     *         response=403,
-     *         description="Forbidden - Insufficient permissions",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="This action is unauthorized.")
-     *         )
+     *         response=401,
+     *         description="Unauthorized"
      *     )
      * )
      */
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('view-members');
-
-        $query = User::with('roles')->whereHas('roles', function ($q) {
-            $q->where('name', 'member');
-        });
+        $query = Member::where('deleted', 0);
 
         // Search functionality
-        if ($request->has('search')) {
+        if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+            $query->search($search);
+        }
+
+        // Status filter
+        if ($request->filled('status')) {
+            if ($request->status === 'active') {
+                $query->active();
+            } elseif ($request->status === 'inactive') {
+                $query->inactive();
+            }
+        }
+
+        // Group filter
+        if ($request->filled('group_id')) {
+            $query->byGroup($request->group_id);
+        }
+
+        // Group category filter
+        if ($request->filled('group_category')) {
+            $query->byGroupCategory($request->group_category);
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'first_name');
+        $sortOrder = $request->get('sort_order', 'asc');
+        
+        if (in_array($sortBy, ['first_name', 'last_name', 'email', 'created_at'])) {
+            $query->orderBy($sortBy, $sortOrder);
+        }
+
+        // Pagination
+        $perPage = $request->get('per_page', 10);
+        
+        // Include groups if requested
+        $withRelations = ['creator', 'updater'];
+        if ($request->boolean('include_groups')) {
+            $withRelations[] = 'groups';
+        }
+        
+        $members = $query->with($withRelations)->paginate($perPage);
+
+        // Transform members to include group count if groups are not loaded
+        if (!$request->boolean('include_groups')) {
+            $members->getCollection()->transform(function ($member) {
+                $member->groups_count = $member->active_groups_count;
+                return $member;
             });
         }
 
-        // Filter by status
-        if ($request->has('status')) {
-            $query->where('is_active', $request->status === 'active');
-        }
-
-        // Sort functionality
-        $sortBy = $request->get('sort_by', 'name');
-        $sortOrder = $request->get('sort_order', 'asc');
-        $query->orderBy($sortBy, $sortOrder);
-
-        $members = $query->paginate($request->get('per_page', 15));
-
         return response()->json([
             'success' => true,
-            'data' => $members
+            'message' => 'Members retrieved successfully',
+            'members' => $members
         ]);
     }
 
@@ -124,23 +215,31 @@ class MemberController extends Controller
      * Store a newly created member
      * 
      * @OA\Post(
-     *     path="/members",
-     *     operationId="createMember",
+     *     path="/api/v1/members",
+     *     operationId="storeMember",
      *     tags={"Members"},
      *     summary="Create a new member",
-     *     description="Creates a new member with the member role",
-     *     security={{"bearerAuth":{}}},
+     *     description="Creates a new church member",
+     *     security={{"sanctum":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name","email","password"},
-     *             @OA\Property(property="name", type="string", example="John Doe", description="Member's full name"),
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com", description="Member's email address"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123", description="Member's password"),
-     *             @OA\Property(property="phone", type="string", example="+1234567890", description="Member's phone number"),
-     *             @OA\Property(property="address", type="string", example="123 Church St", description="Member's address"),
-     *             @OA\Property(property="date_of_birth", type="string", format="date", example="1990-01-01", description="Member's date of birth"),
-     *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, example="male", description="Member's gender")
+     *             required={"first_name","last_name","email"},
+     *             @OA\Property(property="first_name", type="string", example="John"),
+     *             @OA\Property(property="last_name", type="string", example="Doe"),
+     *             @OA\Property(property="email", type="string", example="john@example.com"),
+     *             @OA\Property(property="phone", type="string", example="+1234567890"),
+     *             @OA\Property(property="address", type="string", example="123 Main St"),
+     *             @OA\Property(property="date_of_birth", type="string", format="date", example="1990-01-01"),
+     *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, example="male"),
+     *             @OA\Property(property="marital_status", type="string", enum={"single","married","divorced","widowed"}, example="single"),
+     *             @OA\Property(property="occupation", type="string", example="Engineer"),
+     *             @OA\Property(property="emergency_contact_name", type="string", example="Jane Doe"),
+     *             @OA\Property(property="emergency_contact_phone", type="string", example="+1234567890"),
+     *             @OA\Property(property="baptism_date", type="string", format="date", example="2000-01-01"),
+     *             @OA\Property(property="membership_date", type="string", format="date", example="2020-01-01"),
+     *             @OA\Property(property="notes", type="string", example="New member"),
+     *             @OA\Property(property="upload_token", type="string", nullable=true, example="abc123def456")
      *         )
      *     ),
      *     @OA\Response(
@@ -149,36 +248,35 @@ class MemberController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Member created successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
+     *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="member", type="object")
      *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=422,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Validation failed"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
+     *         description="Validation failed"
      *     )
      * )
      */
     public function store(Request $request): JsonResponse
     {
-        $this->authorize('create-members');
-
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:members',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|in:male,female,other',
+            'marital_status' => 'nullable|in:single,married,divorced,widowed',
+            'occupation' => 'nullable|string|max:255',
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_contact_phone' => 'nullable|string|max:20',
+            'baptism_date' => 'nullable|date',
+            'membership_date' => 'nullable|date',
+            'notes' => 'nullable|string|max:1000',
+            'upload_token' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -189,24 +287,36 @@ class MemberController extends Controller
             ], 422);
         }
 
-        $member = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'date_of_birth' => $request->date_of_birth,
-            'gender' => $request->gender,
-            'is_active' => true,
-        ]);
+        // Create member using service (this will also create user account via observer)
+        $result = $this->memberService->createMember($request->all());
 
-        $member->assignRole('member');
+        if (!$result['success']) {
+            return response()->json($result, 500);
+        }
+
+        $member = $result['data']['member'];
+
+        // Handle profile image upload if an image was uploaded
+        $attachedFile = null;
+        if ($request->has('upload_token') && !empty($request->upload_token)) {
+            $attachedFile = $this->fileUploadService->attachFileToModel(
+                $request->upload_token,
+                Member::class,
+                $member->id
+            );
+
+            if ($attachedFile) {
+                $member->profile_image_path = $attachedFile->path;
+                $member->save();
+            }
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'Member created successfully',
             'data' => [
-                'member' => $member->load('roles')
+                'member' => $member->load(['creator', 'user']),
+                'user_account_created' => $result['data']['user_account_created']
             ]
         ], 201);
     }
@@ -215,14 +325,14 @@ class MemberController extends Controller
      * Display the specified member
      * 
      * @OA\Get(
-     *     path="/members/{member}",
+     *     path="/api/v1/members/{id}",
      *     operationId="getMember",
      *     tags={"Members"},
      *     summary="Get member details",
      *     description="Returns detailed information about a specific member",
-     *     security={{"bearerAuth":{}}},
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
-     *         name="member",
+     *         name="id",
      *         in="path",
      *         description="Member ID",
      *         required=true,
@@ -242,30 +352,25 @@ class MemberController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Member not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="User is not a member")
-     *         )
+     *         description="Member not found"
      *     )
      * )
      */
-    public function show(User $member): JsonResponse
+    public function show(int $id): JsonResponse
     {
-        $this->authorize('view-members');
+        $member = Member::with(['creator', 'updater', 'groups'])->find($id);
 
-        // Ensure the user is a member
-        if (!$member->hasRole('member')) {
+        if (!$member) {
             return response()->json([
                 'success' => false,
-                'message' => 'User is not a member'
+                'message' => 'Member not found'
             ], 404);
         }
 
         return response()->json([
             'success' => true,
             'data' => [
-                'member' => $member->load('roles')
+                'member' => $member
             ]
         ]);
     }
@@ -274,14 +379,14 @@ class MemberController extends Controller
      * Update the specified member
      * 
      * @OA\Put(
-     *     path="/members/{member}",
+     *     path="/api/v1/members/{id}",
      *     operationId="updateMember",
      *     tags={"Members"},
-     *     summary="Update member",
-     *     description="Updates the information of a specific member",
-     *     security={{"bearerAuth":{}}},
+     *     summary="Update member details",
+     *     description="Updates an existing member's information",
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
-     *         name="member",
+     *         name="id",
      *         in="path",
      *         description="Member ID",
      *         required=true,
@@ -290,13 +395,22 @@ class MemberController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", example="John Doe", description="Member's full name"),
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com", description="Member's email address"),
-     *             @OA\Property(property="phone", type="string", example="+1234567890", description="Member's phone number"),
-     *             @OA\Property(property="address", type="string", example="123 Church St", description="Member's address"),
-     *             @OA\Property(property="date_of_birth", type="string", format="date", example="1990-01-01", description="Member's date of birth"),
-     *             @OA\Property(property="gender", type="string", enum={"male","female","other"}, example="male", description="Member's gender"),
-     *             @OA\Property(property="is_active", type="boolean", example=true, description="Member's active status")
+     *             @OA\Property(property="first_name", type="string"),
+     *             @OA\Property(property="last_name", type="string"),
+     *             @OA\Property(property="email", type="string"),
+     *             @OA\Property(property="phone", type="string"),
+     *             @OA\Property(property="address", type="string"),
+     *             @OA\Property(property="date_of_birth", type="string", format="date"),
+     *             @OA\Property(property="gender", type="string"),
+     *             @OA\Property(property="marital_status", type="string"),
+     *             @OA\Property(property="occupation", type="string"),
+     *             @OA\Property(property="emergency_contact_name", type="string"),
+     *             @OA\Property(property="emergency_contact_phone", type="string"),
+     *             @OA\Property(property="baptism_date", type="string", format="date"),
+     *             @OA\Property(property="membership_date", type="string", format="date"),
+     *             @OA\Property(property="is_active", type="boolean"),
+     *             @OA\Property(property="notes", type="string"),
+     *             @OA\Property(property="upload_token", type="string", nullable=true)
      *         )
      *     ),
      *     @OA\Response(
@@ -305,43 +419,49 @@ class MemberController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Member updated successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
+     *             @OA\Property(property="data", type="object,
      *                 @OA\Property(property="member", type="object")
      *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Member not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="User is not a member")
-     *         )
+     *         description="Member not found"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
      *     )
      * )
      */
-    public function update(Request $request, User $member): JsonResponse
+    public function update(Request $request, int $id): JsonResponse
     {
-        $this->authorize('edit-members');
+        $member = Member::find($id);
 
-        // Ensure the user is a member
-        if (!$member->hasRole('member')) {
+        if (!$member) {
             return response()->json([
                 'success' => false,
-                'message' => 'User is not a member'
+                'message' => 'Member not found'
             ], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|string|email|max:255|unique:users,email,' . $member->id,
+            'first_name' => 'sometimes|required|string|max:255',
+            'last_name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:members,email,' . $id,
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|in:male,female,other',
+            'marital_status' => 'nullable|in:single,married,divorced,widowed',
+            'occupation' => 'nullable|string|max:255',
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_contact_phone' => 'nullable|string|max:20',
+            'baptism_date' => 'nullable|date',
+            'membership_date' => 'nullable|date',
             'is_active' => 'sometimes|boolean',
+            'notes' => 'nullable|string|max:1000',
+            'upload_token' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -352,31 +472,144 @@ class MemberController extends Controller
             ], 422);
         }
 
-        $member->update($request->only([
-            'name', 'email', 'phone', 'address', 'date_of_birth', 'gender', 'is_active'
-        ]));
+        // Handle profile image upload if an image was uploaded
+        if ($request->has('upload_token') && !empty($request->upload_token)) {
+            $attachedFile = $this->fileUploadService->attachFileToModel(
+                $request->upload_token,
+                Member::class,
+                $member->id
+            );
+
+            if ($attachedFile) {
+                $member->profile_image_path = $attachedFile->path;
+            }
+        }
+
+        // Update member fields
+        $member->fill($request->except(['upload_token', 'profile_image_path']));
+        $member->updated_by = Auth::id();
+        $member->save();
 
         return response()->json([
             'success' => true,
             'message' => 'Member updated successfully',
             'data' => [
-                'member' => $member->load('roles')
+                'member' => $member->load(['creator', 'updater'])
             ]
         ]);
+    }
+
+    /**
+     * Get member statistics
+     * 
+     * @OA\Get(
+     *     path="/api/v1/members/statistics",
+     *     operationId="getMemberStatistics",
+     *     tags={"Members"},
+     *     summary="Get member statistics",
+     *     description="Returns comprehensive statistics about members",
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Statistics retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Statistics retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="total_members", type="integer", example=150),
+     *                 @OA\Property(property="active_members", type="integer", example=140),
+     *                 @OA\Property(property="inactive_members", type="integer", example=10),
+     *                 @OA\Property(property="new_members_this_month", type="integer", example=5),
+     *                 @OA\Property(property="new_members_this_year", type="integer", example=25),
+     *                 @OA\Property(property="gender_distribution", type="object"),
+     *                 @OA\Property(property="marital_status_distribution", type="object"),
+     *                 @OA\Property(property="age_groups", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function statistics(): JsonResponse
+    {
+        try {
+            $totalMembers = Member::count();
+            $activeMembers = Member::active()->count();
+            $inactiveMembers = Member::inactive()->count();
+            $newMembersThisMonth = Member::where('created_at', '>=', now()->startOfMonth())->count();
+            $newMembersThisYear = Member::where('created_at', '>=', now()->startOfYear())->count();
+
+            // Gender distribution
+            $genderDistribution = Member::selectRaw('gender, COUNT(*) as count')
+                ->whereNotNull('gender')
+                ->groupBy('gender')
+                ->pluck('count', 'gender')
+                ->toArray();
+
+            // Marital status distribution
+            $maritalStatusDistribution = Member::selectRaw('marital_status, COUNT(*) as count')
+                ->whereNotNull('marital_status')
+                ->groupBy('marital_status')
+                ->pluck('count', 'marital_status')
+                ->toArray();
+
+            // Age groups
+            $ageGroups = Member::selectRaw('
+                CASE 
+                    WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN "Under 18"
+                    WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 25 THEN "18-25"
+                    WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 26 AND 35 THEN "26-35"
+                    WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 36 AND 50 THEN "36-50"
+                    WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 51 AND 65 THEN "51-65"
+                    WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) > 65 THEN "Over 65"
+                    ELSE "Unknown"
+                END as age_group,
+                COUNT(*) as count
+            ')
+                ->whereNotNull('date_of_birth')
+                ->groupBy('age_group')
+                ->pluck('count', 'age_group')
+                ->toArray();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Statistics retrieved successfully',
+                'data' => [
+                    'total_members' => $totalMembers,
+                    'active_members' => $activeMembers,
+                    'inactive_members' => $inactiveMembers,
+                    'new_members_this_month' => $newMembersThisMonth,
+                    'new_members_this_year' => $newMembersThisYear,
+                    'gender_distribution' => $genderDistribution,
+                    'marital_status_distribution' => $maritalStatusDistribution,
+                    'age_groups' => $ageGroups,
+                ]
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve statistics: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
      * Remove the specified member
      * 
      * @OA\Delete(
-     *     path="/members/{member}",
+     *     path="/api/v1/members/{id}",
      *     operationId="deleteMember",
      *     tags={"Members"},
-     *     summary="Delete member",
-     *     description="Permanently deletes a member from the system",
-     *     security={{"bearerAuth":{}}},
+     *     summary="Delete a member",
+     *     description="Removes a member from the system",
+     *     security={{"sanctum":{}}},
      *     @OA\Parameter(
-     *         name="member",
+     *         name="id",
      *         in="path",
      *         description="Member ID",
      *         required=true,
@@ -392,27 +625,23 @@ class MemberController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Member not found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="User is not a member")
-     *         )
+     *         description="Member not found"
      *     )
      * )
      */
-    public function destroy(User $member): JsonResponse
+    public function destroy(int $id): JsonResponse
     {
-        $this->authorize('delete-members');
+        $member = Member::find($id);
 
-        // Ensure the user is a member
-        if (!$member->hasRole('member')) {
+        if (!$member) {
             return response()->json([
                 'success' => false,
-                'message' => 'User is not a member'
+                'message' => 'Member not found'
             ], 404);
         }
 
-        $member->delete();
+        $member->deleted = 1;
+        $member->save();
 
         return response()->json([
             'success' => true,
@@ -421,60 +650,495 @@ class MemberController extends Controller
     }
 
     /**
-     * Get member statistics
+     * Get member's groups
      * 
      * @OA\Get(
-     *     path="/members/statistics",
-     *     operationId="getMemberStatistics",
+     *     path="/api/v1/members/{id}/groups",
+     *     operationId="getMemberGroups",
      *     tags={"Members"},
-     *     summary="Get member statistics",
-     *     description="Returns statistical information about members",
-     *     security={{"bearerAuth":{}}},
+     *     summary="Get member's groups",
+     *     description="Returns all groups that a member belongs to",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Member ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Statistics retrieved successfully",
+     *         description="Member groups retrieved successfully",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
-     *                 @OA\Property(property="total_members", type="integer", example=150),
-     *                 @OA\Property(property="active_members", type="integer", example=120),
-     *                 @OA\Property(property="inactive_members", type="integer", example=30),
-     *                 @OA\Property(property="gender_distribution", type="array", @OA\Items(type="object"))
+     *             @OA\Property(property="message", type="string", example="Member groups retrieved successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="member", type="object"),
+     *                 @OA\Property(property="groups", type="array", @OA\Items(type="object"))
      *             )
      *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Member not found"
      *     )
      * )
      */
-    public function statistics(): JsonResponse
+    public function getGroups(int $id): JsonResponse
     {
-        $this->authorize('view-members');
+        $member = Member::with(['groups' => function ($query) {
+            $query->where('deleted', 0);
+        }])->find($id);
 
-        $totalMembers = User::whereHas('roles', function ($q) {
-            $q->where('name', 'member');
-        })->count();
-
-        $activeMembers = User::whereHas('roles', function ($q) {
-            $q->where('name', 'member');
-        })->where('is_active', true)->count();
-
-        $inactiveMembers = $totalMembers - $activeMembers;
-
-        $genderStats = User::whereHas('roles', function ($q) {
-            $q->where('name', 'member');
-        })->selectRaw('gender, count(*) as count')
-          ->groupBy('gender')
-          ->get();
+        if (!$member) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member not found'
+            ], 404);
+        }
 
         return response()->json([
             'success' => true,
+            'message' => 'Member groups retrieved successfully',
             'data' => [
-                'total_members' => $totalMembers,
-                'active_members' => $activeMembers,
-                'inactive_members' => $inactiveMembers,
-                'gender_distribution' => $genderStats
+                'member' => [
+                    'id' => $member->id,
+                    'first_name' => $member->first_name,
+                    'last_name' => $member->last_name,
+                    'email' => $member->email,
+                    'full_name' => $member->full_name
+                ],
+                'groups' => $member->groups->map(function ($group) {
+                    return [
+                        'id' => $group->id,
+                        'name' => $group->name,
+                        'description' => $group->description,
+                        'category' => $group->category,
+                        'status' => $group->status,
+                        'pivot' => [
+                            'role' => $group->pivot->role,
+                            'joined_at' => $group->pivot->joined_at,
+                            'is_active' => $group->pivot->is_active,
+                            'notes' => $group->pivot->notes
+                        ]
+                    ];
+                })
             ]
         ]);
+    }
+
+    /**
+     * Add member to groups
+     * 
+     * @OA\Post(
+     *     path="/api/v1/members/{id}/groups",
+     *     operationId="addMemberToGroups",
+     *     tags={"Members"},
+     *     summary="Add member to groups",
+     *     description="Adds a member to one or more groups",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Member ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"group_ids"},
+     *             @OA\Property(property="group_ids", type="array", @OA\Items(type="integer"), example={1, 2, 3}),
+     *             @OA\Property(property="role", type="string", enum={"member", "leader", "coordinator", "mentor"}, example="member"),
+     *             @OA\Property(property="notes", type="string", example="Added via member management")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Member added to groups successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Member added to groups successfully"),
+     *             @OA\Property(property="data", type="object,
+     *                 @OA\Property(property="added_groups", type="array"),
+     *                 @OA\Property(property="skipped_groups", type="array"),
+     *                 @OA\Property(property="errors", type="array")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Member not found"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     )
+     * )
+     */
+    public function addToGroups(Request $request, int $id): JsonResponse
+    {
+        $member = Member::find($id);
+
+        if (!$member) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member not found'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'group_ids' => 'required|array|min:1',
+            'group_ids.*' => 'integer|exists:groups,id',
+            'role' => 'nullable|string|in:member,leader,coordinator,mentor',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $groupIds = $request->group_ids;
+        $role = $request->role ?? 'member';
+        $notes = $request->notes;
+        
+        $addedGroups = [];
+        $skippedGroups = [];
+        $errors = [];
+
+        foreach ($groupIds as $groupId) {
+            try {
+                $group = \App\Models\Group::find($groupId);
+                
+                if (!$group || $group->deleted) {
+                    $errors[] = "Group ID {$groupId} not found or deleted";
+                    continue;
+                }
+
+                // Check if member is already in the group
+                if ($member->groups()->where('group_id', $groupId)->exists()) {
+                    $skippedGroups[] = [
+                        'id' => $groupId,
+                        'name' => $group->name,
+                        'reason' => 'Already a member'
+                    ];
+                    continue;
+                }
+
+                // Check if group is full
+                if ($group->is_full) {
+                    $skippedGroups[] = [
+                        'id' => $groupId,
+                        'name' => $group->name,
+                        'reason' => 'Group is full'
+                    ];
+                    continue;
+                }
+
+                // Add member to group
+                $member->groups()->attach($groupId, [
+                    'role' => $role,
+                    'notes' => $notes,
+                    'joined_at' => now(),
+                    'is_active' => true,
+                ]);
+
+                $addedGroups[] = [
+                    'id' => $groupId,
+                    'name' => $group->name,
+                    'role' => $role
+                ];
+
+            } catch (Exception $e) {
+                $errors[] = "Failed to add member to group {$groupId}: " . $e->getMessage();
+            }
+        }
+
+        $message = count($addedGroups) > 0 ? 'Member added to groups successfully' : 'No groups were added';
+        
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => [
+                'added_groups' => $addedGroups,
+                'skipped_groups' => $skippedGroups,
+                'errors' => $errors
+            ]
+        ]);
+    }
+
+    /**
+     * Remove member from groups
+     * 
+     * @OA\Delete(
+     *     path="/api/v1/members/{id}/groups",
+     *     operationId="removeMemberFromGroups",
+     *     tags={"Members"},
+     *     summary="Remove member from groups",
+     *     description="Removes a member from one or more groups",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Member ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"group_ids"},
+     *             @OA\Property(property="group_ids", type="array", @OA\Items(type="integer"), example={1, 2, 3})
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Member removed from groups successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Member removed from groups successfully"),
+     *             @OA\Property(property="data", type="object,
+     *                 @OA\Property(property="removed_groups", type="array"),
+     *                 @OA\Property(property="not_found_groups", type="array")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Member not found"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     )
+     * )
+     */
+    public function removeFromGroups(Request $request, int $id): JsonResponse
+    {
+        $member = Member::find($id);
+
+        if (!$member) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member not found'
+            ], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'group_ids' => 'required|array|min:1',
+            'group_ids.*' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $groupIds = $request->group_ids;
+        $removedGroups = [];
+        $notFoundGroups = [];
+
+        foreach ($groupIds as $groupId) {
+            $group = \App\Models\Group::find($groupId);
+            
+            if (!$group) {
+                $notFoundGroups[] = $groupId;
+                continue;
+            }
+
+            // Check if member is actually in this group
+            if ($member->groups()->where('group_id', $groupId)->exists()) {
+                $member->groups()->detach($groupId);
+                $removedGroups[] = [
+                    'id' => $groupId,
+                    'name' => $group->name
+                ];
+            } else {
+                $notFoundGroups[] = $groupId;
+            }
+        }
+
+        $message = count($removedGroups) > 0 ? 'Member removed from groups successfully' : 'No groups were removed';
+        
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => [
+                'removed_groups' => $removedGroups,
+                'not_found_groups' => $notFoundGroups
+            ]
+        ]);
+    }
+
+    /**
+     * Update member's group role
+     * 
+     * @OA\Put(
+     *     path="/api/v1/members/{id}/groups/{group_id}",
+     *     operationId="updateMemberGroupRole",
+     *     tags={"Members"},
+     *     summary="Update member's group role",
+     *     description="Updates a member's role in a specific group",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Member ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="group_id",
+     *         in="path",
+     *         description="Group ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="role", type="string", enum={"member", "leader", "coordinator", "mentor"}, example="leader"),
+     *             @OA\Property(property="notes", type="string", example="Promoted to leader"),
+     *             @OA\Property(property="is_active", type="boolean", example=true)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Member group role updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Member group role updated successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Member or group not found"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     )
+     * )
+     */
+    public function updateGroupRole(Request $request, int $id, int $group_id): JsonResponse
+    {
+        $member = Member::find($id);
+        $group = \App\Models\Group::find($group_id);
+
+        if (!$member) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member not found'
+            ], 404);
+        }
+
+        if (!$group) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Group not found'
+            ], 404);
+        }
+
+        // Check if member is in this group
+        if (!$member->groups()->where('group_id', $group_id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member is not in this group'
+            ], 422);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'role' => 'nullable|string|in:member,leader,coordinator,mentor',
+            'notes' => 'nullable|string|max:1000',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $updateData = [];
+        if ($request->has('role')) {
+            $updateData['role'] = $request->role;
+        }
+        if ($request->has('notes')) {
+            $updateData['notes'] = $request->notes;
+        }
+        if ($request->has('is_active')) {
+            $updateData['is_active'] = $request->is_active;
+        }
+
+        if (!empty($updateData)) {
+            $member->groups()->updateExistingPivot($group_id, $updateData);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Member group role updated successfully'
+        ]);
+    }
+
+    /**
+     * Create a user account for an existing member
+     * 
+     * @OA\Post(
+     *     path="/api/v1/members/{id}/create-user-account",
+     *     operationId="createUserAccountForMember",
+     *     tags={"Members"},
+     *     summary="Create user account for member",
+     *     description="Creates a user account for an existing member who doesn't have one",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Member ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User account created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="User account created successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="member", type="object"),
+     *                 @OA\Property(property="user_account_created", type="boolean", example=true),
+     *                 @OA\Property(property="existing_user", type="boolean", example=false),
+     *                 @OA\Property(property="generated_password", type="string", example="abc123def456")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Member not found"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Member already has user account"
+     *     )
+     * )
+     */
+    public function createUserAccount(int $id): JsonResponse
+    {
+        $result = $this->memberService->createUserAccountForMember($id);
+
+        if (!$result['success']) {
+            $statusCode = $result['message'] === 'Member not found' ? 404 : 422;
+            return response()->json($result, $statusCode);
+        }
+
+        return response()->json($result);
     }
 }

@@ -62,6 +62,15 @@ Route::prefix($apiVersion)->group(function () {
         Route::get('/{member}', [MemberController::class, 'show']);
         Route::put('/{member}', [MemberController::class, 'update']);
         Route::delete('/{member}', [MemberController::class, 'destroy']);
+        
+        // Member group management routes
+        Route::get('/{member}/groups', [MemberController::class, 'getGroups']);
+        Route::post('/{member}/groups', [MemberController::class, 'addToGroups']);
+        Route::delete('/{member}/groups', [MemberController::class, 'removeFromGroups']);
+        Route::put('/{member}/groups/{group_id}', [MemberController::class, 'updateGroupRole']);
+        
+        // User account management routes
+        Route::post('/{member}/create-user-account', [MemberController::class, 'createUserAccount']);
     });
 
     // File upload routes
@@ -79,6 +88,11 @@ Route::prefix($apiVersion)->group(function () {
         Route::post('/', [GroupController::class, 'store']);
         Route::put('/{id}', [GroupController::class, 'update']);
         Route::delete('/{id}', [GroupController::class, 'destroy']);
+        
+        // Group member management routes
+        Route::get('/{id}/members', [GroupController::class, 'getMembers']);
+        Route::post('/{id}/members', [GroupController::class, 'addMember']);
+        Route::delete('/{id}/members/{member_id}', [GroupController::class, 'removeMember']);
     });
 
     // TODO: Add routes for other modules (Events, Donations, Communications, etc.)

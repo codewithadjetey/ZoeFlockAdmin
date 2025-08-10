@@ -21,6 +21,9 @@ export { default as TabNavigation } from './TabNavigation';
 export { default as StatusBadge } from './StatusBadge';
 export { default as CategoryBadge } from './CategoryBadge';
 
+// Avatar Component
+export { default as Avatar } from './Avatar';
+
 // Theme Components
 export { default as ColorSwitcher } from './ColorSwitcher';
 
