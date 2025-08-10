@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Group extends Model
 {
@@ -23,12 +21,14 @@ class Group extends Model
         'location',
         'img_path',
         'status',
+        'deleted',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'max_members' => 'integer',
+        'deleted' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -118,12 +118,7 @@ class Group extends Model
         return $query->where('category', $category);
     }
 
-    public function image(): HasOne
-    {
-        return $this->hasOne(FileUpload::class, 'model_id', 'id')
-            ->where('model_type', Group::class)
-            ->orderBy('id', 'desc');
-    }
+
 
     /**
      * Get the events associated with this group
@@ -134,22 +129,6 @@ class Group extends Model
             ->using(EventGroup::class)
             ->withPivot('is_required', 'notes')
             ->withTimestamps();
-    }
-
-    /**
-     * Get the upcoming events for this group
-     */
-    public function upcomingEvents()
-    {
-        return $this->events()->upcoming();
-    }
-
-    /**
-     * Get the past events for this group
-     */
-    public function pastEvents()
-    {
-        return $this->events()->past();
     }
 
     /**
@@ -200,27 +179,5 @@ class Group extends Model
         return $this->members()->wherePivot('role', $role)->wherePivot('is_active', true)->get();
     }
 
-    /**
-     * Get group leaders
-     */
-    public function getLeadersAttribute()
-    {
-        return $this->getMembersByRole('leader');
-    }
 
-    /**
-     * Get group coordinators
-     */
-    public function getCoordinatorsAttribute()
-    {
-        return $this->getMembersByRole('coordinator');
-    }
-
-    /**
-     * Get group mentors
-     */
-    public function getMentorsAttribute()
-    {
-        return $this->getMembersByRole('mentor');
-    }
 } 
