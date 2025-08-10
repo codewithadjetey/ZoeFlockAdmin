@@ -250,6 +250,24 @@ export default function EventsPage() {
           >
             <i className="fas fa-edit"></i>
           </button>
+          {event.status === 'draft' && (
+            <button 
+              className="text-green-600 hover:text-green-700 text-sm"
+              onClick={() => handlePublishEvent(event)}
+              title="Publish Event"
+            >
+              <i className="fas fa-globe"></i>
+            </button>
+          )}
+          {event.status === 'published' && (
+            <button 
+              className="text-orange-600 hover:text-orange-700 text-sm"
+              onClick={() => handleCancelEvent(event)}
+              title="Cancel Event"
+            >
+              <i className="fas fa-ban"></i>
+            </button>
+          )}
           <button 
             className="text-red-600 hover:text-red-700 text-sm"
             onClick={() => handleDeleteEvent(event.id)}
@@ -269,7 +287,7 @@ export default function EventsPage() {
     <DashboardLayout>
       <PageHeader
         title="Events"
-        description="Manage church events and activities"
+        description="Manage church events and activities. Create drafts and publish when ready."
         actionButton={{
           text: "Create Event",
           icon: "fas fa-calendar-plus",
@@ -277,8 +295,84 @@ export default function EventsPage() {
         }}
       />
 
+      {/* Status Summary */}
+      <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="flex items-center text-blue-800 dark:text-blue-200">
+          <i className="fas fa-info-circle mr-2"></i>
+          <span className="text-sm">
+            <strong>Tip:</strong> Create events as drafts first, then publish them when ready. Use the globe icon to publish draft events.
+          </span>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <i className="fas fa-calendar text-blue-600 dark:text-blue-400"></i>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">{events.length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center">
+            <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+              <i className="fas fa-edit text-yellow-600 dark:text-yellow-400"></i>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Draft</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {events.filter(e => e.status === 'draft').length}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+              <i className="fas fa-globe text-green-600 dark:text-green-400"></i>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Published</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {events.filter(e => e.status === 'published').length}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center">
+            <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
+              <i className="fas fa-ban text-red-600 dark:text-red-400"></i>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Cancelled</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {events.filter(e => e.status === 'cancelled').length}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="flex items-center">
+            <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+              <i className="fas fa-check-circle text-gray-600 dark:text-gray-400"></i>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {events.filter(e => e.status === 'completed').length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Search and Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="md:col-span-2">
           <SearchInput
             placeholder="Search events..."
@@ -287,9 +381,25 @@ export default function EventsPage() {
           />
         </div>
         <SelectInput
-          value={categoryFilter}
-          onChange={setCategoryFilter}
-          options={categoryOptions}
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { value: 'all', label: 'All Statuses' },
+            { value: 'draft', label: 'Draft' },
+            { value: 'published', label: 'Published' },
+            { value: 'cancelled', label: 'Cancelled' },
+            { value: 'completed', label: 'Completed' }
+          ]}
+        />
+        <SelectInput
+          value={typeFilter}
+          onChange={setTypeFilter}
+          options={[
+            { value: 'all', label: 'All Types' },
+            { value: 'general', label: 'General' },
+            { value: 'group', label: 'Group' },
+            { value: 'family', label: 'Family' }
+          ]}
         />
       </div>
 

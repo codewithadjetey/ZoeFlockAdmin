@@ -24,6 +24,7 @@ interface EventModalProps {
 interface EventFormData extends Omit<CreateEventRequest, 'recurrence_pattern' | 'recurrence_settings'> {
   recurrence_pattern: 'daily' | 'weekly' | 'monthly' | 'yearly';
   recurrence_settings: Record<string, any>;
+  status?: string;
 }
 
 export default function EventModal({ 
@@ -69,10 +70,11 @@ export default function EventModal({
       setFormData({
         title: event.title,
         description: event.description || '',
-        start_date: event.start_date,
+        start_date: event.start_date || '',
         end_date: event.end_date || '',
         location: event.location || '',
         type: event.type,
+        status: event.status || 'draft',
         is_recurring: event.is_recurring,
         recurrence_pattern: event.recurrence_pattern || 'weekly',
         recurrence_settings: event.recurrence_settings || {},
@@ -94,6 +96,7 @@ export default function EventModal({
         end_date: '',
         location: '',
         type: 'general',
+        status: 'draft',
         is_recurring: false,
         recurrence_pattern: 'weekly',
         recurrence_settings: {},
@@ -133,16 +136,17 @@ export default function EventModal({
       newErrors.title = 'Title is required';
     }
 
-    if (!formData.start_date) {
-      newErrors.start_date = 'Start date is required';
-    } else {
+    // Start date is only required for non-recurring events
+    if (!formData.is_recurring && !formData.start_date) {
+      newErrors.start_date = 'Start date is required for non-recurring events';
+    } else if (formData.start_date) {
       const startDate = new Date(formData.start_date);
       if (startDate <= new Date()) {
         newErrors.start_date = 'Start date must be in the future';
       }
     }
 
-    if (formData.end_date) {
+    if (formData.end_date && formData.start_date) {
       const startDate = new Date(formData.start_date);
       const endDate = new Date(formData.end_date);
       if (endDate <= startDate) {
@@ -154,7 +158,7 @@ export default function EventModal({
       newErrors.recurrence_pattern = 'Recurrence pattern is required for recurring events';
     }
 
-    if (formData.is_recurring && formData.recurrence_end_date) {
+    if (formData.is_recurring && formData.recurrence_end_date && formData.start_date) {
       const startDate = new Date(formData.start_date);
       const endDate = new Date(formData.recurrence_end_date);
       if (endDate <= startDate) {
@@ -334,6 +338,27 @@ export default function EventModal({
             </FormField>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField label="Status" error={errors.status}>
+              <SelectInput
+                value={formData.status || 'draft'}
+                onChange={(value) => handleInputChange('status', value)}
+                options={[
+                  { value: 'draft', label: 'Draft' },
+                  { value: 'published', label: 'Published' }
+                ]}
+              />
+            </FormField>
+
+            <FormField label="Location" error={errors.location}>
+              <TextInput
+                value={formData.location || ''}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                placeholder="Event location"
+              />
+            </FormField>
+          </div>
+
           <FormField label="Description" error={errors.description}>
             <Textarea
               value={formData.description || ''}
@@ -344,12 +369,20 @@ export default function EventModal({
           </FormField>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Start Date & Time" error={errors.start_date}>
+            <FormField 
+              label={`Start Date & Time${formData.is_recurring ? ' (Optional for recurring events)' : ''}`}
+              error={errors.start_date}
+            >
               <TextInput
                 type="datetime-local"
-                value={formData.start_date}
+                value={formData.start_date || ''}
                 onChange={(e) => handleInputChange('start_date', e.target.value)}
               />
+              {formData.is_recurring && (
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Leave empty to start recurring events from today
+                </p>
+              )}
             </FormField>
 
             <FormField label="End Date & Time" error={errors.end_date}>
@@ -361,14 +394,6 @@ export default function EventModal({
               />
             </FormField>
           </div>
-
-          <FormField label="Location" error={errors.location}>
-            <TextInput
-              value={formData.location || ''}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-              placeholder="Event location"
-            />
-          </FormField>
 
           {/* Recurring Event Settings */}
           <div className="border-t pt-6">

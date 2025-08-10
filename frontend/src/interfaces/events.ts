@@ -2,7 +2,7 @@ export interface Event {
   id: number;
   title: string;
   description?: string;
-  start_date: string;
+  start_date?: string; // Optional for recurring events
   end_date?: string;
   location?: string;
   type: 'group' | 'family' | 'general';
@@ -73,7 +73,7 @@ export interface FileUpload {
 export interface CreateEventRequest {
   title: string;
   description?: string;
-  start_date: string;
+  start_date?: string; // Optional for recurring events
   end_date?: string;
   location?: string;
   type: 'group' | 'family' | 'general';
