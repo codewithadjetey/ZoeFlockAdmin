@@ -60,6 +60,72 @@ class AttendanceService
     }
 
     /**
+     * Ensure attendance records exist for an event and member
+     */
+    public function ensureAttendanceRecordExists(int $eventId, int $memberId): ?Attendance
+    {
+        $attendance = Attendance::where('event_id', $eventId)
+            ->where('member_id', $memberId)
+            ->first();
+
+        if (!$attendance) {
+            // Create default attendance record
+            $attendance = Attendance::create([
+                'event_id' => $eventId,
+                'member_id' => $memberId,
+                'status' => 'absent', // Default status
+                'recorded_by' => auth()->id() ?? 1,
+            ]);
+        }
+
+        return $attendance;
+    }
+
+    /**
+     * Ensure all eligible members have attendance records for an event
+     */
+    public function ensureAllAttendanceRecordsExist(int $eventId): array
+    {
+        try {
+            $event = Event::findOrFail($eventId);
+            $eligibleMembers = $this->getEligibleMembersForEvent($event);
+            $createdRecords = [];
+            $existingRecords = [];
+
+            foreach ($eligibleMembers as $member) {
+                $attendance = Attendance::where('event_id', $eventId)
+                    ->where('member_id', $member->id)
+                    ->first();
+
+                if (!$attendance) {
+                    $attendance = Attendance::create([
+                        'event_id' => $eventId,
+                        'member_id' => $member->id,
+                        'status' => 'absent', // Default status
+                        'recorded_by' => auth()->id() ?? 1,
+                    ]);
+                    $createdRecords[] = $attendance;
+                } else {
+                    $existingRecords[] = $attendance;
+                }
+            }
+
+            return [
+                'success' => true,
+                'created_records' => count($createdRecords),
+                'existing_records' => count($existingRecords),
+                'total_eligible_members' => count($eligibleMembers),
+                'message' => 'Attendance records ensured successfully'
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Get all members eligible to attend a specific event
      */
     public function getEligibleMembersForEvent(Event $event): \Illuminate\Database\Eloquent\Collection
@@ -108,12 +174,23 @@ class AttendanceService
                 ->first();
 
             if (!$attendance) {
+                // Create the attendance record if it doesn't exist
+                $attendance = Attendance::create([
+                    'event_id' => $eventId,
+                    'member_id' => $memberId,
+                    'status' => $status,
+                    'notes' => $notes,
+                    'recorded_by' => auth()->id() ?? 1,
+                ]);
+
                 return [
-                    'success' => false,
-                    'error' => 'Attendance record not found'
+                    'success' => true,
+                    'attendance' => $attendance,
+                    'message' => 'Attendance created successfully'
                 ];
             }
 
+            // Update existing attendance record
             $attendance->update([
                 'status' => $status,
                 'notes' => $notes,
@@ -233,10 +310,13 @@ class AttendanceService
                 ->first();
 
             if (!$attendance) {
-                return [
-                    'success' => false,
-                    'error' => 'Attendance record not found'
-                ];
+                // Create the attendance record if it doesn't exist
+                $attendance = Attendance::create([
+                    'event_id' => $eventId,
+                    'member_id' => $memberId,
+                    'status' => 'present', // Default to present when checking in
+                    'recorded_by' => auth()->id() ?? 1,
+                ]);
             }
 
             $attendance->update([
@@ -268,10 +348,13 @@ class AttendanceService
                 ->first();
 
             if (!$attendance) {
-                return [
-                    'success' => false,
-                    'error' => 'Attendance record not found'
-                ];
+                // Create the attendance record if it doesn't exist
+                $attendance = Attendance::create([
+                    'event_id' => $eventId,
+                    'member_id' => $memberId,
+                    'status' => 'present', // Default to present when checking out
+                    'recorded_by' => auth()->id() ?? 1,
+                ]);
             }
 
             $attendance->update([
@@ -289,6 +372,6 @@ class AttendanceService
                 'success' => false,
                 'error' => $e->getMessage()
             ];
+            }
         }
-    }
 } 

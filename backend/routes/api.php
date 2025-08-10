@@ -168,15 +168,16 @@ Route::prefix($apiVersion)->group(function () {
         // Member-specific events
         Route::get('/member/{memberId}', [EventController::class, 'getMemberEvents']);
         
-        // Attendance management routes
-        Route::prefix('{event}/attendance')->group(function () {
-            Route::get('/', [AttendanceController::class, 'getEventAttendance']);
-            Route::get('/eligible-members', [AttendanceController::class, 'getEligibleMembers']);
-            Route::put('/{memberId}/status', [AttendanceController::class, 'updateAttendanceStatus']);
-            Route::post('/{memberId}/check-in', [AttendanceController::class, 'markCheckIn']);
-            Route::post('/{memberId}/check-out', [AttendanceController::class, 'markCheckOut']);
-            Route::post('/bulk-update', [AttendanceController::class, 'bulkUpdateAttendance']);
-        });
+            // Attendance management routes
+    Route::prefix('{event}/attendance')->group(function () {
+        Route::get('/', [AttendanceController::class, 'getEventAttendance']);
+        Route::get('/eligible-members', [AttendanceController::class, 'getEligibleMembers']);
+        Route::put('/{memberId}/status', [AttendanceController::class, 'updateAttendanceStatus']);
+        Route::post('/{memberId}/check-in', [AttendanceController::class, 'markCheckIn']);
+        Route::post('/{memberId}/check-out', [AttendanceController::class, 'markCheckOut']);
+        Route::post('/bulk-update', [AttendanceController::class, 'bulkUpdateAttendance']);
+        Route::post('/ensure-records', [AttendanceController::class, 'ensureAttendanceRecords']);
+    });
     });
 
     // General attendance routes

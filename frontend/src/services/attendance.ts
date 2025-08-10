@@ -79,6 +79,14 @@ export class AttendanceService {
   }
 
   /**
+   * Ensure all attendance records exist for an event
+   */
+  static async ensureAttendanceRecords(eventId: number): Promise<{ success: boolean; message: string; data: any }> {
+    const response = await http({ method: 'post', url: `/events/${eventId}/attendance/ensure-records` });
+    return response.data;
+  }
+
+  /**
    * Update individual attendance status
    */
   static async updateAttendanceStatus(
@@ -194,6 +202,94 @@ export class AttendanceService {
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+    }
+  }
+
+  /**
+   * Validate attendance status
+   */
+  static isValidStatus(status: string): boolean {
+    return this.getAttendanceStatuses().includes(status);
+  }
+
+  /**
+   * Get status display name
+   */
+  static getStatusDisplayName(status: string): string {
+    switch (status) {
+      case 'present':
+        return 'Present';
+      case 'absent':
+        return 'Absent';
+      case 'first_timer':
+        return 'First Timer';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  /**
+   * Calculate attendance statistics from attendance records
+   */
+  static calculateAttendanceStats(attendances: Attendance[]): {
+    present: number;
+    absent: number;
+    first_timers: number;
+    total: number;
+  } {
+    const stats = {
+      present: 0,
+      absent: 0,
+      first_timers: 0,
+      total: 0
+    };
+
+    attendances.forEach(attendance => {
+      switch (attendance.status) {
+        case 'present':
+          stats.present++;
+          break;
+        case 'absent':
+          stats.absent++;
+          break;
+        case 'first_timer':
+          stats.first_timers++;
+          break;
+      }
+    });
+
+    stats.total = stats.present + stats.first_timers;
+    return stats;
+  }
+
+  /**
+   * Format attendance time for display
+   */
+  static formatAttendanceTime(time: string | null | undefined): string {
+    if (!time) return '-';
+    try {
+      return new Date(time).toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    } catch {
+      return '-';
+    }
+  }
+
+  /**
+   * Get attendance status icon
+   */
+  static getStatusIcon(status: string): string {
+    switch (status) {
+      case 'present':
+        return 'fas fa-check-circle';
+      case 'absent':
+        return 'fas fa-times-circle';
+      case 'first_timer':
+        return 'fas fa-star';
+      default:
+        return 'fas fa-question-circle';
     }
   }
 } 

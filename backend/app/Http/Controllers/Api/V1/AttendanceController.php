@@ -236,4 +236,34 @@ class AttendanceController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Ensure all attendance records exist for an event
+     */
+    public function ensureAttendanceRecords(int $eventId): JsonResponse
+    {
+        try {
+            $result = $this->attendanceService->ensureAllAttendanceRecordsExist($eventId);
+
+            if ($result['success']) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'data' => $result
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to ensure attendance records',
+                    'error' => $result['error']
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to ensure attendance records',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 } 
