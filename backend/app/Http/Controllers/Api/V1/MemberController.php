@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Services\FileUploadService;
+use App\Services\MemberService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -20,10 +21,12 @@ use Exception;
 class MemberController extends Controller
 {
     protected FileUploadService $fileUploadService;
+    protected MemberService $memberService;
 
-    public function __construct(FileUploadService $fileUploadService)
+    public function __construct(FileUploadService $fileUploadService, MemberService $memberService)
     {
         $this->fileUploadService = $fileUploadService;
+        $this->memberService = $memberService;
     }
 
     /**
@@ -284,25 +287,14 @@ class MemberController extends Controller
             ], 422);
         }
 
-        $member = Member::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'date_of_birth' => $request->date_of_birth,
-            'gender' => $request->gender,
-            'marital_status' => $request->marital_status,
-            'occupation' => $request->occupation,
-            'emergency_contact_name' => $request->emergency_contact_name,
-            'emergency_contact_phone' => $request->emergency_contact_phone,
-            'baptism_date' => $request->baptism_date,
-            'membership_date' => $request->membership_date,
-            'notes' => $request->notes,
-            'is_active' => true,
-            'created_by' => Auth::id(),
-            'updated_by' => Auth::id(),
-        ]);
+        // Create member using service (this will also create user account via observer)
+        $result = $this->memberService->createMember($request->all());
+
+        if (!$result['success']) {
+            return response()->json($result, 500);
+        }
+
+        $member = $result['data']['member'];
 
         // Handle profile image upload if an image was uploaded
         $attachedFile = null;
@@ -323,7 +315,8 @@ class MemberController extends Controller
             'success' => true,
             'message' => 'Member created successfully',
             'data' => [
-                'member' => $member->load(['creator'])
+                'member' => $member->load(['creator', 'user']),
+                'user_account_created' => $result['data']['user_account_created']
             ]
         ], 201);
     }
@@ -1094,5 +1087,58 @@ class MemberController extends Controller
             'success' => true,
             'message' => 'Member group role updated successfully'
         ]);
+    }
+
+    /**
+     * Create a user account for an existing member
+     * 
+     * @OA\Post(
+     *     path="/api/v1/members/{id}/create-user-account",
+     *     operationId="createUserAccountForMember",
+     *     tags={"Members"},
+     *     summary="Create user account for member",
+     *     description="Creates a user account for an existing member who doesn't have one",
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Member ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User account created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="User account created successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="member", type="object"),
+     *                 @OA\Property(property="user_account_created", type="boolean", example=true),
+     *                 @OA\Property(property="existing_user", type="boolean", example=false),
+     *                 @OA\Property(property="generated_password", type="string", example="abc123def456")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Member not found"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Member already has user account"
+     *     )
+     * )
+     */
+    public function createUserAccount(int $id): JsonResponse
+    {
+        $result = $this->memberService->createUserAccountForMember($id);
+
+        if (!$result['success']) {
+            $statusCode = $result['message'] === 'Member not found' ? 404 : 422;
+            return response()->json($result, $statusCode);
+        }
+
+        return response()->json($result);
     }
 }

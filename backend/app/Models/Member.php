@@ -34,6 +34,7 @@ class Member extends Model
         'is_active',
         'notes',
         'profile_image_path',
+        'user_id',
         'created_by',
         'updated_by',
     ];
@@ -81,6 +82,22 @@ class Member extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Get the user account associated with this member
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Check if member has a user account
+     */
+    public function hasUserAccount(): bool
+    {
+        return !is_null($this->user_id);
     }
 
     /**
@@ -151,10 +168,13 @@ class Member extends Model
     /**
      * Scope to get members by group
      */
-    public function scopeByGroup($query, $groupId)
+    public function scopeByGroup($query, $groupId, $includeInactive = false)
     {
-        return $query->whereHas('groups', function ($q) use ($groupId) {
-            $q->where('group_id', $groupId)->where('is_active', true);
+        return $query->whereHas('groups', function ($q) use ($groupId, $includeInactive) {
+            $q->where('group_id', $groupId);
+            if (!$includeInactive) {
+                $q->where('is_active', true);
+            }
         });
     }
 

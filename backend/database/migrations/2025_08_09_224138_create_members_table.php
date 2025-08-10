@@ -30,6 +30,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->string(column: 'profile_image_path')->nullable();
             $table->boolean(column: 'deleted')->default(0);
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
@@ -39,6 +40,7 @@ return new class extends Migration
             $table->index('email');
             $table->index('is_active');
             $table->index('membership_date');
+            $table->index('user_id');
         });
     }
 

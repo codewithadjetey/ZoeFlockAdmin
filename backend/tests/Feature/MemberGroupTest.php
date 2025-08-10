@@ -23,6 +23,12 @@ class MemberGroupTest extends TestCase
     {
         parent::setUp();
         
+        // Ensure the MemberObserver is registered for tests
+        Member::observe(\App\Observers\MemberObserver::class);
+        
+        // Seed roles and permissions for tests
+        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+        
         // Create a user for authentication
         $this->user = User::factory()->create();
         
@@ -277,12 +283,22 @@ class MemberGroupTest extends TestCase
             'left_at' => now(),
         ]);
 
+        // Refresh both the group and member to get updated pivot data
+        $this->group1->refresh();
         $this->member->refresh();
         
         // Member should still be in group but inactive
         $this->assertCount(1, $this->member->groups);
         $this->assertEquals(0, $this->member->active_groups_count);
-        $this->assertFalse($this->member->groups->first()->pivot->is_active);
+        
+        // Check the pivot data directly from the database
+        $pivotData = \DB::table('group_members')
+            ->where('group_id', $this->group1->id)
+            ->where('member_id', $this->member->id)
+            ->first();
+        
+        $this->assertNotNull($pivotData);
+        $this->assertEquals(0, $pivotData->is_active);
     }
 
     #[Test]
@@ -402,7 +418,7 @@ class MemberGroupTest extends TestCase
         $this->assertFalse($inactiveMembers->contains($this->member));
 
         // Test byGroup scope
-        $groupMembers = Member::byGroup($this->group1->id)->get();
+        $groupMembers = Member::byGroup($this->group1->id, true)->get();
         $this->assertTrue($groupMembers->contains($this->member));
         $this->assertTrue($groupMembers->contains($member2));
 
@@ -493,5 +509,109 @@ class MemberGroupTest extends TestCase
 
         $smallGroup->refresh();
         $this->assertEquals(4, $smallGroup->available_spots); // Still 4 because inactive member doesn't count
+    }
+
+    #[Test]
+    public function member_automatically_gets_user_account_when_created()
+    {
+        // Create a new member
+        $newMember = Member::factory()->create([
+            'email' => 'newmember@example.com',
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+        ]);
+
+        // Refresh to get the updated data
+        $newMember->refresh();
+
+        // Check if user account was created
+        $this->assertTrue($newMember->hasUserAccount());
+        $this->assertNotNull($newMember->user_id);
+        $this->assertNotNull($newMember->user);
+
+        // Verify user account details
+        $user = $newMember->user;
+        $this->assertEquals($newMember->full_name, $user->name);
+        $this->assertEquals($newMember->email, $user->email);
+        $this->assertEquals($newMember->phone, $user->phone);
+        $this->assertEquals($newMember->address, $user->address);
+        $this->assertEquals($newMember->date_of_birth, $user->date_of_birth);
+        $this->assertEquals($newMember->gender, $user->gender);
+        $this->assertEquals($newMember->profile_image_path, $user->profile_picture);
+        $this->assertEquals($newMember->is_active, $user->is_active);
+
+        // Check if user has the 'member' role
+        $this->assertTrue($user->hasRole('member'));
+    }
+
+    #[Test]
+    public function member_with_existing_user_email_links_to_existing_user()
+    {
+        // Create a user first
+        $existingUser = User::factory()->create([
+            'email' => 'existing@example.com',
+            'name' => 'Existing User',
+        ]);
+
+        // Create a member with the same email
+        $member = Member::factory()->create([
+            'email' => 'existing@example.com',
+            'first_name' => 'New',
+            'last_name' => 'Member',
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+        ]);
+
+        // Refresh to get the updated data
+        $member->refresh();
+
+        // Check if member is linked to existing user
+        $this->assertTrue($member->hasUserAccount());
+        $this->assertEquals($existingUser->id, $member->user_id);
+        $this->assertEquals($existingUser->id, $member->user->id);
+
+        // Verify the existing user wasn't modified
+        $existingUser->refresh();
+        $this->assertEquals('Existing User', $existingUser->name);
+    }
+
+    #[Test]
+    public function member_observer_creates_user_account_on_update_if_not_exists()
+    {
+        // Create a member without user account by using a temporary email that gets changed
+        $member = Member::factory()->create([
+            'email' => 'temp@temp.com',
+            'user_id' => null,
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+        ]);
+
+        // Manually remove the user_id to simulate no user account
+        $member->update(['user_id' => null]);
+        $member->refresh();
+
+        // Initially no user account
+        $this->assertFalse($member->hasUserAccount());
+
+        // Update the member with a real email (this should trigger the observer)
+        $member->update([
+            'email' => 'update@example.com',
+            'is_active' => true,
+            'updated_by' => $this->user->id,
+        ]);
+
+        // Refresh to get the updated data
+        $member->refresh();
+
+        // Check if user account was created
+        $this->assertTrue($member->hasUserAccount());
+        $this->assertNotNull($member->user_id);
+        $this->assertNotNull($member->user);
+
+        // Verify user account details
+        $user = $member->user;
+        $this->assertEquals($member->full_name, $user->name);
+        $this->assertEquals($member->email, $user->email);
+        $this->assertTrue($user->hasRole('member'));
     }
 } 

@@ -68,6 +68,9 @@ Route::prefix($apiVersion)->group(function () {
         Route::post('/{member}/groups', [MemberController::class, 'addToGroups']);
         Route::delete('/{member}/groups', [MemberController::class, 'removeFromGroups']);
         Route::put('/{member}/groups/{group_id}', [MemberController::class, 'updateGroupRole']);
+        
+        // User account management routes
+        Route::post('/{member}/create-user-account', [MemberController::class, 'createUserAccount']);
     });
 
     // File upload routes

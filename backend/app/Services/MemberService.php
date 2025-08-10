@@ -77,13 +77,18 @@ class MemberService
                 'updated_by' => Auth::id(),
             ]);
 
+            // The observer will automatically create a user account
+            // Reload the member to get the user_id
+            $member->refresh();
+
             DB::commit();
 
             return [
                 'success' => true,
                 'message' => 'Member created successfully',
                 'data' => [
-                    'member' => $member->load(['creator'])
+                    'member' => $member->load(['creator', 'user']),
+                    'user_account_created' => $member->hasUserAccount()
                 ]
             ];
         } catch (Exception $e) {
@@ -91,6 +96,93 @@ class MemberService
             return [
                 'success' => false,
                 'message' => 'Failed to create member: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Manually create a user account for an existing member
+     */
+    public function createUserAccountForMember(int $memberId): array
+    {
+        try {
+            $member = Member::find($memberId);
+
+            if (!$member) {
+                return [
+                    'success' => false,
+                    'message' => 'Member not found'
+                ];
+            }
+
+            if ($member->hasUserAccount()) {
+                return [
+                    'success' => false,
+                    'message' => 'Member already has a user account'
+                ];
+            }
+
+            DB::beginTransaction();
+
+            // Check if a user with this email already exists
+            $existingUser = User::where('email', $member->email)->first();
+            
+            if ($existingUser) {
+                // Link the existing user to the member
+                $member->update(['user_id' => $existingUser->id]);
+                DB::commit();
+                
+                return [
+                    'success' => true,
+                    'message' => 'Member linked to existing user account',
+                    'data' => [
+                        'member' => $member->load(['user']),
+                        'user_account_created' => true,
+                        'existing_user' => true
+                    ]
+                ];
+            }
+
+            // Generate a random password
+            $password = \Illuminate\Support\Str::random(12);
+            
+            // Create the user account
+            $user = User::create([
+                'name' => $member->full_name,
+                'email' => $member->email,
+                'password' => \Illuminate\Support\Facades\Hash::make($password),
+                'phone' => $member->phone,
+                'address' => $member->address,
+                'date_of_birth' => $member->date_of_birth,
+                'gender' => $member->gender,
+                'profile_picture' => $member->profile_image_path,
+                'is_active' => $member->is_active,
+            ]);
+
+            // Assign the 'member' role
+            $user->assignRole('member');
+
+            // Link the user to the member
+            $member->update(['user_id' => $user->id]);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'User account created successfully for member',
+                'data' => [
+                    'member' => $member->load(['user']),
+                    'user_account_created' => true,
+                    'existing_user' => false,
+                    'generated_password' => $password
+                ]
+            ];
+            
+        } catch (Exception $e) {
+            DB::rollBack();
+            return [
+                'success' => false,
+                'message' => 'Failed to create user account: ' . $e->getMessage()
             ];
         }
     }
