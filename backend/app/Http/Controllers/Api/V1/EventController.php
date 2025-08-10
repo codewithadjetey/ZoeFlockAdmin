@@ -81,13 +81,13 @@ class EventController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'start_date' => 'required|date|after:now',
+            'start_date' => 'required_without:is_recurring|nullable|date|after:now',
             'end_date' => 'nullable|date|after:start_date',
             'location' => 'nullable|string|max:255',
             'type' => ['required', Rule::in(['group', 'family', 'general'])],
             'is_recurring' => 'boolean',
-            'recurrence_pattern' => 'nullable|string|in:daily,weekly,monthly,yearly',
-            'recurrence_settings' => 'nullable|array',
+            'recurrence_pattern' => 'required_if:is_recurring,true|nullable|string|in:daily,weekly,monthly,yearly',
+            'recurrence_settings' => 'required_if:is_recurring,true|nullable|array',
             'recurrence_end_date' => 'nullable|date|after:start_date',
             'group_ids' => 'nullable|array',
             'group_ids.*' => 'exists:groups,id',
@@ -112,6 +112,13 @@ class EventController extends Controller
                 'type', 'is_recurring', 'recurrence_pattern', 'recurrence_settings',
                 'recurrence_end_date', 'img_path'
             ]);
+
+            // For recurring events without start_date, we don't set a default
+            // The RecurringEventService will handle creating instances from today
+            // Only set start_date if it's provided
+            if ($request->start_date) {
+                $eventData['start_date'] = $request->start_date;
+            }
 
             $eventData['created_by'] = auth()->id();
             $eventData['status'] = 'draft';
@@ -180,13 +187,13 @@ class EventController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
-            'start_date' => 'sometimes|required|date',
+            'start_date' => 'sometimes|required_without:is_recurring|nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'location' => 'nullable|string|max:255',
             'type' => ['sometimes', 'required', Rule::in(['group', 'family', 'general'])],
             'is_recurring' => 'boolean',
-            'recurrence_pattern' => 'nullable|string|in:daily,weekly,monthly,yearly',
-            'recurrence_settings' => 'nullable|array',
+            'recurrence_pattern' => 'required_if:is_recurring,true|nullable|string|in:daily,weekly,monthly,yearly',
+            'recurrence_settings' => 'required_if:is_recurring,true|nullable|array',
             'recurrence_end_date' => 'nullable|date|after:start_date',
             'group_ids' => 'nullable|array',
             'group_ids.*' => 'exists:groups,id',
@@ -211,6 +218,13 @@ class EventController extends Controller
                 'type', 'is_recurring', 'recurrence_pattern', 'recurrence_settings',
                 'recurrence_end_date', 'img_path'
             ]);
+
+            // For recurring events without start_date, we don't set a default
+            // The RecurringEventService will handle creating instances from today
+            // Only set start_date if it's provided
+            if ($request->start_date) {
+                $eventData['start_date'] = $request->start_date;
+            }
 
             $eventData['updated_by'] = auth()->id();
 
