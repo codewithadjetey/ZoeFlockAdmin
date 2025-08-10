@@ -13,7 +13,8 @@ import {
   DataGrid, 
   DataTable,
   StatusBadge,
-  CategoryBadge
+  CategoryBadge,
+  Avatar
 } from "@/components/ui";
 import { getImageUrl } from "@/utils/helpers";
 
@@ -97,13 +98,12 @@ export default function GroupsPage() {
   const tableColumns = [
     { key: "group", label: "Group", render: (_: any, group: any) => (
       <div className="flex items-center">
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-500 flex items-center justify-center">
-          {group.img_path ? (
-            <img src={getImageUrl(group.img_path) || ''} alt={group.name} className="w-full h-full object-cover" />
-          ) : (
-            <i className="fas fa-users text-white"></i>
-          )}
-        </div>
+        <Avatar 
+          src={group.img_path}
+          fallback={group.name}
+          size="md"
+          alt={group.name}
+        />
         <div className="ml-4">
           <div className="text-sm font-medium text-gray-900">{group.name}</div>
           <div className="text-sm text-gray-500">{group.description}</div>
@@ -145,19 +145,12 @@ export default function GroupsPage() {
     return (
       <div className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">
         <div className="flex items-start justify-between mb-4">
-          {imageUrl ? (
-            <div className="w-12 h-12 rounded-xl overflow-hidden">
-              <img 
-                src={imageUrl} 
-                alt={group.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-              <i className="fas fa-users text-white text-xl"></i>
-            </div>
-          )}
+          <Avatar 
+            src={group.img_path}
+            fallback={group.name}
+            size="lg"
+            alt={group.name}
+          />
           <StatusBadge status={group.status} />
         </div>
         

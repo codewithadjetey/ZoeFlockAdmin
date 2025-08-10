@@ -9,7 +9,8 @@ import {
   DataGrid, 
   DataTable,
   StatusBadge,
-  Button 
+  Button,
+  Avatar
 } from "@/components/ui";
 import { MembersService, type Member } from "@/services/members";
 import { formatDate } from "@/utils/helpers";
@@ -166,9 +167,12 @@ export default function MembersPage() {
       label: "Member", 
       render: (_: any, member: Member) => (
         <div className="flex items-center">
-          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-            <i className="fas fa-user text-gray-500" />
-          </div>
+          <Avatar 
+            src={member.profile_image_path}
+            fallback={`${member.first_name} ${member.last_name}`}
+            size="md"
+            alt={`${member.first_name} ${member.last_name}`}
+          />
           <div className="ml-4">
             <div className="text-sm font-medium text-gray-900">{member.first_name} {member.last_name}</div>
             <div className="text-sm text-gray-500">{member.email}</div>
@@ -202,9 +206,12 @@ export default function MembersPage() {
   const renderMemberCard = (member: Member) => (
     <div className="member-card rounded-3xl shadow-xl p-6 cursor-pointer">
       <div className="flex items-center mb-4">
-        <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-          <i className="fas fa-user text-gray-500 text-xl" />
-        </div>
+        <Avatar 
+          src={member.profile_image_path}
+          fallback={`${member.first_name} ${member.last_name}`}
+          size="lg"
+          alt={`${member.first_name} ${member.last_name}`}
+        />
         <div className="ml-4">
           <h3 className="text-lg font-semibold text-gray-900">
             {member.first_name} {member.last_name}
