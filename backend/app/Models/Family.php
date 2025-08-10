@@ -193,4 +193,31 @@ class Family extends Model
     {
         return $this->hasMany(\App\Models\FamilyMember::class);
     }
+
+    /**
+     * Get the events associated with this family
+     */
+    public function events(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_families')
+            ->using(EventFamily::class)
+            ->withPivot('is_required', 'notes')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the upcoming events for this family
+     */
+    public function upcomingEvents()
+    {
+        return $this->events()->upcoming();
+    }
+
+    /**
+     * Get the past events for this family
+     */
+    public function pastEvents()
+    {
+        return $this->events()->past();
+    }
 } 

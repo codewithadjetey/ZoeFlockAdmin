@@ -674,4 +674,41 @@ class FamilyController extends Controller
             'data' => $statistics
         ]);
     }
+
+    /**
+     * Get events for a specific family
+     */
+    public function getFamilyEvents(int $id): JsonResponse
+    {
+        try {
+            $family = Family::where('deleted', false)->find($id);
+            
+            if (!$family) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Family not found'
+                ], 404);
+            }
+
+            $events = $family->events()
+                ->where('status', 'published')
+                ->where('deleted', false)
+                ->with(['groups', 'creator'])
+                ->orderBy('start_date')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Family events retrieved successfully',
+                'data' => $events
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get family events',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 } 

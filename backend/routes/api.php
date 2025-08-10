@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\DocumentationController;
 use App\Http\Controllers\Api\V1\FileUploadController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\FamilyController;
+use App\Http\Controllers\Api\V1\EventController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -109,6 +110,9 @@ Route::prefix($apiVersion)->group(function () {
         Route::post('/{id}/members', [FamilyController::class, 'addMember']);
         Route::delete('/{id}/members/{member_id}', [FamilyController::class, 'removeMember']);
         
+        // Get family events
+        Route::get('/{id}/events', [FamilyController::class, 'getFamilyEvents']);
+        
         // Get current user's family
         Route::get('/my-family', [FamilyController::class, 'getMyFamily']);
         
@@ -116,15 +120,33 @@ Route::prefix($apiVersion)->group(function () {
         Route::get('/statistics', [FamilyController::class, 'getStatistics']);
     });
 
-    // TODO: Add routes for other modules (Events, Donations, Communications, etc.)
-
-    // Route::prefix('events')->group(function () {
-    //     Route::get('/', [EventController::class, 'index']);
-    //     Route::post('/', [EventController::class, 'store']);
-    //     Route::get('/{event}', [EventController::class, 'show']);
-    //     Route::put('/{event}', [EventController::class, 'update']);
-    //     Route::delete('/{event}', [EventController::class, 'destroy']);
-    // });
+    // Events management routes
+    Route::prefix('events')->group(function () {
+        Route::get('/', [EventController::class, 'index']);
+        Route::post('/', [EventController::class, 'store']);
+        Route::get('/{event}', [EventController::class, 'show']);
+        Route::put('/{event}', [EventController::class, 'update']);
+        Route::delete('/{event}', [EventController::class, 'destroy']);
+        
+        // Event management actions
+        Route::post('/{event}/cancel', [EventController::class, 'cancel']);
+        Route::post('/{event}/publish', [EventController::class, 'publish']);
+        
+        // Event-family relationship management
+        Route::get('/{event}/families', [EventController::class, 'getEventFamilies']);
+        Route::post('/{event}/families', [EventController::class, 'addFamiliesToEvent']);
+        Route::put('/{event}/families/{family_id}', [EventController::class, 'updateEventFamily']);
+        Route::delete('/{event}/families/{family_id}', [EventController::class, 'removeFamilyFromEvent']);
+        
+        // Event-group relationship management
+        Route::get('/{event}/groups', [EventController::class, 'getEventGroups']);
+        Route::post('/{event}/groups', [EventController::class, 'addGroupsToEvent']);
+        Route::put('/{event}/groups/{group_id}', [EventController::class, 'updateEventGroup']);
+        Route::delete('/{event}/groups/{group_id}', [EventController::class, 'removeGroupFromEvent']);
+        
+        // Member-specific events
+        Route::get('/member/{memberId}', [EventController::class, 'getMemberEvents']);
+    });
 
     // Route::prefix('donations')->group(function () {
     //     Route::get('/', [DonationController::class, 'index']);
