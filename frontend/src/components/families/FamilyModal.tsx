@@ -58,15 +58,8 @@ export default function FamilyModal({ isOpen, onClose, onSave, family, mode }: F
     try {
       const response = await MembersService.getMembers();
       if (response.success) {
-        // Filter out members who are already in families
-        const availableMembers = response.members.data.filter((member: Member) => {
-          if (mode === 'edit' && family) {
-            // In edit mode, allow the current family head
-            return !member.family || member.family.id === family.id;
-          }
-          return !member.family;
-        });
-        setMembers(availableMembers);
+        // For now, show all members since family information is not available in the API response
+        setMembers(response.members.data);
       }
     } catch (error) {
       console.error('Error loading members:', error);

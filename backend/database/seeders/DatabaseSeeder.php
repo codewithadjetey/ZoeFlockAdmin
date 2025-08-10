@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             AdminSeeder::class,
             FamilySeeder::class,
+            EventSeeder::class,
         ]);
 
         // Create additional test users if needed

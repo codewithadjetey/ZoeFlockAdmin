@@ -126,6 +126,33 @@ class Group extends Model
     }
 
     /**
+     * Get the events associated with this group
+     */
+    public function events(): BelongsToMany
+    {
+        return $this->belongsToMany(Event::class, 'event_groups')
+            ->using(EventGroup::class)
+            ->withPivot('is_required', 'notes')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the upcoming events for this group
+     */
+    public function upcomingEvents()
+    {
+        return $this->events()->upcoming();
+    }
+
+    /**
+     * Get the past events for this group
+     */
+    public function pastEvents()
+    {
+        return $this->events()->past();
+    }
+
+    /**
      * Scope to get groups by member
      */
     public function scopeByMember($query, $memberId)
