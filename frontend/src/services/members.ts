@@ -80,12 +80,13 @@ export class MembersService {
     baptism_date?: string;
     membership_date?: string;
     notes?: string;
+    upload_token?: string;
   }): Promise<MemberResponse> {
     const response = await http({ method: 'post', url: '/members', data });
     return response.data;
   }
 
-  static async updateMember(id: number, data: Partial<Member>): Promise<MemberResponse> {
+  static async updateMember(id: number, data: Partial<Member> & { upload_token?: string }): Promise<MemberResponse> {
     const response = await http({ method: 'put', url: `/members/${id}`, data });
     return response.data;
   }

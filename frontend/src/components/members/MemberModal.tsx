@@ -9,7 +9,7 @@ import { getImageUrl } from '../../utils/helpers';
 interface MemberModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (member: Partial<Member>) => void;
+  onSave: (member: Partial<Member> & { upload_token?: string }) => void;
   member?: Member | null;
   mode: 'create' | 'edit';
 }
@@ -112,7 +112,8 @@ export const MemberModal: React.FC<MemberModalProps> = ({
       ...(uploadToken && { upload_token: uploadToken })
     };
     
-    onSave(memberData);
+    // Pass upload_token separately to avoid TypeScript stripping it
+    onSave({ ...memberData, upload_token: uploadToken || undefined });
   };
 
   const handleClose = () => {

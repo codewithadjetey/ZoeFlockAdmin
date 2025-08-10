@@ -96,7 +96,7 @@ export default function MembersPage() {
     setIsModalOpen(true);
   };
 
-  const handleSave = async (data: Partial<Member>) => {
+  const handleSave = async (data: Partial<Member> & { upload_token?: string }) => {
     try {
       if (modalMode === 'create') {
         if (!data.first_name || !data.last_name || !data.email) {
@@ -118,6 +118,7 @@ export default function MembersPage() {
           baptism_date: data.baptism_date,
           membership_date: data.membership_date,
           notes: data.notes,
+          upload_token: (data as any).upload_token,
         });
         if (res.success) toast.success('Member created'); else toast.error(res.message || 'Failed to create');
       } else if (selectedMember) {
@@ -137,6 +138,7 @@ export default function MembersPage() {
           membership_date: data.membership_date,
           is_active: data.is_active,
           notes: data.notes,
+          upload_token: (data as any).upload_token,
         });
         if (res.success) toast.success('Member updated'); else toast.error(res.message || 'Failed to update');
       }
