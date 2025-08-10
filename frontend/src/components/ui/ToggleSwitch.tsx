@@ -1,49 +1,53 @@
-import React from "react";
+"use client";
+import React from 'react';
 
 interface ToggleSwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
   label?: string;
-  description?: string;
-  className?: string;
   disabled?: boolean;
+  className?: string;
 }
 
-const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ 
+export default function ToggleSwitch({ 
   checked, 
   onChange, 
-  label,
-  description,
-  className = "",
-  disabled = false
-}) => {
+  label, 
+  disabled = false, 
+  className = '' 
+}: ToggleSwitchProps) {
   return (
-    <div className={`flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-300 ${
-      disabled ? 'opacity-60' : ''
-    } ${className}`}>
-      {(label || description) && (
-        <div>
-          {label && <h4 className="font-medium text-gray-900 dark:text-white transition-colors duration-200">{label}</h4>}
-          {description && <p className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">{description}</p>}
-        </div>
-      )}
+    <div className={`flex items-center ${className}`}>
       <button
-        onClick={() => !disabled && onChange(!checked)}
+        type="button"
+        role="switch"
+        aria-checked={checked}
         disabled={disabled}
-        className={`w-12 h-6 rounded-full transition-all duration-300 shadow-inner ${
-          checked 
-            ? "bg-gradient-to-r from-primary-500 to-primary-600" 
-            : "bg-gray-300 dark:bg-gray-600"
-        } ${
-          disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:shadow-lg'
-        }`}
+        onClick={() => !disabled && onChange(!checked)}
+        className={`
+          relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+          ${checked 
+            ? 'bg-blue-600' 
+            : 'bg-gray-200 dark:bg-gray-700'
+          }
+          ${disabled 
+            ? 'cursor-not-allowed opacity-50' 
+            : 'cursor-pointer'
+          }
+        `}
       >
-        <div className={`w-5 h-5 bg-white dark:bg-gray-200 rounded-full transition-all duration-300 shadow-md ${
-          checked ? "translate-x-6" : "translate-x-1"
-        }`}></div>
+        <span
+          className={`
+            inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+            ${checked ? 'translate-x-6' : 'translate-x-1'}
+          `}
+        />
       </button>
+      {label && (
+        <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {label}
+        </span>
+      )}
     </div>
   );
-};
-
-export default ToggleSwitch; 
+} 
