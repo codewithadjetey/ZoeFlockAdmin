@@ -129,7 +129,8 @@ class Event extends Model
      */
     public function scopeUpcoming($query)
     {
-        return $query->where('start_date', '>', now())
+        return $query->whereNotNull('start_date')
+                    ->where('start_date', '>', now())
                     ->where('status', '!=', 'cancelled')
                     ->where('deleted', false);
     }
@@ -139,7 +140,8 @@ class Event extends Model
      */
     public function scopePast($query)
     {
-        return $query->where('start_date', '<', now())
+        return $query->whereNotNull('start_date')
+                    ->where('start_date', '<', now())
                     ->where('deleted', false);
     }
 
@@ -224,7 +226,7 @@ class Event extends Model
      */
     public function getIsUpcomingAttribute(): bool
     {
-        return $this->start_date > now() && !$this->is_cancelled;
+        return $this->start_date && $this->start_date > now() && !$this->is_cancelled;
     }
 
     /**
@@ -232,6 +234,10 @@ class Event extends Model
      */
     public function getIsOngoingAttribute(): bool
     {
+        if (!$this->start_date) {
+            return false;
+        }
+        
         $now = now();
         return $this->start_date <= $now && 
                ($this->end_date === null || $this->end_date >= $now) && 
@@ -243,6 +249,10 @@ class Event extends Model
      */
     public function getIsPastAttribute(): bool
     {
+        if (!$this->start_date) {
+            return false;
+        }
+        
         return $this->end_date !== null && $this->end_date < now();
     }
 
@@ -251,7 +261,7 @@ class Event extends Model
      */
     public function getDurationAttribute(): int
     {
-        if ($this->end_date === null) {
+        if ($this->start_date === null || $this->end_date === null) {
             return 0;
         }
         return $this->start_date->diffInMinutes($this->end_date);

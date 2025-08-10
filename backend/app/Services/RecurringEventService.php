@@ -17,11 +17,51 @@ class RecurringEventService
             return collect();
         }
 
+        // For recurring events without a start_date, we need to calculate based on recurrence settings
+        if (!$parentEvent->start_date) {
+            return $this->createRecurringInstancesWithoutStartDate($parentEvent);
+        }
+
         $instances = collect();
         $currentDate = Carbon::parse($parentEvent->start_date);
         $endDate = $parentEvent->recurrence_end_date ? Carbon::parse($parentEvent->recurrence_end_date) : null;
         $maxInstances = 100; // Prevent infinite loops
         $instanceCount = 0;
+
+        while ($instanceCount < $maxInstances) {
+            if ($endDate && $currentDate->gt($endDate)) {
+                break;
+            }
+
+            // Create the recurring instance
+            $instance = $this->createEventInstance($parentEvent, $currentDate);
+            $instances->push($instance);
+
+            // Calculate next occurrence
+            $currentDate = $this->getNextOccurrence($currentDate, $parentEvent->recurrence_pattern, $parentEvent->recurrence_settings);
+            
+            if (!$currentDate) {
+                break;
+            }
+
+            $instanceCount++;
+        }
+
+        return $instances;
+    }
+
+    /**
+     * Create recurring event instances when parent event has no start_date
+     */
+    protected function createRecurringInstancesWithoutStartDate(Event $parentEvent): Collection
+    {
+        $instances = collect();
+        $maxInstances = 100; // Prevent infinite loops
+        $instanceCount = 0;
+
+        // Start from today or a default date
+        $currentDate = now();
+        $endDate = $parentEvent->recurrence_end_date ? Carbon::parse($parentEvent->recurrence_end_date) : null;
 
         while ($instanceCount < $maxInstances) {
             if ($endDate && $currentDate->gt($endDate)) {
