@@ -29,7 +29,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->text('notes')->nullable();
             $table->string(column: 'profile_image_path')->nullable();
-
+            $table->boolean(column: 'deleted')->default(0);
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();

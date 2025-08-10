@@ -124,7 +124,7 @@ class GroupController extends Controller
     {
 
         $perPage = $request->per_page ?? 10;
-        $query = Group::with(['creator']);
+        $query = Group::where('deleted', 0)->with(['creator']);
 
 
         // Search filter
@@ -423,7 +423,8 @@ class GroupController extends Controller
             ], 404);
         }
 
-        $group->delete();
+        $group->deleted = 1;
+        $group->save();
 
         return response()->json([
             'success' => true,

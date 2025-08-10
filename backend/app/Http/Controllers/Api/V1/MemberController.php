@@ -126,7 +126,7 @@ class MemberController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Member::query();
+        $query = Member::where('deleted', 0);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -601,7 +601,8 @@ class MemberController extends Controller
             ], 404);
         }
 
-        $member->delete();
+        $member->deleted = 1;
+        $member->save();
 
         return response()->json([
             'success' => true,
