@@ -17,6 +17,7 @@ import {
   Avatar
 } from "@/components/ui";
 import { getImageUrl } from "@/utils/helpers";
+import type { Column, Filter, SortConfig } from "@/components/ui/DataTable";
 
 export default function FamiliesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -32,12 +33,12 @@ export default function FamiliesPage() {
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
-  const [links, setLinks] = useState<{ url: string | null; label: string; active: boolean }[]>([]);
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   // Load families from API
   useEffect(() => {
     loadFamilies();
-  }, [page, perPage]);
+  }, [page, perPage, sortConfig]);
 
   const loadFamilies = async () => {
     try {
@@ -53,7 +54,6 @@ export default function FamiliesPage() {
       if (response.success && response.families) {
         setFamilies(response.families.data);
         setTotal(response.families.total);
-        setLinks(response.families.links || []);
       } else {
         toast.error(response.message || 'Failed to load families');
       }
@@ -77,67 +77,139 @@ export default function FamiliesPage() {
     { value: "Inactive", label: "Inactive" },
   ];
 
-  const perPageOptions = [
-    { value: 10, label: '10 / page' },
-    { value: 25, label: '25 / page' },
-    { value: 50, label: '50 / page' },
+  const perPageOptions = [10, 25, 50, 100];
+
+  const handleSort = (key: string) => {
+    setSortConfig(prev => {
+      if (prev?.key === key) {
+        return {
+          key,
+          direction: prev.direction === 'asc' ? 'desc' : 'asc'
+        };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  const handleFiltersChange = (filters: Record<string, any>) => {
+    if (filters.search !== undefined) setSearchTerm(filters.search);
+    if (filters.status !== undefined) setStatusFilter(filters.status);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePerPageChange = (newPerPage: number) => {
+    setPerPage(newPerPage);
+    setPage(1);
+  };
+
+  const tableColumns: Column<Family>[] = [
+    { 
+      key: "family", 
+      label: "Family", 
+      sortable: false,
+      render: (_: any, family: any) => (
+        <div className="flex items-center">
+          <Avatar
+            src={getImageUrl(family.img_url)}
+            alt={family.name}
+            size="sm"
+            className="mr-3"
+          />
+          <div>
+            <div className="font-medium text-gray-900">{family.name}</div>
+            {family.slogan && (
+              <div className="text-sm text-gray-500">{family.slogan}</div>
+            )}
+          </div>
+        </div>
+      )
+    },
+    { 
+      key: "family_head", 
+      label: "Family Head", 
+      sortable: false,
+      render: (_: any, family: any) => (
+        <div className="text-sm text-gray-900">
+          {family.family_head ? `${family.family_head.first_name} ${family.family_head.last_name}` : 'N/A'}
+        </div>
+      )
+    },
+    { 
+      key: "member_count", 
+      label: "Members", 
+      sortable: true,
+      render: (_: any, family: any) => (
+        <div className="text-sm text-gray-900">{family.member_count || 0}</div>
+      )
+    },
+    { 
+      key: "active", 
+      label: "Status", 
+      sortable: true,
+      render: (_: any, family: any) => (
+        <StatusBadge status={family.active ? 'active' : 'inactive'} />
+      )
+    },
+    { 
+      key: "created_at", 
+      label: "Created", 
+      sortable: true,
+      render: (_: any, family: any) => (
+        <div className="text-sm text-gray-500">
+          {new Date(family.created_at).toLocaleDateString()}
+        </div>
+      )
+    },
+    { 
+      key: "actions", 
+      label: "Actions", 
+      sortable: false,
+      render: (_: any, family: any) => (
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleEditFamily(family)}
+            className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleManageMembers(family)}
+            className="text-green-600 hover:text-green-900 text-sm font-medium"
+          >
+            Members
+          </button>
+          <button
+            onClick={() => handleDeleteFamily(family.id!)}
+            className="text-red-600 hover:text-red-900 text-sm font-medium"
+          >
+            Delete
+          </button>
+        </div>
+      )
+    },
   ];
 
-  const tableColumns = [
-    { key: "family", label: "Family", render: (_: any, family: any) => (
-      <div className="flex items-center">
-        <Avatar
-          src={getImageUrl(family.img_url)}
-          alt={family.name}
-          size="sm"
-          className="mr-3"
-        />
-        <div>
-          <div className="font-medium text-gray-900">{family.name}</div>
-          {family.slogan && (
-            <div className="text-sm text-gray-500">{family.slogan}</div>
-          )}
-        </div>
-      </div>
-    )},
-    { key: "family_head", label: "Family Head", render: (_: any, family: any) => (
-      <div className="text-sm text-gray-900">
-        {family.family_head ? `${family.family_head.first_name} ${family.family_head.last_name}` : 'N/A'}
-      </div>
-    )},
-    { key: "member_count", label: "Members", render: (_: any, family: any) => (
-      <div className="text-sm text-gray-900">{family.member_count || 0}</div>
-    )},
-    { key: "status", label: "Status", render: (_: any, family: any) => (
-      <StatusBadge status={family.active ? 'active' : 'inactive'} />
-    )},
-    { key: "created_at", label: "Created", render: (_: any, family: any) => (
-      <div className="text-sm text-gray-500">
-        {new Date(family.created_at).toLocaleDateString()}
-      </div>
-    )},
-    { key: "actions", label: "Actions", render: (_: any, family: any) => (
-      <div className="flex space-x-2">
-        <button
-          onClick={() => handleEditFamily(family)}
-          className="text-blue-600 hover:text-blue-900 text-sm font-medium"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => handleManageMembers(family)}
-          className="text-green-600 hover:text-green-900 text-sm font-medium"
-        >
-          Members
-        </button>
-        <button
-          onClick={() => handleDeleteFamily(family.id!)}
-          className="text-red-600 hover:text-red-900 text-sm font-medium"
-        >
-          Delete
-        </button>
-      </div>
-    )},
+  const tableFilters: Filter[] = [
+    {
+      key: "search",
+      label: "Search",
+      type: "text",
+      placeholder: "Search by family name or slogan..."
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { value: "All Status", label: "All Status" },
+        { value: "Active", label: "Active" },
+        { value: "Inactive", label: "Inactive" }
+      ]
+    }
   ];
 
   const renderFamilyCard = (family: any) => (
@@ -274,24 +346,6 @@ export default function FamiliesPage() {
     }
   };
 
-  const followLink = async (url: string | null) => {
-    if (!url) return;
-    
-    try {
-      setLoading(true);
-      const response = await FamiliesService.getByPageUrl(url);
-      if (response.success && response.families) {
-        setFamilies(response.families.data);
-        setLinks(response.families.links || []);
-      }
-    } catch (error) {
-      console.error('Error following link:', error);
-      toast.error('Failed to load page');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -332,20 +386,11 @@ export default function FamiliesPage() {
                 { value: "list", label: "List", icon: "list" }
               ]}
             />
-            <SelectInput
-              value={String(perPage)}
-              onChange={(value) => {
-                setPerPage(Number(value));
-                setPage(1);
-              }}
-              options={perPageOptions.map(opt => ({ value: String(opt.value), label: opt.label }))}
-              className="w-32"
-            />
           </div>
         </div>
 
         {/* Content */}
-        {loading ? (
+        {loading && families.length === 0 ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="mt-2 text-gray-600">Loading families...</p>
@@ -384,37 +429,29 @@ export default function FamiliesPage() {
               <DataTable
                 data={families}
                 columns={tableColumns}
-                className=""
+                filters={tableFilters}
+                pagination={{
+                  currentPage: page,
+                  totalPages: Math.ceil(total / perPage),
+                  totalItems: total,
+                  perPage: perPage,
+                  onPageChange: handlePageChange,
+                  onPerPageChange: handlePerPageChange
+                }}
+                sorting={{
+                  sortConfig: sortConfig,
+                  onSort: handleSort
+                }}
+                onFiltersChange={handleFiltersChange}
+                loading={loading}
+                emptyMessage="No families found"
+                perPageOptions={perPageOptions}
+                showPerPageSelector={true}
+                showPagination={true}
+                responsive={true}
               />
             )}
           </>
-        )}
-        
-        {/* Pagination for list view */}
-        {viewMode === "list" && families.length > 0 && (
-          <div className="flex items-center justify-between bg-white dark:bg-gray-800 px-6 py-3 rounded-lg shadow">
-            <div className="text-sm text-gray-700 dark:text-gray-300">
-              Showing {((page - 1) * perPage) + 1} to {Math.min(page * perPage, total)} of {total} results
-            </div>
-            <div className="flex space-x-2">
-              {links.map((link, index) => (
-                <button
-                  key={index}
-                  onClick={() => followLink(link.url)}
-                  disabled={!link.url || link.active}
-                  className={`px-3 py-1 text-sm rounded ${
-                    link.active
-                      ? 'bg-blue-600 text-white cursor-default'
-                      : link.url
-                      ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {link.label}
-                </button>
-              ))}
-            </div>
-          </div>
         )}
       </div>
 

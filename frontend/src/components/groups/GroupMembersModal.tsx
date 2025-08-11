@@ -5,12 +5,13 @@ import Modal from '@/components/shared/Modal';
 import { Button, SelectInput, Textarea } from '@/components/ui';
 import { GroupsService } from '@/services/groups';
 import { MembersService, Member } from '@/services/members';
+import { Group } from '@/interfaces/groups';
 import { toast } from 'react-toastify';
 
 interface GroupMembersModalProps {
   isOpen: boolean;
   onClose: () => void;
-  group: any;
+  group: Group | undefined;
 }
 
 export const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
@@ -32,10 +33,15 @@ export const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
     }
   }, [isOpen, group]);
 
+  // Don't render if no group is provided
+  if (!group) {
+    return null;
+  }
+
   const loadGroupMembers = async () => {
     try {
       setLoading(true);
-      const response = await GroupsService.getGroupMembers(group.id);
+      const response = await GroupsService.getGroupMembers(group.id!);
       if (response.success) {
         setMembers(response.data);
       } else {
@@ -71,7 +77,7 @@ export const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
 
     try {
       const response = await GroupsService.addMemberToGroup(
-        group.id,
+        group.id!,
         parseInt(selectedMemberId),
         { role: selectedRole, notes }
       );
@@ -98,7 +104,7 @@ export const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
     }
 
     try {
-      const response = await GroupsService.removeMemberFromGroup(group.id, memberId);
+      const response = await GroupsService.removeMemberFromGroup(group.id!, memberId);
       if (response.success) {
         toast.success('Member removed from group successfully');
         loadGroupMembers();
@@ -220,4 +226,4 @@ export const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
       </div>
     </Modal>
   );
-}; 
+};
