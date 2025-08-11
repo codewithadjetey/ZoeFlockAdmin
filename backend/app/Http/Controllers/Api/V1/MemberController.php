@@ -61,13 +61,6 @@ class MemberController extends Controller
      *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Parameter(
-     *         name="group_category",
-     *         in="query",
-     *         description="Filter by group category",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
      *         name="include_groups",
      *         in="query",
      *         description="Include group information in response",
@@ -170,11 +163,6 @@ class MemberController extends Controller
         // Group filter
         if ($request->filled('group_id')) {
             $query->byGroup($request->group_id);
-        }
-
-        // Group category filter
-        if ($request->filled('group_category')) {
-            $query->byGroupCategory($request->group_category);
         }
 
         // Sorting
@@ -367,11 +355,19 @@ class MemberController extends Controller
             ], 404);
         }
 
+        $member->load(['family', 'groups', 'user']);
+
+        // Add group information
+        $member->groups->each(function ($group) {
+            $group->member_count = $group->activeMembers()->count();
+            $group->available_spots = max(0, $group->max_members - $group->member_count);
+            $group->is_full = $group->member_count >= $group->max_members;
+        });
+
         return response()->json([
             'success' => true,
-            'data' => [
-                'member' => $member
-            ]
+            'message' => 'Member retrieved successfully',
+            'data' => $member
         ]);
     }
 

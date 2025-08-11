@@ -1,21 +1,6 @@
 import { http } from '@/utils';
 import type { Paginated } from '@/interfaces/api';
-
-export interface Group {
-  id?: number;
-  name: string;
-  description: string;
-  category: string;
-  max_members: number;
-  member_count?: number;
-  meeting_day: string;
-  meeting_time: string;
-  location: string;
-  status: string;
-  created_at?: string;
-  updated_at?: string;
-  img_path?: string | null;
-}
+import { Group, CreateGroup, GroupFilters, GroupsResponse, GroupResponse } from '@/interfaces/groups';
 
 export interface FileUpload {
   upload_token: string;
@@ -25,37 +10,18 @@ export interface FileUpload {
   mime_type: string;
 }
 
-export interface GroupsResponse {
-  success: boolean;
-  message: string;
-  groups: Paginated<Group>;
-}
-
-export interface GroupResponse {
-  success: boolean;
-  message: string;
-  data: Group;
-}
-
 export class GroupsService {
   /**
    * Get groups with optional filters and pagination
    */
-  static async getGroups(filters: {
-    search?: string;
-    category?: string;
-    status?: string;
-    include_files?: boolean;
-    page?: number;
-    per_page?: number;
-  } = {}): Promise<GroupsResponse> {
+  static async getGroups(filters: GroupFilters = {}): Promise<GroupsResponse> {
     const params = new URLSearchParams();
     if (filters.search) params.append('search', filters.search);
-    if (filters.category) params.append('category', filters.category);
     if (filters.status) params.append('status', filters.status);
-    if (filters.include_files) params.append('include_files', 'true');
-    if (filters.page) params.append('page', String(filters.page));
-    if (filters.per_page) params.append('per_page', String(filters.per_page));
+    if (filters.member_count_min) params.append('member_count_min', filters.member_count_min.toString());
+    if (filters.member_count_max) params.append('member_count_max', filters.member_count_max.toString());
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.per_page) params.append('per_page', filters.per_page.toString());
 
     const response = await http({ method: 'get', url: `/groups?${params.toString()}` });
     return response.data as GroupsResponse;
@@ -80,7 +46,7 @@ export class GroupsService {
   /**
    * Create a new group
    */
-  static async createGroup(groupData: Omit<Group, 'id'>): Promise<GroupResponse> {
+  static async createGroup(groupData: CreateGroup): Promise<GroupResponse> {
     const response = await http({ method: 'post', url: '/groups', data: groupData });
     return response.data;
   }

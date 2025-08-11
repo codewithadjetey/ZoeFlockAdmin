@@ -25,7 +25,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const [formData, setFormData] = useState<Group & { upload_token?: string }>({
     name: '',
     description: '',
-    category: '',
     max_members: 10,
     meeting_day: '',
     meeting_time: '',
@@ -49,7 +48,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
       setFormData({
         name: '',
         description: '',
-        category: '',
         max_members: 10,
         meeting_day: '',
         meeting_time: '',
@@ -61,18 +59,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
     }
     setErrors({});
   }, [group, mode, isOpen]);
-
-  const categoryOptions = [
-    { value: 'Ministry', label: 'Ministry' },
-    { value: 'Education', label: 'Education' },
-    { value: 'Prayer', label: 'Prayer' },
-    { value: 'Music', label: 'Music' },
-    { value: 'Fellowship', label: 'Fellowship' },
-    { value: 'Outreach', label: 'Outreach' },
-    { value: 'Children', label: 'Children' },
-    { value: 'Youth', label: 'Youth' },
-    { value: 'Seniors', label: 'Seniors' },
-  ];
 
   const statusOptions = [
     { value: 'Active', label: 'Active' },
@@ -184,12 +170,11 @@ const GroupModal: React.FC<GroupModalProps> = ({
           
           <div>
             <SelectInput
-              label="Category"
-              value={formData.category}
-              onChange={handleSelectChange('category')}
-              options={categoryOptions}
-              placeholder="Select category"
-              error={errors.category}
+              label="Status"
+              value={formData.status}
+              onChange={handleSelectChange('status')}
+              options={statusOptions}
+              placeholder="Select status"
             />
           </div>
         </div>
@@ -218,7 +203,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
         </div>
 
         {/* Meeting Information */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <SelectInput
               label="Meeting Day"
@@ -240,26 +225,15 @@ const GroupModal: React.FC<GroupModalProps> = ({
               error={errors.meeting_time}
             />
           </div>
-          
-          <div>
-            <TextInput
-              label="Location"
-              value={formData.location}
-              onChange={handleInputChange('location')}
-              placeholder="Enter meeting location"
-              error={errors.location}
-            />
-          </div>
         </div>
 
-        {/* Status */}
         <div>
-          <SelectInput
-            label="Status"
-            value={formData.status}
-            onChange={handleSelectChange('status')}
-            options={statusOptions}
-            placeholder="Select status"
+          <TextInput
+            label="Location"
+            value={formData.location}
+            onChange={handleInputChange('location')}
+            placeholder="Enter meeting location"
+            error={errors.location}
           />
         </div>
 

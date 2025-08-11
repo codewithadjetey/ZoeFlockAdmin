@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description');
-            $table->string('category');
             $table->unsignedInteger('max_members')->default(10);
             $table->string('meeting_day');
             $table->string('meeting_time');
@@ -30,7 +29,7 @@ return new class extends Migration
             $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
             
-            $table->index(['category', 'status']);
+            $table->index(['status']);
         });
     }
 

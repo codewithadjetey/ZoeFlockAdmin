@@ -9,7 +9,6 @@ import {
   DataGrid, 
   ContentCard,
   StatusBadge,
-  CategoryBadge,
   Button,
   DataTable
 } from "@/components/ui";
@@ -143,21 +142,6 @@ export default function GroupsPage() {
     }
   };
 
-  const getGroupTypeColor = (category: string) => {
-    switch (category) {
-      case 'Ministry': return 'bg-blue-500';
-      case 'Fellowship': return 'bg-purple-500';
-      case 'Education': return 'bg-green-500';
-      case 'Prayer': return 'bg-orange-500';
-      case 'Music': return 'bg-pink-500';
-      case 'Outreach': return 'bg-indigo-500';
-      case 'Children': return 'bg-yellow-500';
-      case 'Youth': return 'bg-teal-500';
-      case 'Seniors': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
   // DataTable columns configuration
   const tableColumns = [
     {
@@ -169,22 +153,6 @@ export default function GroupsPage() {
           <div className="font-medium text-gray-900 dark:text-white">{group.name}</div>
           <div className="text-sm text-gray-500 dark:text-gray-400">{group.description}</div>
         </div>
-      )
-    },
-    {
-      key: 'category',
-      label: 'Type',
-      sortable: true,
-      render: (value: any, group: Group) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          group.category === 'Ministry' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
-          group.category === 'Fellowship' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300' :
-          group.category === 'Education' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-          group.category === 'Prayer' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300' :
-          'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
-        }`}>
-          {group.category}
-        </span>
       )
     },
     {
@@ -286,19 +254,6 @@ export default function GroupsPage() {
       ]
     },
     {
-      key: 'category',
-      label: 'Category',
-      type: 'select' as const,
-      options: [
-        { value: 'all', label: 'All Categories' },
-        { value: 'Ministry', label: 'Ministry' },
-        { value: 'Education', label: 'Education' },
-        { value: 'Prayer', label: 'Prayer' },
-        { value: 'Music', label: 'Music' },
-        { value: 'Fellowship', label: 'Fellowship' }
-      ]
-    },
-    {
       key: 'member_count_min',
       label: 'Min Members',
       type: 'text' as const,
@@ -317,7 +272,6 @@ export default function GroupsPage() {
     // Apply filters to groups
     const filteredGroups = groups.filter((group) => {
       const matchesStatus = !filters.status || filters.status === 'all' || group.status === filters.status;
-      const matchesCategory = !filters.category || filters.category === 'all' || group.category === filters.category;
       
       let matchesMemberCount = true;
       if (filters.member_count_min) {
@@ -327,7 +281,7 @@ export default function GroupsPage() {
         matchesMemberCount = matchesMemberCount && (group.member_count || 0) <= parseInt(filters.member_count_max);
       }
       
-      return matchesStatus && matchesCategory && matchesMemberCount;
+      return matchesStatus && matchesMemberCount;
     });
     
     // Update pagination
@@ -392,7 +346,7 @@ export default function GroupsPage() {
   const renderGroupCard = (group: Group) => (
     <div className="member-card rounded-2xl shadow-lg p-6 cursor-pointer">
       <div className="flex items-start justify-between mb-4">
-        <div className={`w-12 h-12 ${getGroupTypeColor(group.category)} rounded-xl flex items-center justify-center`}>
+        <div className={`w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center`}>
           <i className="fas fa-users text-white text-xl"></i>
         </div>
         <StatusBadge status={group.status} />
@@ -402,10 +356,6 @@ export default function GroupsPage() {
       <p className="text-sm text-gray-600 mb-4">{group.description}</p>
       
       <div className="space-y-2 mb-4">
-        <div className="flex items-center text-sm">
-          <i className="fas fa-tag text-gray-400 mr-2"></i>
-          <span className="text-gray-600">{group.category}</span>
-        </div>
         <div className="flex items-center text-sm">
           <i className="fas fa-users text-gray-400 mr-2"></i>
           <span className="text-gray-600">{group.member_count || 0} members</span>

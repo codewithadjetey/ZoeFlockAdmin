@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolePermissionSeeder::class,
             AdminSeeder::class,
+            GroupSeeder::class, // Add groups after users and members exist
         ]);
 
         // Create additional test users if needed

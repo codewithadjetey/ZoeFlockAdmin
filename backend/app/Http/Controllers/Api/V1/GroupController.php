@@ -37,14 +37,7 @@ class GroupController extends Controller
      *     @OA\Parameter(
      *         name="search",
      *         in="query",
-     *         description="Search term for group name or description",
-     *         required=false,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Parameter(
-     *         name="category",
-     *         in="query",
-     *         description="Filter by category",
+     *         description="Search by name or description",
      *         required=false,
      *         @OA\Schema(type="string")
      *     ),
@@ -53,21 +46,35 @@ class GroupController extends Controller
      *         in="query",
      *         description="Filter by status",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"Active", "Inactive", "Full"})
+     *         @OA\Schema(type="string")
      *     ),
      *     @OA\Parameter(
-     *         name="per_page",
+     *         name="min_members",
      *         in="query",
-     *         description="Items per page (default 10)",
+     *         description="Filter by minimum member count",
      *         required=false,
-     *         @OA\Schema(type="integer", example=10)
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="max_members",
+     *         in="query",
+     *         description="Filter by maximum member count",
+     *         required=false,
+     *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Parameter(
      *         name="page",
      *         in="query",
      *         description="Page number",
      *         required=false,
-     *         @OA\Schema(type="integer", example=1)
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=15)
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -75,43 +82,24 @@ class GroupController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Groups retrieved successfully"),
-     *             @OA\Property(
-     *                 property="groups",
-     *                 type="object",
+     *             @OA\Property(property="groups", type="object",
+     *                 @OA\Property(property="data", type="array", @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Youth Group"),
+     *                     @OA\Property(property="description", type="string", example="A group for young people"),
+     *                     @OA\Property(property="max_members", type="integer", example=20),
+     *                     @OA\Property(property="meeting_day", type="string", example="Sunday"),
+     *                     @OA\Property(property="meeting_time", type="string", example="10:00 AM"),
+     *                     @OA\Property(property="location", type="string", example="Main Hall"),
+     *                     @OA\Property(property="status", type="string", example="Active"),
+     *                     @OA\Property(property="member_count", type="integer", example=15),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time")
+     *                 )),
      *                 @OA\Property(property="current_page", type="integer", example=1),
-     *                 @OA\Property(property="data", type="array",
-     *                     @OA\Items(type="object",
-     *                         @OA\Property(property="id", type="integer", example=1),
-     *                         @OA\Property(property="name", type="string", example="Youth Ministry"),
-     *                         @OA\Property(property="description", type="string", example="Engaging young people in faith"),
-     *                         @OA\Property(property="category", type="string", example="Ministry"),
-     *                         @OA\Property(property="max_members", type="integer", example=30),
-     *                         @OA\Property(property="meeting_day", type="string", example="Sunday"),
-     *                         @OA\Property(property="meeting_time", type="string", example="4:00 PM"),
-     *                         @OA\Property(property="location", type="string", example="Youth Room"),
-     *                         @OA\Property(property="status", type="string", example="Active"),
-     *                         @OA\Property(property="img_path", type="string", nullable=true, example="uploads/2025/08/07/abc123.jpg"),
-     *                         @OA\Property(property="created_at", type="string", format="date-time"),
-     *                         @OA\Property(property="updated_at", type="string", format="date-time")
-     *                     )
-     *                 ),
-     *                 @OA\Property(property="first_page_url", type="string"),
-     *                 @OA\Property(property="from", type="integer", nullable=true),
-     *                 @OA\Property(property="last_page", type="integer"),
-     *                 @OA\Property(property="last_page_url", type="string"),
-     *                 @OA\Property(property="links", type="array",
-     *                     @OA\Items(type="object",
-     *                         @OA\Property(property="url", type="string", nullable=true),
-     *                         @OA\Property(property="label", type="string"),
-     *                         @OA\Property(property="active", type="boolean")
-     *                     )
-     *                 ),
-     *                 @OA\Property(property="next_page_url", type="string", nullable=true),
-     *                 @OA\Property(property="path", type="string"),
-     *                 @OA\Property(property="per_page", type="integer"),
-     *                 @OA\Property(property="prev_page_url", type="string", nullable=true),
-     *                 @OA\Property(property="to", type="integer", nullable=true),
-     *                 @OA\Property(property="total", type="integer")
+     *                 @OA\Property(property="last_page", type="integer", example=1),
+     *                 @OA\Property(property="per_page", type="integer", example=15),
+     *                 @OA\Property(property="total", type="integer", example=1)
      *             )
      *         )
      *     ),
@@ -123,10 +111,8 @@ class GroupController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-
-        $perPage = $request->per_page ?? 10;
-        $query = Group::where('deleted', 0)->with(['creator']);
-
+        $query = Group::with(['creator', 'updater'])
+            ->where('deleted', 0);
 
         // Search filter
         if ($request->has('search') && !empty($request->search)) {
@@ -137,17 +123,31 @@ class GroupController extends Controller
             });
         }
 
-        // Category filter
-        if ($request->has('category') && !empty($request->category)) {
-            $query->byCategory($request->category);
-        }
-
         // Status filter
         if ($request->has('status') && !empty($request->status)) {
             $query->where('status', $request->status);
         }
 
-        $groups = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        // Member count filters
+        if ($request->has('min_members') && !empty($request->min_members)) {
+            $query->where('max_members', '>=', $request->min_members);
+        }
+
+        if ($request->has('max_members') && !empty($request->max_members)) {
+            $query->where('max_members', '<=', $request->max_members);
+        }
+
+        // Pagination
+        $perPage = $request->get('per_page', 15);
+        $groups = $query->paginate($perPage);
+
+        // Add member count to each group
+        $groups->getCollection()->transform(function ($group) {
+            $group->member_count = $group->activeMembers()->count();
+            $group->available_spots = max(0, $group->max_members - $group->member_count);
+            $group->is_full = $group->member_count >= $group->max_members;
+            return $group;
+        });
 
         return response()->json([
             'success' => true,
@@ -165,16 +165,15 @@ class GroupController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "description", "category", "max_members", "meeting_day", "meeting_time", "location"},
-     *             @OA\Property(property="name", type="string", example="Youth Ministry"),
-     *             @OA\Property(property="description", type="string", example="Engaging young people in faith"),
-     *             @OA\Property(property="category", type="string", example="Ministry"),
-     *             @OA\Property(property="max_members", type="integer", example=30),
+     *             required={"name", "description", "max_members", "meeting_day", "meeting_time", "location"},
+     *             @OA\Property(property="name", type="string", example="Youth Group"),
+     *             @OA\Property(property="description", type="string", example="A group for young people"),
+     *             @OA\Property(property="max_members", type="integer", example=20),
      *             @OA\Property(property="meeting_day", type="string", example="Sunday"),
-     *             @OA\Property(property="meeting_time", type="string", example="4:00 PM"),
-     *             @OA\Property(property="location", type="string", example="Youth Room"),
+     *             @OA\Property(property="meeting_time", type="string", example="10:00 AM"),
+     *             @OA\Property(property="location", type="string", example="Main Hall"),
      *             @OA\Property(property="status", type="string", example="Active"),
-     *             @OA\Property(property="upload_token", type="string", nullable=true, example="abc123def456")
+     *             @OA\Property(property="img_path", type="string", example="path/to/image.jpg")
      *         )
      *     ),
      *     @OA\Response(
@@ -183,19 +182,15 @@ class GroupController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Group created successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="object",
+     *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="name", type="string"),
-     *                 @OA\Property(property="description", type="string"),
-     *                 @OA\Property(property="category", type="string"),
-     *                 @OA\Property(property="max_members", type="integer"),
-     *                 @OA\Property(property="meeting_day", type="string"),
-     *                 @OA\Property(property="meeting_time", type="string"),
-     *                 @OA\Property(property="location", type="string"),
-     *                 @OA\Property(property="status", type="string"),
-     *                 @OA\Property(property="img_path", type="string", nullable=true),
+     *                 @OA\Property(property="name", type="string", example="Youth Group"),
+     *                 @OA\Property(property="description", type="string", example="A group for young people"),
+     *                 @OA\Property(property="max_members", type="integer", example=20),
+     *                 @OA\Property(property="meeting_day", type="string", example="Sunday"),
+     *                 @OA\Property(property="meeting_time", type="string", example="10:00 AM"),
+     *                 @OA\Property(property="location", type="string", example="Main Hall"),
+     *                 @OA\Property(property="status", type="string", example="Active"),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time")
      *             )
@@ -213,58 +208,34 @@ class GroupController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
-            'category' => 'required|string|max:100',
-
+            'description' => 'required|string',
             'max_members' => 'required|integer|min:1|max:1000',
-            'meeting_day' => 'required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'meeting_day' => 'required|string|max:50',
             'meeting_time' => 'required|string|max:50',
             'location' => 'required|string|max:255',
-            'status' => 'nullable|string|in:Active,Inactive,Full',
+            'status' => 'sometimes|string|in:Active,Inactive,Full,Suspended,Archived',
+            'img_path' => 'sometimes|string|max:500'
         ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
 
         $group = Group::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'category' => $request->category,
-            'max_members' => $request->max_members,
-            'meeting_day' => $request->meeting_day,
-            'meeting_time' => $request->meeting_time,
-            'location' => $request->location,
-            'status' => $request->status ?? 'Active',
-            'created_by' => Auth::id(),
-            'updated_by' => Auth::id(),
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'max_members' => $validated['max_members'],
+            'meeting_day' => $validated['meeting_day'],
+            'meeting_time' => $validated['meeting_time'],
+            'location' => $validated['location'],
+            'status' => $validated['status'] ?? 'Active',
+            'img_path' => $validated['img_path'] ?? null,
+            'created_by' => auth()->id(),
+            'updated_by' => auth()->id()
         ]);
-
-        $attachedFile = null;
-        if ($request->has('upload_token') && !empty($request->upload_token)) {
-            $attachedFile = $this->fileUploadService->attachFileToModel(
-                $request->upload_token,
-                Group::class,
-                $group->id
-            );
-
-            if ($attachedFile) {
-                $group->img_path = $attachedFile->path;
-                $group->save();
-            }
-        }
 
         return response()->json([
             'success' => true,
             'message' => 'Group created successfully',
-            'data' => $group->load(['creator']),
-            'uploaded_file' => $attachedFile ? "File uploaded successfully" : "No file uploaded",
+            'data' => $group
         ], 201);
     }
 
@@ -272,7 +243,7 @@ class GroupController extends Controller
     /**
      * @OA\Put(
      *     path="/api/v1/groups/{id}",
-     *     summary="Update a group",
+     *     summary="Update an existing group",
      *     tags={"Groups"},
      *     security={{"sanctum":{}}},
      *     @OA\Parameter(
@@ -287,13 +258,12 @@ class GroupController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="name", type="string"),
      *             @OA\Property(property="description", type="string"),
-     *             @OA\Property(property="category", type="string"),
      *             @OA\Property(property="max_members", type="integer"),
      *             @OA\Property(property="meeting_day", type="string"),
      *             @OA\Property(property="meeting_time", type="string"),
      *             @OA\Property(property="location", type="string"),
      *             @OA\Property(property="status", type="string"),
-     *             @OA\Property(property="upload_token", type="string", nullable=true, example="abc123def456")
+     *             @OA\Property(property="img_path", type="string")
      *         )
      *     ),
      *     @OA\Response(
@@ -302,7 +272,17 @@ class GroupController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Group updated successfully"),
-     *             @OA\Property(property="data", type="object")
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Youth Group"),
+     *                 @OA\Property(property="description", type="string", example="A group for young people"),
+     *                 @OA\Property(property="max_members", type="integer", example=20),
+     *                 @OA\Property(property="meeting_day", type="string", example="Sunday"),
+     *                 @OA\Property(property="meeting_time", type="string", example="10:00 AM"),
+     *                 @OA\Property(property="location", type="string", example="Main Hall"),
+     *                 @OA\Property(property="status", type="string", example="Active"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -321,64 +301,35 @@ class GroupController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $group = Group::find($id);
+        $group = Group::where('id', $id)->where('deleted', 0)->firstOrFail();
 
-        if (!$group) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Group not found'
-            ], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string|max:1000',
-            'category' => 'sometimes|required|string|max:100',
-
+            'description' => 'sometimes|required|string',
             'max_members' => 'sometimes|required|integer|min:1|max:1000',
-            'meeting_day' => 'sometimes|required|string|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'meeting_day' => 'sometimes|required|string|max:50',
             'meeting_time' => 'sometimes|required|string|max:50',
             'location' => 'sometimes|required|string|max:255',
-            'status' => 'sometimes|required|string|in:Active,Inactive,Full',
+            'status' => 'sometimes|required|string|in:Active,Inactive,Full,Suspended,Archived',
+            'img_path' => 'sometimes|string|max:500'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        if (isset($validated['name'])) $group->name = $validated['name'];
+        if (isset($validated['description'])) $group->description = $validated['description'];
+        if (isset($validated['max_members'])) $group->max_members = $validated['max_members'];
+        if (isset($validated['meeting_day'])) $group->meeting_day = $validated['meeting_day'];
+        if (isset($validated['meeting_time'])) $group->meeting_time = $validated['meeting_time'];
+        if (isset($validated['location'])) $group->location = $validated['location'];
+        if (isset($validated['status'])) $group->status = $validated['status'];
+        if (isset($validated['img_path'])) $group->img_path = $validated['img_path'];
 
-        //check if has upload_token
-        if ($request->has('upload_token') && !empty($request->upload_token)) {
-            $attachedFile = $this->fileUploadService->attachFileToModel(
-                $request->upload_token,
-                Group::class,
-                $group->id
-            );
-
-            if ($attachedFile) {
-                $group->img_path = $attachedFile->path;
-            }
-        }
-
-        $group->name = $request->name;
-        $group->description = $request->description;
-        $group->category = $request->category;
-        $group->max_members = $request->max_members;
-        $group->meeting_day = $request->meeting_day;
-        $group->meeting_time = $request->meeting_time;
-        $group->location = $request->location;
-        $group->status = $request->status;
-        $group->updated_by = Auth::id();
+        $group->updated_by = auth()->id();
         $group->save();
-
 
         return response()->json([
             'success' => true,
             'message' => 'Group updated successfully',
-            'data' => $group->load(['creator']),
+            'data' => $group
         ]);
     }
 
@@ -807,17 +758,19 @@ class GroupController extends Controller
     {
         $stats = [
             'total_groups' => Group::where('deleted', 0)->count(),
-            'active_groups' => Group::where('deleted', 0)->active()->count(),
-            'full_groups' => Group::where('deleted', 0)->full()->count(),
-            'groups_by_category' => Group::where('deleted', 0)
-                ->selectRaw('category, COUNT(*) as count')
-                ->groupBy('category')
-                ->pluck('count', 'category')
-                ->toArray(),
-            'total_members_across_groups' => DB::table('group_members')
-                ->where('is_active', true)
-                ->distinct('member_id')
-                ->count('member_id'),
+            'active_groups' => Group::where('deleted', 0)->where('status', 'Active')->count(),
+            'inactive_groups' => Group::where('deleted', 0)->where('status', 'Inactive')->count(),
+            'full_groups' => Group::where('deleted', 0)->where('status', 'Full')->count(),
+            'groups_by_status' => Group::where('deleted', 0)
+                ->selectRaw('status, COUNT(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status'),
+            'total_members' => DB::table('group_members')->where('is_active', 1)->count(),
+            'average_members_per_group' => Group::where('deleted', 0)->avg('max_members'),
+            'groups_needing_members' => Group::where('deleted', 0)
+                ->where('status', 'Active')
+                ->whereRaw('(SELECT COUNT(*) FROM group_members WHERE group_members.group_id = groups.id AND group_members.is_active = 1) < max_members')
+                ->count()
         ];
 
         return response()->json([
@@ -873,7 +826,6 @@ class GroupController extends Controller
      *         required=false,
      *         @OA\JsonContent(
      *             @OA\Property(property="search", type="string", example="youth"),
-     *             @OA\Property(property="category", type="string", example="Ministry"),
      *             @OA\Property(property="status", type="string", example="Active"),
      *             @OA\Property(property="min_members", type="integer", example=5),
      *             @OA\Property(property="max_members", type="integer", example=20),
@@ -898,50 +850,43 @@ class GroupController extends Controller
     public function searchGroups(Request $request): JsonResponse
     {
         $filters = $request->only([
-            'search', 'category', 'status', 'min_members', 'max_members',
-            'meeting_day', 'with_available_spots', 'sort_by', 'sort_order'
+            'search', 'status', 'min_members', 'max_members',
+            'meeting_day', 'meeting_time', 'location'
         ]);
 
-        $perPage = $request->per_page ?? 15;
-        $query = Group::with(['creator'])->where('deleted', 0);
+        $query = Group::with(['creator', 'updater'])
+            ->where('deleted', 0);
 
-        // Text search
+        // Apply filters
         if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%");
+            $query->where(function ($q) use ($filters) {
+                $q->where('name', 'like', "%{$filters['search']}%")
+                  ->orWhere('description', 'like', "%{$filters['search']}%");
             });
         }
 
-        // Category filter
-        if (!empty($filters['category'])) {
-            $query->byCategory($filters['category']);
-        }
-
-        // Status filter
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        // Member count filter
         if (!empty($filters['min_members'])) {
-            $query->whereRaw('(SELECT COUNT(*) FROM group_members WHERE group_members.group_id = groups.id AND group_members.is_active = 1) >= ?', [$filters['min_members']]);
+            $query->where('max_members', '>=', $filters['min_members']);
         }
 
         if (!empty($filters['max_members'])) {
-            $query->whereRaw('(SELECT COUNT(*) FROM group_members WHERE group_members.group_id = groups.id AND group_members.is_active = 1) <= ?', [$filters['max_members']]);
+            $query->where('max_members', '<=', $filters['max_members']);
         }
 
-        // Meeting day filter
         if (!empty($filters['meeting_day'])) {
             $query->where('meeting_day', $filters['meeting_day']);
         }
 
-        // Available spots filter
-        if (!empty($filters['with_available_spots'])) {
-            $query->withAvailableSpots();
+        if (!empty($filters['meeting_time'])) {
+            $query->where('meeting_time', $filters['meeting_time']);
+        }
+
+        if (!empty($filters['location'])) {
+            $query->where('location', 'like', "%{$filters['location']}%");
         }
 
         // Sort options
@@ -954,7 +899,15 @@ class GroupController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        $groups = $query->paginate($perPage);
+        $groups = $query->paginate($request->get('per_page', 15));
+
+        // Add member count to each group
+        $groups->getCollection()->transform(function ($group) {
+            $group->member_count = $group->activeMembers()->count();
+            $group->available_spots = max(0, $group->max_members - $group->member_count);
+            $group->is_full = $group->member_count >= $group->max_members;
+            return $group;
+        });
 
         return response()->json([
             'success' => true,

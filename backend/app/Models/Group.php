@@ -14,7 +14,6 @@ class Group extends Model
     protected $fillable = [
         'name',
         'description',
-        'category',
         'max_members',
         'meeting_day',
         'meeting_time',
@@ -110,13 +109,7 @@ class Group extends Model
         return $query->where('status', 'Full');
     }
 
-    /**
-     * Scope by category
-     */
-    public function scopeByCategory($query, $category)
-    {
-        return $query->where('category', $category);
-    }
+
 
 
 
