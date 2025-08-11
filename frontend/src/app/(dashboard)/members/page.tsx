@@ -16,6 +16,7 @@ import { MembersService, type Member } from "@/services/members";
 import { formatDate } from "@/utils/helpers";
 import { toast } from "react-toastify";
 import { MemberModal } from "@/components/members/MemberModal";
+import type { Column, Filter, SortConfig } from "@/components/ui/DataTable";
 
 export default function MembersPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -25,7 +26,8 @@ export default function MembersPage() {
   const [page, setPage] = useState<number>(1);
   const [perPage, setPerPage] = useState<number>(10);
   const [total, setTotal] = useState<number>(0);
-  const [links, setLinks] = useState<{ url: string | null; label: string; active: boolean }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
@@ -38,30 +40,30 @@ export default function MembersPage() {
     { value: "inactive", label: "Inactive" },
   ];
 
-  const perPageOptions = [
-    { value: 10, label: '10 / page' },
-    { value: 25, label: '25 / page' },
-    { value: 50, label: '50 / page' },
-  ];
+  const perPageOptions = [10, 25, 50, 100];
 
   const loadMembers = async () => {
     try {
+      setLoading(true);
       const response = await MembersService.getMembers({
         search: searchTerm || undefined,
         status: statusFilter === "All Status" ? undefined : (statusFilter as 'active' | 'inactive'),
+        sort_by: sortConfig?.key,
+        sort_order: sortConfig?.direction,
         page,
         per_page: perPage,
       });
       if (response.success) {
         setMembers(response.members.data);
         setTotal(response.members.total);
-        setLinks(response.members.links || []);
       } else {
         toast.error(response.message || 'Failed to load members');
       }
     } catch (err) {
       toast.error('Failed to load members');
       console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,7 +81,7 @@ export default function MembersPage() {
   useEffect(() => {
     loadMembers();
     loadStatistics();
-  }, [page, perPage]);
+  }, [page, perPage, sortConfig]);
 
   useEffect(() => {
     setPage(1);
@@ -91,6 +93,7 @@ export default function MembersPage() {
     setSelectedMember(null);
     setIsModalOpen(true);
   };
+  
   const openEdit = (m: Member) => {
     setModalMode('edit');
     setSelectedMember(m);
@@ -168,10 +171,38 @@ export default function MembersPage() {
     // TODO: Implement member group management modal
   };
 
-  const tableColumns = [
+  const handleSort = (key: string) => {
+    setSortConfig(prev => {
+      if (prev?.key === key) {
+        return {
+          key,
+          direction: prev.direction === 'asc' ? 'desc' : 'asc'
+        };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  const handleFiltersChange = (filters: Record<string, any>) => {
+    if (filters.search !== undefined) setSearchTerm(filters.search);
+    if (filters.status !== undefined) setStatusFilter(filters.status);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePerPageChange = (newPerPage: number) => {
+    setPerPage(newPerPage);
+    setPage(1);
+  };
+
+  const tableColumns: Column<Member>[] = [
     { 
       key: "member", 
       label: "Member", 
+      sortable: false,
       render: (_: any, member: Member) => (
         <div className="flex items-center">
           <Avatar 
@@ -187,27 +218,68 @@ export default function MembersPage() {
         </div>
       )
     },
-    { key: "phone", label: "Contact" },
     { 
-      key: "status", 
+      key: "phone", 
+      label: "Contact", 
+      sortable: false,
+      render: (_: any, member: Member) => (
+        <div className="text-sm text-gray-900">
+          {member.phone || '-'}
+        </div>
+      )
+    },
+    { 
+      key: "is_active", 
       label: "Status", 
+      sortable: true,
       render: (_: any, m: Member) => <StatusBadge status={m.is_active ? 'Active' : 'Inactive'} /> 
     },
     { 
-      key: "joinDate", 
+      key: "created_at", 
       label: "Joined", 
+      sortable: true,
       render: (_: any, m: Member) => m.created_at ? formatDate(m.created_at) : '-' 
     },
     { 
       key: "actions", 
       label: "Actions", 
+      sortable: false,
       render: (_: any, m: Member) => (
-        <div className="text-sm font-medium">
-          <button className="text-blue-600 hover:text-blue-900 mr-3" onClick={() => openEdit(m)}>Edit</button>
-          <button className="text-red-600 hover:text-red-900" onClick={() => handleDelete(m)}>Delete</button>
+        <div className="flex space-x-2">
+          <button 
+            className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+            onClick={() => openEdit(m)}
+          >
+            Edit
+          </button>
+          <button 
+            className="text-red-600 hover:text-red-900 text-sm font-medium"
+            onClick={() => handleDelete(m)}
+          >
+            Delete
+          </button>
         </div>
       ) 
     },
+  ];
+
+  const tableFilters: Filter[] = [
+    {
+      key: "search",
+      label: "Search",
+      type: "text",
+      placeholder: "Search by name, email, or phone..."
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "select",
+      options: [
+        { value: "All Status", label: "All Status" },
+        { value: "active", label: "Active" },
+        { value: "inactive", label: "Inactive" }
+      ]
+    }
   ];
 
   const renderMemberCard = (member: Member) => (
@@ -266,29 +338,6 @@ export default function MembersPage() {
       </div>
     </div>
   );
-
-  const followLink = async (url: string | null) => {
-    if (!url) return;
-    try {
-      const u = new URL(url);
-      if (!u.searchParams.get('per_page')) u.searchParams.set('per_page', String(perPage));
-      const response = await MembersService.getByPageUrl(u.toString());
-      if (response.success) {
-        setMembers(response.members.data);
-        setTotal(response.members.total);
-        setLinks(response.members.links || []);
-        const nextPage = Number(u.searchParams.get('page') || '1');
-        setPage(nextPage);
-      } else {
-        toast.error(response.message || 'Failed to load members');
-      }
-    } catch (err) {
-      toast.error('Failed to load page');
-    }
-  };
-
-  const prevLink = links.find(l => l.label.includes('Previous'));
-  const nextLink = links.find(l => l.label.includes('Next'));
 
   return (
     <DashboardLayout>
@@ -351,68 +400,44 @@ export default function MembersPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="md:col-span-2">
-          <SearchInput
-            placeholder="Search members..."
-            value={searchTerm}
-            onChange={setSearchTerm}
-          />
-        </div>
-        <SelectInput
-          value={statusFilter}
-          onChange={(val: string) => { setStatusFilter(val); setPage(1); }}
-          options={statusOptions}
+      <div className="mb-6">
+        <ViewToggle
+          value={viewMode}
+          onChange={(v) => setViewMode(v as any)}
+          options={[{ value: "grid", label: "Grid", icon: "fas fa-th" }, { value: "list", label: "List", icon: "fas fa-list" }]}
+          count={total}
+          countLabel="members"
         />
-        <div className="w-40">
-          <SelectInput
-            value={String(perPage)}
-            onChange={(val: string) => { setPerPage(Number(val)); setPage(1); }}
-            options={perPageOptions.map(p => ({ value: String(p.value), label: p.label }))}
-          />
-        </div>
       </div>
-
-      <ViewToggle
-        value={viewMode}
-        onChange={(v) => setViewMode(v as any)}
-        options={[{ value: "grid", label: "Grid", icon: "fas fa-th" }, { value: "list", label: "List", icon: "fas fa-list" }]}
-        count={total}
-        countLabel="members"
-      />
 
       {viewMode === "grid" ? (
         <DataGrid data={members} renderCard={renderMemberCard} columns={4} />
       ) : (
-        <DataTable columns={tableColumns} data={members} />
+        <DataTable 
+          columns={tableColumns} 
+          data={members} 
+          filters={tableFilters}
+          pagination={{
+            currentPage: page,
+            totalPages: Math.ceil(total / perPage),
+            totalItems: total,
+            perPage: perPage,
+            onPageChange: handlePageChange,
+            onPerPageChange: handlePerPageChange
+          }}
+          sorting={{
+            sortConfig: sortConfig,
+            onSort: handleSort
+          }}
+          onFiltersChange={handleFiltersChange}
+          loading={loading}
+          emptyMessage="No members found"
+          perPageOptions={perPageOptions}
+          showPerPageSelector={true}
+          showPagination={true}
+          responsive={true}
+        />
       )}
-
-      <div className="mt-6 flex items-center justify-center space-x-2">
-        <button
-          className={`px-3 py-1 rounded ${prevLink?.url ? 'bg-gray-100 text-gray-700' : 'bg-gray-50 text-gray-400 cursor-not-allowed'}`}
-          disabled={!prevLink?.url}
-          onClick={() => followLink(prevLink?.url || null)}
-        >
-          « Prev
-        </button>
-        {links.filter(l => !l.label.includes('Previous') && !l.label.includes('Next')).map((link, idx) => (
-          <button
-            key={idx}
-            className={`px-3 py-1 rounded ${link.active ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
-            disabled={!link.url}
-            onClick={() => followLink(link.url)}
-          >
-            {link.label}
-          </button>
-        ))}
-        <button
-          className={`px-3 py-1 rounded ${nextLink?.url ? 'bg-gray-100 text-gray-700' : 'bg-gray-50 text-gray-400 cursor-not-allowed'}`}
-          disabled={!nextLink?.url}
-          onClick={() => followLink(nextLink?.url || null)}
-        >
-          Next »
-        </button>
-      </div>
 
       <MemberModal
         isOpen={isModalOpen}

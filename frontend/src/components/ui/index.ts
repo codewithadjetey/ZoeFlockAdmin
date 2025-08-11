@@ -8,11 +8,12 @@ export { default as SearchInput } from './SearchInput';
 export { default as ToggleSwitch } from './ToggleSwitch';
 export { default as FormField } from './FormField';
 
+
 // Display Components
 export { default as StatCard } from './StatCard';
 export { default as ContentCard } from './ContentCard';
 export { default as PageHeader } from './PageHeader';
-export { default as DataTable } from './DataTable';
+export { default as DataTable, type Column, type Filter, type SortConfig, type DataTableProps } from './DataTable';
 export { default as DataGrid } from './DataGrid';
 export { default as ViewToggle } from './ViewToggle';
 export { default as TabNavigation } from './TabNavigation';
@@ -20,6 +21,7 @@ export { default as TabNavigation } from './TabNavigation';
 // Badge Components
 export { default as StatusBadge } from './StatusBadge';
 export { default as CategoryBadge } from './CategoryBadge';
+
 
 // Avatar Component
 export { default as Avatar } from './Avatar';
@@ -29,4 +31,6 @@ export { default as ColorSwitcher } from './ColorSwitcher';
 
 // Alert and Card Components
 export { default as Alert, AlertDescription } from './Alert';
-export { default as Card, CardHeader, CardTitle, CardDescription, CardContent } from './Card'; 
+export { default as Card, CardHeader, CardTitle, CardDescription, CardContent } from './Card';
+
+ 

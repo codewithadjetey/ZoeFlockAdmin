@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   PageHeader, 
@@ -10,7 +10,8 @@ import {
   ContentCard,
   StatusBadge,
   CategoryBadge,
-  Button
+  Button,
+  DataTable
 } from "@/components/ui";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { Event, EventFilters } from "@/interfaces/events";
@@ -21,7 +22,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function EventsPage() {
   const { user } = useAuth();
-  const [viewMode, setViewMode] = useState<"grid" | "calendar">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "calendar" | "table">("table");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -77,8 +78,6 @@ export default function EventsPage() {
       setIsLoading(false);
     }
   };
-
-
 
   const handleCreateEvent = () => {
     setEditingEvent(undefined);
@@ -171,6 +170,226 @@ export default function EventsPage() {
     }
   };
 
+  // DataTable columns configuration
+  const tableColumns = [
+    {
+      key: 'title',
+      label: 'Event',
+      sortable: true,
+      render: (value: any, event: Event) => (
+        <div>
+          <div className="font-medium text-gray-900 dark:text-white">{event.title}</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">{event.description}</div>
+        </div>
+      )
+    },
+    {
+      key: 'start_date',
+      label: 'Date & Time',
+      sortable: true,
+      render: (value: any, event: Event) => (
+        <div className="text-sm">
+          <div className="text-gray-900 dark:text-white">
+            {formatEventDate(event.start_date)}
+          </div>
+          <div className="text-gray-500 dark:text-gray-400">
+            {formatEventTime(event.start_date)}
+            {event.end_date && ` - ${formatEventTime(event.end_date)}`}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'type',
+      label: 'Type',
+      sortable: true,
+      render: (value: any, event: Event) => (
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          event.type === 'general' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
+          event.type === 'group' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+          'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+        }`}>
+          {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
+        </span>
+      )
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (value: any, event: Event) => (
+        <StatusBadge status={event.status} />
+      )
+    },
+    {
+      key: 'location',
+      label: 'Location',
+      render: (value: any, event: Event) => (
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          {event.location || 'No location specified'}
+        </div>
+      )
+    },
+    {
+      key: 'recurring',
+      label: 'Recurring',
+      render: (value: any, event: Event) => (
+        <div className="text-sm">
+          {event.is_recurring ? (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">
+              <i className="fas fa-redo mr-1"></i>
+              {event.recurrence_pattern}
+            </span>
+          ) : (
+            <span className="text-gray-500 dark:text-gray-400">One-time</span>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (value: any, event: Event) => (
+        <div className="flex space-x-2">
+          <button 
+            className="text-blue-600 hover:text-blue-700 text-sm p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            onClick={() => handleEditEvent(event)}
+            title="Edit Event"
+          >
+            <i className="fas fa-edit"></i>
+          </button>
+          {event.status === 'draft' && (
+            <button 
+              className="text-green-600 hover:text-green-700 text-sm p-1 rounded hover:bg-green-50 dark:hover:bg-green-900/20"
+              onClick={() => handlePublishEvent(event)}
+              title="Publish Event"
+            >
+              <i className="fas fa-globe"></i>
+            </button>
+          )}
+          {event.status === 'published' && (
+            <button 
+              className="text-orange-600 hover:text-orange-700 text-sm p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20"
+              onClick={() => handleCancelEvent(event)}
+              title="Cancel Event"
+            >
+              <i className="fas fa-ban"></i>
+            </button>
+          )}
+          <button 
+            className="text-red-600 hover:text-red-700 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+            onClick={() => handleDeleteEvent(event.id)}
+            title="Delete Event"
+          >
+            <i className="fas fa-trash"></i>
+          </button>
+        </div>
+      )
+    }
+  ];
+
+  // DataTable filters configuration
+  const tableFilters = [
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select' as const,
+      options: [
+        { value: 'all', label: 'All Statuses' },
+        { value: 'draft', label: 'Draft' },
+        { value: 'published', label: 'Published' },
+        { value: 'cancelled', label: 'Cancelled' },
+        { value: 'completed', label: 'Completed' }
+      ]
+    },
+    {
+      key: 'type',
+      label: 'Type',
+      type: 'select' as const,
+      options: [
+        { value: 'all', label: 'All Types' },
+        { value: 'general', label: 'General' },
+        { value: 'group', label: 'Group' },
+        { value: 'family', label: 'Family' }
+      ]
+    },
+    {
+      key: 'date_from',
+      label: 'From Date',
+      type: 'date' as const
+    },
+    {
+      key: 'date_to',
+      label: 'To Date',
+      type: 'date' as const
+    }
+  ];
+
+  // Handle filters change
+  const handleFiltersChange = (filters: Record<string, any>) => {
+    // Apply filters to events
+    const filteredEvents = events.filter((event) => {
+      const matchesStatus = !filters.status || filters.status === 'all' || event.status === filters.status;
+      const matchesType = !filters.type || filters.type === 'all' || event.type === filters.type;
+      
+      let matchesDate = true;
+      if (filters.date_from) {
+        const eventDate = new Date(event.start_date);
+        const fromDate = new Date(filters.date_from);
+        matchesDate = eventDate >= fromDate;
+      }
+      if (filters.date_to) {
+        const eventDate = new Date(event.start_date);
+        const toDate = new Date(filters.date_to);
+        matchesDate = matchesDate && eventDate <= toDate;
+      }
+      
+      return matchesStatus && matchesType && matchesDate;
+    });
+    
+    // Update pagination
+    setPagination(prev => ({
+      ...prev,
+      current_page: 1,
+      total: filteredEvents.length
+    }));
+  };
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, current_page: page }));
+  };
+
+  const handlePerPageChange = (perPage: number) => {
+    setPagination(prev => ({ ...prev, per_page: perPage, current_page: 1 }));
+  };
+
+  // Handle sorting
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+
+  const handleSort = (key: string) => {
+    setSortConfig(prev => {
+      if (prev?.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  // Apply sorting to events
+  const sortedEvents = useMemo(() => {
+    if (!sortConfig) return events;
+    
+    return [...events].sort((a, b) => {
+      const aValue = a[sortConfig.key as keyof Event];
+      const bValue = b[sortConfig.key as keyof Event];
+      
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [events, sortConfig]);
+
   // Sample event data for demonstration
   const sampleEvents = [
     {
@@ -183,13 +402,10 @@ export default function EventsPage() {
     },
   ];
 
-  const filteredEvents = events.filter((event) => {
+  const filteredEvents = sortedEvents.filter((event) => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (event.description && event.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || event.status === statusFilter;
-    const matchesType = typeFilter === "all" || event.type === typeFilter;
-    
-    return matchesSearch && matchesStatus && matchesType;
+    return matchesSearch;
   });
 
   const categoryOptions = [
@@ -202,6 +418,7 @@ export default function EventsPage() {
   ];
 
   const viewToggleOptions = [
+    { value: "table", label: "Table", icon: "fas fa-table" },
     { value: "grid", label: "Grid", icon: "fas fa-th" },
     { value: "calendar", label: "Calendar", icon: "fas fa-calendar" },
   ];
@@ -280,7 +497,7 @@ export default function EventsPage() {
   );
 
   const handleViewModeChange = (value: string) => {
-    setViewMode(value as "grid" | "calendar");
+    setViewMode(value as "grid" | "calendar" | "table");
   };
 
   return (
@@ -411,6 +628,31 @@ export default function EventsPage() {
         count={filteredEvents.length}
         countLabel="events"
       />
+
+      {/* Events Table View */}
+      {viewMode === "table" && (
+        <DataTable
+          columns={tableColumns}
+          data={filteredEvents}
+          filters={tableFilters}
+          pagination={{
+            currentPage: pagination.current_page,
+            totalPages: pagination.last_page,
+            totalItems: pagination.total,
+            perPage: pagination.per_page,
+            onPageChange: handlePageChange,
+            onPerPageChange: handlePerPageChange
+          }}
+          sorting={{
+            sortConfig,
+            onSort: handleSort
+          }}
+          onFiltersChange={handleFiltersChange}
+          loading={isLoading}
+          emptyMessage="No events found. Create your first event to get started."
+          className="mb-6"
+        />
+      )}
 
       {/* Events Grid */}
       {viewMode === "grid" && (
