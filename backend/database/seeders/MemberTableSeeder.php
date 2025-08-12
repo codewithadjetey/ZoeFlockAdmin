@@ -20,7 +20,7 @@ class MemberTableSeeder extends Seeder
                 'id' => 1,
                 'first_name' => 'Derrick',
                 'last_name' => 'Doe',
-                'email' => 'derrick.adjetey@gmail.com',
+                'email' => 'derrick.doe@gmail.com',
                 'phone' => 'Voluptatem est quo r',
                 'address' => 'Autem ut voluptatem',
                 'date_of_birth' => '2017-12-09',
