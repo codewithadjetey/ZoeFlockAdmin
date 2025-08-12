@@ -31,6 +31,11 @@ class Family extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     */
+    protected $appends = ['member_count'];
+
+    /**
      * Get the family head (member)
      */
     public function familyHead(): BelongsTo

@@ -47,6 +47,7 @@ export class MembersService {
     sort_order?: 'asc' | 'desc';
     page?: number;
     per_page?: number;
+    unassigned_family?: boolean;
   } = {}): Promise<MembersResponse> {
     const params = new URLSearchParams();
     if (filters.search) params.append('search', filters.search);
@@ -55,6 +56,7 @@ export class MembersService {
     if (filters.sort_order) params.append('sort_order', filters.sort_order);
     if (filters.page) params.append('page', String(filters.page));
     if (filters.per_page) params.append('per_page', String(filters.per_page));
+    if (filters.unassigned_family) params.append('unassigned_family', String(filters.unassigned_family));
 
     const response = await http({ method: 'get', url: `/members?${params.toString()}` });
     return response.data as MembersResponse;

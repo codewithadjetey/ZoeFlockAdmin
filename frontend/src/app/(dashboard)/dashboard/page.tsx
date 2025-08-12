@@ -76,8 +76,8 @@ export default function DashboardPage() {
             if (stat.title === "Total Members") {
               return {
                 ...stat,
-                value: data.total_members?.toString() || "0",
-                description: `${data.active_members || 0} active members`
+                value: data.total_family_members?.toString() || "0",
+                description: `${data.total_family_members || 0} family members`
               };
             }
             if (stat.title === "Active Groups") {

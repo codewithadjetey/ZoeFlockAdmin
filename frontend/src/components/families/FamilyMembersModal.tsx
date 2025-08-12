@@ -47,10 +47,12 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
   };
 
   const loadAvailableMembers = async () => {
+    if (!isOpen || !family) return;
+    
     try {
-      const response = await MembersService.getMembers();
+      // Use backend filter to get only members not assigned to any family
+      const response = await MembersService.getMembers({ unassigned_family: true });
       if (response.success) {
-        // For now, show all members since family information is not available in the API response
         setAvailableMembers(response.members.data);
       }
     } catch (error) {
@@ -141,13 +143,13 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
   if (!family) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Manage ${family.name} Members`} size="xl">
+    <Modal isOpen={isOpen} onClose={onClose} title={`Manage ${family.name} Members`} size="xxl">
       <div className="space-y-6">
         {/* Add Member Section */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Add New Member</h3>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
+            <div className="col-span-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Select Member
               </label>
@@ -182,7 +184,7 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
                 ]}
               />
             </div>
-            <div>
+            <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Notes
               </label>

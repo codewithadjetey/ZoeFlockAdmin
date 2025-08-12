@@ -61,6 +61,13 @@ class MemberController extends Controller
      *         @OA\Schema(type="integer")
      *     ),
      *     @OA\Parameter(
+     *         name="unassigned_family",
+     *         in="query",
+     *         description="Filter to show only members not assigned to any family",
+     *         required=false,
+     *         @OA\Schema(type="boolean", default=false)
+     *     ),
+     *     @OA\Parameter(
      *         name="include_groups",
      *         in="query",
      *         description="Include group information in response",
@@ -163,6 +170,13 @@ class MemberController extends Controller
         // Group filter
         if ($request->filled('group_id')) {
             $query->byGroup($request->group_id);
+        }
+
+        // Unassigned family filter - only show members not assigned to any family
+        if ($request->boolean('unassigned_family')) {
+            $query->whereDoesntHave('families', function ($q) {
+                $q->where('is_active', true);
+            });
         }
 
         // Sorting
