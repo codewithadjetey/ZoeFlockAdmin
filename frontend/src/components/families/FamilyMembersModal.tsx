@@ -176,6 +176,7 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
                 value={selectedRole}
                 onChange={(value) => setSelectedRole(value)}
                 options={[
+                  { value: 'family_head', label: 'Family Head' },
                   { value: 'member', label: 'Member' },
                   { value: 'deputy', label: 'Deputy' }
                 ]}
@@ -236,10 +237,10 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
                   </div>
                   <div className="flex items-center space-x-3">
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleBadgeColor(member.role)}`}>
-                      {getRoleLabel(member.role)}
+                      {getRoleLabel(family.family_head_id === member.id ? 'head' : member.role)}
                     </span>
                     <StatusBadge status={member.is_active ? 'active' : 'inactive'} />
-                    {member.role !== 'head' && (
+                    {family.family_head_id !== member.id && (
                       <Button
                         variant="danger"
                         size="sm"
