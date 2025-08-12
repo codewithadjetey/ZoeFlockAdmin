@@ -163,6 +163,11 @@ export default function FamilyModal({ isOpen, onClose, onSave, family, mode }: F
                 label: `${member.first_name} ${member.last_name}`
               }))
             ]}
+            searchable={true}
+            placeholder="Search and select a family head..."
+            clearable={true}
+            maxHeight="250px"
+            noOptionsMessage="No members found matching your search"
           />
         </div>
 

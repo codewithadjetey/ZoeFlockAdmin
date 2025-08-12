@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Search, ChevronDown, Check, X } from "lucide-react";
 
 interface SelectOption {
@@ -7,16 +7,15 @@ interface SelectOption {
   disabled?: boolean;
 }
 
-interface SelectInputProps {
+interface SearchableSelectProps {
   value: string;
   onChange: (value: string) => void;
-  options?: SelectOption[];
+  options: SelectOption[];
   placeholder?: string;
   className?: string;
   label?: string;
   error?: string;
   disabled?: boolean;
-  children?: React.ReactNode;
   searchable?: boolean;
   clearable?: boolean;
   maxHeight?: string;
@@ -25,17 +24,16 @@ interface SelectInputProps {
   onSearch?: (searchTerm: string) => void;
 }
 
-const SelectInput: React.FC<SelectInputProps> = ({ 
-  value, 
-  onChange, 
-  options, 
+const SearchableSelect: React.FC<SearchableSelectProps> = ({
+  value,
+  onChange,
+  options,
   placeholder = "Select an option",
   className = "",
   label,
   error,
   disabled = false,
-  children,
-  searchable = false,
+  searchable = true,
   clearable = true,
   maxHeight = "200px",
   noOptionsMessage = "No options found",
@@ -52,15 +50,13 @@ const SelectInput: React.FC<SelectInputProps> = ({
   const optionsRef = useRef<HTMLDivElement>(null);
 
   // Get the selected option label
-  const selectedOption = options?.find(option => option.value === value);
+  const selectedOption = options.find(option => option.value === value);
   const displayValue = selectedOption ? selectedOption.label : "";
 
   // Filter options based on search term
-  const filteredOptions = useMemo(() => 
-    options?.filter(option =>
-      option.label.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      !option.disabled
-    ) || [], [options, searchTerm]
+  const filteredOptions = options.filter(option =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    !option.disabled
   );
 
   // Handle option selection
@@ -165,41 +161,6 @@ const SelectInput: React.FC<SelectInputProps> = ({
     }
   }, [isOpen]);
 
-  // If not searchable, render the original select element
-  if (!searchable) {
-    return (
-      <div className="relative">
-        {label && (
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">{label}</label>
-        )}
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          className={`w-full px-4 py-3 appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 dark:focus:border-primary-400 cursor-pointer transition-all duration-300 text-gray-900 dark:text-white shadow-sm hover:shadow-md focus:shadow-lg ${
-            error ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' : ''
-          } ${
-            disabled ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''
-          } ${className}`}
-        >
-          {placeholder && <option value="" className="text-gray-500 dark:text-gray-400">{placeholder}</option>}
-          {children ? (
-            children
-          ) : options ? (
-            options.map((option) => (
-              <option key={option.value} value={option.value} className="text-gray-900 dark:text-white">
-                {option.label}
-              </option>
-            ))
-          ) : null}
-        </select>
-        <i className="fas fa-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none transition-colors duration-200"></i>
-        {error && <p className="text-red-500 dark:text-red-400 text-xs mt-1 transition-colors duration-200">{error}</p>}
-      </div>
-    );
-  }
-
-  // Render searchable dropdown
   return (
     <div className={`relative ${className}`} ref={containerRef}>
       {label && (
@@ -223,11 +184,11 @@ const SelectInput: React.FC<SelectInputProps> = ({
           role="combobox"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
-          aria-controls={isOpen ? 'select-input-options' : undefined}
+          aria-controls={isOpen ? 'searchable-select-options' : undefined}
         >
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
-              {isOpen ? (
+              {isOpen && searchable ? (
                 <input
                   ref={inputRef}
                   type="text"
@@ -272,7 +233,7 @@ const SelectInput: React.FC<SelectInputProps> = ({
               className="overflow-y-auto"
               style={{ maxHeight }}
               role="listbox"
-              id="select-input-options"
+              id="searchable-select-options"
             >
               {loading ? (
                 <div className="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
@@ -323,4 +284,4 @@ const SelectInput: React.FC<SelectInputProps> = ({
   );
 };
 
-export default SelectInput; 
+export default SearchableSelect; 

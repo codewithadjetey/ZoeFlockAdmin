@@ -141,7 +141,7 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
   if (!family) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Manage ${family.name} Members`} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} title={`Manage ${family.name} Members`} size="xl">
       <div className="space-y-6">
         {/* Add Member Section */}
         <div className="bg-gray-50 p-4 rounded-lg">
@@ -161,6 +161,11 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
                     label: `${member.first_name} ${member.last_name}`
                   }))
                 ]}
+                searchable={true}
+                placeholder="Search and select a member..."
+                clearable={true}
+                maxHeight="200px"
+                noOptionsMessage="No members found matching your search"
               />
             </div>
             <div>
@@ -216,11 +221,11 @@ export function FamilyMembersModal({ isOpen, onClose, family }: FamilyMembersMod
                   <div className="flex items-center space-x-3">
                     <Avatar
                       src={undefined}
-                      alt={`${member.name}`}
+                      alt={`${member.first_name} ${member.last_name}`}
                       size="sm"
                     />
                     <div>
-                      <div className="font-medium text-gray-900">{member.name}</div>
+                      <div className="font-medium text-gray-900">{member.first_name} {member.last_name}</div>
                       <div className="text-sm text-gray-500">
                         Joined: {new Date(member.joined_at).toLocaleDateString()}
                       </div>

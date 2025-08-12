@@ -7,6 +7,7 @@ export { default as SelectInput } from './SelectInput';
 export { default as SearchInput } from './SearchInput';
 export { default as ToggleSwitch } from './ToggleSwitch';
 export { default as FormField } from './FormField';
+export { default as SearchableSelect } from './SearchableSelect';
 
 
 // Display Components
