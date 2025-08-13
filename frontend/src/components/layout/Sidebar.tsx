@@ -9,6 +9,7 @@ const navItems = [
   { label: "Members", icon: "fas fa-users", href: "/members" },
   { label: "Families", icon: "fas fa-house-user", href: "/families" },
   { label: "Events", icon: "fas fa-calendar", href: "/events" },
+  { label: "Event Categories", icon: "fas fa-tags", href: "/event-categories" },
   { label: "Groups", icon: "fas fa-layer-group", href: "/groups" },
   { label: "Attendance", icon: "fas fa-clipboard-check", href: "/attendance" },
   { label: "Donations", icon: "fas fa-donate", href: "/donations" },
