@@ -6,20 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\Group;
 use App\Models\Family;
-use App\Services\RecurringEventService;
-use Illuminate\Http\Request;
+use App\Models\User;
+use App\Services\FileUploadService;
+// Removed: No longer using RecurringEventService
+// use App\Services\RecurringEventService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class EventController extends Controller
 {
-    protected $recurringEventService;
+    protected $fileUploadService;
 
-    public function __construct(RecurringEventService $recurringEventService)
+    public function __construct(FileUploadService $fileUploadService)
     {
-        $this->recurringEventService = $recurringEventService;
+        $this->fileUploadService = $fileUploadService;
     }
 
     /**
@@ -28,6 +31,11 @@ class EventController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = Event::query();
+
+        // Always exclude deleted events unless explicitly requested
+        if (!$request->boolean('include_deleted')) {
+            $query->where('deleted', false);
+        }
 
         // Apply filters
         if ($request->has('type')) {
@@ -58,8 +66,18 @@ class EventController extends Controller
             $query->where('start_date', '<=', $request->date_to);
         }
 
-        // Default to upcoming events if no specific filter
-        if (!$request->has('status') && !$request->has('date_from') && !$request->has('date_to')) {
+        // Add filter to show all events (including those without dates)
+        if ($request->has('show_all') && $request->boolean('show_all')) {
+            // Don't apply any date restrictions
+        } elseif ($request->has('include_no_date') && $request->boolean('include_no_date')) {
+            // Include events without dates along with upcoming events
+            $query->where(function($q) {
+                $q->whereNotNull('start_date')
+                  ->where('start_date', '>', now())
+                  ->orWhereNull('start_date');
+            });
+        } elseif (!$request->has('status') && !$request->has('date_from') && !$request->has('date_to')) {
+            // Default to upcoming events if no specific filter
             $query->upcoming();
         }
 
@@ -142,9 +160,10 @@ class EventController extends Controller
             }
 
             // Create recurring instances if needed
-            if ($event->is_recurring && $event->recurrence_pattern) {
-                $this->recurringEventService->createRecurringInstances($event);
-            }
+            // Removed: Don't create multiple event instances for recurring events
+            // if ($event->is_recurring && $event->recurrence_pattern) {
+            //     $this->recurringEventService->createRecurringInstances($event);
+            // }
 
             DB::commit();
 
@@ -171,7 +190,7 @@ class EventController extends Controller
      */
     public function show(Event $event): JsonResponse
     {
-        $event->load(['groups', 'families', 'creator', 'recurringInstances']);
+        $event->load(['groups', 'families', 'creator']);
 
         return response()->json([
             'success' => true,
@@ -253,14 +272,15 @@ class EventController extends Controller
             }
 
             // Handle recurring event updates
-            if ($event->is_recurring && $event->recurrence_pattern) {
-                // Cancel future instances and regenerate
-                $this->recurringEventService->cancelFutureInstances($event);
-                $this->recurringEventService->createRecurringInstances($event);
-            } else {
-                // Cancel all future instances if no longer recurring
-                $this->recurringEventService->cancelFutureInstances($event);
-            }
+            // Removed: Don't create multiple event instances for recurring events
+            // if ($event->is_recurring && $event->recurrence_pattern) {
+            //     // Cancel future instances and regenerate
+            //     $this->recurringEventService->cancelFutureInstances($event);
+            //     $this->recurringEventService->createRecurringInstances($event);
+            // } else {
+            //     // Cancel all future instances if no longer recurring
+            //     $this->recurringEventService->cancelFutureInstances($event);
+            // }
 
             DB::commit();
 
@@ -291,9 +311,10 @@ class EventController extends Controller
             DB::beginTransaction();
 
             // Cancel all future recurring instances
-            if ($event->is_recurring) {
-                $this->recurringEventService->cancelFutureInstances($event);
-            }
+            // Removed: No longer creating multiple event instances for recurring events
+            // if ($event->is_recurring) {
+            //     $this->recurringEventService->cancelFutureInstances($event);
+            // }
 
             // Soft delete the event
             $event->update(['deleted' => true]);
@@ -339,9 +360,11 @@ class EventController extends Controller
             $reason = $request->get('reason');
             $cancelFutureInstances = $request->get('cancel_future_instances', false);
 
-            if ($cancelFutureInstances && $event->is_recurring) {
-                $this->recurringEventService->cancelFutureInstances($event, $reason);
-            }
+            // Cancel future recurring instances if requested
+            // Removed: No longer creating multiple event instances for recurring events
+            // if ($cancelFutureInstances && $event->is_recurring) {
+            //     $this->recurringEventService->cancelFutureInstances($event, $reason);
+            // }
 
             $event->cancel($reason);
 

@@ -27,6 +27,16 @@ export class EventsService {
   }
 
   /**
+   * Get all events including those without start dates
+   */
+  static async getAllEvents(filters: EventFilters = {}): Promise<EventListResponse> {
+    return this.getEvents({
+      show_all: true,
+      ...filters
+    });
+  }
+
+  /**
    * Get a specific event by ID
    */
   static async getEvent(id: number): Promise<EventResponse> {

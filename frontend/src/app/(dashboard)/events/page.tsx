@@ -62,7 +62,7 @@ export default function EventsPage() {
         // In a real implementation, you'd add search to the API
       }
 
-      const response = await EventsService.getEvents(filters);
+      const response = await EventsService.getAllEvents(filters);
       if (response.success) {
         setEvents(response.data.data);
         setPagination({

@@ -136,6 +136,69 @@ describe('Event Management', function () {
             ]);
         });
 
+        it('creates only one event record for recurring events', function () {
+            $eventData = [
+                'title' => 'Weekly Meeting',
+                'description' => 'A weekly recurring meeting',
+                'start_date' => now()->addDays(7)->toISOString(),
+                'type' => 'general',
+                'is_recurring' => true,
+                'recurrence_pattern' => 'weekly',
+                'recurrence_settings' => ['interval' => 1, 'weekdays' => [1]],
+                'recurrence_end_date' => now()->addMonths(6)->toISOString()
+            ];
+            
+            $response = $this->postJson('/api/v1/events', $eventData);
+            
+            $response->assertStatus(201);
+            
+            // Verify only one event was created
+            $this->assertDatabaseCount('events', 1);
+            
+            // Verify the event has recurring properties
+            $event = Event::where('title', 'Weekly Meeting')->first();
+            $this->assertTrue($event->is_recurring);
+            $this->assertEquals('weekly', $event->recurrence_pattern);
+        });
+
+        it('can retrieve events without start dates using show_all filter', function () {
+            // Create an event without a start date
+            $event = Event::factory()->create([
+                'title' => 'Event Without Date',
+                'start_date' => null,
+                'status' => 'published'
+            ]);
+            
+            $response = $this->getJson('/api/v1/events?show_all=true');
+            
+            $response->assertStatus(200);
+            $response->assertJsonCount(1, 'data.data');
+            $response->assertJsonPath('data.data.0.title', 'Event Without Date');
+        });
+
+        it('defaults to upcoming events when no filters are applied', function () {
+            // Create a past event
+            $pastEvent = Event::factory()->create([
+                'title' => 'Past Event',
+                'start_date' => now()->subDays(1),
+                'status' => 'published'
+            ]);
+            
+            // Create an upcoming event
+            $upcomingEvent = Event::factory()->create([
+                'title' => 'Upcoming Event',
+                'start_date' => now()->addDays(1),
+                'status' => 'published'
+            ]);
+            
+            $response = $this->getJson('/api/v1/events');
+            
+            $response->assertStatus(200);
+            // Should only show upcoming events by default
+            $response->assertJsonCount(1, 'data.data');
+            $response->assertJsonPath('data.data.0.title', 'Upcoming Event');
+        });
+
         it('validates required fields when creating event', function () {
             $response = $this->postJson('/api/v1/events', []);
             

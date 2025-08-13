@@ -11,7 +11,6 @@ export interface Event {
   recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | 'yearly';
   recurrence_settings?: Record<string, any>;
   recurrence_end_date?: string;
-  parent_event_id?: number;
   cancelled_at?: string;
   cancellation_reason?: string;
   img_path?: string;
@@ -26,8 +25,6 @@ export interface Event {
   families?: EventFamily[];
   creator?: User;
   updater?: User;
-  parentEvent?: Event;
-  recurringInstances?: Event[];
   image?: FileUpload;
 }
 

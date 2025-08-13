@@ -27,7 +27,6 @@ class Event extends Model
         'recurrence_pattern',
         'recurrence_settings',
         'recurrence_end_date',
-        'parent_event_id',
         'cancelled_at',
         'cancellation_reason',
         'img_path',
@@ -59,22 +58,6 @@ class Event extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    /**
-     * Get the parent event (for recurring events)
-     */
-    public function parentEvent(): BelongsTo
-    {
-        return $this->belongsTo(Event::class, 'parent_event_id');
-    }
-
-    /**
-     * Get the recurring event instances
-     */
-    public function recurringInstances(): HasMany
-    {
-        return $this->hasMany(Event::class, 'parent_event_id');
     }
 
     /**
@@ -226,15 +209,7 @@ class Event extends Model
      */
     public function getIsRecurringAttribute(): bool
     {
-        return $this->attributes['is_recurring'] ?? false || $this->parent_event_id !== null;
-    }
-
-    /**
-     * Check if the event is a recurring instance
-     */
-    public function getIsRecurringInstanceAttribute(): bool
-    {
-        return $this->parent_event_id !== null;
+        return $this->attributes['is_recurring'] ?? false;
     }
 
     /**

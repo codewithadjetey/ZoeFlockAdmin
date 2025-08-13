@@ -61,7 +61,6 @@ class EventFactory extends Factory
                 }
             },
             'recurrence_end_date' => null,
-            'parent_event_id' => null,
             'cancelled_at' => null,
             'cancellation_reason' => null,
             'img_path' => $this->faker->optional(0.3)->imageUrl(640, 480, 'events'),
