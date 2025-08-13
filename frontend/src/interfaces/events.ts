@@ -6,6 +6,7 @@ export interface Event {
   end_date?: string;
   location?: string;
   type: 'group' | 'family' | 'general';
+  category_id?: number; // Link to event category
   status: 'draft' | 'published' | 'cancelled' | 'completed';
   is_recurring: boolean;
   recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -25,6 +26,7 @@ export interface Event {
   families?: EventFamily[];
   creator?: User;
   updater?: User;
+  category?: EventCategory;
   image?: FileUpload;
 }
 
@@ -65,6 +67,33 @@ export interface FileUpload {
   size: number;
   model_type: string;
   model_id: number;
+}
+
+export interface EventCategory {
+  id: number;
+  name: string;
+  description?: string;
+  color: string;
+  icon?: string;
+  attendance_type: 'individual' | 'general' | 'none';
+  is_active: boolean;
+  is_recurring: boolean;
+  recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  recurrence_settings?: Record<string, any>;
+  default_start_time?: string;
+  default_duration?: number;
+  default_location?: string;
+  default_description?: string;
+  created_by: number;
+  updated_by?: number;
+  created_at: string;
+  updated_at: string;
+  deleted: boolean;
+  
+  // Relationships
+  creator?: User;
+  updater?: User;
+  events?: Event[];
 }
 
 export interface CreateEventRequest {
