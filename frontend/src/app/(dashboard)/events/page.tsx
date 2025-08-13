@@ -16,9 +16,8 @@ import {
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { Event, EventFilters } from "@/interfaces/events";
 import { EventsService } from "@/services/events";
-import { EntitiesService } from "@/services/entities";
-import EventModal from "@/components/events/EventModal";
 import { useAuth } from "@/contexts/AuthContext";
+import EventModal from "@/components/events/EventModal";
 
 export default function EventsPage() {
   const { user } = useAuth();
@@ -79,11 +78,6 @@ export default function EventsPage() {
     }
   };
 
-  const handleCreateEvent = () => {
-    setEditingEvent(undefined);
-    setIsModalOpen(true);
-  };
-
   const handleEditEvent = (event: Event) => {
     setEditingEvent(event);
     setIsModalOpen(true);
@@ -92,8 +86,6 @@ export default function EventsPage() {
   const handleEventSuccess = (event: Event) => {
     if (editingEvent) {
       setEvents(prev => prev.map(e => e.id === event.id ? event : e));
-    } else {
-      setEvents(prev => [event, ...prev]);
     }
     setIsModalOpen(false);
     setEditingEvent(undefined);
@@ -134,7 +126,8 @@ export default function EventsPage() {
     }
   };
 
-  const formatEventDate = (dateString: string) => {
+  const formatEventDate = (dateString: string | undefined) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
@@ -143,7 +136,8 @@ export default function EventsPage() {
     });
   };
 
-  const formatEventTime = (dateString: string) => {
+  const formatEventTime = (dateString: string | undefined) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -333,12 +327,12 @@ export default function EventsPage() {
       const matchesType = !filters.type || filters.type === 'all' || event.type === filters.type;
       
       let matchesDate = true;
-      if (filters.date_from) {
+      if (filters.date_from && event.start_date) {
         const eventDate = new Date(event.start_date);
         const fromDate = new Date(filters.date_from);
         matchesDate = eventDate >= fromDate;
       }
-      if (filters.date_to) {
+      if (filters.date_to && event.start_date) {
         const eventDate = new Date(event.start_date);
         const toDate = new Date(filters.date_to);
         matchesDate = matchesDate && eventDate <= toDate;
@@ -384,6 +378,7 @@ export default function EventsPage() {
       const aValue = a[sortConfig.key as keyof Event];
       const bValue = b[sortConfig.key as keyof Event];
       
+      if (aValue === undefined || bValue === undefined) return 0;
       if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
@@ -451,7 +446,7 @@ export default function EventsPage() {
         </div>
         <div className="flex items-center text-sm">
           <i className="fas fa-map-marker-alt text-gray-400 mr-2"></i>
-          <span className="text-gray-600">{event.location}</span>
+          <span className="text-gray-600">{event.location || 'No location'}</span>
         </div>
         <div className="flex items-center text-sm">
           <i className="fas fa-tag text-gray-400 mr-2"></i>
@@ -504,12 +499,7 @@ export default function EventsPage() {
     <DashboardLayout>
       <PageHeader
         title="Events"
-        description="Manage church events and activities. Create drafts and publish when ready."
-        actionButton={{
-          text: "Create Event",
-          icon: "fas fa-calendar-plus",
-          onClick: handleCreateEvent
-        }}
+        description="View and manage church events and activities. Events are created through event categories."
       />
 
       {/* Status Summary */}
@@ -517,7 +507,7 @@ export default function EventsPage() {
         <div className="flex items-center text-blue-800 dark:text-blue-200">
           <i className="fas fa-info-circle mr-2"></i>
           <span className="text-sm">
-            <strong>Tip:</strong> Create events as drafts first, then publish them when ready. Use the globe icon to publish draft events.
+            <strong>Tip:</strong> Events are now managed through event categories. Use the event categories page to create and configure recurring events.
           </span>
         </div>
       </div>
@@ -649,7 +639,7 @@ export default function EventsPage() {
           }}
           onFiltersChange={handleFiltersChange}
           loading={isLoading}
-          emptyMessage="No events found. Create your first event to get started."
+          emptyMessage="No events found. Events are created through event categories."
           className="mb-6"
         />
       )}
@@ -682,7 +672,7 @@ export default function EventsPage() {
             {/* Calendar days */}
             {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
               const dayEvents = filteredEvents.filter(
-                (event) => new Date(event.start_date).getDate() === day
+                (event) => event.start_date && new Date(event.start_date).getDate() === day
               );
               
               return (

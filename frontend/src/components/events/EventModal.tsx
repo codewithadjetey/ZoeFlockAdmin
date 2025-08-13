@@ -7,7 +7,8 @@ import {
   SelectInput, 
   ToggleSwitch, 
   Button,
-  FormField 
+  FormField, 
+  TextArea
 } from '@/components/ui';
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/interfaces/events';
 import { EventsService } from '@/services/events';
@@ -360,7 +361,7 @@ export default function EventModal({
           </div>
 
           <FormField label="Description" error={errors.description}>
-            <Textarea
+            <TextArea
               value={formData.description || ''}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Event description"
