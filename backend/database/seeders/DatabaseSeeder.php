@@ -13,12 +13,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // First, seed roles and permissions
         $this->call([
-            RolePermissionSeeder::class,
             AdminSeeder::class,
-            MemberTableSeeder::class, // Add members after users exist
-            GroupSeeder::class, // Add groups after users and members exist
+            RolePermissionSeeder::class,
+            UserSeeder::class,
+            GroupSeeder::class,
+            FamilySeeder::class,
+            MemberSeeder::class,
+            EventCategorySeeder::class,
+            EventSeeder::class,
+            AttendanceSeeder::class,
         ]);
 
         // Create additional test users if needed
