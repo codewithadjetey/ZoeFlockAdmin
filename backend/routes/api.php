@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\EventController;
 use App\Http\Controllers\Api\V1\EntityController;
 use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\GeneralAttendanceController;
+use App\Http\Controllers\Api\V1\EventCategoryController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -178,6 +179,21 @@ Route::prefix($apiVersion)->group(function () {
         Route::post('/bulk-update', [AttendanceController::class, 'bulkUpdateAttendance']);
         Route::post('/ensure-records', [AttendanceController::class, 'ensureAttendanceRecords']);
     });
+    });
+
+    // Event Categories management routes
+    Route::prefix('event-categories')->group(function () {
+        Route::get('/', [EventCategoryController::class, 'index']);
+        Route::post('/', [EventCategoryController::class, 'store']);
+        Route::get('/{category}', [EventCategoryController::class, 'show']);
+        Route::put('/{category}', [EventCategoryController::class, 'update']);
+        Route::delete('/{category}', [EventCategoryController::class, 'destroy']);
+        
+        // Category-specific operations
+        Route::get('/{category}/events', [EventCategoryController::class, 'getCategoryEvents']);
+        Route::post('/{category}/generate-events', [EventCategoryController::class, 'generateEvents']);
+        Route::post('/{category}/toggle-status', [EventCategoryController::class, 'toggleStatus']);
+        Route::get('/{category}/statistics', [EventCategoryController::class, 'getStatistics']);
     });
 
     // General attendance routes
