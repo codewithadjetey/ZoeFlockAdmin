@@ -272,6 +272,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     register,
     updateProfile,
+    hasRole: (role: string) => state.user?.roles?.some(r => r.name === role) ?? false,
+    isFamilyHead: () => state.user?.roles?.some(r => r.name === 'family-head') ?? false,
   };
 
   return (

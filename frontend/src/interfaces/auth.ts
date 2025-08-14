@@ -65,4 +65,6 @@ export interface AuthContextType extends AuthState {
   logout: () => void;
   register: (userData: RegisterData) => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  hasRole: (role: string) => boolean;
+  isFamilyHead: () => boolean;
 } 
