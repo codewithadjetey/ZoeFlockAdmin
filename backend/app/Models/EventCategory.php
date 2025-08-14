@@ -241,63 +241,11 @@ class EventCategory extends Model
             return [];
         }
 
-        $events = [];
+        // Use the RecurringEventService for proper date calculations
+        $recurringService = app(\App\Services\RecurringEventService::class);
+        $events = $recurringService->generateEventsFromCategory($this, $count);
         
-        // Use recurrence_start_date if available, otherwise use fromDate or now
-        $currentDate = $this->recurrence_start_date ? 
-            Carbon::parse($this->recurrence_start_date) : 
-            ($fromDate ?? now());
-            
-        $generatedCount = 0;
-        $endDate = $this->recurrence_end_date ? Carbon::parse($this->recurrence_end_date) : null;
-
-        while ($generatedCount < $count) {
-            // Check if we've exceeded the end date
-            if ($endDate && $currentDate->gt($endDate)) {
-                break;
-            }
-
-            // Create event start date by combining the current date with default start time
-            $eventStartDate = $currentDate->copy();
-            if ($this->default_start_time) {
-                $eventStartDate->setTimeFrom($this->default_start_time);
-            } else {
-                $eventStartDate->setTime(9, 0, 0); // Default to 9:00 AM
-            }
-
-            // Create event end date by adding duration to start date
-            $eventEndDate = $eventStartDate->copy();
-            if ($this->default_duration) {
-                $eventEndDate->addMinutes($this->default_duration);
-            } else {
-                $eventEndDate->addHour(); // Default to 1 hour duration
-            }
-
-            $eventData = [
-                'title' => $this->name,
-                'description' => $this->default_description,
-                'start_date' => $eventStartDate,
-                'end_date' => $eventEndDate,
-                'location' => $this->default_location,
-                'type' => 'general',
-                'category_id' => $this->id,
-                'status' => 'draft',
-                'is_recurring' => false, // Individual events are not recurring
-                'created_by' => $this->created_by,
-            ];
-
-            $events[] = $eventData;
-
-            // Calculate next occurrence
-            $currentDate = $this->getNextOccurrenceDate($currentDate);
-            if (!$currentDate) {
-                break;
-            }
-
-            $generatedCount++;
-        }
-
-        return $events;
+        return $events->toArray();
     }
 
     /**

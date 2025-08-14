@@ -39,7 +39,7 @@ class GenerateRecurringEvents extends Command
         try {
             $categoryId = $this->option('category');
             $count = (int) $this->option('count');
-            $fromDate = $this->option('from-date') ? Carbon::parse($this->option('from-date')) : now();
+            $fromDate = $this->option('from-date') ? Carbon::parse($this->option('from-date')) : null;
             $autoPublish = $this->option('auto-publish');
 
             // Get categories to process
@@ -76,15 +76,13 @@ class GenerateRecurringEvents extends Command
                         ->orderBy('start_date', 'desc')
                         ->first();
 
-                    $startDate = $fromDate;
-                    if ($lastEvent && $lastEvent->start_date > $fromDate) {
-                        $startDate = $lastEvent->start_date;
-                    }
+                    // Use the RecurringEventService for proper date calculations
+                    $recurringService = app(\App\Services\RecurringEventService::class);
+                    
+                    // Generate events using the service
+                    $eventsData = $recurringService->generateEventsFromCategory($category, $count);
 
-                    // Generate events
-                    $eventsData = $category->generateEvents($startDate, $count);
-
-                    if (empty($eventsData)) {
+                    if ($eventsData->isEmpty()) {
                         $this->warn("  No events could be generated for category: {$category->name}");
                         continue;
                     }
