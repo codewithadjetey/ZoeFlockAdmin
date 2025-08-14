@@ -121,8 +121,7 @@ export default function AttendancePage() {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastApiCall, setLastApiCall] = useState<Date>(new Date());
-  const [apiCallCount, setApiCallCount] = useState(0);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
   // Memoized functions for better performance
   const loadEvents = useCallback(async () => {
@@ -132,20 +131,10 @@ export default function AttendancePage() {
       return;
     }
 
-    // Prevent API calls if we've made too many recently
-    const now = new Date();
-    const timeSinceLastCall = now.getTime() - lastApiCall.getTime();
-    if (timeSinceLastCall < 5000 && apiCallCount > 10) { // 5 seconds, max 10 calls
-      console.log('Too many API calls recently, skipping...');
-      return;
-    }
-
     try {
       setIsRefreshing(true);
       setLoading(true);
       setError(null);
-      setLastApiCall(now);
-      setApiCallCount(prev => prev + 1);
       
       const response = await EventsService.getEvents({
         status: 'published',
@@ -163,8 +152,35 @@ export default function AttendancePage() {
           }
         }));
         
+        // Set events first, then load attendance statistics
         setEvents(eventsWithStats);
-        await loadAttendanceStatistics(eventsWithStats);
+        
+        // Load attendance statistics without setting events again
+        const eventsWithAttendanceStats = await Promise.all(
+          eventsWithStats.map(async (event) => {
+            try {
+              const attendanceResponse = await AttendanceService.getEventAttendance(event.id);
+              if (attendanceResponse.success) {
+                const stats = attendanceResponse.data.statistics;
+                return {
+                  ...event,
+                  attendance_stats: {
+                    present: stats.individual_attendance.present,
+                    absent: stats.individual_attendance.absent,
+                    total: stats.individual_attendance.total_individual
+                  },
+                  general_attendance: stats.general_attendance
+                };
+              }
+            } catch (error) {
+              console.error(`Failed to load attendance for event ${event.id}:`, error);
+            }
+            return event;
+          })
+        );
+        
+        // Update events with attendance data
+        setEvents(eventsWithAttendanceStats);
       } else {
         setError('Failed to load events');
         setEvents([]);
@@ -177,38 +193,9 @@ export default function AttendancePage() {
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [isRefreshing, lastApiCall, apiCallCount]);
-
-  const loadAttendanceStatistics = useCallback(async (eventsList: EventWithAttendance[]) => {
-    try {
-      const eventsWithStats = await Promise.all(
-        eventsList.map(async (event) => {
-          try {
-            const attendanceResponse = await AttendanceService.getEventAttendance(event.id);
-            if (attendanceResponse.success) {
-              const stats = attendanceResponse.data.statistics;
-              return {
-                ...event,
-                attendance_stats: {
-                  present: stats.individual_attendance.present,
-                  absent: stats.individual_attendance.absent,
-                  total: stats.individual_attendance.total_individual
-                },
-                general_attendance: stats.general_attendance
-              };
-            }
-          } catch (error) {
-            console.error(`Failed to load attendance for event ${event.id}:`, error);
-          }
-          return event;
-        })
-      );
-      
-      setEvents(eventsWithStats);
-    } catch (error) {
-      console.error('Failed to load attendance statistics:', error);
-    }
   }, []);
+
+
 
   const loadEventAttendance = useCallback(async (eventId: number) => {
     try {
@@ -240,8 +227,7 @@ export default function AttendancePage() {
       console.log('Already refreshing, please wait...');
       return;
     }
-    // Reset API call counter on manual refresh
-    setApiCallCount(0);
+    // Reset refresh timestamp on manual refresh
     setLastRefresh(new Date());
     await loadEvents();
   }, [loadEvents, isRefreshing]);
@@ -510,45 +496,25 @@ export default function AttendancePage() {
 
   // Auto-refresh functionality - only refresh when needed
   useEffect(() => {
-    // Completely disable auto-refresh if too many API calls
-    if (apiCallCount > 25) {
-      console.log('Too many API calls, disabling auto-refresh');
-      if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-        setAutoRefreshInterval(null);
-      }
-      return;
+    // Clear any existing interval first
+    if (autoRefreshInterval) {
+      clearInterval(autoRefreshInterval);
+      setAutoRefreshInterval(null);
     }
 
-    // Only set up auto-refresh if we have events and no modals are open
-    if (events.length > 0 && !showEventModal && !showGeneralAttendanceModal && !isRefreshing) {
+    // Only set up auto-refresh if we have events, no modals are open, and initial load is complete
+    if (hasInitialLoad && events.length > 0 && !showEventModal && !showGeneralAttendanceModal && !isRefreshing) {
       console.log('Setting up auto-refresh interval...');
       const interval = setInterval(() => {
         console.log('Auto-refresh triggered at:', new Date().toLocaleTimeString());
-        // Use a stable reference to prevent dependency issues
-        if (!isRefreshing && apiCallCount < 20) { // Additional safety check
+        if (!isRefreshing) {
           loadEvents();
-        } else {
-          console.log('Skipping auto-refresh due to conditions');
         }
-      }, 120000); // Refresh every 2 minutes instead of 1 minute
+      }, 120000); // Refresh every 2 minutes
       
       setAutoRefreshInterval(interval);
-      
-      return () => {
-        console.log('Clearing auto-refresh interval...');
-        clearInterval(interval);
-      };
     }
-    
-    return () => {
-      if (autoRefreshInterval) {
-        console.log('Cleaning up auto-refresh interval...');
-        clearInterval(autoRefreshInterval);
-        setAutoRefreshInterval(null);
-      }
-    };
-  }, [events.length, showEventModal, showGeneralAttendanceModal, isRefreshing, apiCallCount, autoRefreshInterval]);
+  }, [events.length, showEventModal, showGeneralAttendanceModal, isRefreshing, hasInitialLoad]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -557,22 +523,15 @@ export default function AttendancePage() {
         clearInterval(autoRefreshInterval);
       }
     };
-  }, [autoRefreshInterval]);
+  }, []);
 
   // Initial load - only run once
   useEffect(() => {
     loadEvents();
+    setHasInitialLoad(true);
   }, []); // Empty dependency array to run only once
 
-  // Reset API call counter every 5 minutes
-  useEffect(() => {
-    const resetInterval = setInterval(() => {
-      setApiCallCount(0);
-      console.log('API call counter reset');
-    }, 300000); // 5 minutes
-    
-    return () => clearInterval(resetInterval);
-  }, []);
+
 
 
 
@@ -624,7 +583,7 @@ export default function AttendancePage() {
                     Individual: {event.attendance_stats?.total || 0}
                   </div>
                   <div className="text-gray-600 dark:text-gray-400 font-medium">
-                    General: {event.general_attendance?.total_attendance || 0}
+                    General: {(event.general_attendance?.total_attendance || 0) + (event.general_attendance?.first_timers_count || 0)}
                   </div>
         </div>
       )
@@ -786,14 +745,14 @@ export default function AttendancePage() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">General Attendance</p>
                     <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {events.reduce((sum, event) => sum + (event.general_attendance?.total_attendance || 0), 0)}
+                      {events.reduce((sum, event) => sum + (event.general_attendance?.total_attendance || 0) + (event.general_attendance?.first_timers_count || 0), 0)}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Avg/Event</p>
                   <p className="text-sm font-medium text-indigo-600">
-                    {events.length > 0 ? Math.round(events.reduce((sum, event) => sum + (event.general_attendance?.total_attendance || 0), 0) / events.length) : 0}
+                    {events.length > 0 ? Math.round(events.reduce((sum, event) => sum + (event.general_attendance?.total_attendance || 0) + (event.general_attendance?.first_timers_count || 0), 0) / events.length) : 0}
                   </p>
                 </div>
               </div>
@@ -818,9 +777,7 @@ export default function AttendancePage() {
                       <i className="fas fa-spinner animate-spin text-xs"></i> Loading...
                     </span>
                   )}
-                  <span className="ml-2 text-gray-400">
-                    API calls: {apiCallCount}
-                  </span>
+
                 </div>
                 <Button 
                   onClick={handleRefresh} 
