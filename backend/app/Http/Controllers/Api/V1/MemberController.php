@@ -584,28 +584,59 @@ class MemberController extends Controller
     public function statistics(): JsonResponse
     {
         try {
-            $totalMembers = Member::count();
-            $activeMembers = Member::active()->count();
-            $inactiveMembers = Member::inactive()->count();
-            $newMembersThisMonth = Member::where('created_at', '>=', now()->startOfMonth())->count();
-            $newMembersThisYear = Member::where('created_at', '>=', now()->startOfYear())->count();
+            // Check if user is a Family Head and restrict to their family members
+            $user = Auth::user();
+            $query = Member::query();
+            
+            if ($user && $user->hasRole('family-head')) {
+                // Get the member record for the authenticated user
+                $member = Member::where('user_id', $user->id)->first();
+                if ($member && $member->family) {
+                    // Only count members from the same family
+                    $query->whereHas('families', function ($q) use ($member) {
+                        $q->where('family_id', $member->family->id)->where('is_active', true);
+                    });
+                } else {
+                    // If family head has no family, return empty statistics
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'No family found for Family Head',
+                        'data' => [
+                            'total_members' => 0,
+                            'active_members' => 0,
+                            'inactive_members' => 0,
+                            'new_members_this_month' => 0,
+                            'new_members_this_year' => 0,
+                            'gender_distribution' => [],
+                            'marital_status_distribution' => [],
+                            'age_groups' => [],
+                        ]
+                    ]);
+                }
+            }
+
+            $totalMembers = (clone $query)->count();
+            $activeMembers = (clone $query)->active()->count();
+            $inactiveMembers = (clone $query)->inactive()->count();
+            $newMembersThisMonth = (clone $query)->where('created_at', '>=', now()->startOfMonth())->count();
+            $newMembersThisYear = (clone $query)->where('created_at', '>=', now()->startOfYear())->count();
 
             // Gender distribution
-            $genderDistribution = Member::selectRaw('gender, COUNT(*) as count')
+            $genderDistribution = (clone $query)->selectRaw('gender, COUNT(*) as count')
                 ->whereNotNull('gender')
                 ->groupBy('gender')
                 ->pluck('count', 'gender')
                 ->toArray();
 
             // Marital status distribution
-            $maritalStatusDistribution = Member::selectRaw('marital_status, COUNT(*) as count')
+            $maritalStatusDistribution = (clone $query)->selectRaw('marital_status, COUNT(*) as count')
                 ->whereNotNull('marital_status')
                 ->groupBy('marital_status')
                 ->pluck('count', 'marital_status')
                 ->toArray();
 
             // Age groups
-            $ageGroups = Member::selectRaw('
+            $ageGroups = (clone $query)->selectRaw('
                 CASE 
                     WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN "Under 18"
                     WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 25 THEN "18-25"
