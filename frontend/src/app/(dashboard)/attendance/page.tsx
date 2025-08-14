@@ -114,7 +114,6 @@ export default function AttendancePage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showGeneralAttendanceModal, setShowGeneralAttendanceModal] = useState(false);
-  const [showIndividualAttendanceModal, setShowIndividualAttendanceModal] = useState(false);
   const [showBulkAttendanceModal, setShowBulkAttendanceModal] = useState(false);
   const [loadingGeneralAttendance, setLoadingGeneralAttendance] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -413,7 +412,7 @@ export default function AttendancePage() {
   const handleIndividualAttendance = useCallback(async (event: Event) => {
     setSelectedEvent(event);
     setError(null);
-    setShowIndividualAttendanceModal(true);
+    setShowEventModal(true);
     setLoadingAttendance(true);
     
     try {
