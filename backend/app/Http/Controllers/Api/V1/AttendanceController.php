@@ -9,6 +9,7 @@ use App\Services\AttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth; // Added this import for Auth::user()
 
 class AttendanceController extends Controller
 {
@@ -155,7 +156,29 @@ class AttendanceController extends Controller
     {
         try {
             $event = Event::findOrFail($eventId);
-            $eligibleMembers = $this->attendanceService->getEligibleMembersForEvent($event);
+            
+            // Check if user is a Family Head and restrict to their family members
+            $user = Auth::user();
+            if ($user && $user->hasRole('family-head')) {
+                // Get the member record for the authenticated user
+                $member = \App\Models\Member::where('user_id', $user->id)->first();
+                if ($member && $member->family) {
+                    // Only show members from the same family
+                    $eligibleMembers = $this->attendanceService->getEligibleMembersForEvent($event, $member->family->id);
+                } else {
+                    // If family head has no family, return empty result
+                    return response()->json([
+                        'success' => true,
+                        'data' => [
+                            'event' => $event,
+                            'eligible_members' => collect([]),
+                            'total_count' => 0
+                        ]
+                    ]);
+                }
+            } else {
+                $eligibleMembers = $this->attendanceService->getEligibleMembersForEvent($event);
+            }
 
             return response()->json([
                 'success' => true,

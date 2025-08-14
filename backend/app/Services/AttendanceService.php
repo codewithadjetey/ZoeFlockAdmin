@@ -126,14 +126,21 @@ class AttendanceService
     }
 
     /**
-     * Get all members eligible to attend a specific event
+     * Get eligible members for an event
      */
-    public function getEligibleMembersForEvent(Event $event): \Illuminate\Database\Eloquent\Collection
+    public function getEligibleMembersForEvent(Event $event, ?int $familyId = null): \Illuminate\Database\Eloquent\Collection
     {
         $memberIds = collect();
 
         if ($event->type === 'general') {
             // For general events, all active members are eligible
+            if ($familyId) {
+                // If familyId is provided, only return members from that family
+                return Member::where('is_active', true)
+                    ->whereHas('families', function ($q) use ($familyId) {
+                        $q->where('family_id', $familyId)->where('is_active', true);
+                    })->get();
+            }
             return Member::where('is_active', true)->get();
         }
 
@@ -158,9 +165,17 @@ class AttendanceService
         }
 
         // Remove duplicates and return unique members
-        return Member::whereIn('id', $memberIds->unique())
-            ->where('is_active', true)
-            ->get();
+        $query = Member::whereIn('id', $memberIds->unique())
+            ->where('is_active', true);
+            
+        // If familyId is provided, filter by family
+        if ($familyId) {
+            $query->whereHas('families', function ($q) use ($familyId) {
+                $q->where('family_id', $familyId)->where('is_active', true);
+            });
+        }
+        
+        return $query->get();
     }
 
     /**
