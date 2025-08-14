@@ -22,6 +22,7 @@ class Event extends Model
         'end_date',
         'location',
         'type',
+        'category_id',
         'status',
         'is_recurring',
         'recurrence_pattern',
@@ -58,6 +59,14 @@ class Event extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    /**
+     * Get the event category
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(EventCategory::class, 'category_id');
     }
 
     /**

@@ -29,6 +29,7 @@ class EventFactory extends Factory
             'end_date' => $this->faker->optional(0.7)->dateTimeBetween($startDate, (clone $startDate)->modify('+7 days')),
             'location' => $this->faker->optional(0.6)->city(),
             'type' => $this->faker->randomElement(['group', 'family', 'general']),
+            'category_id' => null, // Will be set by seeder if needed
             'status' => $this->faker->randomElement(['draft', 'published', 'cancelled', 'completed']),
             'is_recurring' => $this->faker->boolean(20),
             'recurrence_pattern' => function (array $attributes) {
