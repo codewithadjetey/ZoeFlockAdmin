@@ -28,10 +28,46 @@ class AttendanceController extends Controller
         try {
             $event = Event::findOrFail($eventId);
             
-            $attendances = Attendance::with(['member:id,first_name,last_name,email,profile_image_path'])
-                ->where('event_id', $eventId)
-                ->orderBy('created_at', 'desc')
-                ->get();
+            // Check if user is a Family Head and restrict to their family members
+            $user = Auth::user();
+            if ($user && $user->hasRole('family-head')) {
+                // Get the member record for the authenticated user
+                $member = \App\Models\Member::where('user_id', $user->id)->first();
+                if ($member && $member->family) {
+                    // Only show attendance records for members from the same family
+                    \Log::info('Family Head filtering attendance', [
+                        'user_id' => $user->id,
+                        'member_id' => $member->id,
+                        'family_id' => $member->family->id,
+                        'event_id' => $eventId
+                    ]);
+                    
+                    $attendances = Attendance::with(['member:id,first_name,last_name,email,profile_image_path'])
+                        ->where('event_id', $eventId)
+                        ->whereHas('member', function($query) use ($member) {
+                            $query->whereHas('families', function($familyQuery) use ($member) {
+                                $familyQuery->where('family_id', $member->family->id)->where('is_active', true);
+                            });
+                        })
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+                    
+                    \Log::info('Filtered attendances for Family Head', [
+                        'total_attendances' => $attendances->count(),
+                        'attendances' => $attendances->toArray()
+                    ]);
+                } else {
+                    // If family head has no family, return empty result
+                    \Log::warning('Family Head has no family', ['user_id' => $user->id]);
+                    $attendances = collect([]);
+                }
+            } else {
+                // For admins and other roles, show all attendance records
+                $attendances = Attendance::with(['member:id,first_name,last_name,email,profile_image_path'])
+                    ->where('event_id', $eventId)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+            }
 
             $stats = $this->attendanceService->getEventAttendanceStats($eventId);
 

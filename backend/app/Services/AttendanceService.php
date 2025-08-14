@@ -232,8 +232,38 @@ class AttendanceService
     public function updateGeneralAttendance(int $eventId, int $totalAttendance, int $firstTimersCount = 0, ?string $notes = null): array
     {
         try {
+            // Check if user is a Family Head and get their family
+            $user = Auth::user();
+            $familyId = null;
+            
+            if ($user && $user->hasRole('family-head')) {
+                // Get the member record for the authenticated user
+                $member = Member::where('user_id', $user->id)->first();
+                if ($member && $member->family) {
+                    $familyId = $member->family->id;
+                } else {
+                    return [
+                        'success' => false,
+                        'error' => 'Family Head must be associated with a family to record general attendance'
+                    ];
+                }
+            } else {
+                // For admin users, they need to specify which family
+                // This maintains backward compatibility for admin users
+                $familyId = request('family_id');
+                if (!$familyId) {
+                    return [
+                        'success' => false,
+                        'error' => 'Family ID is required for general attendance'
+                    ];
+                }
+            }
+
             $generalAttendance = GeneralAttendance::updateOrCreate(
-                ['event_id' => $eventId],
+                [
+                    'event_id' => $eventId,
+                    'family_id' => $familyId
+                ],
                 [
                     'total_attendance' => $totalAttendance,
                     'first_timers_count' => $firstTimersCount,
@@ -278,6 +308,11 @@ class AttendanceService
         
         // If Family Head, only show attendance for their family members
         if ($familyId) {
+            \Log::info('Filtering attendance stats for Family Head', [
+                'family_id' => $familyId,
+                'event_id' => $eventId
+            ]);
+            
             $individualStats->whereHas('member', function ($q) use ($familyId) {
                 $q->whereHas('families', function ($familyQuery) use ($familyId) {
                     $familyQuery->where('family_id', $familyId)->where('is_active', true);
@@ -289,8 +324,20 @@ class AttendanceService
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
+            
+        \Log::info('Individual attendance stats', [
+            'family_id' => $familyId,
+            'event_id' => $eventId,
+            'stats' => $individualStats
+        ]);
 
-        $generalAttendance = GeneralAttendance::where('event_id', $eventId)->first();
+        // Get general attendance for the specific family (if Family Head) or all families (if admin)
+        $generalAttendanceQuery = GeneralAttendance::where('event_id', $eventId);
+        if ($familyId) {
+            // Family Head sees only their family's general attendance
+            $generalAttendanceQuery->where('family_id', $familyId);
+        }
+        $generalAttendance = $generalAttendanceQuery->first();
 
         return [
             'event' => $event,
@@ -302,7 +349,8 @@ class AttendanceService
             ],
             'general_attendance' => $generalAttendance ? [
                 'total_attendance' => $generalAttendance->total_attendance,
-                'first_timers_count' => $generalAttendance->first_timers_count
+                'first_timers_count' => $generalAttendance->first_timers_count,
+                'family_id' => $generalAttendance->family_id
             ] : null,
             'eligible_members_count' => $this->getEligibleMembersForEvent($event, $familyId)->count()
         ];
