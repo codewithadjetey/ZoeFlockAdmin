@@ -152,6 +152,26 @@ class MemberController extends Controller
     {
         $query = Member::where('deleted', 0);
 
+        // Check if user is a Family Head and restrict to their family members
+        $user = Auth::user();
+        if ($user && $user->hasRole('family-head')) {
+            // Get the member record for the authenticated user
+            $member = Member::where('user_id', $user->id)->first();
+            if ($member && $member->family) {
+                // Only show members from the same family
+                $query->whereHas('families', function ($q) use ($member) {
+                    $q->where('family_id', $member->family->id)->where('is_active', true);
+                });
+            } else {
+                // If family head has no family, return empty result
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No family members found',
+                    'members' => []
+                ]);
+            }
+        }
+
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
@@ -287,6 +307,22 @@ class MemberController extends Controller
                 'message' => 'Validation failed',
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        // Check if user is a Family Head and ensure they can only create members for their family
+        $user = Auth::user();
+        if ($user && $user->hasRole('family-head')) {
+            // Get the member record for the authenticated user
+            $member = Member::where('user_id', $user->id)->first();
+            if (!$member || !$member->family) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Family Head must be associated with a family to create members'
+                ], 403);
+            }
+            
+            // Add family_id to the request data to ensure the new member is added to the same family
+            $request->merge(['family_id' => $member->family->id]);
         }
 
         // Create member using service (this will also create user account via observer)

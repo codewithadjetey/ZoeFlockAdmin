@@ -77,6 +77,18 @@ class MemberService
                 'updated_by' => Auth::id(),
             ]);
 
+            // Add member to family if family_id is provided
+            if (!empty($data['family_id'])) {
+                $family = \App\Models\Family::find($data['family_id']);
+                if ($family) {
+                    $family->members()->attach($member->id, [
+                        'role' => 'member',
+                        'joined_at' => now(),
+                        'is_active' => true,
+                    ]);
+                }
+            }
+
             // The observer will automatically create a user account
             // Reload the member to get the user_id
             $member->refresh();
@@ -87,7 +99,7 @@ class MemberService
                 'success' => true,
                 'message' => 'Member created successfully',
                 'data' => [
-                    'member' => $member->load(['creator', 'user']),
+                    'member' => $member->load(['creator', 'user', 'families']),
                     'user_account_created' => $member->hasUserAccount()
                 ]
             ];
