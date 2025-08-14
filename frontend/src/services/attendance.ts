@@ -186,7 +186,7 @@ export class AttendanceService {
    * Get available attendance statuses
    */
   static getAttendanceStatuses(): string[] {
-    return ['present', 'absent', 'first_timer'];
+    return ['present', 'absent'];
   }
 
   /**
@@ -198,8 +198,6 @@ export class AttendanceService {
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
       case 'absent':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      case 'first_timer':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
@@ -221,8 +219,6 @@ export class AttendanceService {
         return 'Present';
       case 'absent':
         return 'Absent';
-      case 'first_timer':
-        return 'First Timer';
       default:
         return 'Unknown';
     }
@@ -234,13 +230,11 @@ export class AttendanceService {
   static calculateAttendanceStats(attendances: Attendance[]): {
     present: number;
     absent: number;
-    first_timers: number;
     total: number;
   } {
     const stats = {
       present: 0,
       absent: 0,
-      first_timers: 0,
       total: 0
     };
 
@@ -252,13 +246,10 @@ export class AttendanceService {
         case 'absent':
           stats.absent++;
           break;
-        case 'first_timer':
-          stats.first_timers++;
-          break;
       }
     });
 
-    stats.total = stats.present + stats.first_timers;
+    stats.total = stats.present;
     return stats;
   }
 

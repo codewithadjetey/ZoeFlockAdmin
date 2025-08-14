@@ -66,6 +66,11 @@ class EventController extends Controller
             $query->where('start_date', '<=', $request->date_to);
         }
 
+        // Filter for attendance events - only show events from today or in the past
+        if ($request->boolean('for_attendance')) {
+            $query->attendanceEvents();
+        }
+
         // Add filter to show all events (including those without dates)
         if ($request->has('show_all') && $request->boolean('show_all')) {
             // Don't apply any date restrictions

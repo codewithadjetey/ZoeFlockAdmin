@@ -2,7 +2,7 @@ export interface Attendance {
   id?: number;
   event_id: number;
   member_id: number;
-  status: 'present' | 'absent' | 'first_timer';
+  status: 'present' | 'absent';
   check_in_time?: string;
   check_out_time?: string;
   notes?: string;
@@ -36,7 +36,6 @@ export interface AttendanceStats {
   individual_attendance: {
     present: number;
     absent: number;
-    first_timers: number;
     total_individual: number;
   };
   general_attendance?: {
@@ -53,7 +52,6 @@ export interface AttendanceAnalytics {
   individual_stats: {
     present: number;
     absent: number;
-    first_timers: number;
     total_individual: number;
   };
   general_stats?: {
@@ -80,7 +78,7 @@ export interface AttendanceSummary {
 
 export interface BulkAttendanceUpdate {
   member_id: number;
-  status: 'present' | 'absent' | 'first_timer';
+  status: 'present' | 'absent';
   notes?: string;
 }
 

@@ -206,6 +206,18 @@ class Event extends Model
     }
 
     /**
+     * Scope for events that can have attendance entered
+     * Only shows events from today or in the past
+     */
+    public function scopeAttendanceEvents($query)
+    {
+        return $query->whereNotNull('start_date')
+                    ->where('start_date', '<=', now()->endOfDay())
+                    ->where('status', '!=', 'cancelled')
+                    ->where('deleted', false);
+    }
+
+    /**
      * Check if the event is cancelled
      */
     public function getIsCancelledAttribute(): bool
