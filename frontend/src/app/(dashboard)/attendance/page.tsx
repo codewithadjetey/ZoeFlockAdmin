@@ -6,6 +6,7 @@ import { Card, PageHeader, DataTable, Button, FormField, SelectInput, TextInput 
 import { LoadingSpinner } from '@/components/shared';
 import { AttendanceService } from '@/services/attendance';
 import { EventsService } from '@/services/events';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Event, Attendance, AttendanceStats, Member, BulkAttendanceUpdate } from '@/interfaces';
 
 interface EventWithAttendance extends Event {
@@ -91,6 +92,7 @@ const SimpleModal: React.FC<{
 };
 
 export default function AttendancePage() {
+  const { isFamilyHead } = useAuth();
   const [events, setEvents] = useState<EventWithAttendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);

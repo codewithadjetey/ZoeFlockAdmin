@@ -10,6 +10,7 @@ use App\Models\Group;
 use App\Models\Family;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class AttendanceService
 {
@@ -126,14 +127,21 @@ class AttendanceService
     }
 
     /**
-     * Get all members eligible to attend a specific event
+     * Get eligible members for an event
      */
-    public function getEligibleMembersForEvent(Event $event): \Illuminate\Database\Eloquent\Collection
+    public function getEligibleMembersForEvent(Event $event, ?int $familyId = null): \Illuminate\Database\Eloquent\Collection
     {
         $memberIds = collect();
 
         if ($event->type === 'general') {
             // For general events, all active members are eligible
+            if ($familyId) {
+                // If familyId is provided, only return members from that family
+                return Member::where('is_active', true)
+                    ->whereHas('families', function ($q) use ($familyId) {
+                        $q->where('family_id', $familyId)->where('is_active', true);
+                    })->get();
+            }
             return Member::where('is_active', true)->get();
         }
 
@@ -158,9 +166,17 @@ class AttendanceService
         }
 
         // Remove duplicates and return unique members
-        return Member::whereIn('id', $memberIds->unique())
-            ->where('is_active', true)
-            ->get();
+        $query = Member::whereIn('id', $memberIds->unique())
+            ->where('is_active', true);
+            
+        // If familyId is provided, filter by family
+        if ($familyId) {
+            $query->whereHas('families', function ($q) use ($familyId) {
+                $q->where('family_id', $familyId)->where('is_active', true);
+            });
+        }
+        
+        return $query->get();
     }
 
     /**
@@ -240,14 +256,36 @@ class AttendanceService
     }
 
     /**
-     * Get attendance statistics for an event
+     * Get event attendance statistics
      */
     public function getEventAttendanceStats(int $eventId): array
     {
         $event = Event::findOrFail($eventId);
         
-        $individualStats = Attendance::where('event_id', $eventId)
-            ->selectRaw('status, COUNT(*) as count')
+        // Check if user is a Family Head and restrict to their family members
+        $user = Auth::user();
+        $familyId = null;
+        
+        if ($user && $user->hasRole('family-head')) {
+            // Get the member record for the authenticated user
+            $member = Member::where('user_id', $user->id)->first();
+            if ($member && $member->family) {
+                $familyId = $member->family->id;
+            }
+        }
+        
+        $individualStats = Attendance::where('event_id', $eventId);
+        
+        // If Family Head, only show attendance for their family members
+        if ($familyId) {
+            $individualStats->whereHas('member', function ($q) use ($familyId) {
+                $q->whereHas('families', function ($familyQuery) use ($familyId) {
+                    $familyQuery->where('family_id', $familyId)->where('is_active', true);
+                });
+            });
+        }
+        
+        $individualStats = $individualStats->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
@@ -266,7 +304,7 @@ class AttendanceService
                 'total_attendance' => $generalAttendance->total_attendance,
                 'first_timers_count' => $generalAttendance->first_timers_count
             ] : null,
-            'eligible_members_count' => $this->getEligibleMembersForEvent($event)->count()
+            'eligible_members_count' => $this->getEligibleMembersForEvent($event, $familyId)->count()
         ];
     }
 
@@ -278,10 +316,33 @@ class AttendanceService
         $startDate = $startDate ?? Carbon::now()->startOfMonth();
         $endDate = $endDate ?? Carbon::now()->endOfMonth();
 
-        $events = Event::whereBetween('start_date', [$startDate, $endDate])
+        // Check if user is a Family Head and restrict to their family events
+        $user = Auth::user();
+        $familyId = null;
+        
+        if ($user && $user->hasRole('family-head')) {
+            // Get the member record for the authenticated user
+            $member = Member::where('user_id', $user->id)->first();
+            if ($member && $member->family) {
+                $familyId = $member->family->id;
+            }
+        }
+
+        $eventsQuery = Event::whereBetween('start_date', [$startDate, $endDate])
             ->where('status', '!=', 'cancelled')
-            ->where('deleted', false)
-            ->get();
+            ->where('deleted', false);
+
+        // If Family Head, only show events where their family is eligible
+        if ($familyId !== null) {
+            $eventsQuery->where(function ($q) use ($familyId) {
+                $q->where('type', 'general') // General events are always eligible
+                  ->orWhereHas('families', function ($familyQuery) use ($familyId) {
+                      $familyQuery->where('family_id', $familyId);
+                  });
+            });
+        }
+
+        $events = $eventsQuery->get();
 
         $analytics = [];
         foreach ($events as $event) {

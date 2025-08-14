@@ -17,8 +17,10 @@ import { formatDate } from "@/utils/helpers";
 import { toast } from "react-toastify";
 import { MemberModal } from "@/components/members/MemberModal";
 import type { Column, Filter, SortConfig } from "@/components/ui/DataTable";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function MembersPage() {
+  const { isFamilyHead } = useAuth();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
@@ -342,10 +344,10 @@ export default function MembersPage() {
   return (
     <DashboardLayout>
       <PageHeader
-        title="Member Directory"
-        description="Manage and view all church members"
+        title={isFamilyHead() ? "Family Members" : "Member Directory"}
+        description={isFamilyHead() ? "Manage and view members in your family" : "Manage and view all church members"}
         actionButton={{
-          text: "Add New Member",
+          text: isFamilyHead() ? "Add Family Member" : "Add New Member",
           icon: "fas fa-user-plus",
           onClick: openCreate
         }}

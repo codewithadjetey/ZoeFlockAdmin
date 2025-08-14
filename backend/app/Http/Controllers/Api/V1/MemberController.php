@@ -152,6 +152,26 @@ class MemberController extends Controller
     {
         $query = Member::where('deleted', 0);
 
+        // Check if user is a Family Head and restrict to their family members
+        $user = Auth::user();
+        if ($user && $user->hasRole('family-head')) {
+            // Get the member record for the authenticated user
+            $member = Member::where('user_id', $user->id)->first();
+            if ($member && $member->family) {
+                // Only show members from the same family
+                $query->whereHas('families', function ($q) use ($member) {
+                    $q->where('family_id', $member->family->id)->where('is_active', true);
+                });
+            } else {
+                // If family head has no family, return empty result
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No family members found',
+                    'members' => []
+                ]);
+            }
+        }
+
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
@@ -287,6 +307,22 @@ class MemberController extends Controller
                 'message' => 'Validation failed',
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        // Check if user is a Family Head and ensure they can only create members for their family
+        $user = Auth::user();
+        if ($user && $user->hasRole('family-head')) {
+            // Get the member record for the authenticated user
+            $member = Member::where('user_id', $user->id)->first();
+            if (!$member || !$member->family) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Family Head must be associated with a family to create members'
+                ], 403);
+            }
+            
+            // Add family_id to the request data to ensure the new member is added to the same family
+            $request->merge(['family_id' => $member->family->id]);
         }
 
         // Create member using service (this will also create user account via observer)
@@ -548,28 +584,59 @@ class MemberController extends Controller
     public function statistics(): JsonResponse
     {
         try {
-            $totalMembers = Member::count();
-            $activeMembers = Member::active()->count();
-            $inactiveMembers = Member::inactive()->count();
-            $newMembersThisMonth = Member::where('created_at', '>=', now()->startOfMonth())->count();
-            $newMembersThisYear = Member::where('created_at', '>=', now()->startOfYear())->count();
+            // Check if user is a Family Head and restrict to their family members
+            $user = Auth::user();
+            $query = Member::query();
+            
+            if ($user && $user->hasRole('family-head')) {
+                // Get the member record for the authenticated user
+                $member = Member::where('user_id', $user->id)->first();
+                if ($member && $member->family) {
+                    // Only count members from the same family
+                    $query->whereHas('families', function ($q) use ($member) {
+                        $q->where('family_id', $member->family->id)->where('is_active', true);
+                    });
+                } else {
+                    // If family head has no family, return empty statistics
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'No family found for Family Head',
+                        'data' => [
+                            'total_members' => 0,
+                            'active_members' => 0,
+                            'inactive_members' => 0,
+                            'new_members_this_month' => 0,
+                            'new_members_this_year' => 0,
+                            'gender_distribution' => [],
+                            'marital_status_distribution' => [],
+                            'age_groups' => [],
+                        ]
+                    ]);
+                }
+            }
+
+            $totalMembers = (clone $query)->count();
+            $activeMembers = (clone $query)->active()->count();
+            $inactiveMembers = (clone $query)->inactive()->count();
+            $newMembersThisMonth = (clone $query)->where('created_at', '>=', now()->startOfMonth())->count();
+            $newMembersThisYear = (clone $query)->where('created_at', '>=', now()->startOfYear())->count();
 
             // Gender distribution
-            $genderDistribution = Member::selectRaw('gender, COUNT(*) as count')
+            $genderDistribution = (clone $query)->selectRaw('gender, COUNT(*) as count')
                 ->whereNotNull('gender')
                 ->groupBy('gender')
                 ->pluck('count', 'gender')
                 ->toArray();
 
             // Marital status distribution
-            $maritalStatusDistribution = Member::selectRaw('marital_status, COUNT(*) as count')
+            $maritalStatusDistribution = (clone $query)->selectRaw('marital_status, COUNT(*) as count')
                 ->whereNotNull('marital_status')
                 ->groupBy('marital_status')
                 ->pluck('count', 'marital_status')
                 ->toArray();
 
             // Age groups
-            $ageGroups = Member::selectRaw('
+            $ageGroups = (clone $query)->selectRaw('
                 CASE 
                     WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) < 18 THEN "Under 18"
                     WHEN TIMESTAMPDIFF(YEAR, date_of_birth, CURDATE()) BETWEEN 18 AND 25 THEN "18-25"
