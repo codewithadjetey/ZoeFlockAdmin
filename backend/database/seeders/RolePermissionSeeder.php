@@ -40,6 +40,12 @@ class RolePermissionSeeder extends Seeder
             'edit-events' => 'Edit Events',
             'delete-events' => 'Delete Events',
             
+            // Attendance Management
+            'view-attendance' => 'View Attendance',
+            'create-attendance' => 'Create Attendance',
+            'edit-attendance' => 'Edit Attendance',
+            'delete-attendance' => 'Delete Attendance',
+            
             // Donation Management
             'view-donations' => 'View Donations',
             'create-donations' => 'Create Donations',
@@ -98,6 +104,15 @@ class RolePermissionSeeder extends Seeder
                     'view-settings',
                 ],
             ],
+            'family-head' => [
+                'display_name' => 'Family Head',
+                'description' => 'Family head with ability to manage family members and take attendance',
+                'permissions' => [
+                    'view-members', 'create-members', 'edit-members',
+                    'view-events', 'view-attendance', 'create-attendance', 'edit-attendance',
+                    'view-groups',
+                ],
+            ],
             'member' => [
                 'display_name' => 'Member',
                 'description' => 'Regular church member',
@@ -116,6 +131,26 @@ class RolePermissionSeeder extends Seeder
             ]);
 
             $role->givePermissionTo($roleData['permissions']);
+        }
+
+        // Assign Family Head role to existing family heads
+        $this->assignFamilyHeadRoles();
+    }
+
+    /**
+     * Assign Family Head role to existing family heads
+     */
+    private function assignFamilyHeadRoles(): void
+    {
+        // Get all members who are family heads
+        $familyHeads = \App\Models\Member::whereHas('families', function ($q) {
+            $q->where('role', 'head')->where('is_active', true);
+        })->get();
+
+        foreach ($familyHeads as $familyHead) {
+            if ($familyHead->user) {
+                $familyHead->user->assignRole('family-head');
+            }
         }
     }
 }
