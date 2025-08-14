@@ -9,9 +9,15 @@ const navItems = [
   { label: "Members", icon: "fas fa-users", href: "/members" },
   { label: "Families", icon: "fas fa-house-user", href: "/families" },
   { label: "Groups", icon: "fas fa-layer-group", href: "/groups" },
-  { label: "Attendance", icon: "fas fa-clipboard-check", href: "/attendance" },
   // { label: "Donations", icon: "fas fa-donate", href: "/donations" },
   { label: "Communication", icon: "fas fa-envelope", href: "/communication" },
+];
+
+// Attendance menu items
+const attendanceMenuItems = [
+  { label: "Manage Attendance", icon: "fas fa-clipboard-check", href: "/attendance" },
+  { label: "Individual Statistics", icon: "fas fa-chart-line", href: "/attendance/statistics/individual" },
+  { label: "General Statistics", icon: "fas fa-chart-bar", href: "/attendance/statistics/general" },
 ];
 
 // Events menu items
@@ -47,6 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const [eventsMenuOpen, setEventsMenuOpen] = useState(false);
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const [attendanceMenuOpen, setAttendanceMenuOpen] = useState(false);
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -103,6 +110,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
   const toggleAdminMenu = () => {
     setAdminMenuOpen(!adminMenuOpen);
+  };
+
+  const toggleAttendanceMenu = () => {
+    setAttendanceMenuOpen(!attendanceMenuOpen);
   };
 
   // Get sidebar background based on theme and color mode
@@ -196,6 +207,50 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             {eventsMenuOpen && (
               <div className="ml-4 mt-2 space-y-2">
                 {eventsMenuItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
+                        isActive
+                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
+                      }`}
+                      onClick={handleNavClick}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                      <span className="relative z-10 text-sm">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Attendance Menu Section */}
+          <div className="pt-4 border-t border-white/10">
+            <button
+              onClick={toggleAttendanceMenu}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
+                pathname.startsWith('/attendance')
+                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <i className="fas fa-clipboard-check mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
+                <span className="relative z-10">Attendance</span>
+              </div>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${attendanceMenuOpen ? 'rotate-180' : ''}`}></i>
+            </button>
+
+            {/* Attendance Submenu */}
+            {attendanceMenuOpen && (
+              <div className="ml-4 mt-2 space-y-2">
+                {attendanceMenuItems.map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
