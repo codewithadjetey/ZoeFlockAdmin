@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\V1\EntityController;
 use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\GeneralAttendanceController;
 use App\Http\Controllers\Api\V1\EventCategoryController;
+use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\RoleController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -203,6 +205,30 @@ Route::prefix($apiVersion)->group(function () {
         Route::post('/event/{eventId}', [GeneralAttendanceController::class, 'updateGeneralAttendance']);
         Route::get('/analytics', [GeneralAttendanceController::class, 'getAttendanceAnalytics']);
         Route::get('/summary', [GeneralAttendanceController::class, 'getGeneralAttendanceSummary']);
+    });
+
+    // User Management routes
+    Route::prefix('users')->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::post('/', [UserController::class, 'store']);
+        Route::get('/statistics', [UserController::class, 'statistics']);
+        Route::get('/{user}', [UserController::class, 'show']);
+        Route::put('/{user}', [UserController::class, 'update']);
+        Route::delete('/{user}', [UserController::class, 'destroy']);
+        Route::put('/{user}/password', [UserController::class, 'changePassword']);
+        Route::put('/{user}/toggle-status', [UserController::class, 'toggleStatus']);
+    });
+
+    // Role Management routes
+    Route::prefix('roles')->group(function () {
+        Route::get('/', [RoleController::class, 'index']);
+        Route::post('/', [RoleController::class, 'store']);
+        Route::get('/statistics', [RoleController::class, 'statistics']);
+        Route::get('/permissions', [RoleController::class, 'permissions']);
+        Route::get('/{role}', [RoleController::class, 'show']);
+        Route::put('/{role}', [RoleController::class, 'update']);
+        Route::delete('/{role}', [RoleController::class, 'destroy']);
+        Route::post('/{role}/duplicate', [RoleController::class, 'duplicate']);
     });
 
     // Route::prefix('donations')->group(function () {
