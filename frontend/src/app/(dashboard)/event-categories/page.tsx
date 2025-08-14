@@ -22,6 +22,13 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { EventCategory } from "@/interfaces/events";
 import { EventCategoriesService, EventCategoryFilters } from "@/services/eventCategories";
 import { useAuth } from "@/contexts/AuthContext";
+import { 
+  formatTimeForInput, 
+  formatDateForInput, 
+  formatDateTimeLocalForInput,
+  formatDateTimeForBackend,
+  formatDateForBackend
+} from "@/utils/helpers";
 
 interface EventCategoryModalProps {
   isOpen: boolean;
@@ -47,8 +54,12 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
     is_active: true,
     is_recurring: false,
     recurrence_pattern: 'weekly' as 'daily' | 'weekly' | 'monthly' | 'yearly',
-    recurrence_settings: { interval: 1, weekdays: [1], day_of_month: 1 } as Record<string, any>,
+    recurrence_settings: { interval: 1, weekdays: [1], day_of_month: 1 } as { interval: number; weekdays: number[]; day_of_month: number },
     default_start_time: '',
+    start_date_time: '',
+    end_date_time: '',
+    recurrence_start_date: '',
+    recurrence_end_date: '',
     default_duration: 60,
     default_location: '',
     default_description: ''
@@ -67,7 +78,11 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
         is_recurring: category.is_recurring,
         recurrence_pattern: category.recurrence_pattern || 'weekly',
         recurrence_settings: category.recurrence_settings || { interval: 1, weekdays: [1], day_of_month: 1 },
-        default_start_time: category.default_start_time || '',
+        default_start_time: formatTimeForInput(category.default_start_time),
+        start_date_time: formatDateTimeLocalForInput(category.start_date_time),
+        end_date_time: formatDateTimeLocalForInput(category.end_date_time),
+        recurrence_start_date: formatDateForInput(category.recurrence_start_date),
+        recurrence_end_date: formatDateForInput(category.recurrence_end_date),
         default_duration: category.default_duration || 60,
         default_location: category.default_location || '',
         default_description: category.default_description || ''
@@ -84,6 +99,10 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
         recurrence_pattern: 'weekly',
         recurrence_settings: { interval: 1, weekdays: [1], day_of_month: 1 },
         default_start_time: '',
+        start_date_time: '',
+        end_date_time: '',
+        recurrence_start_date: '',
+        recurrence_end_date: '',
         default_duration: 60,
         default_location: '',
         default_description: ''
@@ -93,7 +112,36 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
   }, [category]);
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear non-required fields when switching event types
+    if (field === 'is_recurring') {
+      if (value === true) {
+        // Switching to recurring: clear one-time specific fields
+        setFormData(prev => ({
+          ...prev,
+          [field]: value,
+          start_date_time: '',
+          end_date_time: '',
+          recurrence_start_date: '',
+          recurrence_end_date: ''
+        }));
+      } else {
+        // Switching to one-time: clear recurring specific fields
+        setFormData(prev => ({
+          ...prev,
+          [field]: value,
+          default_start_time: '',
+          default_duration: 60,
+          recurrence_pattern: 'weekly',
+          recurrence_settings: { interval: 1, weekdays: [1], day_of_month: 1 },
+          recurrence_start_date: '',
+          recurrence_end_date: ''
+        }));
+      }
+    } else {
+      // Normal field update
+      setFormData(prev => ({ ...prev, [field]: value }));
+    }
+    
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -105,11 +153,44 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
     setErrors({});
 
     try {
+      // Convert datetime-local values to backend format
+      const submitData = { ...formData };
+      
+      if (!submitData.is_recurring) {
+        // For one-time events, convert datetime-local to Y-m-d H:i:s format
+        if (submitData.start_date_time) {
+          submitData.start_date_time = formatDateTimeForBackend(submitData.start_date_time);
+        }
+        
+        if (submitData.end_date_time) {
+          submitData.end_date_time = formatDateTimeForBackend(submitData.end_date_time);
+        }
+        
+        // Clear recurring fields for one-time events
+        submitData.recurrence_start_date = '';
+        submitData.recurrence_end_date = '';
+        submitData.default_start_time = '';
+        submitData.default_duration = 0;
+      } else {
+        // For recurring events, convert date to Y-m-d format
+        if (submitData.recurrence_start_date) {
+          submitData.recurrence_start_date = formatDateForBackend(submitData.recurrence_start_date);
+        }
+        
+        if (submitData.recurrence_end_date) {
+          submitData.recurrence_end_date = formatDateForBackend(submitData.recurrence_end_date);
+        }
+        
+        // Clear one-time fields for recurring events
+        submitData.start_date_time = '';
+        submitData.end_date_time = '';
+      }
+
       let response;
       if (category) {
-        response = await EventCategoriesService.updateEventCategory(category.id, formData);
+        response = await EventCategoriesService.updateEventCategory(category.id, submitData);
       } else {
-        response = await EventCategoriesService.createEventCategory(formData);
+        response = await EventCategoriesService.createEventCategory(submitData);
       }
       
       if (response.success) {
@@ -254,7 +335,7 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
             />
           </FormField>
 
-          <FormField label="Color">
+          <FormField label="Color" error={errors.color}>
             <ColorInput
               value={formData.color}
               onChange={(color) => handleInputChange('color', color)}
@@ -263,12 +344,12 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
         </div>
 
         <FormField label="Description" error={errors.description}>
-          <TextArea
-            value={formData.description}
-            onChange={(e) => handleInputChange('description', e.target.value)}
-            placeholder="Enter category description"
-            rows={3}
-          />
+                      <TextArea
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Enter category description"
+              rows={3}
+            />
         </FormField>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -332,27 +413,76 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
 
         <div className="border-t pt-6">
           <h3 className="text-lg font-medium mb-4">Default Event Settings</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField label="Default Start Time">
-              <TextInput
-                type="time"
-                value={formData.default_start_time}
-                onChange={(e) => handleInputChange('default_start_time', e.target.value + ':00')}
-              />
-            </FormField>
+          
+          {/* Time and Duration Settings - Only for recurring categories */}
+          {formData.is_recurring && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <FormField label="Default Start Time" error={errors.default_start_time}>
+                <TextInput
+                  type="time"
+                  value={formData.default_start_time}
+                  onChange={(e) => handleInputChange('default_start_time', e.target.value + ':00')}
+                />
+              </FormField>
 
-            <FormField label="Default Duration (minutes)">
-              <TextInput
-                type="number"
-                min="15"
-                value={String(formData.default_duration)}
-                onChange={(e) => handleInputChange('default_duration', parseInt(e.target.value))}
-                placeholder="60"
-              />
-            </FormField>
-          </div>
+              <FormField label="Default Duration (minutes)" error={errors.default_duration}>
+                <TextInput
+                  type="number"
+                  min="15"
+                  value={String(formData.default_duration)}
+                  onChange={(e) => handleInputChange('default_duration', parseInt(e.target.value))}
+                  placeholder="60"
+                />
+              </FormField>
+            </div>
+          )}
 
-          <FormField label="Default Location">
+          {/* Date Settings - Conditional based on event type */}
+          {!formData.is_recurring && (
+            <div className="space-y-4">
+              <FormField label="Start Date & Time (for one-time events)" error={errors.start_date_time}>
+                <TextInput
+                  type="datetime-local"
+                  value={formData.start_date_time}
+                  onChange={(e) => handleInputChange('start_date_time', e.target.value)}
+                  placeholder="YYYY-MM-DDTHH:MM"
+                />
+              </FormField>
+              
+              <FormField label="End Date & Time (for one-time events)" error={errors.end_date_time}>
+                <TextInput
+                  type="datetime-local"
+                  value={formData.end_date_time}
+                  onChange={(e) => handleInputChange('end_date_time', e.target.value)}
+                  placeholder="YYYY-MM-DDTHH:MM"
+                />
+              </FormField>
+            </div>
+          )}
+
+          {formData.is_recurring && (
+            <div className="space-y-4">
+              <FormField label="Recurrence Start Date" error={errors.recurrence_start_date}>
+                <TextInput
+                  type="date"
+                  value={formData.recurrence_start_date}
+                  onChange={(e) => handleInputChange('recurrence_start_date', e.target.value)}
+                  placeholder="YYYY-MM-DD"
+                />
+              </FormField>
+
+              <FormField label="Recurrence End Date (optional)" error={errors.recurrence_end_date}>
+                <TextInput
+                  type="date"
+                  value={formData.recurrence_end_date}
+                  onChange={(e) => handleInputChange('recurrence_end_date', e.target.value)}
+                  placeholder="YYYY-MM-DD"
+                />
+              </FormField>
+            </div>
+          )}
+
+          <FormField label="Default Location" error={errors.default_location}>
             <TextInput
               value={formData.default_location}
               onChange={(e) => handleInputChange('default_location', e.target.value)}
@@ -360,7 +490,7 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
             />
           </FormField>
 
-          <FormField label="Default Description">
+          <FormField label="Default Description" error={errors.default_description}>
             <TextArea
               value={formData.default_description}
               onChange={(e) => handleInputChange('default_description', e.target.value)}
@@ -497,27 +627,60 @@ export default function EventCategoriesPage() {
   };
 
   const handleGenerateEvents = async (category: EventCategory) => {
-    if (!category.is_recurring) {
-      alert('This category is not configured for recurring events.');
-      return;
-    }
+    console.log('Generate events clicked for category:', category);
+    console.log('Category is recurring:', category.is_recurring);
+    console.log('Category start_date_time:', category.start_date_time);
+    
+    if (category.is_recurring) {
+      // Handle recurring events
+      const count = prompt('How many events to generate?', '10');
+      if (!count) return;
 
-    const count = prompt('How many events to generate?', '10');
-    if (!count) return;
+      const autoPublish = confirm('Auto-publish generated events?');
 
-    const autoPublish = confirm('Auto-publish generated events?');
+      try {
+        const response = await EventCategoriesService.generateEvents(category.id, {
+          count: parseInt(count),
+          auto_publish: autoPublish
+        });
 
-    try {
-      const response = await EventCategoriesService.generateEvents(category.id, {
-        count: parseInt(count),
-        auto_publish: autoPublish
-      });
-
-      if (response.success) {
-        alert(`Successfully generated events!`);
+        if (response.success) {
+          alert(`Successfully generated recurring events!`);
+        }
+      } catch (error: any) {
+        alert(`Error generating recurring events: ${error.message}`);
       }
-    } catch (error: any) {
-      alert(`Error generating events: ${error.message}`);
+    } else {
+      // Handle one-time events
+      console.log('Handling one-time event generation');
+      
+      // Check if event already exists
+      if (category.events && category.events.length > 0) {
+        alert('An event already exists for this one-time category. One-time categories can only generate one event.');
+        return;
+      }
+
+      // Check if start_date_time and end_date_time are configured
+      if (!category.start_date_time || !category.end_date_time) {
+        alert('This category does not have start and end date/time configured. Please configure the event schedule first.');
+        return;
+      }
+
+      const autoPublish = confirm('Auto-publish the generated event?');
+
+      try {
+        const response = await EventCategoriesService.generateOneTimeEvent(category.id, {
+          auto_publish: autoPublish
+        });
+
+        if (response.success) {
+          alert('Successfully generated one-time event!');
+          // Refresh the categories to show the new event
+          loadCategories();
+        }
+      } catch (error: any) {
+        alert(`Error generating one-time event: ${error.message}`);
+      }
     }
   };
 
@@ -534,16 +697,21 @@ export default function EventCategoriesPage() {
     }
   };
 
-  // DataTable columns configuration
+  // Table columns configuration
   const tableColumns = [
     {
       key: 'name',
-      label: 'Category',
+      label: 'Name',
       sortable: true,
       render: (value: any, category: EventCategory) => (
-        <div>
-          <div className="font-medium text-gray-900 dark:text-white">{category.name}</div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">{category.description}</div>
+        <div className="flex items-center">
+          <div className="w-8 h-8 rounded-lg mr-3 flex items-center justify-center" style={{ backgroundColor: category.color }}>
+            <i className={`${category.icon || 'fas fa-tag'} text-white text-sm`}></i>
+          </div>
+          <div>
+            <div className="font-medium text-gray-900">{category.name}</div>
+            <div className="text-sm text-gray-500">{category.description}</div>
+          </div>
         </div>
       )
     },
@@ -552,17 +720,25 @@ export default function EventCategoriesPage() {
       label: 'Attendance Type',
       sortable: true,
       render: (value: any, category: EventCategory) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          category.attendance_type === 'individual' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' :
-          category.attendance_type === 'general' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-          'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+        <span className="capitalize">{category.attendance_type}</span>
+      )
+    },
+    {
+      key: 'is_recurring',
+      label: 'Type',
+      sortable: true,
+      render: (value: any, category: EventCategory) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          category.is_recurring 
+            ? 'bg-purple-100 text-purple-800' 
+            : 'bg-orange-100 text-orange-800'
         }`}>
-          {category.attendance_type.charAt(0).toUpperCase() + category.attendance_type.slice(1)}
+          {category.is_recurring ? 'Recurring' : 'One-time'}
         </span>
       )
     },
     {
-      key: 'status',
+      key: 'is_active',
       label: 'Status',
       sortable: true,
       render: (value: any, category: EventCategory) => (
@@ -570,67 +746,55 @@ export default function EventCategoriesPage() {
       )
     },
     {
-      key: 'recurring',
-      label: 'Recurring',
-      render: (value: any, category: EventCategory) => (
-        <div className="text-sm">
-          {category.is_recurring ? (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300">
-              <i className="fas fa-redo mr-1"></i>
-              {category.recurrence_pattern}
-            </span>
-          ) : (
-            <span className="text-gray-500 dark:text-gray-400">One-time</span>
-          )}
-        </div>
-      )
-    },
-    {
       key: 'events_count',
       label: 'Events',
+      sortable: true,
       render: (value: any, category: EventCategory) => (
-        <div className="text-sm text-gray-600 dark:text-gray-400">
-          {category.events?.length || 0} events
-        </div>
+        <span className="text-gray-600">{category.events?.length || 0}</span>
       )
     },
     {
       key: 'actions',
       label: 'Actions',
+      sortable: false,
       render: (value: any, category: EventCategory) => (
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
           <button 
-            className="text-blue-600 hover:text-blue-700 text-sm p-1 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className="text-blue-600 hover:text-blue-700 p-1 rounded hover:bg-blue-50"
             onClick={() => handleEditCategory(category)}
             title="Edit Category"
           >
-            <i className="fas fa-edit"></i>
+            <i className="fas fa-edit text-sm"></i>
           </button>
           
-          {category.is_recurring && (
-            <button 
-              className="text-green-600 hover:text-green-700 text-sm p-1 rounded hover:bg-green-50 dark:hover:bg-green-900/20"
-              onClick={() => handleGenerateEvents(category)}
-              title="Generate Events"
-            >
-              <i className="fas fa-magic"></i>
-            </button>
-          )}
+          <button 
+            className={`px-2 py-1 rounded text-xs font-medium ${
+              category.is_recurring 
+                ? 'text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100' 
+                : 'text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100'
+            } ${!category.is_recurring && (!category.start_date_time || !category.end_date_time || (category.events && category.events.length > 0)) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={() => handleGenerateEvents(category)}
+            title={category.is_recurring ? 'Generate Events' : 'Generate Event'}
+            disabled={!category.is_recurring && (!category.start_date_time || !category.end_date_time || (category.events && category.events.length > 0))}
+          >
+            <i className={`fas ${category.is_recurring ? 'fa-magic' : 'fa-calendar-plus'} mr-1`}></i>
+            {category.is_recurring ? 'Events' : 'Event'}
+          </button>
           
           <button 
-            className="text-orange-600 hover:text-orange-700 text-sm p-1 rounded hover:bg-orange-50 dark:hover:bg-orange-900/20"
+            className="text-orange-600 hover:text-orange-700 p-1 rounded hover:bg-orange-50"
             onClick={() => handleToggleStatus(category)}
             title={category.is_active ? 'Deactivate' : 'Activate'}
           >
-            <i className={`fas fa-${category.is_active ? 'pause' : 'play'}`}></i>
+            <i className={`fas fa-${category.is_active ? 'pause' : 'play'} text-sm`}></i>
           </button>
           
           <button 
-            className="text-red-600 hover:text-red-700 text-sm p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+            className="text-red-600 hover:text-red-700 p-1 rounded hover:bg-red-50"
             onClick={() => handleDeleteCategory(category.id)}
             title="Delete Category"
           >
-            <i className="fas fa-trash"></i>
+            <i className="fas fa-trash text-sm"></i>
           </button>
         </div>
       )
@@ -776,15 +940,19 @@ export default function EventCategoriesPage() {
             <i className="fas fa-edit"></i>
           </button>
           
-          {category.is_recurring && (
-            <button 
-              className="text-green-600 hover:text-green-700 text-sm"
-              onClick={() => handleGenerateEvents(category)}
-              title="Generate Events"
-            >
-              <i className="fas fa-magic"></i>
-            </button>
-          )}
+          <button 
+            className={`text-sm px-2 py-1 rounded ${
+              category.is_recurring 
+                ? 'text-green-600 hover:text-green-700 bg-green-50 hover:bg-green-100' 
+                : 'text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100'
+            } ${!category.is_recurring && (!category.start_date_time || !category.end_date_time || (category.events && category.events.length > 0)) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={() => handleGenerateEvents(category)}
+            title={category.is_recurring ? 'Generate Events' : 'Generate Event'}
+            disabled={!category.is_recurring && (!category.start_date_time || !category.end_date_time || (category.events && category.events.length > 0))}
+          >
+            <i className={`fas ${category.is_recurring ? 'fa-magic' : 'fa-calendar-plus'} mr-1`}></i>
+            {category.is_recurring ? 'Generate Events' : 'Generate Event'}
+          </button>
           
           <button 
             className="text-orange-600 hover:text-orange-700 text-sm"
@@ -826,7 +994,7 @@ export default function EventCategoriesPage() {
         <div className="flex items-center text-blue-800 dark:text-blue-200">
           <i className="fas fa-info-circle mr-2"></i>
           <span className="text-sm">
-            <strong>Tip:</strong> Create event categories to organize your events. Configure recurring patterns to automatically generate events.
+            <strong>Tip:</strong> Create event categories to organize your events. Configure recurring patterns or set specific dates to automatically generate events.
           </span>
         </div>
       </div>

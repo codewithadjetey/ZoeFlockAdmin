@@ -192,6 +192,7 @@ Route::prefix($apiVersion)->group(function () {
         // Category-specific operations
         Route::get('/{category}/events', [EventCategoryController::class, 'getCategoryEvents']);
         Route::post('/{category}/generate-events', [EventCategoryController::class, 'generateEvents']);
+        Route::post('/{category}/generate-one-time-event', [EventCategoryController::class, 'generateOneTimeEvent']);
         Route::post('/{category}/toggle-status', [EventCategoryController::class, 'toggleStatus']);
         Route::get('/{category}/statistics', [EventCategoryController::class, 'getStatistics']);
     });

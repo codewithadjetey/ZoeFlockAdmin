@@ -23,11 +23,15 @@ class EventCategory extends Model
         'recurrence_pattern',
         'recurrence_settings',
         'default_start_time',
+        'start_date_time',
+        'end_date_time',
+        'recurrence_start_date',
+        'recurrence_end_date',
         'default_duration',
         'default_location',
         'default_description',
         'created_by',
-        'updated_by',
+        'updated_by'
     ];
 
     protected $casts = [
@@ -35,7 +39,12 @@ class EventCategory extends Model
         'is_recurring' => 'boolean',
         'recurrence_settings' => 'array',
         'default_start_time' => 'datetime',
-        'deleted' => 'boolean',
+        'start_date_time' => 'datetime',
+        'end_date_time' => 'datetime',
+        'recurrence_start_date' => 'date',
+        'recurrence_end_date' => 'date',
+        'default_duration' => 'integer',
+        'deleted' => 'boolean'
     ];
 
     /**
@@ -232,38 +241,48 @@ class EventCategory extends Model
             return [];
         }
 
-        $events = [];
-        $currentDate = $fromDate ?? now();
-        $generatedCount = 0;
+        // Use the RecurringEventService for proper date calculations
+        $recurringService = app(\App\Services\RecurringEventService::class);
+        $events = $recurringService->generateEventsFromCategory($this, $count);
+        
+        return $events->toArray();
+    }
 
-        while ($generatedCount < $count) {
-            $eventData = [
-                'title' => $this->name,
-                'description' => $this->default_description,
-                'start_date' => $currentDate->copy()->setTimeFrom($this->default_start_time ?? '09:00:00'),
-                'end_date' => $this->default_duration ? 
-                    $currentDate->copy()->setTimeFrom($this->default_start_time ?? '09:00:00')->addMinutes($this->default_duration) : 
-                    null,
-                'location' => $this->default_location,
-                'type' => 'general',
-                'category_id' => $this->id,
-                'status' => 'draft',
-                'is_recurring' => false, // Individual events are not recurring
-                'created_by' => $this->created_by,
-            ];
-
-            $events[] = $eventData;
-
-            // Calculate next occurrence
-            $currentDate = $this->getNextOccurrenceDate($currentDate);
-            if (!$currentDate) {
-                break;
-            }
-
-            $generatedCount++;
+    /**
+     * Generate a single one-time event for this category
+     */
+    public function generateOneTimeEvent(): array
+    {
+        // Check if this is a one-time category
+        if ($this->is_recurring) {
+            return [];
         }
 
-        return $events;
+        // Check if an event already exists for this one-time category
+        if ($this->events()->exists()) {
+            return [];
+        }
+
+        // Check if start_date_time and end_date_time are set
+        if (!$this->start_date_time || !$this->end_date_time) {
+            return [];
+        }
+
+        $startDateTime = Carbon::parse($this->start_date_time);
+        $endDateTime = Carbon::parse($this->end_date_time);
+        
+        return [
+            'title' => $this->name,
+            'description' => $this->default_description,
+            'start_date' => $startDateTime,
+            'end_date' => $endDateTime,
+            'location' => $this->default_location,
+            'type' => 'general',
+            'category_id' => $this->id,
+            'status' => 'draft',
+            'is_recurring' => false,
+            'created_by' => $this->created_by,
+        ];
     }
 
     /**

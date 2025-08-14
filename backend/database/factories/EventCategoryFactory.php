@@ -38,6 +38,9 @@ class EventCategoryFactory extends Factory
             'recurrence_settings' => $isRecurring ? $this->getRecurrenceSettings() : null,
             'default_start_time' => $this->faker->optional(0.7)->time(),
             'default_duration' => $this->faker->optional(0.6)->randomElement([30, 60, 90, 120, 180]),
+            'default_event_date' => $isRecurring ? null : $this->faker->optional(0.8)->dateTimeBetween('+1 week', '+3 months'),
+            'recurrence_start_date' => $isRecurring ? $this->faker->optional(0.8)->dateTimeBetween('+1 week', '+1 month') : null,
+            'recurrence_end_date' => $isRecurring ? $this->faker->optional(0.6)->dateTimeBetween('+6 months', '+2 years') : null,
             'default_location' => $this->faker->optional(0.5)->city(),
             'default_description' => $this->faker->optional(0.4)->sentence(),
             'created_by' => User::factory(),
@@ -54,6 +57,24 @@ class EventCategoryFactory extends Factory
             'is_recurring' => true,
             'recurrence_pattern' => $this->faker->randomElement(['daily', 'weekly', 'monthly', 'yearly']),
             'recurrence_settings' => $this->getRecurrenceSettings(),
+            'recurrence_start_date' => $this->faker->dateTimeBetween('+1 week', '+1 month'),
+            'recurrence_end_date' => $this->faker->optional(0.6)->dateTimeBetween('+6 months', '+2 years'),
+            'default_event_date' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the category is one-time.
+     */
+    public function oneTime(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_recurring' => false,
+            'recurrence_pattern' => null,
+            'recurrence_settings' => null,
+            'recurrence_start_date' => null,
+            'recurrence_end_date' => null,
+            'default_event_date' => $this->faker->dateTimeBetween('+1 week', '+3 months'),
         ]);
     }
 

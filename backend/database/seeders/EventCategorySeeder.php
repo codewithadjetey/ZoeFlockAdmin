@@ -41,6 +41,8 @@ class EventCategorySeeder extends Seeder
                 ],
                 'default_start_time' => '09:00:00',
                 'default_duration' => 90,
+                'recurrence_start_date' => now()->addWeek()->startOfWeek(0), // Next Sunday
+                'recurrence_end_date' => now()->addYear(), // One year from now
                 'default_location' => 'Church Auditorium Loveworld Treasureland',
                 'default_description' => 'Join us for our weekly Sunday worship service'
             ],
@@ -59,6 +61,8 @@ class EventCategorySeeder extends Seeder
                 ],
                 'default_start_time' => '19:00:00',
                 'default_duration' => 60,
+                'recurrence_start_date' => now()->addWeek()->startOfWeek(2), // Next Tuesday
+                'recurrence_end_date' => now()->addYear(), // One year from now
                 'default_location' => 'Church Auditorium Loveworld Treasureland',
                 'default_description' => 'Weekly Family Meetings'
             ],
@@ -77,6 +81,8 @@ class EventCategorySeeder extends Seeder
                 ],
                 'default_start_time' => '18:00:00',
                 'default_duration' => 120,
+                'recurrence_start_date' => now()->addWeek()->startOfWeek(4), // Next Thursday
+                'recurrence_end_date' => now()->addYear(), // One year from now
                 'default_location' => 'Church Auditorium Loveworld Treasureland',
                 'default_description' => 'Choir Rehearsal by Supernatural Choir'
             ],
@@ -95,8 +101,47 @@ class EventCategorySeeder extends Seeder
                 ],
                 'default_start_time' => '18:30:00',
                 'default_duration' => 120,
+                'recurrence_start_date' => now()->addWeek()->startOfWeek(5), // Next Friday
+                'recurrence_end_date' => now()->addYear(), // One year from now
                 'default_location' => 'Church Auditorium Loveworld Treasureland',
                 'default_description' => 'Prayer and intercession'
+            ],
+            [
+                'name' => 'Youth Conference',
+                'description' => 'Annual youth conference and workshop',
+                'color' => '#EC4899',
+                'icon' => 'fas fa-star',
+                'attendance_type' => 'individual',
+                'is_active' => true,
+                'is_recurring' => false,
+                'recurrence_pattern' => null,
+                'recurrence_settings' => null,
+                'default_start_time' => '10:00:00',
+                'default_duration' => 480, // 8 hours
+                'recurrence_start_date' => null,
+                'recurrence_end_date' => null,
+                'default_location' => 'Church Auditorium Loveworld Treasureland',
+                'default_description' => 'Annual youth conference with workshops, worship, and fellowship'
+            ],
+            [
+                'name' => 'Bible Study',
+                'description' => 'Monthly Bible study session',
+                'color' => '#06B6D4',
+                'icon' => 'fas fa-book-open',
+                'attendance_type' => 'individual',
+                'is_active' => true,
+                'is_recurring' => true,
+                'recurrence_pattern' => 'monthly',
+                'recurrence_settings' => [
+                    'interval' => 1,
+                    'day_of_month' => 15
+                ],
+                'default_start_time' => '19:00:00',
+                'default_duration' => 90,
+                'recurrence_start_date' => now()->addMonth()->day(15), // 15th of next month
+                'recurrence_end_date' => now()->addYear(), // One year from now
+                'default_location' => 'Church Auditorium Loveworld Treasureland',
+                'default_description' => 'Monthly Bible study and discussion'
             ],
         ];
 

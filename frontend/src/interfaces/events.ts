@@ -79,21 +79,27 @@ export interface EventCategory {
   is_active: boolean;
   is_recurring: boolean;
   recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  recurrence_settings?: Record<string, any>;
+  recurrence_settings?: {
+    interval: number;
+    weekdays: number[];
+    day_of_month: number;
+  };
   default_start_time?: string;
-  default_duration?: number;
+  start_date_time?: string;
+  end_date_time?: string;
+  recurrence_start_date?: string;
+  recurrence_end_date?: string;
+  default_duration: number;
   default_location?: string;
   default_description?: string;
-  created_by: number;
+  created_by?: number;
   updated_by?: number;
-  created_at: string;
-  updated_at: string;
-  deleted: boolean;
-  
-  // Relationships
+  created_at?: string;
+  updated_at?: string;
+  deleted?: boolean;
+  events?: Event[];
   creator?: User;
   updater?: User;
-  events?: Event[];
 }
 
 export interface CreateEventRequest {

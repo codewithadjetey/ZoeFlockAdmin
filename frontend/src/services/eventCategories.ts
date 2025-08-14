@@ -126,6 +126,14 @@ export class EventCategoriesService {
   }
 
   /**
+   * Generate a single one-time event for a category
+   */
+  static async generateOneTimeEvent(categoryId: number, data: { auto_publish?: boolean } = {}): Promise<EventCategoryResponse> {
+    const response = await api.post(`/event-categories/${categoryId}/generate-one-time-event`, data);
+    return response.data;
+  }
+
+  /**
    * Toggle category active status
    */
   static async toggleStatus(categoryId: number): Promise<EventCategoryResponse> {

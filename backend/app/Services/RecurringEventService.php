@@ -183,6 +183,193 @@ class RecurringEventService
     }
 
     /**
+     * Generate recurring events from an event category with proper date calculations
+     */
+    public function generateEventsFromCategory($eventCategory, int $count = 10): Collection
+    {
+        if (!$eventCategory->is_recurring || !$eventCategory->recurrence_pattern) {
+            return collect();
+        }
+
+        $events = collect();
+        $currentDate = $this->getInitialDate($eventCategory);
+        $endDate = $eventCategory->recurrence_end_date ? Carbon::parse($eventCategory->recurrence_end_date) : null;
+        $generatedCount = 0;
+
+        while ($generatedCount < $count) {
+            // Check if we've exceeded the end date
+            if ($endDate && $currentDate->gt($endDate)) {
+                break;
+            }
+
+            // Create event start date by combining the current date with default start time
+            $eventStartDate = $currentDate->copy();
+            if ($eventCategory->default_start_time) {
+                $eventStartDate->setTimeFrom($eventCategory->default_start_time);
+            } else {
+                $eventStartDate->setTime(9, 0, 0); // Default to 9:00 AM
+            }
+
+            // Create event end date by adding duration to start date
+            $eventEndDate = $eventStartDate->copy();
+            if ($eventCategory->default_duration) {
+                $eventEndDate->addMinutes($eventCategory->default_duration);
+            } else {
+                $eventEndDate->addHour(); // Default to 1 hour duration
+            }
+
+            $eventData = [
+                'title' => $eventCategory->name,
+                'description' => $eventCategory->default_description,
+                'start_date' => $eventStartDate,
+                'end_date' => $eventEndDate,
+                'location' => $eventCategory->default_location,
+                'type' => 'general',
+                'category_id' => $eventCategory->id,
+                'status' => 'draft',
+                'is_recurring' => false, // Individual events are not recurring
+                'created_by' => $eventCategory->created_by,
+            ];
+
+            $events->push($eventData);
+
+            // Calculate next occurrence
+            $currentDate = $this->getNextOccurrenceFromCategory($currentDate, $eventCategory);
+            if (!$currentDate) {
+                break;
+            }
+
+            $generatedCount++;
+        }
+
+        return $events;
+    }
+
+    /**
+     * Get the initial date for event generation based on category settings
+     */
+    protected function getInitialDate($eventCategory): Carbon
+    {
+        // If recurrence_start_date is set, use it
+        if ($eventCategory->recurrence_start_date) {
+            $startDate = Carbon::parse($eventCategory->recurrence_start_date);
+        } else {
+            // Otherwise start from today
+            $startDate = now()->startOfDay();
+        }
+
+        // For weekly patterns, adjust to the correct weekday if specified
+        if ($eventCategory->recurrence_pattern === 'weekly' && 
+            isset($eventCategory->recurrence_settings['weekdays']) && 
+            !empty($eventCategory->recurrence_settings['weekdays'])) {
+            
+            $weekdays = $eventCategory->recurrence_settings['weekdays'];
+            $startDate = $this->adjustToNextWeekday($startDate, $weekdays);
+        }
+
+        return $startDate;
+    }
+
+    /**
+     * Calculate the next occurrence date based on event category recurrence settings
+     */
+    protected function getNextOccurrenceFromCategory(Carbon $currentDate, $eventCategory): ?Carbon
+    {
+        $nextDate = $currentDate->copy();
+
+        switch ($eventCategory->recurrence_pattern) {
+            case 'daily':
+                $interval = $eventCategory->recurrence_settings['interval'] ?? 1;
+                $nextDate->addDays($interval);
+                break;
+
+            case 'weekly':
+                $interval = $eventCategory->recurrence_settings['interval'] ?? 1;
+                $weekdays = $eventCategory->recurrence_settings['weekdays'] ?? [0]; // Default to Sunday
+                
+                // Find next weekday in the list
+                $nextWeekday = $this->findNextWeekdayFromCategory($currentDate, $weekdays, $interval);
+                if ($nextWeekday) {
+                    $nextDate = $nextWeekday;
+                } else {
+                    // If no next weekday found, add weeks and find the first weekday
+                    $nextDate->addWeeks($interval);
+                    $nextDate = $this->adjustToNextWeekday($nextDate, $weekdays);
+                }
+                break;
+
+            case 'monthly':
+                $interval = $eventCategory->recurrence_settings['interval'] ?? 1;
+                $dayOfMonth = $eventCategory->recurrence_settings['day_of_month'] ?? $currentDate->day;
+                $nextDate->addMonths($interval);
+                
+                // Adjust day if it exceeds month length
+                $daysInMonth = $nextDate->daysInMonth;
+                $nextDate->day = min($dayOfMonth, $daysInMonth);
+                break;
+
+            case 'yearly':
+                $interval = $eventCategory->recurrence_settings['interval'] ?? 1;
+                $nextDate->addYears($interval);
+                break;
+
+            default:
+                return null;
+        }
+
+        return $nextDate;
+    }
+
+    /**
+     * Find the next weekday from a list of weekdays for event categories
+     */
+    protected function findNextWeekdayFromCategory(Carbon $date, array $weekdays, int $interval): ?Carbon
+    {
+        $currentDayOfWeek = $date->dayOfWeek;
+        $sortedWeekdays = collect($weekdays)->sort()->values();
+        
+        // Find next weekday in current week
+        foreach ($sortedWeekdays as $weekday) {
+            if ($weekday > $currentDayOfWeek) {
+                $nextDate = $date->copy();
+                $nextDate->addDays($weekday - $currentDayOfWeek);
+                return $nextDate;
+            }
+        }
+        
+        // If no weekday found in current week, go to first weekday of next week
+        $nextDate = $date->copy()->addWeeks($interval);
+        $nextDate = $this->adjustToNextWeekday($nextDate, $sortedWeekdays->toArray());
+        
+        return $nextDate;
+    }
+
+    /**
+     * Adjust a date to the next occurrence of a specified weekday
+     */
+    protected function adjustToNextWeekday(Carbon $date, array $weekdays): Carbon
+    {
+        $currentDayOfWeek = $date->dayOfWeek;
+        $sortedWeekdays = collect($weekdays)->sort()->values();
+        
+        // Find the next weekday that matches
+        foreach ($sortedWeekdays as $weekday) {
+            if ($weekday >= $currentDayOfWeek) {
+                $daysToAdd = $weekday - $currentDayOfWeek;
+                $date->addDays($daysToAdd);
+                return $date;
+            }
+        }
+        
+        // If no weekday found in current week, go to first weekday of next week
+        $date->addWeek();
+        $date->startOfWeek();
+        $date->addDays($sortedWeekdays->first());
+        
+        return $date;
+    }
+
+    /**
      * Cancel all future instances of a recurring event
      */
     public function cancelFutureInstances(Event $parentEvent, ?string $reason = null): int
