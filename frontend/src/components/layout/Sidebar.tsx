@@ -1,5 +1,5 @@
 "use client";
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -8,13 +8,31 @@ const navItems = [
   { label: "Dashboard", icon: "fas fa-home", href: "/dashboard" },
   { label: "Members", icon: "fas fa-users", href: "/members" },
   { label: "Families", icon: "fas fa-house-user", href: "/families" },
-  { label: "Events", icon: "fas fa-calendar", href: "/events" },
-  { label: "Event Categories", icon: "fas fa-tags", href: "/event-categories" },
   { label: "Groups", icon: "fas fa-layer-group", href: "/groups" },
   { label: "Attendance", icon: "fas fa-clipboard-check", href: "/attendance" },
-  { label: "Donations", icon: "fas fa-donate", href: "/donations" },
+  // { label: "Donations", icon: "fas fa-donate", href: "/donations" },
   { label: "Communication", icon: "fas fa-envelope", href: "/communication" },
-  { label: "Settings", icon: "fas fa-cog", href: "/settings" },
+];
+
+// Events menu items
+const eventsMenuItems = [
+  { label: "Events", icon: "fas fa-calendar", href: "/events" },
+  { label: "Event Categories", icon: "fas fa-tags", href: "/event-categories" },
+];
+
+// Settings menu items
+const settingsMenuItems = [
+  { label: "General", icon: "fas fa-cog", href: "/settings" },
+  { label: "Appearance", icon: "fas fa-palette", href: "/settings/appearance" },
+  { label: "Notifications", icon: "fas fa-bell", href: "/settings/notifications" },
+  { label: "Security", icon: "fas fa-shield-alt", href: "/settings/security" },
+  { label: "Backup", icon: "fas fa-database", href: "/settings/backup" },
+];
+
+// Admin menu items
+const adminMenuItems = [
+  { label: "Users", icon: "fas fa-user-cog", href: "/admin/users" },
+  { label: "Roles & Permissions", icon: "fas fa-shield-alt", href: "/admin/roles" },
 ];
 
 interface SidebarProps {
@@ -26,6 +44,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const pathname = usePathname();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { currentTheme, colorMode } = useTheme();
+  const [eventsMenuOpen, setEventsMenuOpen] = useState(false);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -70,6 +91,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     if (window.innerWidth < 1024) {
       onToggle();
     }
+  };
+
+  const toggleEventsMenu = () => {
+    setEventsMenuOpen(!eventsMenuOpen);
+  };
+
+  const toggleSettingsMenu = () => {
+    setSettingsMenuOpen(!settingsMenuOpen);
+  };
+
+  const toggleAdminMenu = () => {
+    setAdminMenuOpen(!adminMenuOpen);
   };
 
   // Get sidebar background based on theme and color mode
@@ -140,6 +173,138 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               </Link>
             );
           })}
+
+          {/* Events Menu Section */}
+          <div className="pt-4 border-t border-white/10">
+            <button
+              onClick={toggleEventsMenu}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
+                pathname.startsWith('/events') || pathname.startsWith('/event-categories')
+                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:backdrop-blur-sm"
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <i className="fas fa-calendar-alt mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
+                <span className="relative z-10">Events</span>
+              </div>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${eventsMenuOpen ? 'rotate-180' : ''}`}></i>
+            </button>
+
+            {/* Events Submenu */}
+            {eventsMenuOpen && (
+              <div className="ml-4 mt-2 space-y-2">
+                {eventsMenuItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
+                        isActive
+                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 hover:backdrop-blur-sm"
+                      }`}
+                      onClick={handleNavClick}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/8 to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                      <span className="relative z-10 text-sm">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Settings Menu Section */}
+          <div className="pt-4 border-t border-white/10">
+            <button
+              onClick={toggleSettingsMenu}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
+                pathname.startsWith('/settings')
+                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:backdrop-blur-sm"
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <i className="fas fa-cog mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
+                <span className="relative z-10">Settings</span>
+              </div>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${settingsMenuOpen ? 'rotate-180' : ''}`}></i>
+            </button>
+
+            {/* Settings Submenu */}
+            {settingsMenuOpen && (
+              <div className="ml-4 mt-2 space-y-2">
+                {settingsMenuItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
+                        isActive
+                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 hover:backdrop-blur-sm"
+                      }`}
+                      onClick={handleNavClick}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/8 to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                      <span className="relative z-10 text-sm">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Admin Menu Section */}
+          <div className="pt-4 border-t border-white/10">
+            <button
+              onClick={toggleAdminMenu}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
+                pathname.startsWith('/admin')
+                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:backdrop-blur-sm"
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <i className="fas fa-user-shield mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
+                <span className="relative z-10">Admin</span>
+              </div>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${adminMenuOpen ? 'rotate-180' : ''}`}></i>
+            </button>
+
+            {/* Admin Submenu */}
+            {adminMenuOpen && (
+              <div className="ml-4 mt-2 space-y-2">
+                {adminMenuItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
+                        isActive
+                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 hover:backdrop-blur-sm"
+                      }`}
+                      onClick={handleNavClick}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/8 to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                      <span className="relative z-10 text-sm">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Modern Logout Button */}
