@@ -11,6 +11,7 @@ export { default as SearchableSelect } from './SearchableSelect';
 export { default as Checkbox } from './Checkbox';
 export { default as SimpleInput } from './SimpleInput';
 export { default as SimpleSelect } from './SimpleSelect';
+export { default as DateRangePicker } from './DateRangePicker';
 
 // Display Components
 export { default as StatCard } from './StatCard';
