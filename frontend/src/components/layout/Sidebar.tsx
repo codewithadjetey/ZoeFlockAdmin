@@ -163,11 +163,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 className={`flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                   isActive
                     ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                    : "text-blue-100 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:backdrop-blur-sm"
+                    : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
                 }`}
                 onClick={handleNavClick}
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <i className={`${item.icon} mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
                 <span className="relative z-10">{item.label}</span>
               </Link>
@@ -181,11 +181,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                 pathname.startsWith('/events') || pathname.startsWith('/event-categories')
                   ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:backdrop-blur-sm"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
               }`}
             >
               <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <i className="fas fa-calendar-alt mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
                 <span className="relative z-10">Events</span>
               </div>
@@ -204,11 +204,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                       className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
                         isActive
                           ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 hover:backdrop-blur-sm"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
                       }`}
                       onClick={handleNavClick}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/8 to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
                       <span className="relative z-10 text-sm">{item.label}</span>
                     </Link>
@@ -225,11 +225,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                 pathname.startsWith('/settings')
                   ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:backdrop-blur-sm"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
               }`}
             >
               <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <i className="fas fa-cog mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
                 <span className="relative z-10">Settings</span>
               </div>
@@ -248,11 +248,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                       className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
                         isActive
                           ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 hover:backdrop-blur-sm"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
                       }`}
                       onClick={handleNavClick}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/8 to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
                       <span className="relative z-10 text-sm">{item.label}</span>
                     </Link>
@@ -269,11 +269,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                 pathname.startsWith('/admin')
                   ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:backdrop-blur-sm"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
               }`}
             >
               <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <i className="fas fa-user-shield mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
                 <span className="relative z-10">Admin</span>
               </div>
@@ -292,11 +292,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                       className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
                         isActive
                           ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/8 hover:to-white/3 hover:backdrop-blur-sm"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
                       }`}
                       onClick={handleNavClick}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/8 to-purple-500/8 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
                       <span className="relative z-10 text-sm">{item.label}</span>
                     </Link>
