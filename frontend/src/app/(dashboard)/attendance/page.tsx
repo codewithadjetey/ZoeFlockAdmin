@@ -139,7 +139,8 @@ export default function AttendancePage() {
       
       const response = await EventsService.getEvents({
         status: 'published',
-        per_page: 50
+        per_page: 50,
+        for_attendance: true
       });
 
       if (response.success) {

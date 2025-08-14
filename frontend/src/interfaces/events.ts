@@ -131,6 +131,7 @@ export interface EventFilters {
   date_from?: string;
   date_to?: string;
   per_page?: number;
+  for_attendance?: boolean;
 }
 
 export interface EventListResponse {
