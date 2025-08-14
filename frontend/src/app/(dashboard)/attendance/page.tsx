@@ -1,8 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, PageHeader, DataTable, Button, FormField, SelectInput, TextInput } from '@/components/ui';
+import { 
+  Card, 
+  PageHeader, 
+  DataTable, 
+  Button, 
+  FormField, 
+  SelectInput, 
+  TextInput,
+  SearchInput,
+  ViewToggle,
+  DataGrid,
+  StatusBadge
+} from '@/components/ui';
 import { LoadingSpinner } from '@/components/shared';
 import { AttendanceService } from '@/services/attendance';
 import { EventsService } from '@/services/events';
@@ -93,33 +105,46 @@ const SimpleModal: React.FC<{
 
 export default function AttendancePage() {
   const { isFamilyHead } = useAuth();
+  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [events, setEvents] = useState<EventWithAttendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showGeneralAttendanceModal, setShowGeneralAttendanceModal] = useState(false);
+  const [showIndividualAttendanceModal, setShowIndividualAttendanceModal] = useState(false);
+  const [showBulkAttendanceModal, setShowBulkAttendanceModal] = useState(false);
+  const [loadingGeneralAttendance, setLoadingGeneralAttendance] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [updatingAttendance, setUpdatingAttendance] = useState<number | null>(null);
+  const [eventAttendance, setEventAttendance] = useState<Attendance[]>([]);
+  const [eligibleMembers, setEligibleMembers] = useState<Member[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<Set<number>>(new Set());
   const [generalAttendanceForm, setGeneralAttendanceForm] = useState<GeneralAttendanceForm>({
     total_attendance: 0,
     first_timers_count: 0,
     notes: ''
   });
-  const [submitting, setSubmitting] = useState(false);
-  const [loadingGeneralAttendance, setLoadingGeneralAttendance] = useState(false);
-  
-  // Individual attendance state
-  const [eventAttendance, setEventAttendance] = useState<Attendance[]>([]);
-  const [eligibleMembers, setEligibleMembers] = useState<Member[]>([]);
+  const [individualAttendanceForm, setIndividualAttendanceForm] = useState<IndividualAttendanceForm>({
+    member_id: 0,
+    status: 'present',
+    notes: ''
+  });
+  const [bulkAttendanceForm, setBulkAttendanceForm] = useState<BulkAttendanceUpdate[]>([]);
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 0
+  });
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
-  const [updatingAttendance, setUpdatingAttendance] = useState<number | null>(null);
-  
-  // Bulk selection state
-  const [selectedMembers, setSelectedMembers] = useState<Set<number>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<'present' | 'absent'>('present');
   const [bulkNotes, setBulkNotes] = useState('');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
-  
-  // Enhanced state for better UX
-  const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -385,6 +410,32 @@ export default function AttendancePage() {
     }
   }, []);
 
+  const handleIndividualAttendance = useCallback(async (event: Event) => {
+    setSelectedEvent(event);
+    setError(null);
+    setShowIndividualAttendanceModal(true);
+    setLoadingAttendance(true);
+    
+    try {
+      // Fetch eligible members for this event
+      const response = await AttendanceService.getEligibleMembers(event.id);
+      if (response.success) {
+        setEligibleMembers(response.data.eligible_members);
+        
+        // Fetch existing attendance records
+        const attendanceResponse = await AttendanceService.getEventAttendance(event.id);
+        if (attendanceResponse.success) {
+          setEventAttendance(attendanceResponse.data.attendances || []);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch eligible members:', error);
+      setError('Failed to load event data. Please try again.');
+    } finally {
+      setLoadingAttendance(false);
+    }
+  }, []);
+
   const handleGeneralAttendanceSubmit = useCallback(async () => {
     if (!selectedEvent) return;
     
@@ -554,81 +605,130 @@ export default function AttendancePage() {
     setHasInitialLoad(true);
   }, []); // Empty dependency array to run only once
 
-
-
-
-
-  const columns = [
+  // Table columns configuration
+  const attendanceColumns = [
     {
       key: 'title',
-      label: 'Event',
-      render: (value: any, event: EventWithAttendance) => (
-        <div>
-          <div className="font-medium text-gray-900 dark:text-white">{event.title || 'Untitled Event'}</div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">{event.description || 'No description'}</div>
-        </div>
+      label: 'Event Title',
+      sortable: true,
+      render: (value: string, row: EventWithAttendance) => (
+        <div className="font-medium text-gray-900 dark:text-white">{value}</div>
       )
     },
     {
-      key: 'date',
+      key: 'start_date',
       label: 'Date',
-      render: (value: any, event: EventWithAttendance) => (
-        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-          <i className="fas fa-calendar mr-2"></i>
-          {event.start_date ? new Date(event.start_date).toLocaleDateString() : 'No date set'}
+      sortable: true,
+      render: (value: string) => (
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          {value ? new Date(value).toLocaleDateString() : '-'}
         </div>
       )
     },
     {
       key: 'type',
       label: 'Type',
-      render: (value: any, event: EventWithAttendance) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          event.type === 'general' ? 'bg-blue-100 text-blue-800' :
-          event.type === 'group' ? 'bg-green-100 text-green-800' :
-          'bg-purple-100 text-purple-800'
-        }`}>
-          {event.type.charAt(0).toUpperCase() + event.type.slice(1)}
-        </span>
+      sortable: true,
+      render: (value: string) => (
+        <StatusBadge 
+          status={value} 
+          className="capitalize"
+        />
       )
     },
     {
-      key: 'attendance',
-      label: 'Attendance',
-      render: (value: any, event: EventWithAttendance) => (
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      render: (value: string) => (
+        <StatusBadge 
+          status={value} 
+          className="capitalize"
+        />
+      )
+    },
+    {
+      key: 'attendance_stats',
+      label: 'Individual Attendance',
+      render: (value: any) => (
         <div className="text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-green-600 dark:text-green-400">
-              {event.attendance_stats?.present || 0} members
-            </span>
-          </div>
-                            <div className="text-gray-600 dark:text-gray-400 font-medium">
-                    Individual: {event.attendance_stats?.total || 0}
-                  </div>
-                  <div className="text-gray-600 dark:text-gray-400 font-medium">
-                    General: {(event.general_attendance?.total_attendance || 0) + (event.general_attendance?.first_timers_count || 0)}
-                  </div>
+          {value ? (
+            <>
+              <span className="text-green-600 font-medium">{value.present || 0}</span>
+              <span className="text-gray-400 mx-1">/</span>
+              <span className="text-gray-600">{value.total || 0}</span>
+            </>
+          ) : (
+            <span className="text-gray-400">No data</span>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'general_attendance',
+      label: 'General Attendance',
+      render: (value: any) => (
+        <div className="text-sm">
+          {value ? (
+            <>
+              <span className="text-blue-600 font-medium">{value.total_attendance || 0}</span>
+              {value.first_timers_count > 0 && (
+                <>
+                  <span className="text-gray-400 mx-1">•</span>
+                  <span className="text-purple-600">{value.first_timers_count} first-timers</span>
+                </>
+              )}
+            </>
+          ) : (
+            <span className="text-gray-400">No data</span>
+          )}
         </div>
       )
     },
     {
       key: 'actions',
       label: 'Actions',
-      render: (value: any, event: EventWithAttendance) => (
-        <div className="flex space-x-2">
+      render: (value: any, row: EventWithAttendance) => (
+        <div className="flex items-center gap-2">
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleEventSelect(event)}
+            onClick={() => {
+              setSelectedEvent(row);
+              setShowEventModal(true);
+              setError(null);
+              setLoadingAttendance(true);
+              
+              // Fetch eligible members for this event
+              AttendanceService.getEligibleMembers(row.id).then(response => {
+                if (response.success) {
+                  setEligibleMembers(response.data.eligible_members);
+                  
+                  // Fetch existing attendance records
+                  AttendanceService.getEventAttendance(row.id).then(attendanceResponse => {
+                    console.log('Attendance API response:', attendanceResponse);
+                    if (attendanceResponse.success) {
+                      console.log('Setting eventAttendance:', attendanceResponse.data.attendances);
+                      setEventAttendance(attendanceResponse.data.attendances || []);
+                    }
+                  });
+                }
+              }).catch(error => {
+                console.error('Failed to fetch eligible members:', error);
+                setError('Failed to load event data. Please try again.');
+              }).finally(() => {
+                setLoadingAttendance(false);
+              });
+            }}
             className="hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
           >
-            <i className="fas fa-users mr-1"></i>
+            <i className="fas fa-user-check mr-1"></i>
             Individual
           </Button>
           <Button
             size="sm"
             variant="outline"
-            onClick={() => handleGeneralAttendance(event)}
+            onClick={() => handleGeneralAttendance(row)}
             className="hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors duration-200"
           >
             <i className="fas fa-chart-bar mr-1"></i>
@@ -638,6 +738,177 @@ export default function AttendancePage() {
       )
     }
   ];
+
+  // DataTable filters configuration
+  const attendanceFilters = [
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select' as const,
+      options: [
+        { value: 'all', label: 'All Statuses' },
+        { value: 'draft', label: 'Draft' },
+        { value: 'published', label: 'Published' },
+        { value: 'cancelled', label: 'Cancelled' },
+        { value: 'completed', label: 'Completed' }
+      ]
+    },
+    {
+      key: 'type',
+      label: 'Type',
+      type: 'select' as const,
+      options: [
+        { value: 'all', label: 'All Types' },
+        { value: 'general', label: 'General' },
+        { value: 'group', label: 'Group' },
+        { value: 'family', label: 'Family' }
+      ]
+    },
+    {
+      key: 'date_range',
+      label: 'Date Range',
+      type: 'text' as const,
+      placeholder: 'Enter date range (e.g., "this week", "this month")'
+    }
+  ];
+
+  // Handle filters change
+  const handleFiltersChange = (filters: Record<string, any>) => {
+    // Apply filters to events
+    const filteredEvents = events.filter((event) => {
+      const matchesStatus = !filters.status || filters.status === 'all' || event.status === filters.status;
+      const matchesType = !filters.type || filters.type === 'all' || event.type === filters.type;
+      
+      return matchesStatus && matchesType;
+    });
+    
+    // Update pagination
+    setPagination(prev => ({
+      ...prev,
+      current_page: 1,
+      total: filteredEvents.length
+    }));
+  };
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setPagination(prev => ({ ...prev, current_page: page }));
+  };
+
+  const handlePerPageChange = (perPage: number) => {
+    setPagination(prev => ({ ...prev, per_page: perPage, current_page: 1 }));
+  };
+
+  // Handle sorting
+  const handleSort = (key: string) => {
+    setSortConfig(prev => {
+      if (prev?.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  // Apply sorting to events
+  const sortedEvents = useMemo(() => {
+    if (!sortConfig) return events;
+    
+    return [...events].sort((a, b) => {
+      const aValue = a[sortConfig.key as keyof EventWithAttendance];
+      const bValue = b[sortConfig.key as keyof EventWithAttendance];
+      
+      // Handle null/undefined values
+      if (aValue == null && bValue == null) return 0;
+      if (aValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (bValue == null) return sortConfig.direction === 'asc' ? 1 : -1;
+      
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [events, sortConfig]);
+
+  const filteredEvents = sortedEvents.filter((event) => {
+    const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (event.description && event.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesSearch;
+  });
+
+  const viewToggleOptions = [
+    { value: "table", label: "Table", icon: "fas fa-table" },
+    { value: "grid", label: "Grid", icon: "fas fa-th" },
+  ];
+
+  const renderEventCard = (event: EventWithAttendance) => (
+    <div className="event-card rounded-2xl shadow-lg p-6 cursor-pointer">
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center`}>
+          <i className="fas fa-calendar text-white text-xl"></i>
+        </div>
+        <div className="flex items-center gap-2">
+          <StatusBadge status={event.status} />
+          <StatusBadge status={event.type} />
+        </div>
+      </div>
+      
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{event.title}</h3>
+      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
+        {event.description || 'No description available'}
+      </p>
+      
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+          <i className="fas fa-calendar mr-2"></i>
+          {event.start_date ? new Date(event.start_date).toLocaleDateString() : 'No date set'}
+        </div>
+        {event.location && (
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+            <i className="fas fa-map-marker-alt mr-2"></i>
+            {event.location}
+          </div>
+        )}
+      </div>
+      
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm">
+          <span className="text-green-600 font-medium">{event.attendance_stats?.present || 0}</span>
+          <span className="text-gray-400 mx-1">/</span>
+          <span className="text-gray-600">{event.attendance_stats?.total || 0}</span>
+          <span className="text-gray-500 ml-1">attended</span>
+        </div>
+        {event.general_attendance && (
+          <div className="text-sm text-blue-600">
+            {event.general_attendance.total_attendance} total
+          </div>
+        )}
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleIndividualAttendance(event)}
+          className="flex-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors duration-200"
+        >
+          <i className="fas fa-user-check mr-1"></i>
+          Individual
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleGeneralAttendance(event)}
+          className="flex-1 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors duration-200"
+        >
+          <i className="fas fa-chart-bar mr-1"></i>
+          General
+        </Button>
+      </div>
+    </div>
+  );
+
+  const handleViewModeChange = (value: string) => {
+    setViewMode(value as "grid" | "table");
+  };
 
   if (loading) {
     return (
@@ -679,155 +950,127 @@ export default function AttendancePage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          <Card>
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <i className="fas fa-calendar text-blue-600 text-xl"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Events</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">{events.length}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Active</p>
-                  <p className="text-sm font-medium text-green-600">
-                    {events.filter(e => e.status === 'published').length}
-                  </p>
-                </div>
+        {/* Status Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                <i className="fas fa-calendar text-blue-600 dark:text-blue-400"></i>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Events</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">{events.length}</p>
               </div>
             </div>
-          </Card>
-
-          <Card>
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <i className="fas fa-users text-green-600 text-xl"></i>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Members</p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {events.reduce((sum, event) => sum + (event.attendance_stats?.present || 0), 0)}
-                  </p>
-                </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                <i className="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Published</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {events.filter(e => e.status === 'published').length}
+                </p>
               </div>
             </div>
-          </Card>
-
-          <Card>
-            <div className="p-6">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <i className="fas fa-star text-purple-600 text-xl"></i>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Present</p>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {events.reduce((sum, event) => sum + (event.attendance_stats?.present || 0), 0)}
-                  </p>
-                </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+                <i className="fas fa-users text-yellow-600 dark:text-yellow-400"></i>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Attendance</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {events.reduce((sum, event) => sum + (event.attendance_stats?.present || 0), 0)}
+                </p>
               </div>
             </div>
-          </Card>
-
-          <Card>
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <i className="fas fa-chart-line text-orange-600 text-xl"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Individual Attendance</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {events.reduce((sum, event) => sum + (event.attendance_stats?.total || 0), 0)}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Avg/Event</p>
-                  <p className="text-sm font-medium text-orange-600">
-                    {events.length > 0 ? Math.round(events.reduce((sum, event) => sum + (event.attendance_stats?.total || 0), 0) / events.length) : 0}
-                  </p>
-                </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                <i className="fas fa-chart-bar text-purple-600 dark:text-purple-400"></i>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">General Attendance</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {events.reduce((sum, event) => sum + (event.general_attendance?.total_attendance || 0), 0)}
+                </p>
               </div>
             </div>
-          </Card>
-
-          <Card>
-            <div className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="p-2 bg-indigo-100 rounded-lg">
-                    <i className="fas fa-chart-bar text-indigo-600 text-xl"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">General Attendance</p>
-                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {events.reduce((sum, event) => sum + (event.general_attendance?.total_attendance || 0) + (event.general_attendance?.first_timers_count || 0), 0)}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Avg/Event</p>
-                  <p className="text-sm font-medium text-indigo-600">
-                    {events.length > 0 ? Math.round(events.reduce((sum, event) => sum + (event.general_attendance?.total_attendance || 0) + (event.general_attendance?.first_timers_count || 0), 0) / events.length) : 0}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
+          </div>
         </div>
 
-        <Card>
-          <div className="p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Recent Events</h3>
-              <div className="flex items-center space-x-3">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Last updated: {lastRefresh.toLocaleTimeString()}
-                  {autoRefreshInterval && (
-                    <span className="ml-2 text-green-600 dark:text-green-400">
-                      <i className="fas fa-circle text-xs"></i> Auto-refresh active (2m)
-                    </span>
-                  )}
-                  {isRefreshing && (
-                    <span className="ml-2 text-blue-600 dark:text-blue-400">
-                      <i className="fas fa-spinner animate-spin text-xs"></i> Loading...
-                    </span>
-                  )}
-
-                </div>
-                <Button 
-                  onClick={handleRefresh} 
-                  disabled={isRefreshing}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50"
-                >
-                  {isRefreshing ? (
-                    <>
-                      <i className="fas fa-spinner animate-spin mr-2"></i>
-                      Refreshing...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-sync-alt mr-2"></i>
-                      Refresh
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-            
-            <DataTable
-              data={events}
-              columns={columns}
+        {/* Search and Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="md:col-span-2">
+            <SearchInput
+              placeholder="Search events..."
+              value={searchTerm}
+              onChange={setSearchTerm}
             />
           </div>
-        </Card>
+          <SelectInput
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: 'all', label: 'All Statuses' },
+              { value: 'draft', label: 'Draft' },
+              { value: 'published', label: 'Published' },
+              { value: 'cancelled', label: 'Cancelled' },
+              { value: 'completed', label: 'Completed' }
+            ]}
+          />
+        </div>
+
+        {/* View Toggle */}
+        <ViewToggle
+          value={viewMode}
+          onChange={handleViewModeChange}
+          options={viewToggleOptions}
+          count={filteredEvents.length}
+          countLabel="events"
+        />
+
+        {/* Events Table View */}
+        {viewMode === "table" && (
+          <DataTable
+            columns={attendanceColumns}
+            data={filteredEvents}
+            filters={attendanceFilters}
+            pagination={{
+              currentPage: pagination.current_page,
+              totalPages: pagination.last_page,
+              totalItems: pagination.total,
+              perPage: pagination.per_page,
+              onPageChange: handlePageChange,
+              onPerPageChange: handlePerPageChange
+            }}
+            sorting={{
+              sortConfig,
+              onSort: handleSort
+            }}
+            onFiltersChange={handleFiltersChange}
+            loading={loading}
+            emptyMessage="No events found. Create your first event to get started."
+            className="mb-6"
+          />
+        )}
+
+        {/* Events Grid View */}
+        {viewMode === "grid" && (
+          <DataGrid
+            data={filteredEvents}
+            renderCard={renderEventCard}
+            columns={3}
+          />
+        )}
 
         {/* Event Attendance Modal */}
         {showEventModal && selectedEvent && (
@@ -839,10 +1082,27 @@ export default function AttendancePage() {
               setBulkStatus('present');
               setBulkNotes('');
             }}
-            title={`Individual Attendance - ${selectedEvent.title}`}
+            title={`${useAuth().isFamilyHead() ? 'Family ' : ''}Individual Attendance - ${selectedEvent.title}`}
             size="4xl"
           >
             <div className="p-6">
+              {/* Family Head Notice */}
+              {useAuth().isFamilyHead() && (
+                <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center">
+                    <i className="fas fa-home text-blue-600 dark:text-blue-400 mr-3 text-lg"></i>
+                    <div>
+                      <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                        Family Head View
+                      </h3>
+                      <p className="text-sm text-blue-700 dark:text-blue-300">
+                        You are managing attendance for your family members only. All statistics, member lists, and updates are limited to your family.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {/* Error Display in Modal */}
               {error && (
                 <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
@@ -865,13 +1125,43 @@ export default function AttendancePage() {
                     <span className="font-medium">Status:</span> {selectedEvent.status}
                   </div>
                   <div>
-                    <span className="font-medium">Eligible Members:</span> {eligibleMembers.length}
+                    <span className="font-medium">
+                      {useAuth().isFamilyHead() ? 'Family Members:' : 'Eligible Members:'}
+                    </span> {eligibleMembers.length}
                   </div>
                 </div>
                 
+                {/* Family-specific note for Family Heads */}
+                {useAuth().isFamilyHead() && (
+                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="flex items-center">
+                      <i className="fas fa-users text-blue-600 dark:text-blue-400 mr-2"></i>
+                      <div>
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                          Family-Specific View
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          You are viewing attendance for your family members only. 
+                          {eligibleMembers.length > 0 ? ` ${eligibleMembers.length} family member(s) are eligible for this event.` : ' No family members are eligible for this event.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {/* Attendance Summary */}
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                  <h5 className="font-medium text-gray-900 dark:text-white mb-3">Current Attendance</h5>
+                  <h5 className="font-medium text-gray-900 dark:text-white mb-3">
+                    {useAuth().isFamilyHead() ? 'Family Attendance Summary' : 'Current Attendance'}
+                  </h5>
+                  
+                  {/* Debug info */}
+                  <div className="mb-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-xs">
+                    Debug: eventAttendance.length={eventAttendance.length}, 
+                    Present: {eventAttendance.filter(a => a.status === 'present').length}, 
+                    Absent: {eventAttendance.filter(a => a.status === 'absent').length}
+                  </div>
+                  
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold text-green-600">
@@ -887,17 +1177,29 @@ export default function AttendancePage() {
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-blue-600">
-                        {eventAttendance.filter(a => a.status === 'present').length}
+                        {eligibleMembers.length}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">Present</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {useAuth().isFamilyHead() ? 'Family Members' : 'Total Members'}
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Family-specific note for Family Heads */}
+                  {useAuth().isFamilyHead() && (
+                    <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">
+                      <i className="fas fa-info-circle mr-1"></i>
+                      Statistics shown are limited to your family members only
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Bulk Selection Controls */}
               <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-3">Bulk Update Attendance</h5>
+                <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-3">
+                  {useAuth().isFamilyHead() ? 'Bulk Update Family Attendance' : 'Bulk Update Attendance'}
+                </h5>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                   <div>
                     <label className="block text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
@@ -958,7 +1260,15 @@ export default function AttendancePage() {
                 </div>
                 {selectedMembers.size > 0 && (
                   <div className="mt-3 text-sm text-blue-700 dark:text-blue-300">
-                    {selectedMembers.size} member(s) selected
+                    {selectedMembers.size} {useAuth().isFamilyHead() ? 'family ' : ''}member(s) selected
+                  </div>
+                )}
+                
+                {/* Family-specific note for Family Heads */}
+                {useAuth().isFamilyHead() && (
+                  <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">
+                    <i className="fas fa-info-circle mr-1"></i>
+                    Bulk updates will only affect your family members
                   </div>
                 )}
               </div>
@@ -971,7 +1281,7 @@ export default function AttendancePage() {
               ) : (
                 <div>
                   <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    Member Attendance
+                    {useAuth().isFamilyHead() ? 'Family Member Attendance' : 'Member Attendance'}
                   </h4>
                   
                   <div className="overflow-x-auto">
@@ -987,7 +1297,7 @@ export default function AttendancePage() {
                             />
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Member
+                            {useAuth().isFamilyHead() ? 'Family Member' : 'Member'}
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Status
@@ -1116,40 +1426,49 @@ export default function AttendancePage() {
               </p>
               
               <div className="space-y-6">
-                <FormField label="Total Attendance of Members">
-                  <TextInput
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Total Attendance of Members
+                  </label>
+                  <input
                     type="number"
                     min="0"
                     value={generalAttendanceForm.total_attendance.toString()}
                     onChange={(e) => handleFormChange('total_attendance', parseInt(e.target.value) || 0)}
                     placeholder="Enter total members present"
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     disabled={loadingGeneralAttendance}
                   />
-                </FormField>
+                </div>
 
-                <FormField label="Total First Timers">
-                  <TextInput
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Total First Timers
+                  </label>
+                  <input
                     type="number"
                     min="0"
                     value={generalAttendanceForm.first_timers_count.toString()}
                     onChange={(e) => handleFormChange('first_timers_count', parseInt(e.target.value) || 0)}
                     placeholder="Enter total first timers"
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     disabled={loadingGeneralAttendance}
                   />
-                </FormField>
+                </div>
 
-                <FormField label="Notes (Optional)">
-                  <TextInput
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Notes (Optional)
+                  </label>
+                  <input
                     type="text"
                     value={generalAttendanceForm.notes}
                     onChange={(e) => handleFormChange('notes', e.target.value)}
                     placeholder="Add any additional notes"
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     disabled={loadingGeneralAttendance}
                   />
-                </FormField>
+                </div>
 
                 {/* Summary Section */}
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
@@ -1208,6 +1527,7 @@ export default function AttendancePage() {
             </div>
           </SimpleModal>
         )}
+
       </div>
     </DashboardLayout>
   );

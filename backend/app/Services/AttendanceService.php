@@ -308,6 +308,11 @@ class AttendanceService
         
         // If Family Head, only show attendance for their family members
         if ($familyId) {
+            \Log::info('Filtering attendance stats for Family Head', [
+                'family_id' => $familyId,
+                'event_id' => $eventId
+            ]);
+            
             $individualStats->whereHas('member', function ($q) use ($familyId) {
                 $q->whereHas('families', function ($familyQuery) use ($familyId) {
                     $familyQuery->where('family_id', $familyId)->where('is_active', true);
@@ -319,6 +324,12 @@ class AttendanceService
             ->groupBy('status')
             ->pluck('count', 'status')
             ->toArray();
+            
+        \Log::info('Individual attendance stats', [
+            'family_id' => $familyId,
+            'event_id' => $eventId,
+            'stats' => $individualStats
+        ]);
 
         // Get general attendance for the specific family (if Family Head) or all families (if admin)
         $generalAttendanceQuery = GeneralAttendance::where('event_id', $eventId);
