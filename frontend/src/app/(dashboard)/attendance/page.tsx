@@ -14,6 +14,10 @@ interface EventWithAttendance extends Event {
     absent: number;
     total: number;
   };
+  general_attendance?: {
+    total_attendance: number;
+    first_timers_count: number;
+  };
 }
 
 interface GeneralAttendanceForm {
@@ -188,8 +192,9 @@ export default function AttendancePage() {
                 attendance_stats: {
                   present: stats.individual_attendance.present,
                   absent: stats.individual_attendance.absent,
-                  total: stats.individual_attendance.total_individual + (stats.general_attendance?.total_attendance || 0)
-                }
+                  total: stats.individual_attendance.total_individual
+                },
+                general_attendance: stats.general_attendance
               };
             }
           } catch (error) {
@@ -569,10 +574,7 @@ export default function AttendancePage() {
     return () => clearInterval(resetInterval);
   }, []);
 
-  // Calculate total accumulated attendance
-  const totalAccumulatedAttendance = events.reduce((sum, event) => {
-    return sum + (event.attendance_stats?.total || 0);
-  }, 0);
+
 
   const columns = [
     {
@@ -617,13 +619,13 @@ export default function AttendancePage() {
             <span className="text-green-600 dark:text-green-400">
               {event.attendance_stats?.present || 0} members
             </span>
-            <span className="text-blue-600 dark:text-blue-400">
-              {event.attendance_stats?.total || 0} total
-            </span>
           </div>
-          <div className="text-gray-600 dark:text-gray-400 font-medium">
-            Total: {event.attendance_stats?.total || 0}
-          </div>
+                            <div className="text-gray-600 dark:text-gray-400 font-medium">
+                    Individual: {event.attendance_stats?.total || 0}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400 font-medium">
+                    General: {event.general_attendance?.total_attendance || 0}
+                  </div>
         </div>
       )
     },
@@ -695,7 +697,7 @@ export default function AttendancePage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <Card>
             <div className="p-6">
               <div className="flex items-center justify-between">
@@ -758,16 +760,40 @@ export default function AttendancePage() {
                     <i className="fas fa-chart-line text-orange-600 text-xl"></i>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Attendance</p>
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Individual Attendance</p>
                     <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                      {totalAccumulatedAttendance}
+                      {events.reduce((sum, event) => sum + (event.attendance_stats?.total || 0), 0)}
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Avg/Event</p>
                   <p className="text-sm font-medium text-orange-600">
-                    {events.length > 0 ? Math.round(totalAccumulatedAttendance / events.length) : 0}
+                    {events.length > 0 ? Math.round(events.reduce((sum, event) => sum + (event.attendance_stats?.total || 0), 0) / events.length) : 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          <Card>
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <i className="fas fa-chart-bar text-indigo-600 text-xl"></i>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">General Attendance</p>
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                      {events.reduce((sum, event) => sum + (event.general_attendance?.total_attendance || 0), 0)}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Avg/Event</p>
+                  <p className="text-sm font-medium text-indigo-600">
+                    {events.length > 0 ? Math.round(events.reduce((sum, event) => sum + (event.general_attendance?.total_attendance || 0), 0) / events.length) : 0}
                   </p>
                 </div>
               </div>
