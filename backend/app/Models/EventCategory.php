@@ -23,11 +23,15 @@ class EventCategory extends Model
         'recurrence_pattern',
         'recurrence_settings',
         'default_start_time',
+        'start_date_time',
+        'end_date_time',
+        'recurrence_start_date',
+        'recurrence_end_date',
         'default_duration',
         'default_location',
         'default_description',
         'created_by',
-        'updated_by',
+        'updated_by'
     ];
 
     protected $casts = [
@@ -35,7 +39,12 @@ class EventCategory extends Model
         'is_recurring' => 'boolean',
         'recurrence_settings' => 'array',
         'default_start_time' => 'datetime',
-        'deleted' => 'boolean',
+        'start_date_time' => 'datetime',
+        'end_date_time' => 'datetime',
+        'recurrence_start_date' => 'date',
+        'recurrence_end_date' => 'date',
+        'default_duration' => 'integer',
+        'deleted' => 'boolean'
     ];
 
     /**
@@ -233,17 +242,42 @@ class EventCategory extends Model
         }
 
         $events = [];
-        $currentDate = $fromDate ?? now();
+        
+        // Use recurrence_start_date if available, otherwise use fromDate or now
+        $currentDate = $this->recurrence_start_date ? 
+            Carbon::parse($this->recurrence_start_date) : 
+            ($fromDate ?? now());
+            
         $generatedCount = 0;
+        $endDate = $this->recurrence_end_date ? Carbon::parse($this->recurrence_end_date) : null;
 
         while ($generatedCount < $count) {
+            // Check if we've exceeded the end date
+            if ($endDate && $currentDate->gt($endDate)) {
+                break;
+            }
+
+            // Create event start date by combining the current date with default start time
+            $eventStartDate = $currentDate->copy();
+            if ($this->default_start_time) {
+                $eventStartDate->setTimeFrom($this->default_start_time);
+            } else {
+                $eventStartDate->setTime(9, 0, 0); // Default to 9:00 AM
+            }
+
+            // Create event end date by adding duration to start date
+            $eventEndDate = $eventStartDate->copy();
+            if ($this->default_duration) {
+                $eventEndDate->addMinutes($this->default_duration);
+            } else {
+                $eventEndDate->addHour(); // Default to 1 hour duration
+            }
+
             $eventData = [
                 'title' => $this->name,
                 'description' => $this->default_description,
-                'start_date' => $currentDate->copy()->setTimeFrom($this->default_start_time ?? '09:00:00'),
-                'end_date' => $this->default_duration ? 
-                    $currentDate->copy()->setTimeFrom($this->default_start_time ?? '09:00:00')->addMinutes($this->default_duration) : 
-                    null,
+                'start_date' => $eventStartDate,
+                'end_date' => $eventEndDate,
                 'location' => $this->default_location,
                 'type' => 'general',
                 'category_id' => $this->id,
@@ -264,6 +298,43 @@ class EventCategory extends Model
         }
 
         return $events;
+    }
+
+    /**
+     * Generate a single one-time event for this category
+     */
+    public function generateOneTimeEvent(): array
+    {
+        // Check if this is a one-time category
+        if ($this->is_recurring) {
+            return [];
+        }
+
+        // Check if an event already exists for this one-time category
+        if ($this->events()->exists()) {
+            return [];
+        }
+
+        // Check if start_date_time and end_date_time are set
+        if (!$this->start_date_time || !$this->end_date_time) {
+            return [];
+        }
+
+        $startDateTime = Carbon::parse($this->start_date_time);
+        $endDateTime = Carbon::parse($this->end_date_time);
+        
+        return [
+            'title' => $this->name,
+            'description' => $this->default_description,
+            'start_date' => $startDateTime,
+            'end_date' => $endDateTime,
+            'location' => $this->default_location,
+            'type' => 'general',
+            'category_id' => $this->id,
+            'status' => 'draft',
+            'is_recurring' => false,
+            'created_by' => $this->created_by,
+        ];
     }
 
     /**

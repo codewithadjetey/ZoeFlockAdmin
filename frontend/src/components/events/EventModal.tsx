@@ -3,17 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/shared';
 import { 
   TextInput, 
-  Textarea, 
+  TextArea, 
   SelectInput, 
   ToggleSwitch, 
   Button,
-  FormField, 
-  TextArea
+  FormField
 } from '@/components/ui';
 import { Event, CreateEventRequest, UpdateEventRequest } from '@/interfaces/events';
 import { EventsService } from '@/services/events';
 import { EntitiesService } from '@/services/entities';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatDateTimeLocalForInput } from '@/utils/helpers';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -23,8 +23,6 @@ interface EventModalProps {
 }
 
 interface EventFormData extends Omit<CreateEventRequest, 'recurrence_pattern' | 'recurrence_settings'> {
-  recurrence_pattern: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  recurrence_settings: Record<string, any>;
   status?: string;
 }
 
@@ -46,10 +44,7 @@ export default function EventModal({
     end_date: '',
     location: '',
     type: 'general',
-    is_recurring: false,
-    recurrence_pattern: 'weekly',
-    recurrence_settings: {},
-    recurrence_end_date: '',
+    status: 'draft',
     group_ids: [],
     family_ids: [],
     img_path: ''
@@ -71,15 +66,11 @@ export default function EventModal({
       setFormData({
         title: event.title,
         description: event.description || '',
-        start_date: event.start_date || '',
-        end_date: event.end_date || '',
+        start_date: formatDateTimeLocalForInput(event.start_date),
+        end_date: formatDateTimeLocalForInput(event.end_date),
         location: event.location || '',
         type: event.type,
         status: event.status || 'draft',
-        is_recurring: event.is_recurring,
-        recurrence_pattern: event.recurrence_pattern || 'weekly',
-        recurrence_settings: event.recurrence_settings || {},
-        recurrence_end_date: event.recurrence_end_date || '',
         group_ids: event.groups?.map(g => g.id) || [],
         family_ids: event.families?.map(f => f.id) || [],
         img_path: event.img_path || ''
@@ -98,10 +89,6 @@ export default function EventModal({
         location: '',
         type: 'general',
         status: 'draft',
-        is_recurring: false,
-        recurrence_pattern: 'weekly',
-        recurrence_settings: {},
-        recurrence_end_date: '',
         group_ids: [],
         family_ids: [],
         img_path: ''
@@ -138,9 +125,9 @@ export default function EventModal({
     }
 
     // Start date is only required for non-recurring events
-    if (!formData.is_recurring && !formData.start_date) {
-      newErrors.start_date = 'Start date is required for non-recurring events';
-    } else if (formData.start_date) {
+    if (!formData.start_date) {
+      newErrors.start_date = 'Start date is required';
+    } else {
       const startDate = new Date(formData.start_date);
       if (startDate <= new Date()) {
         newErrors.start_date = 'Start date must be in the future';
@@ -152,18 +139,6 @@ export default function EventModal({
       const endDate = new Date(formData.end_date);
       if (endDate <= startDate) {
         newErrors.end_date = 'End date must be after start date';
-      }
-    }
-
-    if (formData.is_recurring && !formData.recurrence_pattern) {
-      newErrors.recurrence_pattern = 'Recurrence pattern is required for recurring events';
-    }
-
-    if (formData.is_recurring && formData.recurrence_end_date && formData.start_date) {
-      const startDate = new Date(formData.start_date);
-      const endDate = new Date(formData.recurrence_end_date);
-      if (endDate <= startDate) {
-        newErrors.recurrence_end_date = 'Recurrence end date must be after start date';
       }
     }
 
@@ -200,112 +175,6 @@ export default function EventModal({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getRecurrenceSettingsFields = () => {
-    if (!formData.is_recurring) return null;
-
-    const fields: React.ReactNode[] = [];
-
-    // Pattern selection
-    fields.push(
-      <FormField key="pattern" label="Recurrence Pattern" error={errors.recurrence_pattern}>
-        <SelectInput
-          value={formData.recurrence_pattern}
-          onChange={(value) => handleInputChange('recurrence_pattern', value)}
-          options={[
-            { value: 'daily', label: 'Daily' },
-            { value: 'weekly', label: 'Weekly' },
-            { value: 'monthly', label: 'Monthly' },
-            { value: 'yearly', label: 'Yearly' }
-          ]}
-        />
-      </FormField>
-    );
-
-    // Interval
-    fields.push(
-      <FormField key="interval" label="Interval" error={
-        typeof errors.recurrence_settings === 'object' ? errors.recurrence_settings.interval : undefined
-      }>
-        <TextInput
-          type="number"
-          min="1"
-          value={formData.recurrence_settings?.interval || 1}
-          onChange={(e) => handleInputChange('recurrence_settings', {
-            ...formData.recurrence_settings,
-            interval: parseInt(e.target.value)
-          })}
-          placeholder="1"
-        />
-      </FormField>
-    );
-
-    // Weekdays for weekly pattern
-    if (formData.recurrence_pattern === 'weekly') {
-      const weekdays = formData.recurrence_settings?.weekdays || [1]; // Monday by default
-      fields.push(
-        <FormField key="weekdays" label="Days of Week" error={
-        typeof errors.recurrence_settings === 'object' ? errors.recurrence_settings.weekdays : undefined
-      }>
-          <div className="flex gap-2 flex-wrap">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-              <label key={day} className="flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={weekdays.includes(index + 1)}
-                  onChange={(e) => {
-                    const newWeekdays = e.target.checked
-                      ? [...weekdays, index + 1]
-                      : weekdays.filter((d: number) => d !== index + 1);
-                    handleInputChange('recurrence_settings', {
-                      ...formData.recurrence_settings,
-                      weekdays: newWeekdays
-                    });
-                  }}
-                />
-                {day}
-              </label>
-            ))}
-          </div>
-        </FormField>
-      );
-    }
-
-    // Day of month for monthly pattern
-    if (formData.recurrence_pattern === 'monthly') {
-      fields.push(
-        <FormField key="dayOfMonth" label="Day of Month" error={
-        typeof errors.recurrence_settings === 'object' ? errors.recurrence_settings.day_of_month : undefined
-      }>
-          <TextInput
-            type="number"
-            min="1"
-            max="31"
-            value={formData.recurrence_settings?.day_of_month || 1}
-            onChange={(e) => handleInputChange('recurrence_settings', {
-              ...formData.recurrence_settings,
-              day_of_month: parseInt(e.target.value)
-            })}
-            placeholder="1"
-          />
-        </FormField>
-      );
-    }
-
-    // Recurrence end date
-    fields.push(
-              <FormField key="recurrenceEndDate" label="Recurrence End Date" error={errors.recurrence_end_date}>
-          <TextInput
-            type="datetime-local"
-            value={formData.recurrence_end_date || ''}
-            onChange={(e) => handleInputChange('recurrence_end_date', e.target.value)}
-            placeholder="Leave empty for no end date"
-          />
-        </FormField>
-    );
-
-    return fields;
   };
 
   return (
@@ -371,22 +240,18 @@ export default function EventModal({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField 
-              label={`Start Date & Time${formData.is_recurring ? ' (Optional for recurring events)' : ''}`}
+              label={`Start Date & Time${formData.start_date ? '' : ' (Required)'}`}
               error={errors.start_date}
             >
               <TextInput
                 type="datetime-local"
                 value={formData.start_date || ''}
                 onChange={(e) => handleInputChange('start_date', e.target.value)}
+                placeholder="Select start date and time"
               />
-              {formData.is_recurring && (
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Leave empty to start recurring events from today
-                </p>
-              )}
             </FormField>
 
-            <FormField label="End Date & Time" error={errors.end_date}>
+            <FormField label="End Date & Time (Optional)" error={errors.end_date}>
               <TextInput
                 type="datetime-local"
                 value={formData.end_date || ''}
@@ -394,23 +259,6 @@ export default function EventModal({
                 placeholder="Leave empty for no end time"
               />
             </FormField>
-          </div>
-
-          {/* Recurring Event Settings */}
-          <div className="border-t pt-6">
-            <FormField label="Recurring Event">
-              <ToggleSwitch
-                checked={formData.is_recurring || false}
-                onChange={(checked) => handleInputChange('is_recurring', checked)}
-                label="Make this event recurring"
-              />
-            </FormField>
-
-            {formData.is_recurring && (
-              <div className="ml-6 mt-4 space-y-4">
-                {getRecurrenceSettingsFields()}
-              </div>
-            )}
           </div>
 
           {/* Group and Family Associations */}

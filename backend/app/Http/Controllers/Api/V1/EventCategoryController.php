@@ -71,12 +71,15 @@ class EventCategoryController extends Controller
             'is_recurring' => 'boolean',
             'recurrence_pattern' => 'required_if:is_recurring,true|nullable|in:daily,weekly,monthly,yearly',
             'recurrence_settings' => 'required_if:is_recurring,true|nullable|array',
-            'default_start_time' => 'nullable|date_format:H:i:s',
-            'default_duration' => 'nullable|integer|min:1',
+            'default_start_time' => 'required_if:is_recurring,true|nullable|date_format:H:i:s',
+            'default_duration' => 'required_if:is_recurring,true|nullable|integer|min:1',
+            'start_date_time' => 'required_if:is_recurring,false|nullable|date_format:Y-m-d H:i:s',
+            'end_date_time' => 'required_if:is_recurring,false|nullable|date_format:Y-m-d H:i:s',
+            'recurrence_start_date' => 'required_if:is_recurring,true|nullable|date|after_or_equal:today',
+            'recurrence_end_date' => 'nullable|date|after:recurrence_start_date',
             'default_location' => 'nullable|string|max:255',
             'default_description' => 'nullable|string',
         ]);
-
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -91,7 +94,8 @@ class EventCategoryController extends Controller
             $categoryData = $request->only([
                 'name', 'description', 'color', 'icon', 'attendance_type',
                 'is_active', 'is_recurring', 'recurrence_pattern', 'recurrence_settings',
-                'default_start_time', 'default_duration', 'default_location', 'default_description'
+                'default_start_time', 'start_date_time', 'end_date_time', 'recurrence_start_date', 
+                'recurrence_end_date', 'default_duration', 'default_location', 'default_description'
             ]);
 
             $categoryData['created_by'] = auth()->id();
@@ -139,17 +143,21 @@ class EventCategoryController extends Controller
     public function update(Request $request, EventCategory $category): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'color' => 'nullable|string|max:7',
             'icon' => 'nullable|string|max:50',
-            'attendance_type' => 'sometimes|required|in:individual,general,none',
+            'attendance_type' => 'required|in:individual,general,none',
             'is_active' => 'boolean',
             'is_recurring' => 'boolean',
             'recurrence_pattern' => 'required_if:is_recurring,true|nullable|in:daily,weekly,monthly,yearly',
             'recurrence_settings' => 'required_if:is_recurring,true|nullable|array',
-            'default_start_time' => 'nullable|date_format:H:i:s',
-            'default_duration' => 'nullable|integer|min:1',
+            'default_start_time' => 'required_if:is_recurring,true|nullable|date_format:H:i:s',
+            'default_duration' => 'required_if:is_recurring,true|nullable|integer|min:1',
+            'start_date_time' => 'required_if:is_recurring,false|nullable|date_format:Y-m-d H:i:s',
+            'end_date_time' => 'required_if:is_recurring,false|nullable|date_format:Y-m-d H:i:s',
+            'recurrence_start_date' => 'required_if:is_recurring,true|nullable|date|after_or_equal:today',
+            'recurrence_end_date' => 'nullable|date|after:recurrence_start_date',
             'default_location' => 'nullable|string|max:255',
             'default_description' => 'nullable|string',
         ]);
@@ -168,7 +176,8 @@ class EventCategoryController extends Controller
             $categoryData = $request->only([
                 'name', 'description', 'color', 'icon', 'attendance_type',
                 'is_active', 'is_recurring', 'recurrence_pattern', 'recurrence_settings',
-                'default_start_time', 'default_duration', 'default_location', 'default_description'
+                'default_start_time', 'start_date_time', 'end_date_time', 'recurrence_start_date', 
+                'recurrence_end_date', 'default_duration', 'default_location', 'default_description'
             ]);
 
             $categoryData['updated_by'] = auth()->id();
@@ -342,6 +351,88 @@ class EventCategoryController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to generate events',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate a single one-time event for a category
+     */
+    public function generateOneTimeEvent(Request $request, EventCategory $category): JsonResponse
+    {
+        if ($category->is_recurring) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This category is configured for recurring events. Use generateEvents instead.'
+            ], 422);
+        }
+
+        // Check if start_date_time and end_date_time are configured
+        if (!$category->start_date_time || !$category->end_date_time) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This category does not have start and end date/time configured. Please configure the event schedule first.'
+            ], 422);
+        }
+
+        // Check if an event already exists for this one-time category
+        if ($category->events()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An event already exists for this one-time category. One-time categories can only generate one event.'
+            ], 422);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'auto_publish' => 'boolean'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $autoPublish = $request->boolean('auto_publish', false);
+
+            // Generate one-time event data
+            $eventData = $category->generateOneTimeEvent();
+
+            if (empty($eventData)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No event could be generated with current settings'
+                ], 422);
+            }
+
+            if ($autoPublish) {
+                $eventData['status'] = 'published';
+            }
+            
+            $event = Event::create($eventData);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'One-time event generated successfully',
+                'data' => [
+                    'category' => $category,
+                    'event' => $event
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate one-time event',
                 'error' => $e->getMessage()
             ], 500);
         }

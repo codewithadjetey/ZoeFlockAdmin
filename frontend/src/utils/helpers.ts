@@ -98,3 +98,65 @@ export const getImageUrl = (path: string | null): string | null => {
   const clean = path.replace(/^\/+/, '');
   return `${base}/${clean}`;
 };
+
+/**
+ * Convert ISO datetime to time format for time input (HH:MM)
+ */
+export const formatTimeForInput = (isoTime: string | undefined): string => {
+  if (!isoTime) return '';
+  const date = new Date(isoTime);
+  return date.toTimeString().slice(0, 5); // Extract HH:MM
+};
+
+/**
+ * Convert ISO datetime to date format for date input (YYYY-MM-DD)
+ */
+export const formatDateForInput = (isoDate: string | undefined): string => {
+  if (!isoDate) return '';
+  const date = new Date(isoDate);
+  return date.toISOString().split('T')[0]; // Extract YYYY-MM-DD
+};
+
+/**
+ * Convert ISO datetime to datetime-local format for datetime-local input (YYYY-MM-DDTHH:MM)
+ */
+export const formatDateTimeLocalForInput = (isoDateTime: string | undefined): string => {
+  if (!isoDateTime) return '';
+  
+  try {
+    const date = new Date(isoDateTime);
+    
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+    
+    // Convert to YYYY-MM-DDTHH:MM format for datetime-local input
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  } catch (error) {
+    return '';
+  }
+};
+
+/**
+ * Convert datetime-local value to backend format (Y-m-d H:i:s)
+ */
+export const formatDateTimeForBackend = (dateTimeLocal: string): string => {
+  if (!dateTimeLocal) return '';
+  const date = new Date(dateTimeLocal);
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+};
+
+/**
+ * Convert date value to backend format (Y-m-d)
+ */
+export const formatDateForBackend = (dateValue: string): string => {
+  if (!dateValue) return '';
+  const date = new Date(dateValue);
+  return date.toISOString().split('T')[0];
+};
