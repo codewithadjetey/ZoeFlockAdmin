@@ -12,6 +12,7 @@ class GeneralAttendance extends Model
 
     protected $fillable = [
         'event_id',
+        'family_id',
         'total_attendance',
         'first_timers_count',
         'notes',
@@ -24,6 +25,14 @@ class GeneralAttendance extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    /**
+     * Get the family that this general attendance belongs to.
+     */
+    public function family(): BelongsTo
+    {
+        return $this->belongsTo(Family::class);
     }
 
     /**

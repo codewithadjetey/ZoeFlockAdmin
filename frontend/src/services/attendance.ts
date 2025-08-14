@@ -39,7 +39,7 @@ export interface GeneralAttendanceResponse {
   message: string;
   data: {
     event: any;
-    general_attendance: GeneralAttendance;
+    general_attendance: GeneralAttendance | GeneralAttendance[];
   };
 }
 

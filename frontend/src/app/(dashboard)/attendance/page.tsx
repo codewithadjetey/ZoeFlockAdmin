@@ -338,11 +338,32 @@ export default function AttendancePage() {
       const response = await AttendanceService.getEventGeneralAttendance(event.id);
       if (response.success && response.data.general_attendance) {
         const existingData = response.data.general_attendance;
-        setGeneralAttendanceForm({
-          total_attendance: existingData.total_attendance || 0,
-          first_timers_count: existingData.first_timers_count || 0,
-          notes: existingData.notes || ''
-        });
+        
+        // Handle both single object and array responses
+        let attendanceData;
+        if (Array.isArray(existingData)) {
+          // For admin users or multiple family records, use the first one
+          // In the future, we might want to show a family selector
+          attendanceData = existingData[0];
+        } else {
+          // For Family Head users, this is a single object
+          attendanceData = existingData;
+        }
+        
+        if (attendanceData) {
+          setGeneralAttendanceForm({
+            total_attendance: attendanceData.total_attendance || 0,
+            first_timers_count: attendanceData.first_timers_count || 0,
+            notes: attendanceData.notes || ''
+          });
+        } else {
+          // Set default values if no data found
+          setGeneralAttendanceForm({
+            total_attendance: 0,
+            first_timers_count: 0,
+            notes: ''
+          });
+        }
       } else {
         // Set default values if no existing data
         setGeneralAttendanceForm({

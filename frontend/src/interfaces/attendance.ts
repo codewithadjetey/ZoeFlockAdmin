@@ -19,6 +19,7 @@ export interface Attendance {
 export interface GeneralAttendance {
   id?: number;
   event_id: number;
+  family_id: number;
   total_attendance: number;
   first_timers_count: number;
   notes?: string;
@@ -29,6 +30,7 @@ export interface GeneralAttendance {
   // Relationships
   event?: Event;
   recordedBy?: User;
+  family?: any;
 }
 
 export interface AttendanceStats {

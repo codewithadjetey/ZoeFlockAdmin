@@ -25,16 +25,62 @@ class GeneralAttendanceController extends Controller
     {
         try {
             $event = Event::findOrFail($eventId);
-            $generalAttendance = GeneralAttendance::where('event_id', $eventId)->first();
+            
+            // Check if user is a Family Head and restrict to their family
+            $user = auth()->user();
+            $generalAttendanceQuery = GeneralAttendance::where('event_id', $eventId);
+            
+            if ($user && $user->hasRole('family-head')) {
+                $member = \App\Models\Member::where('user_id', $user->id)->first();
+                if ($member && $member->family) {
+                    // Family Head only sees their family's general attendance
+                    $generalAttendanceQuery->where('family_id', $member->family->id);
+                    // Return single record for Family Heads
+                    $generalAttendance = $generalAttendanceQuery->first();
+                    
+                    // Debug: Log the actual query and result
+                    \Log::info('Family Head query', [
+                        'user_id' => $user->id,
+                        'family_id' => $member->family->id,
+                        'sql' => $generalAttendanceQuery->toSql(),
+                        'bindings' => $generalAttendanceQuery->getBindings(),
+                        'result_count' => $generalAttendance ? 1 : 0,
+                        'result' => $generalAttendance ? $generalAttendance->toArray() : null
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Family Head must be associated with a family'
+                    ], 400);
+                }
+            } else {
+                // Admin users see all general attendance records
+                $generalAttendance = $generalAttendanceQuery->get();
+                
+                // Debug: Log the admin query
+                \Log::info('Admin query', [
+                    'user_id' => $user ? $user->id : null,
+                    'sql' => $generalAttendanceQuery->toSql(),
+                    'bindings' => $generalAttendanceQuery->getBindings(),
+                    'result_count' => $generalAttendance->count()
+                ]);
+            }
 
             return response()->json([
                 'success' => true,
                 'data' => [
                     'event' => $event,
-                    'general_attendance' => $generalAttendance
+                    'general_attendance' => $generalAttendance,
+                    'debug_info' => [
+                        'method' => 'getEventGeneralAttendance',
+                        'user_role' => $user && $user->hasRole('family-head') ? 'family-head' : 'admin',
+                        'result_type' => is_array($generalAttendance) ? 'array' : 'object',
+                        'result_count' => is_array($generalAttendance) ? count($generalAttendance) : 1
+                    ]
                 ]
             ]);
         } catch (\Exception $e) {
+            \Log::error('getEventGeneralAttendance error', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch general attendance',
@@ -51,10 +97,34 @@ class GeneralAttendanceController extends Controller
         $request->validate([
             'total_attendance' => 'required|integer|min:0',
             'first_timers_count' => 'nullable|integer|min:0',
-            'notes' => 'nullable|string|max:1000'
+            'notes' => 'nullable|string|max:1000',
+            'family_id' => 'nullable|integer|exists:families,id'
         ]);
 
         try {
+            // Check if user is a Family Head and automatically set family_id
+            $user = auth()->user();
+            if ($user && $user->hasRole('family-head')) {
+                $member = \App\Models\Member::where('user_id', $user->id)->first();
+                if ($member && $member->family) {
+                    // Family Head can only update their own family's attendance
+                    $request->merge(['family_id' => $member->family->id]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Family Head must be associated with a family to record general attendance'
+                    ], 400);
+                }
+            } else {
+                // For admin users, family_id is required
+                if (!$request->has('family_id') || !$request->family_id) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Family ID is required for general attendance'
+                    ], 400);
+                }
+            }
+
             $result = $this->attendanceService->updateGeneralAttendance(
                 $eventId,
                 $request->total_attendance,
@@ -127,17 +197,42 @@ class GeneralAttendanceController extends Controller
             $currentMonth = \Carbon\Carbon::now()->startOfMonth();
             $lastMonth = \Carbon\Carbon::now()->subMonth()->startOfMonth();
 
-            // Current month statistics
-            $currentMonthStats = GeneralAttendance::whereHas('event', function ($query) use ($currentMonth) {
+            // Check if user is a Family Head and restrict to their family
+            $user = auth()->user();
+            $familyId = null;
+            
+            if ($user && $user->hasRole('family-head')) {
+                $member = \App\Models\Member::where('user_id', $user->id)->first();
+                if ($member && $member->family) {
+                    $familyId = $member->family->id;
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Family Head must be associated with a family'
+                    ], 400);
+                }
+            }
+
+            // Build query for current month statistics
+            $currentMonthQuery = GeneralAttendance::whereHas('event', function ($query) use ($currentMonth) {
                 $query->whereMonth('start_date', $currentMonth->month)
                       ->whereYear('start_date', $currentMonth->year);
-            })->get();
-
-            // Last month statistics
-            $lastMonthStats = GeneralAttendance::whereHas('event', function ($query) use ($lastMonth) {
+            });
+            
+            // Build query for last month statistics
+            $lastMonthQuery = GeneralAttendance::whereHas('event', function ($query) use ($lastMonth) {
                 $query->whereMonth('start_date', $lastMonth->month)
                       ->whereYear('start_date', $lastMonth->year);
-            })->get();
+            });
+
+            // Apply family filter if Family Head
+            if ($familyId) {
+                $currentMonthQuery->where('family_id', $familyId);
+                $lastMonthQuery->where('family_id', $familyId);
+            }
+
+            $currentMonthStats = $currentMonthQuery->get();
+            $lastMonthStats = $lastMonthQuery->get();
 
             $summary = [
                 'current_month' => [
