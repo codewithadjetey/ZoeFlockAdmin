@@ -6,13 +6,12 @@ import { Card, PageHeader, DataTable, Button, FormField, SelectInput, TextInput 
 import { LoadingSpinner } from '@/components/shared';
 import { AttendanceService } from '@/services/attendance';
 import { EventsService } from '@/services/events';
-import type { Event, Attendance, AttendanceStats, Member } from '@/interfaces';
+import type { Event, Attendance, AttendanceStats, Member, BulkAttendanceUpdate } from '@/interfaces';
 
 interface EventWithAttendance extends Event {
   attendance_stats?: {
     present: number;
     absent: number;
-    first_timers: number;
     total: number;
   };
 }
@@ -25,7 +24,7 @@ interface GeneralAttendanceForm {
 
 interface IndividualAttendanceForm {
   member_id: number;
-  status: 'present' | 'absent' | 'first_timer';
+  status: 'present' | 'absent';
   notes: string;
 }
 
@@ -99,12 +98,19 @@ export default function AttendancePage() {
     notes: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [loadingGeneralAttendance, setLoadingGeneralAttendance] = useState(false);
   
   // Individual attendance state
   const [eventAttendance, setEventAttendance] = useState<Attendance[]>([]);
   const [eligibleMembers, setEligibleMembers] = useState<Member[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   const [updatingAttendance, setUpdatingAttendance] = useState<number | null>(null);
+  
+  // Bulk selection state
+  const [selectedMembers, setSelectedMembers] = useState<Set<number>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<'present' | 'absent'>('present');
+  const [bulkNotes, setBulkNotes] = useState('');
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   
   // Enhanced state for better UX
   const [error, setError] = useState<string | null>(null);
@@ -149,7 +155,6 @@ export default function AttendancePage() {
           attendance_stats: {
             present: 0,
             absent: 0,
-            first_timers: 0,
             total: 0
           }
         }));
@@ -183,7 +188,6 @@ export default function AttendancePage() {
                 attendance_stats: {
                   present: stats.individual_attendance.present,
                   absent: stats.individual_attendance.absent,
-                  first_timers: stats.individual_attendance.first_timers,
                   total: stats.individual_attendance.total_individual + (stats.general_attendance?.total_attendance || 0)
                 }
               };
@@ -281,7 +285,7 @@ export default function AttendancePage() {
           setEventAttendance(prev => 
             prev.map(att => 
               att.member_id === memberId 
-                ? { ...att, status: status as 'present' | 'absent' | 'first_timer', notes, updated_at: new Date().toISOString() }
+                ? { ...att, status: status as 'present' | 'absent', notes, updated_at: new Date().toISOString() }
                 : att
             )
           );
@@ -291,7 +295,7 @@ export default function AttendancePage() {
             id: result.data.id,
             event_id: selectedEvent.id,
             member_id: memberId,
-            status: status as 'present' | 'absent' | 'first_timer',
+            status: status as 'present' | 'absent',
             notes: notes,
             check_in_time: undefined,
             check_out_time: undefined,
@@ -309,7 +313,7 @@ export default function AttendancePage() {
               // Recalculate stats based on current eventAttendance state
               const currentAttendance = eventAttendance.map(att => 
                 att.member_id === memberId 
-                  ? { ...att, status: status as 'present' | 'absent' | 'first_timer', notes, updated_at: new Date().toISOString() }
+                  ? { ...att, status: status as 'present' | 'absent', notes, updated_at: new Date().toISOString() }
                   : att
               );
               
@@ -328,17 +332,43 @@ export default function AttendancePage() {
     } finally {
       setUpdatingAttendance(null);
     }
-  }, [selectedEvent, eventAttendance]); // Added eventAttendance back for the find operation
+  }, [selectedEvent, eventAttendance]);
 
-  const handleGeneralAttendance = useCallback((event: Event) => {
+  const handleGeneralAttendance = useCallback(async (event: Event) => {
     setSelectedEvent(event);
-    setGeneralAttendanceForm({
-      total_attendance: 0,
-      first_timers_count: 0,
-      notes: ''
-    });
     setError(null);
     setShowGeneralAttendanceModal(true);
+    setLoadingGeneralAttendance(true);
+    
+    // Fetch existing general attendance data if it exists
+    try {
+      const response = await AttendanceService.getEventGeneralAttendance(event.id);
+      if (response.success && response.data.general_attendance) {
+        const existingData = response.data.general_attendance;
+        setGeneralAttendanceForm({
+          total_attendance: existingData.total_attendance || 0,
+          first_timers_count: existingData.first_timers_count || 0,
+          notes: existingData.notes || ''
+        });
+      } else {
+        // Set default values if no existing data
+        setGeneralAttendanceForm({
+          total_attendance: 0,
+          first_timers_count: 0,
+          notes: ''
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch existing general attendance:', error);
+      // Set default values on error
+      setGeneralAttendanceForm({
+        total_attendance: 0,
+        first_timers_count: 0,
+        notes: ''
+      });
+    } finally {
+      setLoadingGeneralAttendance(false);
+    }
   }, []);
 
   const handleGeneralAttendanceSubmit = useCallback(async () => {
@@ -366,8 +396,7 @@ export default function AttendancePage() {
               attendance_stats: {
                 present: generalAttendanceForm.total_attendance,
                 absent: 0,
-                first_timers: generalAttendanceForm.first_timers_count,
-                total: generalAttendanceForm.total_attendance + generalAttendanceForm.first_timers_count
+                total: generalAttendanceForm.total_attendance
               }
             };
           }
@@ -396,6 +425,83 @@ export default function AttendancePage() {
       [field]: value
     }));
   }, []);
+
+  // Bulk selection functions
+  const handleSelectAll = useCallback(() => {
+    if (selectedMembers.size === eligibleMembers.length) {
+      setSelectedMembers(new Set());
+    } else {
+      setSelectedMembers(new Set(eligibleMembers.map(member => member.id)));
+    }
+  }, [selectedMembers.size, eligibleMembers]);
+
+  const handleMemberSelection = useCallback((memberId: number, selected: boolean) => {
+    const newSelected = new Set(selectedMembers);
+    if (selected) {
+      newSelected.add(memberId);
+    } else {
+      newSelected.delete(memberId);
+    }
+    setSelectedMembers(newSelected);
+  }, [selectedMembers]);
+
+  const handleBulkUpdate = useCallback(async () => {
+    if (!selectedEvent || selectedMembers.size === 0) return;
+
+    setIsBulkUpdating(true);
+    setError(null);
+
+    try {
+      const bulkUpdates: BulkAttendanceUpdate[] = Array.from(selectedMembers).map(memberId => ({
+        member_id: memberId,
+        status: bulkStatus,
+        notes: bulkNotes
+      }));
+
+      const result = await AttendanceService.bulkUpdateAttendance(selectedEvent.id, bulkUpdates);
+
+      if (result.success) {
+        // Update local state
+        setEventAttendance(prev => 
+          prev.map(att => 
+            selectedMembers.has(att.member_id) 
+              ? { ...att, status: bulkStatus, notes: bulkNotes, updated_at: new Date().toISOString() }
+              : att
+          )
+        );
+
+        // Update events list
+        setEvents(prev => 
+          prev.map(event => {
+            if (event.id === selectedEvent.id) {
+              const updatedAttendance = eventAttendance.map(att => 
+                selectedMembers.has(att.member_id) 
+                  ? { ...att, status: bulkStatus, notes: bulkNotes, updated_at: new Date().toISOString() }
+                  : att
+              );
+              const newStats = AttendanceService.calculateAttendanceStats(updatedAttendance);
+              return { ...event, attendance_stats: newStats };
+            }
+            return event;
+          })
+        );
+
+        // Clear selection and form
+        setSelectedMembers(new Set());
+        setBulkStatus('present');
+        setBulkNotes('');
+        
+        setError(null);
+      } else {
+        setError(`Failed to update attendance: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Failed to bulk update attendance:', error);
+      setError('Failed to bulk update attendance. Please try again.');
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  }, [selectedEvent, selectedMembers, bulkStatus, bulkNotes]);
 
   // Auto-refresh functionality - only refresh when needed
   useEffect(() => {
@@ -512,7 +618,7 @@ export default function AttendancePage() {
               {event.attendance_stats?.present || 0} members
             </span>
             <span className="text-blue-600 dark:text-blue-400">
-              {event.attendance_stats?.first_timers || 0} first-timers
+              {event.attendance_stats?.total || 0} total
             </span>
           </div>
           <div className="text-gray-600 dark:text-gray-400 font-medium">
@@ -635,9 +741,9 @@ export default function AttendancePage() {
                   <i className="fas fa-star text-purple-600 text-xl"></i>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">First Timers</p>
+                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Present</p>
                   <p className="text-2xl font-semibold text-gray-900 dark:text-white">
-                    {events.reduce((sum, event) => sum + (event.attendance_stats?.first_timers || 0), 0)}
+                    {events.reduce((sum, event) => sum + (event.attendance_stats?.present || 0), 0)}
                   </p>
                 </div>
               </div>
@@ -721,7 +827,12 @@ export default function AttendancePage() {
         {showEventModal && selectedEvent && (
           <SimpleModal
             isOpen={showEventModal}
-            onClose={() => setShowEventModal(false)}
+            onClose={() => {
+              setShowEventModal(false);
+              setSelectedMembers(new Set());
+              setBulkStatus('present');
+              setBulkNotes('');
+            }}
             title={`Individual Attendance - ${selectedEvent.title}`}
             size="4xl"
           >
@@ -770,12 +881,80 @@ export default function AttendancePage() {
                     </div>
                     <div>
                       <div className="text-2xl font-bold text-blue-600">
-                        {eventAttendance.filter(a => a.status === 'first_timer').length}
+                        {eventAttendance.filter(a => a.status === 'present').length}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">First Timers</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">Present</div>
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Bulk Selection Controls */}
+              <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-3">Bulk Update Attendance</h5>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                  <div>
+                    <label className="block text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                      Select Members
+                    </label>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSelectAll}
+                      className="w-full"
+                    >
+                      {selectedMembers.size === eligibleMembers.length ? 'Deselect All' : 'Select All'}
+                    </Button>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                      Status
+                    </label>
+                    <SelectInput
+                      value={bulkStatus}
+                      onChange={(value) => setBulkStatus(value as 'present' | 'absent')}
+                      className="w-full"
+                    >
+                      <option value="present">Present</option>
+                      <option value="absent">Absent</option>
+                    </SelectInput>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                      Notes (Optional)
+                    </label>
+                    <TextInput
+                      value={bulkNotes}
+                      onChange={(e) => setBulkNotes(e.target.value)}
+                      placeholder="Add notes for all selected members"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <Button
+                      onClick={handleBulkUpdate}
+                      disabled={selectedMembers.size === 0 || isBulkUpdating}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {isBulkUpdating ? (
+                        <>
+                          <i className="fas fa-spinner animate-spin mr-2"></i>
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-save mr-2"></i>
+                          Update {selectedMembers.size} Members
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                {selectedMembers.size > 0 && (
+                  <div className="mt-3 text-sm text-blue-700 dark:text-blue-300">
+                    {selectedMembers.size} member(s) selected
+                  </div>
+                )}
               </div>
 
               {loadingAttendance ? (
@@ -793,6 +972,14 @@ export default function AttendancePage() {
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                       <thead className="bg-gray-50 dark:bg-gray-800">
                         <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            <input
+                              type="checkbox"
+                              checked={selectedMembers.size === eligibleMembers.length && eligibleMembers.length > 0}
+                              onChange={handleSelectAll}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                          </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Member
                           </th>
@@ -817,6 +1004,14 @@ export default function AttendancePage() {
                           
                           return (
                             <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150">
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedMembers.has(member.id)}
+                                  onChange={(e) => handleMemberSelection(member.id, e.target.checked)}
+                                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
+                              </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center">
                                   <div className="flex-shrink-0 h-10 w-10">
@@ -863,7 +1058,6 @@ export default function AttendancePage() {
                                   >
                                     <option value="present">Present</option>
                                     <option value="absent">Absent</option>
-                                    <option value="first_timer">First Timer</option>
                                   </SelectInput>
                                   {updatingAttendance === member.id && (
                                     <div className="flex items-center">
@@ -901,6 +1095,16 @@ export default function AttendancePage() {
                 </div>
               )}
 
+              {/* Loading State */}
+              {loadingGeneralAttendance && (
+                <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                  <div className="flex items-center">
+                    <i className="fas fa-spinner animate-spin mr-2 text-blue-600"></i>
+                    <p className="text-sm text-blue-800 dark:text-blue-200">Loading existing attendance data...</p>
+                  </div>
+                </div>
+              )}
+
               <p className="text-gray-600 dark:text-gray-400 mb-6">
                 Record general attendance numbers for this event. Enter the total attendance of members and first timers.
               </p>
@@ -914,6 +1118,7 @@ export default function AttendancePage() {
                     onChange={(e) => handleFormChange('total_attendance', parseInt(e.target.value) || 0)}
                     placeholder="Enter total members present"
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    disabled={loadingGeneralAttendance}
                   />
                 </FormField>
 
@@ -925,6 +1130,7 @@ export default function AttendancePage() {
                     onChange={(e) => handleFormChange('first_timers_count', parseInt(e.target.value) || 0)}
                     placeholder="Enter total first timers"
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    disabled={loadingGeneralAttendance}
                   />
                 </FormField>
 
@@ -935,6 +1141,7 @@ export default function AttendancePage() {
                     onChange={(e) => handleFormChange('notes', e.target.value)}
                     placeholder="Add any additional notes"
                     className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    disabled={loadingGeneralAttendance}
                   />
                 </FormField>
 
@@ -975,7 +1182,7 @@ export default function AttendancePage() {
                   </Button>
                   <Button
                     onClick={handleGeneralAttendanceSubmit}
-                    disabled={submitting || (generalAttendanceForm.total_attendance === 0 && generalAttendanceForm.first_timers_count === 0)}
+                    disabled={submitting || loadingGeneralAttendance || (generalAttendanceForm.total_attendance === 0 && generalAttendanceForm.first_timers_count === 0)}
                     className="hover:bg-blue-600 transition-colors duration-200"
                   >
                     {submitting ? (
