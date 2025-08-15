@@ -251,13 +251,13 @@ class GeneralAttendanceController extends Controller
             $request->validate([
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date',
-                'granularity' => 'nullable|in:weekly,monthly,yearly',
+                'granularity' => 'nullable|in:none,monthly,yearly',
                 'family_id' => 'nullable|integer|exists:families,id'
             ]);
 
             $startDate = $request->start_date ? \Carbon\Carbon::parse($request->start_date) : null;
             $endDate = $request->end_date ? \Carbon\Carbon::parse($request->end_date) : null;
-            $granularity = $request->granularity ?? 'weekly';
+            $granularity = $request->granularity ?? 'monthly';
             $familyId = $request->family_id;
 
             // Check if user is a Family Head and restrict to their family
@@ -326,46 +326,60 @@ class GeneralAttendanceController extends Controller
      */
     private function processDataByGranularity($data, $granularity)
     {
-        if ($granularity === 'weekly') {
-            return $data;
+        if ($granularity === 'none') {
+            // Raw data, label by event title
+            return $data->map(function ($item) {
+                return [
+                    'xLabel' => $item->event->title ?? 'Unknown Event',
+                    'event_id' => $item->event_id,
+                    'total_attendance' => $item->total_attendance,
+                    'first_timers_count' => $item->first_timers_count,
+                    'notes' => $item->notes,
+                    'event' => $item->event,
+                    'family' => $item->family,
+                ];
+            })->values();
         }
-
         if ($granularity === 'monthly') {
             $monthlyData = $data->groupBy(function ($item) {
                 return \Carbon\Carbon::parse($item->event->start_date)->format('Y-m');
-            })->map(function ($group) {
+            })->map(function ($group, $label) {
                 $count = $group->count();
                 $totalAttendance = $group->sum('total_attendance');
                 $totalFirstTimers = $group->sum('first_timers_count');
-
+                // Format xLabel as 'Month YYYY'
+                $monthLabel = $group->first()->event->start_date
+                    ? \Carbon\Carbon::parse($group->first()->event->start_date)->format('F Y')
+                    : $label;
                 return [
-                    'period' => $group->first()->event->start_date ? 
-                        \Carbon\Carbon::parse($group->first()->event->start_date)->format('Y-m') : 'Unknown',
+                    'xLabel' => $monthLabel,
                     'total_attendance' => round($totalAttendance / $count),
                     'first_timers_count' => round($totalFirstTimers / $count),
                     'event_count' => $count
                 ];
             })->values();
+            return $monthlyData;
         }
-
         if ($granularity === 'yearly') {
             $yearlyData = $data->groupBy(function ($item) {
                 return \Carbon\Carbon::parse($item->event->start_date)->format('Y');
-            })->map(function ($group) {
+            })->map(function ($group, $label) {
                 $count = $group->count();
                 $totalAttendance = $group->sum('total_attendance');
                 $totalFirstTimers = $group->sum('first_timers_count');
-
+                // xLabel is just the year
+                $yearLabel = $group->first()->event->start_date
+                    ? \Carbon\Carbon::parse($group->first()->event->start_date)->format('Y')
+                    : $label;
                 return [
-                    'period' => $group->first()->event->start_date ? 
-                        \Carbon\Carbon::parse($group->first()->event->start_date)->format('Y') : 'Unknown',
+                    'xLabel' => $yearLabel,
                     'total_attendance' => round($totalAttendance / $count),
                     'first_timers_count' => round($totalFirstTimers / $count),
                     'event_count' => $count
                 ];
             })->values();
+            return $yearlyData;
         }
-
         return $data;
     }
 
