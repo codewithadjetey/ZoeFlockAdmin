@@ -55,15 +55,7 @@ class GeneralAttendanceController extends Controller
                 }
             } else {
                 // Admin users see all general attendance records
-                $generalAttendance = $generalAttendanceQuery->get();
-                
-                // Debug: Log the admin query
-                \Log::info('Admin query', [
-                    'user_id' => $user ? $user->id : null,
-                    'sql' => $generalAttendanceQuery->toSql(),
-                    'bindings' => $generalAttendanceQuery->getBindings(),
-                    'result_count' => $generalAttendance->count()
-                ]);
+                $generalAttendance = $generalAttendanceQuery->where('family_id', null)->get();
             }
 
             return response()->json([
@@ -71,12 +63,6 @@ class GeneralAttendanceController extends Controller
                 'data' => [
                     'event' => $event,
                     'general_attendance' => $generalAttendance,
-                    'debug_info' => [
-                        'method' => 'getEventGeneralAttendance',
-                        'user_role' => $user && $user->hasRole('family-head') ? 'family-head' : 'admin',
-                        'result_type' => is_array($generalAttendance) ? 'array' : 'object',
-                        'result_count' => is_array($generalAttendance) ? count($generalAttendance) : 1
-                    ]
                 ]
             ]);
         } catch (\Exception $e) {
@@ -113,14 +99,6 @@ class GeneralAttendanceController extends Controller
                     return response()->json([
                         'success' => false,
                         'message' => 'Family Head must be associated with a family to record general attendance'
-                    ], 400);
-                }
-            } else {
-                // For admin users, family_id is required
-                if (!$request->has('family_id') || !$request->family_id) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Family ID is required for general attendance'
                     ], 400);
                 }
             }
@@ -259,6 +237,250 @@ class GeneralAttendanceController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to fetch attendance summary',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get general attendance statistics with filtering options
+     */
+    public function getStatistics(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'start_date' => 'nullable|date',
+                'end_date' => 'nullable|date',
+                'granularity' => 'nullable|in:weekly,monthly,yearly',
+                'family_id' => 'nullable|integer|exists:families,id',
+                'data_type' => 'nullable|in:members,firstTimers'
+            ]);
+
+            $startDate = $request->start_date ? \Carbon\Carbon::parse($request->start_date) : null;
+            $endDate = $request->end_date ? \Carbon\Carbon::parse($request->end_date) : null;
+            $granularity = $request->granularity ?? 'weekly';
+            $familyId = $request->family_id;
+            $dataType = $request->data_type ?? 'members';
+
+            // Check if user is a Family Head and restrict to their family
+            $user = auth()->user();
+            if ($user && $user->hasRole('family-head')) {
+                $member = \App\Models\Member::where('user_id', $user->id)->first();
+                if ($member && $member->family) {
+                    $familyId = $member->family->id;
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Family Head must be associated with a family'
+                    ], 400);
+                }
+            }
+
+        
+
+
+
+            // Build base query
+            $query = GeneralAttendance::with(['event:id,title,start_date', 'family:id,name'])
+                // ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                //     $q->whereHas('event', function ($eventQuery) use ($startDate, $endDate) {
+                //         $eventQuery->whereBetween('start_date', [$startDate, $endDate]);
+                //     });
+                // })
+                ->when($familyId === null, function ($q) {
+                    $q->whereNull('family_id');
+                })
+                ->when($familyId, function ($q) use ($familyId) {
+                    // If family_id is provided, show only records for that family
+                    $q->where('family_id', $familyId);
+                });
+                // If no family_id provided, show ALL records (no filtering)
+
+            $generalAttendance = $query->get();
+
+            // Process data based on granularity
+            $processedData = $this->processDataByGranularity($generalAttendance, $granularity, $dataType);
+
+            // Get summary statistics
+            $summaryStats = $this->getSummaryStats($generalAttendance);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'general_attendance' => $processedData,
+                    'summary_stats' => $summaryStats,
+                    'filters' => [
+                        'start_date' => $startDate ? $startDate->format('Y-m-d') : null,
+                        'end_date' => $endDate ? $endDate->format('Y-m-d') : null,
+                        'granularity' => $granularity,
+                        'family_id' => $familyId,
+                        'data_type' => $dataType
+                    ]
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('getStatistics error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch attendance statistics',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Process data based on granularity
+     */
+    private function processDataByGranularity($data, $granularity, $dataType)
+    {
+        if ($granularity === 'weekly') {
+            return $data;
+        }
+
+        if ($granularity === 'monthly') {
+            $monthlyData = $data->groupBy(function ($item) {
+                return \Carbon\Carbon::parse($item->event->start_date)->format('Y-m');
+            })->map(function ($group) use ($dataType) {
+                $count = $group->count();
+                $totalAttendance = $group->sum('total_attendance');
+                $totalFirstTimers = $group->sum('first_timers_count');
+
+                return [
+                    'period' => $group->first()->event->start_date ? 
+                        \Carbon\Carbon::parse($group->first()->event->start_date)->format('Y-m') : 'Unknown',
+                    'total_attendance' => $dataType === 'members' ? 
+                        round($totalAttendance / $count) : round($totalFirstTimers / $count),
+                    'first_timers_count' => $dataType === 'firstTimers' ? 
+                        round($totalFirstTimers / $count) : round($totalAttendance / $count),
+                    'event_count' => $count
+                ];
+            })->values();
+        }
+
+        if ($granularity === 'yearly') {
+            $yearlyData = $data->groupBy(function ($item) {
+                return \Carbon\Carbon::parse($item->event->start_date)->format('Y');
+            })->map(function ($group) use ($dataType) {
+                $count = $group->count();
+                $totalAttendance = $group->sum('total_attendance');
+                $totalFirstTimers = $group->sum('first_timers_count');
+
+                return [
+                    'period' => $group->first()->event->start_date ? 
+                        \Carbon\Carbon::parse($group->first()->event->start_date)->format('Y') : 'Unknown',
+                    'total_attendance' => $dataType === 'members' ? 
+                        round($totalAttendance / $count) : round($totalFirstTimers / $count),
+                    'first_timers_count' => $dataType === 'firstTimers' ? 
+                        round($totalFirstTimers / $count) : round($totalAttendance / $count),
+                    'event_count' => $count
+                ];
+            })->values();
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get summary statistics
+     */
+    private function getSummaryStats($data)
+    {
+        if ($data->isEmpty()) {
+            return [
+                'total_members' => 0,
+                'total_first_timers' => 0,
+                'average_members' => 0,
+                'average_first_timers' => 0
+            ];
+        }
+
+        $uniqueEvents = $data->pluck('event_id')->unique()->count();
+        $totalMembers = $data->sum('total_attendance');
+        $totalFirstTimers = $data->sum('first_timers_count');
+
+        return [
+            'total_members' => $totalMembers,
+            'total_first_timers' => $totalFirstTimers,
+            'average_members' => $uniqueEvents > 0 ? round($totalMembers / $uniqueEvents) : 0,
+            'average_first_timers' => $uniqueEvents > 0 ? round($totalFirstTimers / $uniqueEvents) : 0
+        ];
+    }
+
+    /**
+     * Test statistics endpoint for debugging
+     */
+    public function testStatistics(): JsonResponse
+    {
+        try {
+            // Get raw counts
+            $totalEvents = \App\Models\Event::count();
+            $totalGeneralAttendance = \App\Models\GeneralAttendance::count();
+            $totalFamilies = \App\Models\Family::count();
+            
+            // Get sample data
+            $sampleGeneralAttendance = \App\Models\GeneralAttendance::with(['event:id,title,start_date', 'family:id,name'])->take(3)->get();
+            $sampleEvents = \App\Models\Event::take(3)->get(['id', 'title', 'start_date', 'type', 'status']);
+            
+            // Test queries
+            $query1 = \App\Models\GeneralAttendance::with(['event:id,title,start_date', 'family:id,name']);
+            $query1Count = $query1->count();
+            
+            $query2 = \App\Models\GeneralAttendance::with(['event:id,title,start_date', 'family:id,name'])
+                ->where('family_id', 1);
+            $query2Count = $query2->count();
+            
+            $query3 = \App\Models\GeneralAttendance::with(['event:id,title,start_date', 'family:id,name'])
+                ->whereNull('family_id');
+            $query3Count = $query3->count();
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'database_totals' => [
+                        'total_events' => $totalEvents,
+                        'total_general_attendance' => $totalGeneralAttendance,
+                        'total_families' => $totalFamilies
+                    ],
+                    'sample_general_attendance' => $sampleGeneralAttendance,
+                    'sample_events' => $sampleEvents,
+                    'query_tests' => [
+                        'all_records' => $query1Count,
+                        'family_id_1' => $query2Count,
+                        'family_id_null' => $query3Count
+                    ],
+                    'current_time' => now()->toISOString(),
+                    'one_year_ago' => now()->subYear()->toISOString(),
+                    'end_of_month' => now()->endOfMonth()->toISOString()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Test failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get families for filter dropdown
+     */
+    public function getFamilies(): JsonResponse
+    {
+        try {
+            $families = \App\Models\Family::select('id', 'name')
+                ->orderBy('name')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $families
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('getFamilies error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch families',
                 'error' => $e->getMessage()
             ], 500);
         }

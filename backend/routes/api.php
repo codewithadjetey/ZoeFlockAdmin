@@ -205,6 +205,9 @@ Route::prefix($apiVersion)->group(function () {
         Route::post('/event/{eventId}', [GeneralAttendanceController::class, 'updateGeneralAttendance']);
         Route::get('/analytics', [GeneralAttendanceController::class, 'getAttendanceAnalytics']);
         Route::get('/summary', [GeneralAttendanceController::class, 'getGeneralAttendanceSummary']);
+        Route::get('/statistics', [GeneralAttendanceController::class, 'getStatistics']);
+        Route::get('/test', [GeneralAttendanceController::class, 'testStatistics']);
+        Route::get('/families', [GeneralAttendanceController::class, 'getFamilies']);
     });
 
     // User Management routes
