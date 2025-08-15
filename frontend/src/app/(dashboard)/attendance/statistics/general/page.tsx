@@ -11,7 +11,6 @@ import { AttendanceService } from '@/services/attendance';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 type ChartType = 'line' | 'bar' | 'pie';
-type DataType = 'members' | 'firstTimers';
 type Granularity = 'weekly' | 'monthly' | 'yearly';
 
 interface GeneralAttendanceData {
@@ -32,7 +31,6 @@ interface Family {
 
 export default function GeneralAttendanceStatisticsPage() {
   const [chartType, setChartType] = useState<ChartType>('line');
-  const [dataType, setDataType] = useState<DataType>('members');
   const [granularity, setGranularity] = useState<Granularity>('weekly');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -78,8 +76,7 @@ export default function GeneralAttendanceStatisticsPage() {
         startDate: startDate ? startDate.toISOString().split('T')[0] : undefined,
         endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
         granularity,
-        familyId: familyFilter !== 'all' ? parseInt(familyFilter) : undefined,
-        dataType
+        familyId: familyFilter !== 'all' ? parseInt(familyFilter) : undefined
       });
 
       if (response.success) {
@@ -103,7 +100,7 @@ export default function GeneralAttendanceStatisticsPage() {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, granularity, familyFilter, dataType]);
+  }, [startDate, endDate, granularity, familyFilter]);
 
   // Load data when component mounts
   useEffect(() => {
@@ -197,18 +194,28 @@ export default function GeneralAttendanceStatisticsPage() {
     }
 
     const xAxisData = processedData.map(item => item.period || item.eventTitle);
-    const yAxisData = processedData.map(item => 
-      dataType === 'members' ? item.totalAttendance : item.firstTimersCount
-    );
+    const membersData = processedData.map(item => item.totalAttendance);
+    const firstTimersData = processedData.map(item => item.firstTimersCount);
 
     if (chartType === 'line') {
       return {
         title: {
-          text: `${dataType === 'members' ? 'Members' : 'First Timers'} Attendance Over Time`,
+          text: 'General Attendance Over Time',
           left: 'center'
         },
         tooltip: {
-          trigger: 'axis'
+          trigger: 'axis',
+          formatter: function(params: any) {
+            let result = params[0].axisValue + '<br/>';
+            params.forEach((param: any) => {
+              result += param.marker + ' ' + param.seriesName + ': ' + param.value + '<br/>';
+            });
+            return result;
+          }
+        },
+        legend: {
+          data: ['Total Members', 'First Timers'],
+          top: 30
         },
         xAxis: {
           type: 'category',
@@ -216,27 +223,56 @@ export default function GeneralAttendanceStatisticsPage() {
         },
         yAxis: {
           type: 'value',
-          name: dataType === 'members' ? 'Members' : 'First Timers'
+          name: 'Count'
         },
-        series: [{
-          data: yAxisData,
-          type: 'line',
-          smooth: true,
-          itemStyle: {
-            color: dataType === 'members' ? '#3B82F6' : '#10B981'
+        series: [
+          {
+            name: 'Total Members',
+            data: membersData,
+            type: 'line',
+            smooth: true,
+            itemStyle: {
+              color: '#3B82F6'
+            },
+            lineStyle: {
+              width: 3
+            }
+          },
+          {
+            name: 'First Timers',
+            data: firstTimersData,
+            type: 'line',
+            smooth: true,
+            itemStyle: {
+              color: '#10B981'
+            },
+            lineStyle: {
+              width: 3
+            }
           }
-        }]
+        ]
       };
     }
 
     if (chartType === 'bar') {
       return {
         title: {
-          text: `${dataType === 'members' ? 'Members' : 'First Timers'} Attendance by ${granularity === 'weekly' ? 'Event' : granularity === 'monthly' ? 'Month' : 'Year'}`,
+          text: `General Attendance by ${granularity === 'weekly' ? 'Event' : granularity === 'monthly' ? 'Month' : 'Year'}`,
           left: 'center'
         },
         tooltip: {
-          trigger: 'axis'
+          trigger: 'axis',
+          formatter: function(params: any) {
+            let result = params[0].axisValue + '<br/>';
+            params.forEach((param: any) => {
+              result += param.marker + ' ' + param.seriesName + ': ' + param.value + '<br/>';
+            });
+            return result;
+          }
+        },
+        legend: {
+          data: ['Total Members', 'First Timers'],
+          top: 30
         },
         xAxis: {
           type: 'category',
@@ -244,47 +280,74 @@ export default function GeneralAttendanceStatisticsPage() {
         },
         yAxis: {
           type: 'value',
-          name: dataType === 'members' ? 'Members' : 'First Timers'
+          name: 'Count'
         },
-        series: [{
-          data: yAxisData,
-          type: 'bar',
-          itemStyle: {
-            color: dataType === 'members' ? '#3B82F6' : '#10B981'
+        series: [
+          {
+            name: 'Total Members',
+            data: membersData,
+            type: 'bar',
+            itemStyle: {
+              color: '#3B82F6'
+            },
+            barWidth: '40%'
+          },
+          {
+            name: 'First Timers',
+            data: firstTimersData,
+            type: 'bar',
+            itemStyle: {
+              color: '#10B981'
+            },
+            barWidth: '40%'
           }
-        }]
+        ]
       };
     }
 
     if (chartType === 'pie') {
-      const total = yAxisData.reduce((sum, value) => sum + value, 0);
-      const pieData = xAxisData.map((label, index) => ({
-        name: label,
-        value: yAxisData[index]
-      }));
+      const totalMembers = membersData.reduce((sum, value) => sum + value, 0);
+      const totalFirstTimers = firstTimersData.reduce((sum, value) => sum + value, 0);
 
       return {
         title: {
-          text: `${dataType === 'members' ? 'Members' : 'First Timers'} Distribution`,
+          text: 'General Attendance Distribution',
           left: 'center'
         },
         tooltip: {
           trigger: 'item',
           formatter: '{a} <br/>{b}: {c} ({d}%)'
         },
-        series: [{
-          name: dataType === 'members' ? 'Members' : 'First Timers',
-          type: 'pie',
-          radius: '50%',
-          data: pieData,
-          emphasis: {
-            itemStyle: {
-              shadowBlur: 10,
-              shadowOffsetX: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
+        legend: {
+          data: ['Total Members', 'First Timers'],
+          top: 30
+        },
+        series: [
+          {
+            name: 'General Attendance',
+            type: 'pie',
+            radius: '50%',
+            data: [
+              {
+                name: 'Total Members',
+                value: totalMembers,
+                itemStyle: { color: '#3B82F6' }
+              },
+              {
+                name: 'First Timers',
+                value: totalFirstTimers,
+                itemStyle: { color: '#10B981' }
+              }
+            ],
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
             }
           }
-        }]
+        ]
       };
     }
 
@@ -348,25 +411,6 @@ export default function GeneralAttendanceStatisticsPage() {
                       onClick={() => setChartType(type)}
                     >
                       {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Data Type Selection */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Data Type
-                </label>
-                <div className="flex gap-2">
-                  {(['members', 'firstTimers'] as DataType[]).map((type) => (
-                    <Button
-                      key={type}
-                      variant={dataType === type ? 'primary' : 'outline'}
-                      size="sm"
-                      onClick={() => setDataType(type)}
-                    >
-                      {type === 'members' ? 'Members' : 'First Timers'}
                     </Button>
                   ))}
                 </div>

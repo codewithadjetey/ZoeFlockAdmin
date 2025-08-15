@@ -190,7 +190,6 @@ export class AttendanceService {
     endDate?: string;
     granularity?: 'weekly' | 'monthly' | 'yearly';
     familyId?: number;
-    dataType?: 'members' | 'firstTimers';
   }): Promise<{
     success: boolean;
     data: {
@@ -209,7 +208,6 @@ export class AttendanceService {
     if (params.endDate) queryParams.append('end_date', params.endDate);
     if (params.granularity) queryParams.append('granularity', params.granularity);
     if (params.familyId) queryParams.append('family_id', params.familyId.toString());
-    if (params.dataType) queryParams.append('data_type', params.dataType);
 
     const response = await http({ 
       method: 'get', 

@@ -252,15 +252,13 @@ class GeneralAttendanceController extends Controller
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date',
                 'granularity' => 'nullable|in:weekly,monthly,yearly',
-                'family_id' => 'nullable|integer|exists:families,id',
-                'data_type' => 'nullable|in:members,firstTimers'
+                'family_id' => 'nullable|integer|exists:families,id'
             ]);
 
             $startDate = $request->start_date ? \Carbon\Carbon::parse($request->start_date) : null;
             $endDate = $request->end_date ? \Carbon\Carbon::parse($request->end_date) : null;
             $granularity = $request->granularity ?? 'weekly';
             $familyId = $request->family_id;
-            $dataType = $request->data_type ?? 'members';
 
             // Check if user is a Family Head and restrict to their family
             $user = auth()->user();
@@ -275,10 +273,6 @@ class GeneralAttendanceController extends Controller
                     ], 400);
                 }
             }
-
-        
-
-
 
             // Build base query
             $query = GeneralAttendance::with(['event:id,title,start_date', 'family:id,name'])
@@ -299,7 +293,7 @@ class GeneralAttendanceController extends Controller
             $generalAttendance = $query->get();
 
             // Process data based on granularity
-            $processedData = $this->processDataByGranularity($generalAttendance, $granularity, $dataType);
+            $processedData = $this->processDataByGranularity($generalAttendance, $granularity);
 
             // Get summary statistics
             $summaryStats = $this->getSummaryStats($generalAttendance);
@@ -313,8 +307,7 @@ class GeneralAttendanceController extends Controller
                         'start_date' => $startDate ? $startDate->format('Y-m-d') : null,
                         'end_date' => $endDate ? $endDate->format('Y-m-d') : null,
                         'granularity' => $granularity,
-                        'family_id' => $familyId,
-                        'data_type' => $dataType
+                        'family_id' => $familyId
                     ]
                 ]
             ]);
@@ -331,7 +324,7 @@ class GeneralAttendanceController extends Controller
     /**
      * Process data based on granularity
      */
-    private function processDataByGranularity($data, $granularity, $dataType)
+    private function processDataByGranularity($data, $granularity)
     {
         if ($granularity === 'weekly') {
             return $data;
@@ -340,7 +333,7 @@ class GeneralAttendanceController extends Controller
         if ($granularity === 'monthly') {
             $monthlyData = $data->groupBy(function ($item) {
                 return \Carbon\Carbon::parse($item->event->start_date)->format('Y-m');
-            })->map(function ($group) use ($dataType) {
+            })->map(function ($group) {
                 $count = $group->count();
                 $totalAttendance = $group->sum('total_attendance');
                 $totalFirstTimers = $group->sum('first_timers_count');
@@ -348,10 +341,8 @@ class GeneralAttendanceController extends Controller
                 return [
                     'period' => $group->first()->event->start_date ? 
                         \Carbon\Carbon::parse($group->first()->event->start_date)->format('Y-m') : 'Unknown',
-                    'total_attendance' => $dataType === 'members' ? 
-                        round($totalAttendance / $count) : round($totalFirstTimers / $count),
-                    'first_timers_count' => $dataType === 'firstTimers' ? 
-                        round($totalFirstTimers / $count) : round($totalAttendance / $count),
+                    'total_attendance' => round($totalAttendance / $count),
+                    'first_timers_count' => round($totalFirstTimers / $count),
                     'event_count' => $count
                 ];
             })->values();
@@ -360,7 +351,7 @@ class GeneralAttendanceController extends Controller
         if ($granularity === 'yearly') {
             $yearlyData = $data->groupBy(function ($item) {
                 return \Carbon\Carbon::parse($item->event->start_date)->format('Y');
-            })->map(function ($group) use ($dataType) {
+            })->map(function ($group) {
                 $count = $group->count();
                 $totalAttendance = $group->sum('total_attendance');
                 $totalFirstTimers = $group->sum('first_timers_count');
@@ -368,10 +359,8 @@ class GeneralAttendanceController extends Controller
                 return [
                     'period' => $group->first()->event->start_date ? 
                         \Carbon\Carbon::parse($group->first()->event->start_date)->format('Y') : 'Unknown',
-                    'total_attendance' => $dataType === 'members' ? 
-                        round($totalAttendance / $count) : round($totalFirstTimers / $count),
-                    'first_timers_count' => $dataType === 'firstTimers' ? 
-                        round($totalFirstTimers / $count) : round($totalAttendance / $count),
+                    'total_attendance' => round($totalAttendance / $count),
+                    'first_timers_count' => round($totalFirstTimers / $count),
                     'event_count' => $count
                 ];
             })->values();
