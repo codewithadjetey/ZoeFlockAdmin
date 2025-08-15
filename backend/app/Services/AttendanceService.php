@@ -247,16 +247,6 @@ class AttendanceService
                         'error' => 'Family Head must be associated with a family to record general attendance'
                     ];
                 }
-            } else {
-                // For admin users, they need to specify which family
-                // This maintains backward compatibility for admin users
-                $familyId = request('family_id');
-                if (!$familyId) {
-                    return [
-                        'success' => false,
-                        'error' => 'Family ID is required for general attendance'
-                    ];
-                }
             }
 
             $generalAttendance = GeneralAttendance::updateOrCreate(
@@ -361,7 +351,7 @@ class AttendanceService
      */
     public function getAttendanceAnalytics(Carbon $startDate = null, Carbon $endDate = null): array
     {
-        $startDate = $startDate ?? Carbon::now()->startOfMonth();
+        $startDate = $startDate ?? Carbon::now()->subYear()->startOfMonth();
         $endDate = $endDate ?? Carbon::now()->endOfMonth();
 
         // Check if user is a Family Head and restrict to their family events
@@ -483,4 +473,33 @@ class AttendanceService
             ];
             }
         }
+
+    /**
+     * Get families for filter dropdown
+     */
+    public function getFamiliesForFilter(): array
+    {
+        try {
+            $families = \App\Models\Family::select('id', 'name')
+                ->orderBy('name')
+                ->get()
+                ->map(function ($family) {
+                    return [
+                        'id' => $family->id,
+                        'name' => $family->name
+                    ];
+                })
+                ->toArray();
+
+            return [
+                'success' => true,
+                'data' => $families
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
 } 

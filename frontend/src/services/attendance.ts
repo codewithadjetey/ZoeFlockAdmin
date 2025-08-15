@@ -183,6 +183,51 @@ export class AttendanceService {
   }
 
   /**
+   * Get general attendance statistics with filtering options
+   */
+  static async getGeneralAttendanceStatistics(params: {
+    startDate?: string;
+    endDate?: string;
+    granularity?: 'weekly' | 'monthly' | 'yearly';
+    familyId?: number;
+  }): Promise<{
+    success: boolean;
+    data: {
+      general_attendance: any[];
+      summary_stats: {
+        total_members: number;
+        total_first_timers: number;
+        average_members: number;
+        average_first_timers: number;
+      };
+      filters: any;
+    };
+  }> {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('start_date', params.startDate);
+    if (params.endDate) queryParams.append('end_date', params.endDate);
+    if (params.granularity) queryParams.append('granularity', params.granularity);
+    if (params.familyId) queryParams.append('family_id', params.familyId.toString());
+
+    const response = await http({ 
+      method: 'get', 
+      url: `/general-attendance/statistics?${queryParams.toString()}` 
+    });
+    return response.data;
+  }
+
+  /**
+   * Get families for filter dropdown
+   */
+  static async getFamilies(): Promise<{
+    success: boolean;
+    data: Array<{ id: number; name: string }>;
+  }> {
+    const response = await http({ method: 'get', url: '/general-attendance/families' });
+    return response.data;
+  }
+
+  /**
    * Get available attendance statuses
    */
   static getAttendanceStatuses(): string[] {
