@@ -26,7 +26,16 @@ class EventController extends Controller
     }
 
     /**
-     * Display a listing of events
+     * @OA\Get(
+     *     path="/events",
+     *     summary="Get a list of events",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Events retrieved successfully"
+     *     )
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -97,7 +106,39 @@ class EventController extends Controller
     }
 
     /**
-     * Store a newly created event
+     * @OA\Post(
+     *     path="/events",
+     *     summary="Create a new event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"title","type"},
+     *             @OA\Property(property="title", type="string", example="Sunday Service"),
+     *             @OA\Property(property="description", type="string", example="Weekly worship service"),
+     *             @OA\Property(property="start_date", type="string", format="date-time", example="2024-08-18T10:00:00Z"),
+     *             @OA\Property(property="end_date", type="string", format="date-time", example="2024-08-18T12:00:00Z"),
+     *             @OA\Property(property="location", type="string", example="Main Hall"),
+     *             @OA\Property(property="type", type="string", enum={"group","family","general"}, example="general"),
+     *             @OA\Property(property="is_recurring", type="boolean", example=false),
+     *             @OA\Property(property="recurrence_pattern", type="string", enum={"daily","weekly","monthly","yearly"}, example="weekly"),
+     *             @OA\Property(property="recurrence_settings", type="object"),
+     *             @OA\Property(property="recurrence_end_date", type="string", format="date-time"),
+     *             @OA\Property(property="group_ids", type="array", @OA\Items(type="integer")),
+     *             @OA\Property(property="family_ids", type="array", @OA\Items(type="integer")),
+     *             @OA\Property(property="img_path", type="string", example="/images/events/sunday.png")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Event created successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     )
+     * )
      */
     public function store(Request $request): JsonResponse
     {
@@ -191,7 +232,27 @@ class EventController extends Controller
     }
 
     /**
-     * Display the specified event
+     * @OA\Get(
+     *     path="/events/{event}",
+     *     summary="Get a specific event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event retrieved successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found"
+     *     )
+     * )
      */
     public function show(Event $event): JsonResponse
     {
@@ -204,7 +265,49 @@ class EventController extends Controller
     }
 
     /**
-     * Update the specified event
+     * @OA\Put(
+     *     path="/events/{event}",
+     *     summary="Update an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="title", type="string", example="Sunday Service"),
+     *             @OA\Property(property="description", type="string", example="Weekly worship service"),
+     *             @OA\Property(property="start_date", type="string", format="date-time", example="2024-08-18T10:00:00Z"),
+     *             @OA\Property(property="end_date", type="string", format="date-time", example="2024-08-18T12:00:00Z"),
+     *             @OA\Property(property="location", type="string", example="Main Hall"),
+     *             @OA\Property(property="type", type="string", enum={"group","family","general"}, example="general"),
+     *             @OA\Property(property="is_recurring", type="boolean", example=false),
+     *             @OA\Property(property="recurrence_pattern", type="string", enum={"daily","weekly","monthly","yearly"}, example="weekly"),
+     *             @OA\Property(property="recurrence_settings", type="object"),
+     *             @OA\Property(property="recurrence_end_date", type="string", format="date-time"),
+     *             @OA\Property(property="group_ids", type="array", @OA\Items(type="integer")),
+     *             @OA\Property(property="family_ids", type="array", @OA\Items(type="integer")),
+     *             @OA\Property(property="img_path", type="string", example="/images/events/sunday.png")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event updated successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found"
+     *     )
+     * )
      */
     public function update(Request $request, Event $event): JsonResponse
     {
@@ -308,7 +411,27 @@ class EventController extends Controller
     }
 
     /**
-     * Remove the specified event
+     * @OA\Delete(
+     *     path="/events/{event}",
+     *     summary="Delete an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event deleted successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found"
+     *     )
+     * )
      */
     public function destroy(Event $event): JsonResponse
     {
@@ -343,6 +466,38 @@ class EventController extends Controller
 
     /**
      * Cancel the specified event
+     * @OA\Post(
+     *     path="/events/{event}/cancel",
+     *     summary="Cancel an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="reason", type="string", example="Event cancelled due to unforeseen circumstances."),
+     *             @OA\Property(property="cancel_future_instances", type="boolean", example=false)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event cancelled successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found"
+     *     )
+     * )
      */
     public function cancel(Request $request, Event $event): JsonResponse
     {
@@ -393,6 +548,31 @@ class EventController extends Controller
 
     /**
      * Publish the specified event
+     * @OA\Post(
+     *     path="/events/{event}/publish",
+     *     summary="Publish an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event published successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Event is already published"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found"
+     *     )
+     * )
      */
     public function publish(Event $event): JsonResponse
     {
@@ -426,6 +606,27 @@ class EventController extends Controller
 
     /**
      * Get events for a specific member
+     * @OA\Get(
+     *     path="/events/member/{memberId}",
+     *     summary="Get events for a specific member",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="memberId",
+     *         in="path",
+     *         required=true,
+     *         description="Member ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Events retrieved successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Member not found"
+     *     )
+     * )
      */
     public function getMemberEvents(Request $request, $memberId): JsonResponse
     {
@@ -478,6 +679,27 @@ class EventController extends Controller
 
     /**
      * Get families associated with an event
+     * @OA\Get(
+     *     path="/events/{event}/families",
+     *     summary="Get families associated with an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Families retrieved successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found"
+     *     )
+     * )
      */
     public function getEventFamilies(Event $event): JsonResponse
     {
@@ -500,6 +722,39 @@ class EventController extends Controller
 
     /**
      * Add families to an event
+     * @OA\Post(
+     *     path="/events/{event}/families",
+     *     summary="Add families to an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="family_ids", type="array", @OA\Items(type="integer")),
+     *             @OA\Property(property="is_required", type="boolean", example=false),
+     *             @OA\Property(property="notes", type="string", example="Notes for the family.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Families added to event successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found"
+     *     )
+     * )
      */
     public function addFamiliesToEvent(Request $request, Event $event): JsonResponse
     {
@@ -552,6 +807,45 @@ class EventController extends Controller
 
     /**
      * Update family relationship for an event
+     * @OA\Put(
+     *     path="/events/{event}/families/{familyId}",
+     *     summary="Update family relationship for an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="familyId",
+     *         in="path",
+     *         required=true,
+     *         description="Family ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="is_required", type="boolean", example=true),
+     *             @OA\Property(property="notes", type="string", example="Updated notes for the family.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event family relationship updated successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event or Family not found"
+     *     )
+     * )
      */
     public function updateEventFamily(Request $request, Event $event, $familyId): JsonResponse
     {
@@ -595,6 +889,34 @@ class EventController extends Controller
 
     /**
      * Remove a family from an event
+     * @OA\Delete(
+     *     path="/events/{event}/families/{familyId}",
+     *     summary="Remove a family from an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="familyId",
+     *         in="path",
+     *         required=true,
+     *         description="Family ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Family removed from event successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event or Family not found"
+     *     )
+     * )
      */
     public function removeFamilyFromEvent(Event $event, $familyId): JsonResponse
     {
@@ -619,6 +941,27 @@ class EventController extends Controller
 
     /**
      * Get groups associated with an event
+     * @OA\Get(
+     *     path="/events/{event}/groups",
+     *     summary="Get groups associated with an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Groups retrieved successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found"
+     *     )
+     * )
      */
     public function getEventGroups(Event $event): JsonResponse
     {
@@ -641,6 +984,39 @@ class EventController extends Controller
 
     /**
      * Add groups to an event
+     * @OA\Post(
+     *     path="/events/{event}/groups",
+     *     summary="Add groups to an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="group_ids", type="array", @OA\Items(type="integer")),
+     *             @OA\Property(property="is_required", type="boolean", example=false),
+     *             @OA\Property(property="notes", type="string", example="Notes for the group.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Groups added to event successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event not found"
+     *     )
+     * )
      */
     public function addGroupsToEvent(Request $request, Event $event): JsonResponse
     {
@@ -693,6 +1069,45 @@ class EventController extends Controller
 
     /**
      * Update group relationship for an event
+     * @OA\Put(
+     *     path="/events/{event}/groups/{groupId}",
+     *     summary="Update group relationship for an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="groupId",
+     *         in="path",
+     *         required=true,
+     *         description="Group ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="is_required", type="boolean", example=true),
+     *             @OA\Property(property="notes", type="string", example="Updated notes for the group.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event group relationship updated successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event or Group not found"
+     *     )
+     * )
      */
     public function updateEventGroup(Request $request, Event $event, $groupId): JsonResponse
     {
@@ -736,6 +1151,34 @@ class EventController extends Controller
 
     /**
      * Remove a group from an event
+     * @OA\Delete(
+     *     path="/events/{event}/groups/{groupId}",
+     *     summary="Remove a group from an event",
+     *     tags={"Events"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="event",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="groupId",
+     *         in="path",
+     *         required=true,
+     *         description="Group ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Group removed from event successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event or Group not found"
+     *     )
+     * )
      */
     public function removeGroupFromEvent(Event $event, $groupId): JsonResponse
     {

@@ -243,7 +243,48 @@ class GeneralAttendanceController extends Controller
     }
 
     /**
-     * Get general attendance statistics with filtering options
+     * @OA\Get(
+     *     path="/general-attendance/statistics",
+     *     summary="Get general attendance statistics with filtering options",
+     *     tags={"GeneralAttendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         required=false,
+     *         description="Start date",
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         required=false,
+     *         description="End date",
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="granularity",
+     *         in="query",
+     *         required=false,
+     *         description="Granularity (none, monthly, yearly)",
+     *         @OA\Schema(type="string", enum={"none","monthly","yearly"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="family_id",
+     *         in="query",
+     *         required=false,
+     *         description="Family ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="General attendance statistics retrieved successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid request or failed to fetch statistics"
+     *     )
+     * )
      */
     public function getStatistics(Request $request): JsonResponse
     {

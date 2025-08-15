@@ -21,7 +21,23 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Get attendance records for a specific event
+     * @OA\Get(
+     *     path="/events/{eventId}/attendance",
+     *     summary="Get attendance records for a specific event",
+     *     tags={"Attendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="eventId",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Attendance records retrieved successfully"
+     *     )
+     * )
      */
     public function getEventAttendance(int $eventId): JsonResponse
     {
@@ -81,7 +97,46 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Update individual attendance status
+     * @OA\Put(
+     *     path="/events/{eventId}/attendance/{memberId}/status",
+     *     summary="Update individual attendance status",
+     *     tags={"Attendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="eventId",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="memberId",
+     *         in="path",
+     *         required=true,
+     *         description="Member ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"status"},
+     *             @OA\Property(property="status", type="string", enum={"present","absent","first_timer"}, example="present"),
+     *             @OA\Property(property="notes", type="string", example="Arrived late")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Attendance status updated successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid request or update failed"
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     )
+     * )
      */
     public function updateAttendanceStatus(Request $request, int $eventId, int $memberId): JsonResponse
     {
@@ -120,7 +175,34 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Mark check-in for a member
+     * @OA\Post(
+     *     path="/events/{eventId}/attendance/{memberId}/check-in",
+     *     summary="Mark check-in for a member",
+     *     tags={"Attendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="eventId",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="memberId",
+     *         in="path",
+     *         required=true,
+     *         description="Member ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Check-in marked successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid request or check-in failed"
+     *     )
+     * )
      */
     public function markCheckIn(int $eventId, int $memberId): JsonResponse
     {
@@ -149,7 +231,34 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Mark check-out for a member
+     * @OA\Post(
+     *     path="/events/{eventId}/attendance/{memberId}/check-out",
+     *     summary="Mark check-out for a member",
+     *     tags={"Attendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="eventId",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="memberId",
+     *         in="path",
+     *         required=true,
+     *         description="Member ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Check-out marked successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid request or check-out failed"
+     *     )
+     * )
      */
     public function markCheckOut(int $eventId, int $memberId): JsonResponse
     {
@@ -178,7 +287,23 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Get eligible members for an event
+     * @OA\Get(
+     *     path="/events/{eventId}/attendance/eligible-members",
+     *     summary="Get eligible members for an event",
+     *     tags={"Attendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="eventId",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Eligible members retrieved successfully"
+     *     )
+     * )
      */
     public function getEligibleMembers(int $eventId): JsonResponse
     {
@@ -226,7 +351,38 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Bulk update attendance statuses
+     * @OA\Post(
+     *     path="/events/{eventId}/attendance/bulk-update",
+     *     summary="Bulk update attendance statuses",
+     *     tags={"Attendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="eventId",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"attendances"},
+     *             @OA\Property(property="attendances", type="array", @OA\Items(type="object",
+     *                 @OA\Property(property="member_id", type="integer"),
+     *                 @OA\Property(property="status", type="string", enum={"present","absent","first_timer"}),
+     *                 @OA\Property(property="notes", type="string")
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Bulk update completed"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bulk update failed"
+     *     )
+     * )
      */
     public function bulkUpdateAttendance(Request $request, int $eventId): JsonResponse
     {
@@ -289,7 +445,27 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Ensure all attendance records exist for an event
+     * @OA\Post(
+     *     path="/events/{eventId}/attendance/ensure-records",
+     *     summary="Ensure all attendance records exist for an event",
+     *     tags={"Attendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="eventId",
+     *         in="path",
+     *         required=true,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Attendance records ensured successfully"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Failed to ensure attendance records"
+     *     )
+     * )
      */
     public function ensureAttendanceRecords(int $eventId): JsonResponse
     {
@@ -319,7 +495,65 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Get individual attendance statistics (dynamic, for dashboard)
+     * @OA\Get(
+     *     path="/attendance/statistics/individual",
+     *     summary="Get individual attendance statistics",
+     *     tags={"Attendance"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         required=false,
+     *         description="Start date",
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         required=false,
+     *         description="End date",
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="granularity",
+     *         in="query",
+     *         required=false,
+     *         description="Granularity (none, monthly, yearly)",
+     *         @OA\Schema(type="string", enum={"none","monthly","yearly"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="member_id",
+     *         in="query",
+     *         required=false,
+     *         description="Member ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="event_id",
+     *         in="query",
+     *         required=false,
+     *         description="Event ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="category_id",
+     *         in="query",
+     *         required=false,
+     *         description="Category ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="family_id",
+     *         in="query",
+     *         required=false,
+     *         description="Family ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Individual attendance statistics retrieved successfully"
+     *     )
+     * )
      */
     public function getIndividualStatistics(Request $request): JsonResponse
     {
