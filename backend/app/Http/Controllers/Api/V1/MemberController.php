@@ -108,11 +108,8 @@ class MemberController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Members retrieved successfully"),
-     *             @OA\Property(
-     *                 property="members",
-     *                 type="object",
-     *                 @OA\Property(property="current_page", type="integer", example=1),
-     *                 @OA\Property(property="data", type="array", 
+     *             @OA\Property(property="members", type="object",
+     *                 @OA\Property(property="data", type="array",
      *                     @OA\Items(type="object",
      *                         @OA\Property(property="id", type="integer", example=1),
      *                         @OA\Property(property="first_name", type="string", example="John"),
@@ -125,20 +122,24 @@ class MemberController extends Controller
      *                         @OA\Property(property="updated_at", type="string", format="date-time")
      *                     )
      *                 ),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
      *                 @OA\Property(property="first_page_url", type="string"),
      *                 @OA\Property(property="from", type="integer", nullable=true),
      *                 @OA\Property(property="last_page", type="integer"),
      *                 @OA\Property(property="last_page_url", type="string"),
+     *                 @OA\Property(property="next_page_url", type="string", nullable=true),
+     *                 @OA\Property(property="path", type="string"),
+     *                 @OA\Property(property="per_page", type="integer"),
+     *                 @OA\Property(property="prev_page_url", type="string", nullable=true),
+     *                 @OA\Property(property="to", type="integer", nullable=true),
+     *                 @OA\Property(property="total", type="integer"),
      *                 @OA\Property(property="links", type="array",
      *                     @OA\Items(type="object",
      *                         @OA\Property(property="url", type="string", nullable=true),
      *                         @OA\Property(property="label", type="string"),
      *                         @OA\Property(property="active", type="boolean")
      *                     )
-     *                 ),
-     *                 @OA\Property(property="total", type="integer"),
-     *                 @OA\Property(property="per_page", type="integer"),
-     *                 @OA\Property(property="current_page", type="integer")
+     *                 )
      *             )
      *         )
      *     ),
@@ -465,7 +466,7 @@ class MemberController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Member updated successfully"),
-     *             @OA\Property(property="data", type="object,
+     *             @OA\Property(property="data", type="object",
      *                 @OA\Property(property="member", type="object")
      *             )
      *         )
@@ -854,10 +855,10 @@ class MemberController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Member added to groups successfully"),
-     *             @OA\Property(property="data", type="object,
-     *                 @OA\Property(property="added_groups", type="array"),
-     *                 @OA\Property(property="skipped_groups", type="array"),
-     *                 @OA\Property(property="errors", type="array")
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="added_groups", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="skipped_groups", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="errors", type="array", @OA\Items(type="string"))
      *             )
      *         )
      *     ),
@@ -996,9 +997,9 @@ class MemberController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Member removed from groups successfully"),
-     *             @OA\Property(property="data", type="object,
-     *                 @OA\Property(property="removed_groups", type="array"),
-     *                 @OA\Property(property="not_found_groups", type="array")
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="removed_groups", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="not_found_groups", type="array", @OA\Items(type="object"))
      *             )
      *         )
      *     ),
