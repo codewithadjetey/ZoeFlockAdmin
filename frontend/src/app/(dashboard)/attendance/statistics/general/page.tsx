@@ -11,7 +11,7 @@ import { AttendanceService } from '@/services/attendance';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 type ChartType = 'line' | 'bar' | 'pie';
-type Granularity = 'weekly' | 'monthly' | 'yearly';
+type Granularity = 'none' | 'monthly' | 'yearly';
 
 interface GeneralAttendanceData {
   eventId: number;
@@ -22,6 +22,9 @@ interface GeneralAttendanceData {
   totalAttendance: number;
   firstTimersCount: number;
   notes: string;
+  xLabel: string; // Added for backend-provided labels
+  total_attendance?: number; // Added for backend-provided data
+  first_timers_count?: number; // Added for backend-provided data
 }
 
 interface Family {
@@ -31,7 +34,7 @@ interface Family {
 
 export default function GeneralAttendanceStatisticsPage() {
   const [chartType, setChartType] = useState<ChartType>('line');
-  const [granularity, setGranularity] = useState<Granularity>('weekly');
+  const [granularity, setGranularity] = useState<Granularity>('none');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [familyFilter, setFamilyFilter] = useState<string>('all');
@@ -89,7 +92,8 @@ export default function GeneralAttendanceStatisticsPage() {
           familyName: item.family?.name || 'Unknown Family',
           totalAttendance: item.total_attendance || 0,
           firstTimersCount: item.first_timers_count || 0,
-          notes: item.notes || ''
+          notes: item.notes || '',
+          xLabel: item.xLabel // Assuming item.period is the xLabel for backend data
         }));
 
         setAttendanceData(transformedData);
@@ -119,67 +123,11 @@ export default function GeneralAttendanceStatisticsPage() {
     return attendanceData;
   };
 
-  const processDataByGranularity = (data: GeneralAttendanceData[]) => {
-    if (granularity === 'weekly') {
-      return data;
-    }
+  // Remove processDataByGranularity and related helpers
 
-    if (granularity === 'monthly') {
-      const monthlyData = data.reduce((acc, item) => {
-        const month = new Date(item.eventDate).toISOString().slice(0, 7); // YYYY-MM
-        if (!acc[month]) {
-          acc[month] = {
-            period: month,
-            totalAttendance: 0,
-            firstTimersCount: 0,
-            eventCount: 0
-          };
-        }
-        acc[month].totalAttendance += item.totalAttendance;
-        acc[month].firstTimersCount += item.firstTimersCount;
-        acc[month].eventCount += 1;
-        return acc;
-      }, {} as Record<string, any>);
-
-      return Object.values(monthlyData).map(item => ({
-        ...item,
-        totalAttendance: Math.round(item.totalAttendance / item.eventCount),
-        firstTimersCount: Math.round(item.firstTimersCount / item.eventCount)
-      }));
-    }
-
-    if (granularity === 'yearly') {
-      const yearlyData = data.reduce((acc, item) => {
-        const year = new Date(item.eventDate).getFullYear().toString();
-        if (!acc[year]) {
-          acc[year] = {
-            period: year,
-            totalAttendance: 0,
-            firstTimersCount: 0,
-            eventCount: 0
-          };
-        }
-        acc[year].totalAttendance += item.totalAttendance;
-        acc[year].firstTimersCount += item.firstTimersCount;
-        acc[year].eventCount += 1;
-        return acc;
-      }, {} as Record<string, any>);
-
-      return Object.values(yearlyData).map(item => ({
-        ...item,
-        totalAttendance: Math.round(item.totalAttendance / item.eventCount),
-        firstTimersCount: Math.round(item.firstTimersCount / item.eventCount)
-      }));
-    }
-
-    return data;
-  };
-
+  // Use backend data directly
   const getChartOption = () => {
-    const filteredData = getFilteredData();
-    const processedData = processDataByGranularity(filteredData);
-
-    if (processedData.length === 0) {
+    if (attendanceData.length === 0) {
       return {
         title: {
           text: 'No data available',
@@ -193,11 +141,12 @@ export default function GeneralAttendanceStatisticsPage() {
       };
     }
 
-    const xAxisData = processedData.map(item => item.period || item.eventTitle);
-    const membersData = processedData.map(item => item.totalAttendance);
-    const firstTimersData = processedData.map(item => item.firstTimersCount);
+    const xAxisData: string[] = attendanceData.map(item => item.xLabel ?? '');
+    const membersData = attendanceData.map(item => item.totalAttendance ?? item.total_attendance ?? 0);
+    const firstTimersData = attendanceData.map(item => item.firstTimersCount ?? item.first_timers_count ?? 0);
 
     if (chartType === 'line') {
+      // Area chart: add areaStyle to both series
       return {
         title: {
           text: 'General Attendance Over Time',
@@ -236,7 +185,11 @@ export default function GeneralAttendanceStatisticsPage() {
             },
             lineStyle: {
               width: 3
-            }
+            },
+            areaStyle: {
+              color: 'rgba(59, 130, 246, 0.15)'
+            },
+            z: 1
           },
           {
             name: 'First Timers',
@@ -248,16 +201,21 @@ export default function GeneralAttendanceStatisticsPage() {
             },
             lineStyle: {
               width: 3
-            }
+            },
+            areaStyle: {
+              color: 'rgba(16, 185, 129, 0.18)'
+            },
+            z: 2
           }
         ]
       };
     }
 
     if (chartType === 'bar') {
+      // Overlap first timers on total members using barGap: '-100%'
       return {
         title: {
-          text: `General Attendance by ${granularity === 'weekly' ? 'Event' : granularity === 'monthly' ? 'Month' : 'Year'}`,
+          text: `General Attendance by ${granularity === 'monthly' ? 'Month' : granularity === 'yearly' ? 'Year' : 'Event'}`,
           left: 'center'
         },
         tooltip: {
@@ -288,18 +246,23 @@ export default function GeneralAttendanceStatisticsPage() {
             data: membersData,
             type: 'bar',
             itemStyle: {
-              color: '#3B82F6'
+              color: '#3B82F6',
+              opacity: 0.5
             },
-            barWidth: '40%'
+            barWidth: '40%',
+            z: 1
           },
           {
             name: 'First Timers',
             data: firstTimersData,
             type: 'bar',
             itemStyle: {
-              color: '#10B981'
+              color: '#10B981',
+              opacity: 0.9
             },
-            barWidth: '40%'
+            barWidth: '40%',
+            barGap: '-100%', // Overlap
+            z: 2
           }
         ]
       };
@@ -354,10 +317,9 @@ export default function GeneralAttendanceStatisticsPage() {
     return {};
   };
 
+  // Update summary stats to use backend data directly
   const getSummaryStats = () => {
-    const filteredData = getFilteredData();
-    
-    if (filteredData.length === 0) {
+    if (attendanceData.length === 0) {
       return {
         totalMembers: 0,
         totalFirstTimers: 0,
@@ -365,16 +327,14 @@ export default function GeneralAttendanceStatisticsPage() {
         averageFirstTimers: 0
       };
     }
-
-    const totalMembers = filteredData.reduce((sum, item) => sum + item.totalAttendance, 0);
-    const totalFirstTimers = filteredData.reduce((sum, item) => sum + item.firstTimersCount, 0);
-    const uniqueEvents = new Set(filteredData.map(item => item.eventId)).size;
-
+    const totalMembers = attendanceData.reduce((sum, item) => sum + (item.totalAttendance ?? item.total_attendance), 0);
+    const totalFirstTimers = attendanceData.reduce((sum, item) => sum + (item.firstTimersCount ?? item.first_timers_count), 0);
+    const uniqueLabels = new Set(attendanceData.map(item => item.xLabel)).size;
     return {
       totalMembers,
       totalFirstTimers,
-      averageMembers: uniqueEvents > 0 ? Math.round(totalMembers / uniqueEvents) : 0,
-      averageFirstTimers: uniqueEvents > 0 ? Math.round(totalFirstTimers / uniqueEvents) : 0
+      averageMembers: uniqueLabels > 0 ? Math.round(totalMembers / uniqueLabels) : 0,
+      averageFirstTimers: uniqueLabels > 0 ? Math.round(totalFirstTimers / uniqueLabels) : 0
     };
   };
 
@@ -410,7 +370,7 @@ export default function GeneralAttendanceStatisticsPage() {
                       size="sm"
                       onClick={() => setChartType(type)}
                     >
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                      {type === 'line' ? 'Area' : type.charAt(0).toUpperCase() + type.slice(1)}
                     </Button>
                   ))}
                 </div>
@@ -422,14 +382,14 @@ export default function GeneralAttendanceStatisticsPage() {
                   Granularity
                 </label>
                 <div className="flex gap-2">
-                  {(['weekly', 'monthly', 'yearly'] as Granularity[]).map((gran) => (
+                  {(['none', 'monthly', 'yearly'] as Granularity[]).map((gran) => (
                     <Button
                       key={gran}
                       variant={granularity === gran ? 'primary' : 'outline'}
                       size="sm"
                       onClick={() => setGranularity(gran)}
                     >
-                      {gran.charAt(0).toUpperCase() + gran.slice(1)}
+                      {gran === 'none' ? 'None' : gran.charAt(0).toUpperCase() + gran.slice(1)}
                     </Button>
                   ))}
                 </div>
