@@ -338,6 +338,7 @@ class AttendanceController extends Controller
             'member_id' => 'nullable|integer|exists:members,id',
             'event_id' => 'nullable|integer|exists:events,id',
             'category_id' => 'nullable|integer|exists:event_categories,id',
+            'family_id' => 'nullable|integer|exists:families,id',
         ]);
 
         try {

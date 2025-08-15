@@ -188,7 +188,7 @@ export class AttendanceService {
   static async getGeneralAttendanceStatistics(params: {
     startDate?: string;
     endDate?: string;
-    granularity?: 'weekly' | 'monthly' | 'yearly';
+    granularity?: 'none' | 'monthly' | 'yearly';
     familyId?: number;
   }): Promise<{
     success: boolean;
@@ -226,6 +226,7 @@ export class AttendanceService {
     memberId?: number;
     eventId?: number;
     categoryId?: number;
+    familyId?: number;
   }): Promise<any> {
     const queryParams = new URLSearchParams();
     if (params.startDate) queryParams.append('start_date', params.startDate);
@@ -234,7 +235,7 @@ export class AttendanceService {
     if (params.memberId) queryParams.append('member_id', params.memberId.toString());
     if (params.eventId) queryParams.append('event_id', params.eventId.toString());
     if (params.categoryId) queryParams.append('category_id', params.categoryId.toString());
-
+    if (params.familyId) queryParams.append('family_id', params.familyId.toString());
     const response = await http({
       method: 'get',
       url: `/attendance/statistics/individual?${queryParams.toString()}`
@@ -243,7 +244,7 @@ export class AttendanceService {
   }
 
   /**
-   * Get families for filter dropdown
+   * Get families for filter dropdown (for individual stats)
    */
   static async getFamilies(): Promise<{
     success: boolean;

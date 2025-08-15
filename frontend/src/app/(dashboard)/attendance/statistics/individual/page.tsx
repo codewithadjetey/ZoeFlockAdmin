@@ -36,6 +36,8 @@ export default function IndividualAttendanceStatisticsPage() {
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedEvent, setSelectedEvent] = useState<string>('all');
+  const [familyFilter, setFamilyFilter] = useState<string>('all');
+  const [families, setFamilies] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [attendanceData, setAttendanceData] = useState<IndividualAttendanceData[]>([]);
   const [summaryStats, setSummaryStats] = useState<any>({});
@@ -53,6 +55,13 @@ export default function IndividualAttendanceStatisticsPage() {
     setStartDate(start);
   };
 
+  // Fetch families for filter dropdown
+  useEffect(() => {
+    AttendanceService.getFamilies().then(res => {
+      if (res.success) setFamilies(res.data);
+    });
+  }, []);
+
   // Fetch attendance statistics from backend
   const loadAttendanceData = useCallback(async () => {
     setLoading(true);
@@ -61,9 +70,8 @@ export default function IndividualAttendanceStatisticsPage() {
         startDate: startDate ? startDate.toISOString().split('T')[0] : undefined,
         endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
         granularity,
+        familyId: familyFilter !== 'all' ? parseInt(familyFilter) : undefined
       };
-      if (selectedCategory !== 'all') params.categoryId = selectedCategory;
-      if (selectedEvent !== 'all') params.eventId = selectedEvent;
       const response = await AttendanceService.getIndividualAttendanceStatistics(params);
       if (response.success) {
         setAttendanceData(response.data.individual_attendance || []);
@@ -78,7 +86,7 @@ export default function IndividualAttendanceStatisticsPage() {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, granularity, selectedCategory, selectedEvent]);
+  }, [startDate, endDate, granularity, selectedCategory, selectedEvent, familyFilter]);
 
   useEffect(() => {
     setDefaultDateRange();
@@ -311,6 +319,26 @@ export default function IndividualAttendanceStatisticsPage() {
                     setStartDate(start);
                     setEndDate(end);
                   }}
+                />
+              </div>
+
+              {/* Family Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Family Filter
+                </label>
+                <SelectInput
+                  value={familyFilter}
+                  onChange={(value) => setFamilyFilter(value)}
+                  options={[
+                    { value: 'all', label: 'All Families' },
+                    ...families.map(family => ({
+                      value: family.id.toString(),
+                      label: family.name
+                    }))
+                  ]}
+                  placeholder="Select family"
+                  className="w-48"
                 />
               </div>
 

@@ -514,6 +514,7 @@ class AttendanceService
         $memberId = $params['member_id'] ?? null;
         $eventId = $params['event_id'] ?? null;
         $categoryId = $params['category_id'] ?? null;
+        $familyId = $params['family_id'] ?? null;
 
         $query = Attendance::with(['event:id,title,start_date,category_id', 'member:id,first_name,last_name'])
             ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
@@ -530,6 +531,11 @@ class AttendanceService
             ->when($categoryId, function ($q) use ($categoryId) {
                 $q->whereHas('event', function ($eventQuery) use ($categoryId) {
                     $eventQuery->where('category_id', $categoryId);
+                });
+            })
+            ->when($familyId, function ($q) use ($familyId) {
+                $q->whereHas('member.families', function ($familyQuery) use ($familyId) {
+                    $familyQuery->where('family_id', $familyId)->where('is_active', true);
                 });
             });
 
@@ -613,6 +619,7 @@ class AttendanceService
                 'member_id' => $memberId,
                 'event_id' => $eventId,
                 'category_id' => $categoryId,
+                'family_id' => $familyId,
             ]
         ];
     }
