@@ -325,4 +325,33 @@ class AttendanceController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get individual attendance statistics (dynamic, for dashboard)
+     */
+    public function getIndividualStatistics(Request $request): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'granularity' => 'nullable|in:none,monthly,yearly',
+            'member_id' => 'nullable|integer|exists:members,id',
+            'event_id' => 'nullable|integer|exists:events,id',
+            'category_id' => 'nullable|integer|exists:event_categories,id',
+        ]);
+
+        try {
+            $data = $this->attendanceService->getIndividualStatistics($request->all());
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch individual attendance statistics',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 } 

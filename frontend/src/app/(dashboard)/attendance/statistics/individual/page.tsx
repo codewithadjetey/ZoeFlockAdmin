@@ -1,17 +1,21 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Button, SelectInput, Card, DateRangePicker } from "@/components/ui";
 import ReactECharts from "echarts-for-react";
+import { AttendanceService } from '@/services/attendance';
 
 type ChartType = "line" | "bar" | "pie";
-type Granularity = "weekly" | "monthly" | "yearly";
+type Granularity = 'none' | 'monthly' | 'yearly';
 
-interface AttendanceData {
-  date: string;
+interface IndividualAttendanceData {
+  xLabel: string;
   present: number;
   absent: number;
+  first_timers: number;
   total: number;
+  event_id?: number;
+  event?: any;
 }
 
 interface EventCategory {
@@ -26,397 +30,180 @@ interface Event {
 }
 
 export default function IndividualAttendanceStatisticsPage() {
-  const [chartType, setChartType] = useState<ChartType>("line");
-  const [granularity, setGranularity] = useState<Granularity>("weekly");
+  const [chartType, setChartType] = useState<ChartType>('line');
+  const [granularity, setGranularity] = useState<Granularity>('none');
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedEvent, setSelectedEvent] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedEvent, setSelectedEvent] = useState<string>('all');
   const [loading, setLoading] = useState(false);
-  const [attendanceData, setAttendanceData] = useState<AttendanceData[]>([]);
-  const [eventCategories, setEventCategories] = useState<EventCategory[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
+  const [attendanceData, setAttendanceData] = useState<IndividualAttendanceData[]>([]);
+  const [summaryStats, setSummaryStats] = useState<any>({});
 
-  // Mock data for demonstration - replace with actual API call
-  const mockData: AttendanceData[] = [
-    { date: "2025-07-15", present: 45, absent: 12, total: 57 },
-    { date: "2025-07-22", present: 52, absent: 8, total: 60 },
-    { date: "2025-07-29", present: 48, absent: 15, total: 63 },
-    { date: "2025-08-05", present: 55, absent: 10, total: 65 },
-    { date: "2025-08-12", present: 50, absent: 13, total: 63 },
-    { date: "2025-08-19", present: 58, absent: 7, total: 65 },
-    { date: "2025-08-26", present: 53, absent: 11, total: 64 },
-  ];
-
-  // Mock event categories
-  const mockEventCategories: EventCategory[] = [
-    { id: 1, name: "Sunday Service" },
-    { id: 2, name: "Bible Study" },
-    { id: 3, name: "Youth Meeting" },
-    { id: 4, name: "Prayer Meeting" },
-    { id: 5, name: "Special Events" },
-  ];
-
-  // Mock events
-  const mockEvents: Event[] = [
-    { id: 1, title: "Sunday Service - Week 1", category_id: 1 },
-    { id: 2, title: "Sunday Service - Week 2", category_id: 1 },
-    { id: 3, title: "Bible Study - Genesis", category_id: 2 },
-    { id: 4, title: "Bible Study - Exodus", category_id: 2 },
-    { id: 5, title: "Youth Meeting - January", category_id: 3 },
-    { id: 6, title: "Prayer Meeting - Evening", category_id: 4 },
-    { id: 7, title: "Christmas Celebration", category_id: 5 },
-  ];
+  // TODO: Replace with real API for categories/events if needed
+  const eventCategories: EventCategory[] = [];
+  const events: Event[] = [];
 
   // Set default date range (one year ago to now)
   const setDefaultDateRange = () => {
     const end = new Date();
     const start = new Date();
     start.setFullYear(start.getFullYear() - 1);
-    
-    console.log('Setting default date range:', {
-      start: start.toISOString(),
-      end: end.toISOString(),
-      startDate: start.toDateString(),
-      endDate: end.toDateString()
-    });
-    
     setEndDate(end);
     setStartDate(start);
   };
 
-  useEffect(() => {
-    // Set default date range on first load
-    if (!startDate || !endDate) {
-      setDefaultDateRange();
-    }
-    
-    // Simulate API call
+  // Fetch attendance statistics from backend
+  const loadAttendanceData = useCallback(async () => {
     setLoading(true);
-    setTimeout(() => {
-      setAttendanceData(mockData);
-      setEventCategories(mockEventCategories);
-      setEvents(mockEvents);
+    try {
+      const params: any = {
+        startDate: startDate ? startDate.toISOString().split('T')[0] : undefined,
+        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
+        granularity,
+      };
+      if (selectedCategory !== 'all') params.categoryId = selectedCategory;
+      if (selectedEvent !== 'all') params.eventId = selectedEvent;
+      const response = await AttendanceService.getIndividualAttendanceStatistics(params);
+      if (response.success) {
+        setAttendanceData(response.data.individual_attendance || []);
+        setSummaryStats(response.data.summary_stats || {});
+      } else {
+        setAttendanceData([]);
+        setSummaryStats({});
+      }
+    } catch (error) {
+      setAttendanceData([]);
+      setSummaryStats({});
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   }, [startDate, endDate, granularity, selectedCategory, selectedEvent]);
 
-  const getFilteredEvents = () => {
-    if (selectedCategory === "all") {
-      return events;
-    }
-    return events.filter(event => event.category_id === parseInt(selectedCategory));
-  };
+  useEffect(() => {
+    setDefaultDateRange();
+  }, []);
 
-  const filterDataByDateRange = (data: AttendanceData[]) => {
-    if (!startDate || !endDate) {
-      return data;
-    }
-    
-    const filtered = data.filter(item => {
-      const itemDate = new Date(item.date);
-      return itemDate >= startDate && itemDate <= endDate;
-    });
-    
-    console.log('Date filtering:', {
-      startDate: startDate.toISOString(),
-      endDate: endDate.toISOString(),
-      originalDataLength: data.length,
-      filteredDataLength: filtered.length,
-      sampleDates: data.slice(0, 3).map(item => item.date)
-    });
-    
-    return filtered;
-  };
+  useEffect(() => {
+    loadAttendanceData();
+  }, [loadAttendanceData]);
 
-  const processDataByGranularity = (data: AttendanceData[]) => {
-    if (granularity === "weekly") {
-      return data; // Keep weekly data as is
-    }
-    
-    if (granularity === "monthly") {
-      // Group by month
-      const monthlyData = new Map<string, { present: number; absent: number; total: number; count: number }>();
-      
-      data.forEach(item => {
-        const monthKey = new Date(item.date).toISOString().slice(0, 7); // YYYY-MM format
-        const existing = monthlyData.get(monthKey) || { present: 0, absent: 0, total: 0, count: 0 };
-        
-        monthlyData.set(monthKey, {
-          present: existing.present + item.present,
-          absent: existing.absent + item.absent,
-          total: existing.total + item.total,
-          count: existing.count + 1
-        });
-      });
-      
-      return Array.from(monthlyData.entries()).map(([month, stats]) => ({
-        date: month,
-        present: Math.round(stats.present / stats.count),
-        absent: Math.round(stats.absent / stats.count),
-        total: Math.round(stats.total / stats.count)
-      }));
-    }
-    
-    if (granularity === "yearly") {
-      // Group by year
-      const yearlyData = new Map<string, { present: number; absent: number; total: number; count: number }>();
-      
-      data.forEach(item => {
-        const yearKey = new Date(item.date).getFullYear().toString();
-        const existing = yearlyData.get(yearKey) || { present: 0, absent: 0, total: 0, count: 0 };
-        
-        yearlyData.set(yearKey, {
-          present: existing.present + item.present,
-          absent: existing.absent + item.absent,
-          total: existing.total + item.total,
-          count: existing.count + 1
-        });
-      });
-      
-      return Array.from(yearlyData.entries()).map(([year, stats]) => ({
-        date: year,
-        present: Math.round(stats.present / stats.count),
-        absent: Math.round(stats.absent / stats.count),
-        total: Math.round(stats.total / stats.count)
-      }));
-    }
-    
-    return data;
-  };
+  // Chart data mapping
+  const xAxisData = attendanceData.map(item => item.xLabel);
+  const presentData = attendanceData.map(item => item.present);
+  const absentData = attendanceData.map(item => item.absent);
 
   const getChartOption = () => {
-    const dateFilteredData = filterDataByDateRange(attendanceData);
-    const processedData = processDataByGranularity(dateFilteredData);
-    const dates = processedData.map(item => item.date);
-    const presentData = processedData.map(item => item.present);
-    const absentData = processedData.map(item => item.absent);
-
-    switch (chartType) {
-      case "line":
-        return {
-          title: {
-            text: `Individual Attendance Trends (${granularity.charAt(0).toUpperCase() + granularity.slice(1)})`,
-            left: "center",
-            textStyle: {
-              color: "#374151",
-              fontSize: 18,
-              fontWeight: "bold"
-            }
-          },
-          tooltip: {
-            trigger: "axis",
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            borderColor: "#e5e7eb",
-            borderWidth: 1,
-            textStyle: {
-              color: "#374151"
-            }
-          },
-          legend: {
-            data: ["Present", "Absent"],
-            bottom: 10,
-            textStyle: {
-              color: "#6b7280"
-            }
-          },
-          grid: {
-            left: "3%",
-            right: "4%",
-            bottom: "15%",
-            top: "15%",
-            containLabel: true
-          },
-          xAxis: {
-            type: "category",
-            data: dates,
-            axisLabel: {
-              color: "#6b7280",
-              formatter: (value: string) => new Date(value).toLocaleDateString()
-            }
-          },
-          yAxis: {
-            type: "value",
-            axisLabel: {
-              color: "#6b7280"
-            }
-          },
-          series: [
-            {
-              name: "Present",
-              type: "line",
-              data: presentData,
-              smooth: true,
-              lineStyle: { color: "#10b981", width: 3 },
-              itemStyle: { color: "#10b981" },
-              areaStyle: {
-                color: {
-                  type: "linear",
-                  x: 0, y: 0, x2: 0, y2: 1,
-                  colorStops: [
-                    { offset: 0, color: "rgba(16, 185, 129, 0.3)" },
-                    { offset: 1, color: "rgba(16, 185, 129, 0.05)" }
-                  ]
-                }
-              }
-            },
-            {
-              name: "Absent",
-              type: "line",
-              data: absentData,
-              smooth: true,
-              lineStyle: { color: "#ef4444", width: 3 },
-              itemStyle: { color: "#ef4444" },
-              areaStyle: {
-                color: {
-                  type: "linear",
-                  x: 0, y: 0, x2: 0, y2: 1,
-                  colorStops: [
-                    { offset: 0, color: "rgba(239, 68, 68, 0.3)" },
-                    { offset: 1, color: "rgba(239, 68, 68, 0.05)" }
-                  ]
-                }
-              }
-            }
-          ]
-        };
-
-      case "bar":
-        return {
-          title: {
-            text: `Individual Attendance Comparison (${granularity.charAt(0).toUpperCase() + granularity.slice(1)})`,
-            left: "center",
-            textStyle: {
-              color: "#374151",
-              fontSize: 18,
-              fontWeight: "bold"
-            }
-          },
-          tooltip: {
-            trigger: "axis",
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            borderColor: "#e5e7eb",
-            borderWidth: 1,
-            textStyle: {
-              color: "#374151"
-            }
-          },
-          legend: {
-            data: ["Present", "Absent"],
-            bottom: 10,
-            textStyle: {
-              color: "#6b7280"
-            }
-          },
-          grid: {
-            left: "3%",
-            right: "4%",
-            bottom: "15%",
-            top: "15%",
-            containLabel: true
-          },
-          xAxis: {
-            type: "category",
-            data: dates,
-            axisLabel: {
-              color: "#6b7280",
-              formatter: (value: string) => new Date(value).toLocaleDateString()
-            }
-          },
-          yAxis: {
-            type: "value",
-            axisLabel: {
-              color: "#6b7280"
-            }
-          },
-          series: [
-            {
-              name: "Present",
-              type: "bar",
-              data: presentData,
-              itemStyle: { color: "#10b981" },
-              barWidth: "60%"
-            },
-            {
-              name: "Absent",
-              type: "bar",
-              data: absentData,
-              itemStyle: { color: "#ef4444" },
-              barWidth: "60%"
-            }
-          ]
-        };
-
-      case "pie":
-        const totalPresent = presentData.reduce((sum, val) => sum + val, 0);
-        const totalAbsent = absentData.reduce((sum, val) => sum + val, 0);
-        
-        return {
-          title: {
-            text: "Overall Attendance Distribution",
-            left: "center",
-            textStyle: {
-              color: "#374151",
-              fontSize: 18,
-              fontWeight: "bold"
-            }
-          },
-          tooltip: {
-            trigger: "item",
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            borderColor: "#e5e7eb",
-            borderWidth: 1,
-            textStyle: {
-              color: "#374151"
-            },
-            formatter: "{a} <br/>{b}: {c} ({d}%)"
-          },
-          legend: {
-            orient: "vertical",
-            left: "left",
-            textStyle: {
-              color: "#6b7280"
-            }
-          },
-          series: [
-            {
-              name: "Attendance",
-              type: "pie",
-              radius: ["40%", "70%"],
-              center: ["60%", "50%"],
-              data: [
-                { value: totalPresent, name: "Present", itemStyle: { color: "#10b981" } },
-                { value: totalAbsent, name: "Absent", itemStyle: { color: "#ef4444" } }
-              ],
-              emphasis: {
-                itemStyle: {
-                  shadowBlur: 10,
-                  shadowOffsetX: 0,
-                  shadowColor: "rgba(0, 0, 0, 0.5)"
-                }
-              }
-            }
-          ]
-        };
-
-      default:
-        return {};
+    if (attendanceData.length === 0) {
+      return {
+        title: {
+          text: 'No data available',
+          left: 'center',
+          top: 'center',
+          textStyle: {
+            color: '#999',
+            fontSize: 16
+          }
+        }
+      };
     }
+    if (chartType === 'line') {
+      return {
+        title: {
+          text: 'Individual Attendance Trends',
+          left: 'center'
+        },
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['Present', 'Absent'], top: 30 },
+        xAxis: { type: 'category', data: xAxisData, axisLabel: { interval: 0 } },
+        yAxis: { type: 'value', name: 'Count' },
+        series: [
+          {
+            name: 'Present',
+            data: presentData,
+            type: 'line',
+            smooth: true,
+            itemStyle: { color: '#10b981' },
+            areaStyle: { color: 'rgba(16, 185, 129, 0.18)' },
+            z: 1
+          },
+          {
+            name: 'Absent',
+            data: absentData,
+            type: 'line',
+            smooth: true,
+            itemStyle: { color: '#ef4444' },
+            areaStyle: { color: 'rgba(239, 68, 68, 0.12)' },
+            z: 2
+          }
+        ]
+      };
+    }
+    if (chartType === 'bar') {
+      return {
+        title: {
+          text: 'Individual Attendance Comparison',
+          left: 'center'
+        },
+        tooltip: { trigger: 'axis' },
+        legend: { data: ['Present', 'Absent'], top: 30 },
+        xAxis: { type: 'category', data: xAxisData, axisLabel: { interval: 0 } },
+        yAxis: { type: 'value', name: 'Count' },
+        series: [
+          {
+            name: 'Present',
+            data: presentData,
+            type: 'bar',
+            itemStyle: { color: '#10b981' },
+            barWidth: '40%'
+          },
+          {
+            name: 'Absent',
+            data: absentData,
+            type: 'bar',
+            itemStyle: { color: '#ef4444' },
+            barWidth: '40%'
+          }
+        ]
+      };
+    }
+    if (chartType === 'pie') {
+      const totalPresent = presentData.reduce((sum, val) => sum + val, 0);
+      const totalAbsent = absentData.reduce((sum, val) => sum + val, 0);
+      return {
+        title: { text: 'Overall Attendance Distribution', left: 'center' },
+        tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+        legend: { data: ['Present', 'Absent'], top: 30 },
+        series: [
+          {
+            name: 'Attendance',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['60%', '50%'],
+            data: [
+              { value: totalPresent, name: 'Present', itemStyle: { color: '#10b981' } },
+              { value: totalAbsent, name: 'Absent', itemStyle: { color: '#ef4444' } }
+            ],
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
+            }
+          }
+        ]
+      };
+    }
+    return {};
   };
 
-  const getSummaryStats = () => {
-    const dateFilteredData = filterDataByDateRange(attendanceData);
-    const processedData = processDataByGranularity(dateFilteredData);
-    if (processedData.length === 0) return { totalPresent: 0, totalAbsent: 0, averageAttendance: 0 };
-    
-    const totalPresent = processedData.reduce((sum, item) => sum + item.present, 0);
-    const totalAbsent = processedData.reduce((sum, item) => sum + item.absent, 0);
-    const averageAttendance = Math.round(totalPresent / processedData.length);
-    
-    return { totalPresent, totalAbsent, averageAttendance };
-  };
-
-  const summaryStats = getSummaryStats();
+  // Summary stats
+  const totalPresent = summaryStats.total_present || 0;
+  const totalAbsent = summaryStats.total_absent || 0;
+  const totalFirstTimers = summaryStats.total_first_timers || 0;
+  const totalRecords = summaryStats.total_records || 0;
+  const averageAttendance = totalRecords > 0 ? Math.round(totalPresent / totalRecords) : 0;
 
   return (
     <DashboardLayout>
@@ -426,164 +213,127 @@ export default function IndividualAttendanceStatisticsPage() {
           description="View detailed statistics and analytics for individual member attendance"
         />
 
-      
-
         {/* Summary Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">{summaryStats.totalPresent}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Total Present</div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Total Present
+              </h3>
+              <p className="text-2xl font-bold text-green-600">
+                {totalPresent}
+              </p>
+            </div>
           </Card>
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-red-600 mb-2">{summaryStats.totalAbsent}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Total Absent</div>
+          <Card>
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Total Absent
+              </h3>
+              <p className="text-2xl font-bold text-red-600">
+                {totalAbsent}
+              </p>
+            </div>
           </Card>
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">{summaryStats.averageAttendance}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Average Attendance</div>
+          <Card>
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Total First Timers
+              </h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {totalFirstTimers}
+              </p>
+            </div>
+          </Card>
+          <Card>
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Average Attendance
+              </h3>
+              <p className="text-2xl font-bold text-purple-600">
+                {averageAttendance}
+              </p>
+            </div>
           </Card>
         </div>
 
         {/* Chart Controls */}
-        <Card className="p-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Chart Type:</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={chartType === "line" ? "primary" : "outline"}
-                  onClick={() => setChartType("line")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-chart-line mr-2"></i>
-                  Line
-                </Button>
-                <Button
-                  size="sm"
-                  variant={chartType === "bar" ? "primary" : "outline"}
-                  onClick={() => setChartType("bar")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-chart-bar mr-2"></i>
-                  Bar
-                </Button>
-                <Button
-                  size="sm"
-                  variant={chartType === "pie" ? "primary" : "outline"}
-                  onClick={() => setChartType("pie")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-chart-pie mr-2"></i>
-                  Pie
-                </Button>
+        <Card>
+          <div className="p-6 space-y-4">
+            <div className="flex flex-wrap gap-4 items-center">
+              {/* Chart Type Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Chart Type
+                </label>
+                <div className="flex gap-2">
+                  {(['line', 'bar', 'pie'] as ChartType[]).map((type) => (
+                    <Button
+                      key={type}
+                      variant={chartType === type ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setChartType(type)}
+                    >
+                      {type === 'line' ? 'Area' : type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Granularity:</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={granularity === "weekly" ? "primary" : "outline"}
-                  onClick={() => setGranularity("weekly")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-calendar-week mr-2"></i>
-                  Weekly
-                </Button>
-                <Button
-                  size="sm"
-                  variant={granularity === "monthly" ? "primary" : "outline"}
-                  onClick={() => setGranularity("monthly")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-calendar-alt mr-2"></i>
-                  Monthly
-                </Button>
-                <Button
-                  size="sm"
-                  variant={granularity === "yearly" ? "primary" : "outline"}
-                  onClick={() => setGranularity("yearly")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-calendar mr-2"></i>
-                  Yearly
-                </Button>
+              {/* Granularity Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Granularity
+                </label>
+                <div className="flex gap-2">
+                  {(['none', 'monthly', 'yearly'] as Granularity[]).map((gran) => (
+                    <Button
+                      key={gran}
+                      variant={granularity === gran ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setGranularity(gran)}
+                    >
+                      {gran === 'none' ? 'None' : gran.charAt(0).toUpperCase() + gran.slice(1)}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date Range:</span>
-              <DateRangePicker
-                startDate={startDate}
-                endDate={endDate}
-                onDateRangeChange={(start, end) => {
-                  setStartDate(start);
-                  setEndDate(end);
-                }}
-                className="w-64"
-              />
-            </div>
+              {/* Date Range Picker */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Date Range
+                </label>
+                <DateRangePicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  onDateRangeChange={(start, end) => {
+                    setStartDate(start);
+                    setEndDate(end);
+                  }}
+                />
+              </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Event Category:</span>
-              <SelectInput
-                value={selectedCategory}
-                onChange={(value) => {
-                  setSelectedCategory(value);
-                  setSelectedEvent("all"); // Reset event selection when category changes
-                }}
-                className="w-40"
-              >
-                <option value="all">All Categories</option>
-                {eventCategories.map(category => (
-                  <option key={category.id} value={category.id.toString()}>
-                    {category.name}
-                  </option>
-                ))}
-              </SelectInput>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Event:</span>
-              <SelectInput
-                value={selectedEvent}
-                onChange={(value) => setSelectedEvent(value)}
-                className="w-48"
-                disabled={selectedCategory === "all"}
-              >
-                <option value="all">
-                  {selectedCategory === "all" ? "Select Category First" : "All Events"}
-                </option>
-                {getFilteredEvents().map(event => (
-                  <option key={event.id} value={event.id.toString()}>
-                    {event.title}
-                  </option>
-                ))}
-              </SelectInput>
+              {/* (Optional) Event Category and Event Filters - can be enhanced later */}
             </div>
           </div>
         </Card>
 
         {/* Chart */}
-        <Card className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center">
-                <i className="fas fa-spinner animate-spin text-4xl text-blue-600 mb-4"></i>
-                <p className="text-gray-600 dark:text-gray-400">Loading chart data...</p>
+        <Card>
+          <div className="p-6">
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-gray-500">Loading chart data...</div>
               </div>
-            </div>
-          ) : (
-            <div className="w-full h-96">
+            ) : (
               <ReactECharts
                 option={getChartOption()}
-                style={{ height: "100%", width: "100%" }}
-                opts={{ renderer: "canvas" }}
+                style={{ height: '400px' }}
+                opts={{ renderer: 'canvas' }}
               />
-            </div>
-          )}
+            )}
+          </div>
         </Card>
       </div>
     </DashboardLayout>

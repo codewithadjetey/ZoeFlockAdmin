@@ -502,4 +502,118 @@ class AttendanceService
             ];
         }
     }
+
+    /**
+     * Get individual attendance statistics for dashboard
+     */
+    public function getIndividualStatistics($params)
+    {
+        $startDate = isset($params['start_date']) ? Carbon::parse($params['start_date']) : null;
+        $endDate = isset($params['end_date']) ? Carbon::parse($params['end_date']) : null;
+        $granularity = $params['granularity'] ?? 'none';
+        $memberId = $params['member_id'] ?? null;
+        $eventId = $params['event_id'] ?? null;
+        $categoryId = $params['category_id'] ?? null;
+
+        $query = Attendance::with(['event:id,title,start_date,category_id', 'member:id,first_name,last_name'])
+            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
+                $q->whereHas('event', function ($eventQuery) use ($startDate, $endDate) {
+                    $eventQuery->whereBetween('start_date', [$startDate, $endDate]);
+                });
+            })
+            ->when($memberId, function ($q) use ($memberId) {
+                $q->where('member_id', $memberId);
+            })
+            ->when($eventId, function ($q) use ($eventId) {
+                $q->where('event_id', $eventId);
+            })
+            ->when($categoryId, function ($q) use ($categoryId) {
+                $q->whereHas('event', function ($eventQuery) use ($categoryId) {
+                    $eventQuery->where('category_id', $categoryId);
+                });
+            });
+
+        $attendances = $query->get();
+
+        // Group and aggregate
+        if ($granularity === 'none') {
+            $data = $attendances->groupBy('event_id')->map(function ($group) {
+                $event = $group->first()->event;
+                $present = $group->where('status', 'present')->count();
+                $absent = $group->where('status', 'absent')->count();
+                $firstTimers = $group->where('status', 'first_timer')->count();
+                $total = $group->count();
+                return [
+                    'xLabel' => $event ? $event->title : 'Unknown Event',
+                    'event_id' => $event ? $event->id : null,
+                    'present' => $present,
+                    'absent' => $absent,
+                    'first_timers' => $firstTimers,
+                    'total' => $total,
+                    'event' => $event,
+                ];
+            })->values();
+        } elseif ($granularity === 'monthly') {
+            $data = $attendances->groupBy(function ($item) {
+                return Carbon::parse($item->event->start_date)->format('Y-m');
+            })->map(function ($group) {
+                $monthLabel = $group->first()->event->start_date
+                    ? Carbon::parse($group->first()->event->start_date)->format('F Y')
+                    : 'Unknown Month';
+                $present = $group->where('status', 'present')->count();
+                $absent = $group->where('status', 'absent')->count();
+                $firstTimers = $group->where('status', 'first_timer')->count();
+                $total = $group->count();
+                return [
+                    'xLabel' => $monthLabel,
+                    'present' => $present,
+                    'absent' => $absent,
+                    'first_timers' => $firstTimers,
+                    'total' => $total,
+                ];
+            })->values();
+        } elseif ($granularity === 'yearly') {
+            $data = $attendances->groupBy(function ($item) {
+                return Carbon::parse($item->event->start_date)->format('Y');
+            })->map(function ($group) {
+                $yearLabel = $group->first()->event->start_date
+                    ? Carbon::parse($group->first()->event->start_date)->format('Y')
+                    : 'Unknown Year';
+                $present = $group->where('status', 'present')->count();
+                $absent = $group->where('status', 'absent')->count();
+                $firstTimers = $group->where('status', 'first_timer')->count();
+                $total = $group->count();
+                return [
+                    'xLabel' => $yearLabel,
+                    'present' => $present,
+                    'absent' => $absent,
+                    'first_timers' => $firstTimers,
+                    'total' => $total,
+                ];
+            })->values();
+        } else {
+            $data = collect();
+        }
+
+        // Summary stats
+        $summary = [
+            'total_present' => $attendances->where('status', 'present')->count(),
+            'total_absent' => $attendances->where('status', 'absent')->count(),
+            'total_first_timers' => $attendances->where('status', 'first_timer')->count(),
+            'total_records' => $attendances->count(),
+        ];
+
+        return [
+            'individual_attendance' => $data,
+            'summary_stats' => $summary,
+            'filters' => [
+                'start_date' => $startDate ? $startDate->format('Y-m-d') : null,
+                'end_date' => $endDate ? $endDate->format('Y-m-d') : null,
+                'granularity' => $granularity,
+                'member_id' => $memberId,
+                'event_id' => $eventId,
+                'category_id' => $categoryId,
+            ]
+        ];
+    }
 } 

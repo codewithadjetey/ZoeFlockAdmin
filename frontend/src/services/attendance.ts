@@ -217,6 +217,32 @@ export class AttendanceService {
   }
 
   /**
+   * Get individual attendance statistics with filtering options
+   */
+  static async getIndividualAttendanceStatistics(params: {
+    startDate?: string;
+    endDate?: string;
+    granularity?: 'none' | 'monthly' | 'yearly';
+    memberId?: number;
+    eventId?: number;
+    categoryId?: number;
+  }): Promise<any> {
+    const queryParams = new URLSearchParams();
+    if (params.startDate) queryParams.append('start_date', params.startDate);
+    if (params.endDate) queryParams.append('end_date', params.endDate);
+    if (params.granularity) queryParams.append('granularity', params.granularity);
+    if (params.memberId) queryParams.append('member_id', params.memberId.toString());
+    if (params.eventId) queryParams.append('event_id', params.eventId.toString());
+    if (params.categoryId) queryParams.append('category_id', params.categoryId.toString());
+
+    const response = await http({
+      method: 'get',
+      url: `/attendance/statistics/individual?${queryParams.toString()}`
+    });
+    return response.data;
+  }
+
+  /**
    * Get families for filter dropdown
    */
   static async getFamilies(): Promise<{
