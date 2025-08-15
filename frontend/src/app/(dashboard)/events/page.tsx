@@ -11,7 +11,8 @@ import {
   StatusBadge,
   CategoryBadge,
   Button,
-  DataTable
+  DataTable,
+  StatCard
 } from "@/components/ui";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { Event, EventFilters } from "@/interfaces/events";
@@ -513,69 +514,46 @@ export default function EventsPage() {
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <i className="fas fa-calendar text-blue-600 dark:text-blue-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{events.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-              <i className="fas fa-edit text-yellow-600 dark:text-yellow-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Draft</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {events.filter(e => e.status === 'draft').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-              <i className="fas fa-globe text-green-600 dark:text-green-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Published</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {events.filter(e => e.status === 'published').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-              <i className="fas fa-ban text-red-600 dark:text-red-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Cancelled</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {events.filter(e => e.status === 'cancelled').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-              <i className="fas fa-check-circle text-gray-600 dark:text-gray-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {events.filter(e => e.status === 'completed').length}
-              </p>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          icon="fas fa-calendar"
+          iconColor="text-blue-600 dark:text-blue-400"
+          iconBgColor="bg-blue-100 dark:bg-blue-900"
+          title="Total"
+          value={events.length}
+          description="Total Events"
+        />
+        <StatCard
+          icon="fas fa-edit"
+          iconColor="text-yellow-600 dark:text-yellow-400"
+          iconBgColor="bg-yellow-100 dark:bg-yellow-900"
+          title="Draft"
+          value={events.filter(e => e.status === 'draft').length}
+          description="Draft Events"
+        />
+        <StatCard
+          icon="fas fa-globe"
+          iconColor="text-green-600 dark:text-green-400"
+          iconBgColor="bg-green-100 dark:bg-green-900"
+          title="Published"
+          value={events.filter(e => e.status === 'published').length}
+          description="Published Events"
+        />
+        <StatCard
+          icon="fas fa-ban"
+          iconColor="text-red-600 dark:text-red-400"
+          iconBgColor="bg-red-100 dark:bg-red-900"
+          title="Cancelled"
+          value={events.filter(e => e.status === 'cancelled').length}
+          description="Cancelled Events"
+        />
+        <StatCard
+          icon="fas fa-check-circle"
+          iconColor="text-gray-600 dark:text-gray-400"
+          iconBgColor="bg-gray-100 dark:bg-gray-700"
+          title="Completed"
+          value={events.filter(e => e.status === 'completed').length}
+          description="Completed Events"
+        />
       </div>
 
       {/* Search and Filters */}

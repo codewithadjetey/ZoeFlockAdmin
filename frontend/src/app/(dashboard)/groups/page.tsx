@@ -10,7 +10,8 @@ import {
   ContentCard,
   StatusBadge,
   Button,
-  DataTable
+  DataTable,
+  StatCard
 } from "@/components/ui";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { Group, GroupFilters } from "@/interfaces/groups";
@@ -440,56 +441,38 @@ export default function GroupsPage() {
       </div>
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <i className="fas fa-users text-blue-600 dark:text-blue-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">{groups.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-              <i className="fas fa-check-circle text-green-600 dark:text-green-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {groups.filter(g => g.status === 'active').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-              <i className="fas fa-pause text-yellow-600 dark:text-yellow-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Inactive</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {groups.filter(g => g.status === 'inactive').length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center">
-            <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-              <i className="fas fa-archive text-gray-600 dark:text-gray-400"></i>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Archived</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                {groups.filter(g => g.status === 'archived').length}
-              </p>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          icon="fas fa-users"
+          iconColor="text-blue-600 dark:text-blue-400"
+          iconBgColor="bg-blue-100 dark:bg-blue-900"
+          title="Total"
+          value={groups.length}
+          description="Total Groups"
+        />
+        <StatCard
+          icon="fas fa-check-circle"
+          iconColor="text-green-600 dark:text-green-400"
+          iconBgColor="bg-green-100 dark:bg-green-900"
+          title="Active"
+          value={groups.filter(g => g.status === 'active').length}
+          description="Active Groups"
+        />
+        <StatCard
+          icon="fas fa-pause"
+          iconColor="text-yellow-600 dark:text-yellow-400"
+          iconBgColor="bg-yellow-100 dark:bg-yellow-900"
+          title="Inactive"
+          value={groups.filter(g => g.status === 'inactive').length}
+          description="Inactive Groups"
+        />
+        <StatCard
+          icon="fas fa-archive"
+          iconColor="text-gray-600 dark:text-gray-400"
+          iconBgColor="bg-gray-100 dark:bg-gray-700"
+          title="Archived"
+          value={groups.filter(g => g.status === 'archived').length}
+          description="Archived Groups"
+        />
       </div>
 
       {/* Search and Filters */}

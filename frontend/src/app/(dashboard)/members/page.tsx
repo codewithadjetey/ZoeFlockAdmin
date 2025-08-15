@@ -10,7 +10,8 @@ import {
   DataTable,
   StatusBadge,
   Button,
-  Avatar
+  Avatar,
+  StatCard
 } from "@/components/ui";
 import { MembersService, type Member } from "@/services/members";
 import { formatDate } from "@/utils/helpers";
@@ -355,50 +356,38 @@ export default function MembersPage() {
 
       {statistics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <i className="fas fa-users text-blue-600 text-xl"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Members</p>
-                <p className="text-2xl font-bold text-gray-900">{statistics.total_members}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <i className="fas fa-user-check text-green-600 text-xl"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Members</p>
-                <p className="text-2xl font-bold text-gray-900">{statistics.active_members}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <i className="fas fa-user-plus text-yellow-600 text-xl"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">New This Month</p>
-                <p className="text-2xl font-bold text-gray-900">{statistics.new_members_this_month}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <i className="fas fa-calendar-plus text-purple-600 text-xl"></i>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">New This Year</p>
-                <p className="text-2xl font-bold text-gray-900">{statistics.new_members_this_year}</p>
-              </div>
-            </div>
-          </div>
+          <StatCard
+            icon="fas fa-users"
+            iconColor="text-blue-600"
+            iconBgColor="bg-blue-100"
+            title="Total Members"
+            value={statistics.total_members}
+            description="Total Members"
+          />
+          <StatCard
+            icon="fas fa-user-check"
+            iconColor="text-green-600"
+            iconBgColor="bg-green-100"
+            title="Active Members"
+            value={statistics.active_members}
+            description="Active Members"
+          />
+          <StatCard
+            icon="fas fa-user-plus"
+            iconColor="text-yellow-600"
+            iconBgColor="bg-yellow-100"
+            title="New This Month"
+            value={statistics.new_members_this_month}
+            description="New This Month"
+          />
+          <StatCard
+            icon="fas fa-calendar-plus"
+            iconColor="text-purple-600"
+            iconBgColor="bg-purple-100"
+            title="New This Year"
+            value={statistics.new_members_this_year}
+            description="New This Year"
+          />
         </div>
       )}
 

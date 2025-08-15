@@ -530,13 +530,6 @@ class MemberController extends Controller
             }
         }
 
-        if ($member->family->id !== $request->family_id) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Member is not associated with the family'
-            ], 403);
-        }
-
         // Handle profile image upload if an image was uploaded
         if ($request->has('upload_token') && !empty($request->upload_token)) {
             $attachedFile = $this->fileUploadService->attachFileToModel(

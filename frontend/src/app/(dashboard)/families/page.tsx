@@ -14,7 +14,8 @@ import {
   DataGrid, 
   DataTable,
   StatusBadge,
-  Avatar
+  Avatar,
+  StatCard
 } from "@/components/ui";
 import { getImageUrl } from "@/utils/helpers";
 import type { Column, Filter, SortConfig } from "@/components/ui/DataTable";
@@ -376,6 +377,33 @@ export default function FamiliesPage() {
           }}
         />
         
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+          <StatCard
+            icon="fas fa-users"
+            iconColor="text-blue-600 dark:text-blue-400"
+            iconBgColor="bg-blue-100 dark:bg-blue-900"
+            title="Total"
+            value={families.length}
+            description="Total Families"
+          />
+          <StatCard
+            icon="fas fa-check-circle"
+            iconColor="text-green-600 dark:text-green-400"
+            iconBgColor="bg-green-100 dark:bg-green-900"
+            title="Active"
+            value={families.filter(f => f.active).length}
+            description="Active Families"
+          />
+          <StatCard
+            icon="fas fa-pause"
+            iconColor="text-yellow-600 dark:text-yellow-400"
+            iconBgColor="bg-yellow-100 dark:bg-yellow-900"
+            title="Inactive"
+            value={families.filter(f => !f.active).length}
+            description="Inactive Families"
+          />
+        </div>
+
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <ViewToggle
