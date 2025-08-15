@@ -10,6 +10,8 @@ const navItems = [
   { label: "Families", icon: "fas fa-house-user", href: "/families" },
   { label: "Groups", icon: "fas fa-layer-group", href: "/groups" },
   // { label: "Donations", icon: "fas fa-donate", href: "/donations" },
+  { label: "First Timers", icon: "fas fa-user-plus", href: "/first-timers" },
+
   { label: "Communication", icon: "fas fa-envelope", href: "/communication" },
 ];
 
