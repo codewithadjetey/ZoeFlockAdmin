@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Group;
 use App\Models\Family;
+use App\Models\Member;
+use Event;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -85,6 +87,16 @@ class EntityController extends Controller
         $entities = explode(',', strtolower(trim($request->entities)));
         $activeOnly = $request->boolean('active_only', true);
         $data = [];
+        $family = null;
+
+        //check is has role family-head
+        $user = Auth::user();
+        if ($user->hasRole('family-head')) {
+            $member = Member::where('user_id', $user->id)->first();
+            // if ($member) {
+            //     $family = $member->family;
+            // }
+        }
 
         foreach ($entities as $entity) {
             $entity = trim($entity);
@@ -104,6 +116,20 @@ class EntityController extends Controller
                         $query->where('active', true);
                     }
                     $data['families'] = $query->orderBy('name')->get();
+                    break;
+                case 'members':
+                    $query = Member::select('id', 'name');
+                    if ($family) {
+                        $family->familyMembers()->where('is_active', true)->get();
+                    }
+                    $data['members'] = $query->orderBy('name')->get();
+                    break;
+                case 'events':
+                    $query = Event::select('id', 'name');
+                    if ($activeOnly) {
+                        $query->where('active', true);
+                    }
+                    $data['events'] = $query->orderBy('name')->get();
                     break;
                     
                 default:

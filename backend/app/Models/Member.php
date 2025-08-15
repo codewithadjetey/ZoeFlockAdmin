@@ -315,4 +315,9 @@ class Member extends Model
     {
         return $this->families()->where('is_active', true)->count();
     }
+
+    public function scopeActiveMembers($query)
+    {
+        return $query->where('is_active', true);
+    }
 } 

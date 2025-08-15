@@ -518,6 +518,24 @@ class MemberController extends Controller
             ], 422);
         }
 
+        $user = Auth::user();
+        if ($user && $user->hasRole('family-head')) {
+            $member = Member::where('user_id', $user->id)->first();
+            if (!$member || !$member->family) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Family Head must be associated with a family to update members'
+                ], 403);
+            }
+        }
+
+        if ($member->family->id !== $request->family_id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Member is not associated with the family'
+            ], 403);
+        }
+
         // Handle profile image upload if an image was uploaded
         if ($request->has('upload_token') && !empty($request->upload_token)) {
             $attachedFile = $this->fileUploadService->attachFileToModel(

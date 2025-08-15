@@ -258,4 +258,7 @@ Route::prefix($apiVersion)->group(function () {
             'timestamp' => now()
         ]);
     });
+
+    // Individual attendance statistics
+    Route::get('attendance/statistics/individual', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'getIndividualStatistics']);
 }); 

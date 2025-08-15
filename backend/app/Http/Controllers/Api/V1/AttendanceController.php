@@ -34,14 +34,6 @@ class AttendanceController extends Controller
                 // Get the member record for the authenticated user
                 $member = \App\Models\Member::where('user_id', $user->id)->first();
                 if ($member && $member->family) {
-                    // Only show attendance records for members from the same family
-                    \Log::info('Family Head filtering attendance', [
-                        'user_id' => $user->id,
-                        'member_id' => $member->id,
-                        'family_id' => $member->family->id,
-                        'event_id' => $eventId
-                    ]);
-                    
                     $attendances = Attendance::with(['member:id,first_name,last_name,email,profile_image_path'])
                         ->where('event_id', $eventId)
                         ->whereHas('member', function($query) use ($member) {
@@ -321,6 +313,36 @@ class AttendanceController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to ensure attendance records',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get individual attendance statistics (dynamic, for dashboard)
+     */
+    public function getIndividualStatistics(Request $request): JsonResponse
+    {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'granularity' => 'nullable|in:none,monthly,yearly',
+            'member_id' => 'nullable|integer|exists:members,id',
+            'event_id' => 'nullable|integer|exists:events,id',
+            'category_id' => 'nullable|integer|exists:event_categories,id',
+            'family_id' => 'nullable|integer|exists:families,id',
+        ]);
+
+        try {
+            $data = $this->attendanceService->getIndividualStatistics($request->all());
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch individual attendance statistics',
                 'error' => $e->getMessage()
             ], 500);
         }
