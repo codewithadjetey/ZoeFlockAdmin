@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import TextInput from '@/components/ui/TextInput';
 import Textarea from '@/components/ui/Textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
+import Checkbox from '@/components/ui/Checkbox';
 
 const getDeviceFingerprint = () => {
   // Simple device fingerprinting (placeholder, replace with a real library for production)
@@ -33,17 +34,11 @@ export default function FirstTimerRegistration() {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
-      setForm(f => ({
-        ...f,
-        [name]: (e.target as HTMLInputElement).checked,
-      }));
+      setForm(f => ({ ...f, [name]: checked }));
     } else {
-      setForm(f => ({
-        ...f,
-        [name]: value,
-      }));
+      setForm(f => ({ ...f, [name]: value }));
     }
   };
 
@@ -104,18 +99,12 @@ export default function FirstTimerRegistration() {
               <Textarea name="how_was_service" label="How was the service?" value={form.how_was_service} onChange={handleChange} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                <input type="checkbox" name="is_first_time" checked={form.is_first_time} onChange={handleChange} className="accent-primary-600" /> First Time?
-              </label>
-              <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                <input type="checkbox" name="has_permanent_place_of_worship" checked={form.has_permanent_place_of_worship} onChange={handleChange} className="accent-primary-600" /> Has Permanent Place of Worship?
-              </label>
+              <Checkbox name="is_first_time" label="First Time?" checked={form.is_first_time} onChange={handleChange} />
+              <Checkbox name="has_permanent_place_of_worship" label="Has Permanent Place of Worship?" checked={form.has_permanent_place_of_worship} onChange={handleChange} />
               <div className="col-span-1 md:col-span-2">
                 <TextInput name="invited_by" label="Invited By (Name)" value={form.invited_by} onChange={handleChange} className="col-span-1 md:col-span-2" />
               </div>
-              <label className="flex items-center gap-2 text-gray-700 dark:text-gray-200">
-                <input type="checkbox" name="would_like_to_stay" checked={form.would_like_to_stay} onChange={handleChange} className="accent-primary-600" /> Would Like to Stay?
-              </label>
+              <Checkbox name="would_like_to_stay" label="Would Like to Stay?" checked={form.would_like_to_stay} onChange={handleChange} />
             </div>
             <button
               type="submit"
