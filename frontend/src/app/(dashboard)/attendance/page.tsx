@@ -105,34 +105,27 @@ const SimpleModal: React.FC<{
 
 export default function AttendancePage() {
   const { isFamilyHead } = useAuth();
-  const [viewMode, setViewMode] = useState<"grid" | "table">("table");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
   const [events, setEvents] = useState<EventWithAttendance[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showGeneralAttendanceModal, setShowGeneralAttendanceModal] = useState(false);
-  const [showBulkAttendanceModal, setShowBulkAttendanceModal] = useState(false);
-  const [loadingGeneralAttendance, setLoadingGeneralAttendance] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [updatingAttendance, setUpdatingAttendance] = useState<number | null>(null);
-  const [eventAttendance, setEventAttendance] = useState<Attendance[]>([]);
   const [eligibleMembers, setEligibleMembers] = useState<Member[]>([]);
+  const [eventAttendance, setEventAttendance] = useState<Attendance[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<Set<number>>(new Set());
-  const [generalAttendanceForm, setGeneralAttendanceForm] = useState<GeneralAttendanceForm>({
-    total_attendance: 0,
-    first_timers_count: 0,
-    notes: ''
-  });
-  const [individualAttendanceForm, setIndividualAttendanceForm] = useState<IndividualAttendanceForm>({
-    member_id: 0,
-    status: 'present',
-    notes: ''
-  });
-  const [bulkAttendanceForm, setBulkAttendanceForm] = useState<BulkAttendanceUpdate[]>([]);
+  const [bulkStatus, setBulkStatus] = useState<'present' | 'absent'>('present');
+  const [bulkNotes, setBulkNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [loadingGeneralAttendance, setLoadingGeneralAttendance] = useState(false);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [updatingAttendance, setUpdatingAttendance] = useState<number | null>(null);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [pagination, setPagination] = useState({
     current_page: 1,
     last_page: 1,
@@ -140,11 +133,11 @@ export default function AttendancePage() {
     total: 0
   });
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
-  const [loadingAttendance, setLoadingAttendance] = useState(false);
-  const [bulkStatus, setBulkStatus] = useState<'present' | 'absent'>('present');
-  const [bulkNotes, setBulkNotes] = useState('');
-  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [generalAttendanceForm, setGeneralAttendanceForm] = useState<GeneralAttendanceForm>({
+    total_attendance: 0,
+    first_timers_count: 0,
+    notes: ''
+  });
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
@@ -1081,12 +1074,12 @@ export default function AttendancePage() {
               setBulkStatus('present');
               setBulkNotes('');
             }}
-            title={`${useAuth().isFamilyHead() ? 'Family ' : ''}Individual Attendance - ${selectedEvent.title}`}
+            title={`${isFamilyHead() ? 'Family ' : ''}Individual Attendance - ${selectedEvent.title}`}
             size="4xl"
           >
             <div className="p-6">
               {/* Family Head Notice */}
-              {useAuth().isFamilyHead() && (
+              {isFamilyHead() && (
                 <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <div className="flex items-center">
                     <i className="fas fa-home text-blue-600 dark:text-blue-400 mr-3 text-lg"></i>
@@ -1125,13 +1118,13 @@ export default function AttendancePage() {
                   </div>
                   <div>
                     <span className="font-medium">
-                      {useAuth().isFamilyHead() ? 'Family Members:' : 'Eligible Members:'}
+                      {isFamilyHead() ? 'Family Members:' : 'Eligible Members:'}
                     </span> {eligibleMembers.length}
                   </div>
                 </div>
                 
                 {/* Family-specific note for Family Heads */}
-                {useAuth().isFamilyHead() && (
+                {isFamilyHead() && (
                   <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <div className="flex items-center">
                       <i className="fas fa-users text-blue-600 dark:text-blue-400 mr-2"></i>
@@ -1151,7 +1144,7 @@ export default function AttendancePage() {
                 {/* Attendance Summary */}
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
                   <h5 className="font-medium text-gray-900 dark:text-white mb-3">
-                    {useAuth().isFamilyHead() ? 'Family Attendance Summary' : 'Current Attendance'}
+                    {isFamilyHead() ? 'Family Attendance Summary' : 'Current Attendance'}
                   </h5>
                   
                   {/* Debug info */}
@@ -1179,13 +1172,13 @@ export default function AttendancePage() {
                         {eligibleMembers.length}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {useAuth().isFamilyHead() ? 'Family Members' : 'Total Members'}
+                        {isFamilyHead() ? 'Family Members' : 'Total Members'}
                       </div>
                     </div>
                   </div>
                   
                   {/* Family-specific note for Family Heads */}
-                  {useAuth().isFamilyHead() && (
+                  {isFamilyHead() && (
                     <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">
                       <i className="fas fa-info-circle mr-1"></i>
                       Statistics shown are limited to your family members only
@@ -1197,7 +1190,7 @@ export default function AttendancePage() {
               {/* Bulk Selection Controls */}
               <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-3">
-                  {useAuth().isFamilyHead() ? 'Bulk Update Family Attendance' : 'Bulk Update Attendance'}
+                  {isFamilyHead() ? 'Bulk Update Family Attendance' : 'Bulk Update Attendance'}
                 </h5>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                   <div>
@@ -1259,12 +1252,12 @@ export default function AttendancePage() {
                 </div>
                 {selectedMembers.size > 0 && (
                   <div className="mt-3 text-sm text-blue-700 dark:text-blue-300">
-                    {selectedMembers.size} {useAuth().isFamilyHead() ? 'family ' : ''}member(s) selected
+                    {selectedMembers.size} {isFamilyHead() ? 'family ' : ''}member(s) selected
                   </div>
                 )}
                 
                 {/* Family-specific note for Family Heads */}
-                {useAuth().isFamilyHead() && (
+                {isFamilyHead() && (
                   <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-700 dark:text-blue-300">
                     <i className="fas fa-info-circle mr-1"></i>
                     Bulk updates will only affect your family members
@@ -1280,7 +1273,7 @@ export default function AttendancePage() {
               ) : (
                 <div>
                   <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                    {useAuth().isFamilyHead() ? 'Family Member Attendance' : 'Member Attendance'}
+                    {isFamilyHead() ? 'Family Member Attendance' : 'Member Attendance'}
                   </h4>
                   
                   <div className="overflow-x-auto">
@@ -1296,7 +1289,7 @@ export default function AttendancePage() {
                             />
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            {useAuth().isFamilyHead() ? 'Family Member' : 'Member'}
+                            {isFamilyHead() ? 'Family Member' : 'Member'}
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                             Status

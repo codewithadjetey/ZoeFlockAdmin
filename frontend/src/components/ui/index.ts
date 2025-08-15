@@ -49,4 +49,24 @@ export { default as ColorInput } from './ColorInput';
 export { default as Toast } from './Toast';
 export { default as ToastContainer } from './ToastContainer';
 
+// Additional missing components
+export { default as Textarea } from './Textarea';
+export { default as Label } from './FormField';
+export { default as Input } from './TextInput';
+export { default as Badge } from './StatusBadge';
+
+// Table components (using DataTable as base)
+export { default as Table } from './DataTable';
+export { default as TableHeader } from './DataTable';
+export { default as TableRow } from './DataTable';
+export { default as TableHead } from './DataTable';
+export { default as TableBody } from './DataTable';
+export { default as TableCell } from './DataTable';
+
+// Dropdown components (using SelectInput as base)
+export { default as DropdownMenu } from './SelectInput';
+export { default as DropdownMenuTrigger } from './SelectInput';
+export { default as DropdownMenuContent } from './SelectInput';
+export { default as DropdownMenuItem } from './SelectInput';
+
  

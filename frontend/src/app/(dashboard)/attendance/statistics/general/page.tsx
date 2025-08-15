@@ -1,12 +1,18 @@
-"use client";
-import React, { useState, useEffect } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
-import { PageHeader, Button, SelectInput, Card, TextInput, DateRangePicker } from "@/components/ui";
-import ReactECharts from "echarts-for-react";
+'use client';
 
-type ChartType = "line" | "bar" | "pie";
-type DataType = "members" | "firstTimers";
-type Granularity = "weekly" | "monthly" | "yearly";
+import { useState, useEffect, useCallback } from 'react';
+import { PageHeader } from '@/components/ui';
+import { Card } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { SelectInput } from '@/components/ui';
+import { DateRangePicker } from '@/components/ui';
+import ReactECharts from 'echarts-for-react';
+import { AttendanceService } from '@/services/attendance';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+
+type ChartType = 'line' | 'bar' | 'pie';
+type DataType = 'members' | 'firstTimers';
+type Granularity = 'weekly' | 'monthly' | 'yearly';
 
 interface GeneralAttendanceData {
   eventId: number;
@@ -16,37 +22,30 @@ interface GeneralAttendanceData {
   familyName: string;
   totalAttendance: number;
   firstTimersCount: number;
-  notes?: string;
+  notes: string;
+}
+
+interface Family {
+  id: number;
+  name: string;
 }
 
 export default function GeneralAttendanceStatisticsPage() {
-  const [chartType, setChartType] = useState<ChartType>("line");
-  const [dataType, setDataType] = useState<DataType>("members");
-  const [granularity, setGranularity] = useState<Granularity>("weekly");
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [familyFilter, setFamilyFilter] = useState<string>("all");
+  const [chartType, setChartType] = useState<ChartType>('line');
+  const [dataType, setDataType] = useState<DataType>('members');
+  const [granularity, setGranularity] = useState<Granularity>('weekly');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [familyFilter, setFamilyFilter] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [attendanceData, setAttendanceData] = useState<GeneralAttendanceData[]>([]);
+  const [families, setFamilies] = useState<Family[]>([]);
 
-  // Mock data for demonstration - replace with actual API call
-  const mockData: GeneralAttendanceData[] = [
-    { eventId: 1, eventTitle: "Sunday Service", eventDate: "2025-07-15", familyId: 1, familyName: "Smith Family", totalAttendance: 25, firstTimersCount: 3, notes: "Great turnout" },
-    { eventId: 1, eventTitle: "Sunday Service", eventDate: "2025-07-15", familyId: 2, familyName: "Johnson Family", totalAttendance: 18, firstTimersCount: 2, notes: "Good attendance" },
-    { eventId: 1, eventTitle: "Sunday Service", eventDate: "2025-07-15", familyId: 3, familyName: "Williams Family", totalAttendance: 22, firstTimersCount: 1, notes: "Steady attendance" },
-    { eventId: 2, eventTitle: "Bible Study", eventDate: "2025-07-22", familyId: 1, familyName: "Smith Family", totalAttendance: 20, firstTimersCount: 0, notes: "Regular members" },
-    { eventId: 2, eventTitle: "Bible Study", eventDate: "2025-07-22", familyId: 2, familyName: "Johnson Family", totalAttendance: 15, firstTimersCount: 1, notes: "Good discussion" },
-    { eventId: 2, eventTitle: "Bible Study", eventDate: "2025-07-22", familyId: 3, familyName: "Williams Family", totalAttendance: 18, firstTimersCount: 0, notes: "Engaged group" },
-    { eventId: 3, eventTitle: "Youth Meeting", eventDate: "2025-07-29", familyId: 1, familyName: "Smith Family", totalAttendance: 12, firstTimersCount: 2, notes: "New youth members" },
-    { eventId: 3, eventTitle: "Youth Meeting", eventDate: "2025-07-29", familyId: 2, familyName: "Johnson Family", totalAttendance: 10, firstTimersCount: 1, notes: "Growing youth group" },
-    { eventId: 3, eventTitle: "Youth Meeting", eventDate: "2025-07-29", familyId: 3, familyName: "Williams Family", totalAttendance: 14, firstTimersCount: 0, notes: "Active participation" },
-  ];
-
-  // Set default date range (last 30 days)
+  // Set default date range (one year ago to now)
   const setDefaultDateRange = () => {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - 30);
+    start.setFullYear(start.getFullYear() - 1);
     
     console.log('Setting default date range (general):', {
       start: start.toISOString(),
@@ -59,380 +58,269 @@ export default function GeneralAttendanceStatisticsPage() {
     setStartDate(start);
   };
 
-  useEffect(() => {
-    // Set default date range on first load
-    if (!startDate || !endDate) {
-      setDefaultDateRange();
+  // Load families for filter dropdown
+  const loadFamilies = useCallback(async () => {
+    try {
+      const response = await AttendanceService.getFamilies();
+      if (response.success) {
+        setFamilies(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load families:', error);
     }
-    
-    // Simulate API call
+  }, []);
+
+  // Load attendance data
+  const loadAttendanceData = useCallback(async () => {
     setLoading(true);
-    setTimeout(() => {
-      setAttendanceData(mockData);
+    try {
+      const response = await AttendanceService.getGeneralAttendanceStatistics({
+        startDate: startDate ? startDate.toISOString().split('T')[0] : undefined,
+        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
+        granularity,
+        familyId: familyFilter !== 'all' ? parseInt(familyFilter) : undefined,
+        dataType
+      });
+
+      if (response.success) {
+        // Transform the API data to match our interface
+        const transformedData = response.data.general_attendance.map((item: any) => ({
+          eventId: item.event?.id || item.id,
+          eventTitle: item.event?.title || 'Unknown Event',
+          eventDate: item.event?.start_date || item.period || 'Unknown Date',
+          familyId: item.family?.id || 0,
+          familyName: item.family?.name || 'Unknown Family',
+          totalAttendance: item.total_attendance || 0,
+          firstTimersCount: item.first_timers_count || 0,
+          notes: item.notes || ''
+        }));
+
+        setAttendanceData(transformedData);
+        console.log('Loaded attendance data:', transformedData);
+      }
+    } catch (error) {
+      console.error('Failed to load attendance data:', error);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [startDate, endDate, familyFilter, granularity]);
+    }
+  }, [startDate, endDate, granularity, familyFilter, dataType]);
+
+  // Load data when component mounts
+  useEffect(() => {
+    setDefaultDateRange();
+    loadFamilies();
+  }, [loadFamilies]);
+
+  // Reload data when filters change
+  useEffect(() => {
+    loadAttendanceData();
+  }, [loadAttendanceData]);
 
   const getFilteredData = () => {
-    let filtered = [...attendanceData];
-    
-    if (startDate && endDate) {
-      filtered = filtered.filter(item => {
-        const itemDate = new Date(item.eventDate);
-        return itemDate >= startDate && itemDate <= endDate;
-      });
-      
-      console.log('General attendance date filtering:', {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        originalDataLength: attendanceData.length,
-        filteredDataLength: filtered.length,
-        sampleDates: attendanceData.slice(0, 3).map(item => item.eventDate)
-      });
-    }
-
-    if (familyFilter !== "all") {
-      filtered = filtered.filter(item => item.familyName === familyFilter);
-    }
-    
-    return filtered;
+    // Since filtering is now handled by the backend API,
+    // we just return the data as-is
+    return attendanceData;
   };
 
   const processDataByGranularity = (data: GeneralAttendanceData[]) => {
-    if (granularity === "weekly") {
-      return data; // Keep weekly data as is
+    if (granularity === 'weekly') {
+      return data;
     }
-    
-    if (granularity === "monthly") {
-      // Group by month
-      const monthlyData = new Map<string, { 
-        totalAttendance: number; 
-        firstTimersCount: number; 
-        count: number 
-      }>();
-      
-      data.forEach(item => {
-        const monthKey = new Date(item.eventDate).toISOString().slice(0, 7); // YYYY-MM format
-        const existing = monthlyData.get(monthKey) || { 
-          totalAttendance: 0, 
-          firstTimersCount: 0, 
-          count: 0 
-        };
-        
-        monthlyData.set(monthKey, {
-          totalAttendance: existing.totalAttendance + item.totalAttendance,
-          firstTimersCount: existing.firstTimersCount + item.firstTimersCount,
-          count: existing.count + 1
-        });
-      });
-      
-      return Array.from(monthlyData.entries()).map(([month, stats]) => ({
-        eventId: 0, // Placeholder for grouped data
-        eventTitle: month,
-        eventDate: month,
-        familyId: 0, // Placeholder for grouped data
-        familyName: "All Families", // Placeholder for grouped data
-        totalAttendance: Math.round(stats.totalAttendance / stats.count),
-        firstTimersCount: Math.round(stats.firstTimersCount / stats.count)
+
+    if (granularity === 'monthly') {
+      const monthlyData = data.reduce((acc, item) => {
+        const month = new Date(item.eventDate).toISOString().slice(0, 7); // YYYY-MM
+        if (!acc[month]) {
+          acc[month] = {
+            period: month,
+            totalAttendance: 0,
+            firstTimersCount: 0,
+            eventCount: 0
+          };
+        }
+        acc[month].totalAttendance += item.totalAttendance;
+        acc[month].firstTimersCount += item.firstTimersCount;
+        acc[month].eventCount += 1;
+        return acc;
+      }, {} as Record<string, any>);
+
+      return Object.values(monthlyData).map(item => ({
+        ...item,
+        totalAttendance: Math.round(item.totalAttendance / item.eventCount),
+        firstTimersCount: Math.round(item.firstTimersCount / item.eventCount)
       }));
     }
-    
-    if (granularity === "yearly") {
-      // Group by year
-      const yearlyData = new Map<string, { 
-        totalAttendance: number; 
-        firstTimersCount: number; 
-        count: number 
-      }>();
-      
-      data.forEach(item => {
-        const yearKey = new Date(item.eventDate).getFullYear().toString();
-        const existing = yearlyData.get(yearKey) || { 
-          totalAttendance: 0, 
-          firstTimersCount: 0, 
-          count: 0 
-        };
-        
-        yearlyData.set(yearKey, {
-          totalAttendance: existing.totalAttendance + item.totalAttendance,
-          firstTimersCount: existing.firstTimersCount + item.firstTimersCount,
-          count: existing.count + 1
-        });
-      });
-      
-      return Array.from(yearlyData.entries()).map(([year, stats]) => ({
-        eventId: 0, // Placeholder for grouped data
-        eventTitle: year,
-        eventDate: year,
-        familyId: 0, // Placeholder for grouped data
-        familyName: "All Families", // Placeholder for grouped data
-        totalAttendance: Math.round(stats.totalAttendance / stats.count),
-        firstTimersCount: Math.round(stats.firstTimersCount / stats.count)
+
+    if (granularity === 'yearly') {
+      const yearlyData = data.reduce((acc, item) => {
+        const year = new Date(item.eventDate).getFullYear().toString();
+        if (!acc[year]) {
+          acc[year] = {
+            period: year,
+            totalAttendance: 0,
+            firstTimersCount: 0,
+            eventCount: 0
+          };
+        }
+        acc[year].totalAttendance += item.totalAttendance;
+        acc[year].firstTimersCount += item.firstTimersCount;
+        acc[year].eventCount += 1;
+        return acc;
+      }, {} as Record<string, any>);
+
+      return Object.values(yearlyData).map(item => ({
+        ...item,
+        totalAttendance: Math.round(item.totalAttendance / item.eventCount),
+        firstTimersCount: Math.round(item.firstTimersCount / item.eventCount)
       }));
     }
-    
+
     return data;
   };
 
   const getChartOption = () => {
     const filteredData = getFilteredData();
     const processedData = processDataByGranularity(filteredData);
-    const events = [...new Set(processedData.map(item => item.eventTitle))];
-    const families = [...new Set(processedData.map(item => item.familyName))];
-    
-    let chartData: any[] = [];
-    let xAxisData: string[] = [];
-    
-    if (dataType === "members") {
-      // Group by event and sum total attendance
-      const eventAttendance = events.map(eventTitle => {
-        const eventData = processedData.filter(item => item.eventTitle === eventTitle);
-        const totalAttendance = eventData.reduce((sum, item) => sum + item.totalAttendance, 0);
-        return { event: eventTitle, attendance: totalAttendance };
-      });
-      
-      chartData = eventAttendance.map(item => item.attendance);
-      xAxisData = eventAttendance.map(item => item.event);
-    } else {
-      // Group by event and sum first timers
-      const eventFirstTimers = events.map(eventTitle => {
-        const eventData = processedData.filter(item => item.eventTitle === eventTitle);
-        const totalFirstTimers = eventData.reduce((sum, item) => sum + item.firstTimersCount, 0);
-        return { event: eventTitle, firstTimers: totalFirstTimers };
-      });
-      
-      chartData = eventFirstTimers.map(item => item.firstTimers);
-      xAxisData = eventFirstTimers.map(item => item.event);
+
+    if (processedData.length === 0) {
+      return {
+        title: {
+          text: 'No data available',
+          left: 'center',
+          top: 'center',
+          textStyle: {
+            color: '#999',
+            fontSize: 16
+          }
+        }
+      };
     }
 
-    switch (chartType) {
-      case "line":
-        return {
-          title: {
-            text: `${dataType === "members" ? "Members" : "First Timers"} Attendance Trends (${granularity.charAt(0).toUpperCase() + granularity.slice(1)})`,
-            left: "center",
-            textStyle: {
-              color: "#374151",
-              fontSize: 18,
-              fontWeight: "bold"
-            }
-          },
-          tooltip: {
-            trigger: "axis",
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            borderColor: "#e5e7eb",
-            borderWidth: 1,
-            textStyle: {
-              color: "#374151"
-            }
-          },
-          legend: {
-            data: [dataType === "members" ? "Total Members" : "First Timers"],
-            bottom: 10,
-            textStyle: {
-              color: "#6b7280"
-            }
-          },
-          grid: {
-            left: "3%",
-            right: "4%",
-            bottom: "15%",
-            top: "15%",
-            containLabel: true
-          },
-          xAxis: {
-            type: "category",
-            data: xAxisData,
-            axisLabel: {
-              color: "#6b7280",
-              rotate: 45
-            }
-          },
-          yAxis: {
-            type: "value",
-            axisLabel: {
-              color: "#6b7280"
-            }
-          },
-          series: [
-            {
-              name: dataType === "members" ? "Total Members" : "First Timers",
-              type: "line",
-              data: chartData,
-              smooth: true,
-              lineStyle: { 
-                color: dataType === "members" ? "#10b981" : "#3b82f6", 
-                width: 3 
-              },
-              itemStyle: { 
-                color: dataType === "members" ? "#10b981" : "#3b82f6" 
-              },
-              areaStyle: {
-                color: {
-                  type: "linear",
-                  x: 0, y: 0, x2: 0, y2: 1,
-                  colorStops: [
-                    { 
-                      offset: 0, 
-                      color: dataType === "members" 
-                        ? "rgba(16, 185, 129, 0.3)" 
-                        : "rgba(59, 130, 246, 0.3)" 
-                    },
-                    { 
-                      offset: 1, 
-                      color: dataType === "members" 
-                        ? "rgba(16, 185, 129, 0.05)" 
-                        : "rgba(59, 130, 246, 0.05)" 
-                    }
-                  ]
-                }
-              }
-            }
-          ]
-        };
+    const xAxisData = processedData.map(item => item.period || item.eventTitle);
+    const yAxisData = processedData.map(item => 
+      dataType === 'members' ? item.totalAttendance : item.firstTimersCount
+    );
 
-      case "bar":
-        return {
-          title: {
-            text: `${dataType === "members" ? "Members" : "First Timers"} Attendance Comparison (${granularity.charAt(0).toUpperCase() + granularity.slice(1)})`,
-            left: "center",
-            textStyle: {
-              color: "#374151",
-              fontSize: 18,
-              fontWeight: "bold"
-            }
-          },
-          tooltip: {
-            trigger: "axis",
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            borderColor: "#e5e7eb",
-            borderWidth: 1,
-            textStyle: {
-              color: "#374151"
-            }
-          },
-          legend: {
-            data: [dataType === "members" ? "Total Members" : "First Timers"],
-            bottom: 10,
-            textStyle: {
-              color: "#6b7280"
-            }
-          },
-          grid: {
-            left: "3%",
-            right: "4%",
-            bottom: "15%",
-            top: "15%",
-            containLabel: true
-          },
-          xAxis: {
-            type: "category",
-            data: xAxisData,
-            axisLabel: {
-              color: "#6b7280",
-              rotate: 45
-            }
-          },
-          yAxis: {
-            type: "value",
-            axisLabel: {
-              color: "#6b7280"
-            }
-          },
-          series: [
-            {
-              name: dataType === "members" ? "Total Members" : "First Timers",
-              type: "bar",
-              data: chartData,
-              itemStyle: { 
-                color: dataType === "members" ? "#10b981" : "#3b82f6" 
-              },
-              barWidth: "60%"
-            }
-          ]
-        };
-
-      case "pie":
-        // For pie chart, show family distribution
-        const familyData = families.map(familyName => {
-          const familyItems = processedData.filter(item => item.familyName === familyName);
-          const total = familyItems.reduce((sum, item) => 
-            sum + (dataType === "members" ? item.totalAttendance : item.firstTimersCount), 0
-          );
-          return { name: familyName, value: total };
-        });
-        
-        return {
-          title: {
-            text: `${dataType === "members" ? "Members" : "First Timers"} by Family (${granularity.charAt(0).toUpperCase() + granularity.slice(1)})`,
-            left: "center",
-            textStyle: {
-              color: "#374151",
-              fontSize: 18,
-              fontWeight: "bold"
-            }
-          },
-          tooltip: {
-            trigger: "item",
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            borderColor: "#e5e7eb",
-            borderWidth: 1,
-            textStyle: {
-              color: "#374151"
-            },
-            formatter: "{a} <br/>{b}: {c} ({d}%)"
-          },
-          legend: {
-            orient: "vertical",
-            left: "left",
-            textStyle: {
-              color: "#6b7280"
-            }
-          },
-          series: [
-            {
-              name: dataType === "members" ? "Members" : "First Timers",
-              type: "pie",
-              radius: ["40%", "70%"],
-              center: ["60%", "50%"],
-              data: familyData.map((item, index) => ({
-                ...item,
-                itemStyle: { 
-                  color: ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6"][index % 5] 
-                }
-              })),
-              emphasis: {
-                itemStyle: {
-                  shadowBlur: 10,
-                  shadowOffsetX: 0,
-                  shadowColor: "rgba(0, 0, 0, 0.5)"
-                }
-              }
-            }
-          ]
-        };
-
-      default:
-        return {};
+    if (chartType === 'line') {
+      return {
+        title: {
+          text: `${dataType === 'members' ? 'Members' : 'First Timers'} Attendance Over Time`,
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'category',
+          data: xAxisData
+        },
+        yAxis: {
+          type: 'value',
+          name: dataType === 'members' ? 'Members' : 'First Timers'
+        },
+        series: [{
+          data: yAxisData,
+          type: 'line',
+          smooth: true,
+          itemStyle: {
+            color: dataType === 'members' ? '#3B82F6' : '#10B981'
+          }
+        }]
+      };
     }
+
+    if (chartType === 'bar') {
+      return {
+        title: {
+          text: `${dataType === 'members' ? 'Members' : 'First Timers'} Attendance by ${granularity === 'weekly' ? 'Event' : granularity === 'monthly' ? 'Month' : 'Year'}`,
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'category',
+          data: xAxisData
+        },
+        yAxis: {
+          type: 'value',
+          name: dataType === 'members' ? 'Members' : 'First Timers'
+        },
+        series: [{
+          data: yAxisData,
+          type: 'bar',
+          itemStyle: {
+            color: dataType === 'members' ? '#3B82F6' : '#10B981'
+          }
+        }]
+      };
+    }
+
+    if (chartType === 'pie') {
+      const total = yAxisData.reduce((sum, value) => sum + value, 0);
+      const pieData = xAxisData.map((label, index) => ({
+        name: label,
+        value: yAxisData[index]
+      }));
+
+      return {
+        title: {
+          text: `${dataType === 'members' ? 'Members' : 'First Timers'} Distribution`,
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        series: [{
+          name: dataType === 'members' ? 'Members' : 'First Timers',
+          type: 'pie',
+          radius: '50%',
+          data: pieData,
+          emphasis: {
+            itemStyle: {
+              shadowBlur: 10,
+              shadowOffsetX: 0,
+              shadowColor: 'rgba(0, 0, 0, 0.5)'
+            }
+          }
+        }]
+      };
+    }
+
+    return {};
   };
 
   const getSummaryStats = () => {
     const filteredData = getFilteredData();
-    const processedData = processDataByGranularity(filteredData);
-    if (processedData.length === 0) return { totalMembers: 0, totalFirstTimers: 0, averageMembers: 0, averageFirstTimers: 0 };
     
-    const totalMembers = processedData.reduce((sum, item) => sum + item.totalAttendance, 0);
-    const totalFirstTimers = processedData.reduce((sum, item) => sum + item.firstTimersCount, 0);
-    const uniqueEvents = new Set(processedData.map(item => item.eventTitle)).size;
-    const averageMembers = Math.round(totalMembers / uniqueEvents);
-    const averageFirstTimers = Math.round(totalFirstTimers / uniqueEvents);
-    
-    return { totalMembers, totalFirstTimers, averageMembers, averageFirstTimers };
+    if (filteredData.length === 0) {
+      return {
+        totalMembers: 0,
+        totalFirstTimers: 0,
+        averageMembers: 0,
+        averageFirstTimers: 0
+      };
+    }
+
+    const totalMembers = filteredData.reduce((sum, item) => sum + item.totalAttendance, 0);
+    const totalFirstTimers = filteredData.reduce((sum, item) => sum + item.firstTimersCount, 0);
+    const uniqueEvents = new Set(filteredData.map(item => item.eventId)).size;
+
+    return {
+      totalMembers,
+      totalFirstTimers,
+      averageMembers: uniqueEvents > 0 ? Math.round(totalMembers / uniqueEvents) : 0,
+      averageFirstTimers: uniqueEvents > 0 ? Math.round(totalFirstTimers / uniqueEvents) : 0
+    };
+  };
+
+  const handleDateRangeChange = (start: Date, end: Date) => {
+    setStartDate(start);
+    setEndDate(end);
   };
 
   const summaryStats = getSummaryStats();
-  const uniqueFamilies = [...new Set(attendanceData.map(item => item.familyName))];
 
   return (
     <DashboardLayout>
@@ -443,165 +331,160 @@ export default function GeneralAttendanceStatisticsPage() {
         />
 
         {/* Chart Controls */}
-        <Card className="p-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Chart Type:</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={chartType === "line" ? "primary" : "outline"}
-                  onClick={() => setChartType("line")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-chart-line mr-2"></i>
-                  Line
-                </Button>
-                <Button
-                  size="sm"
-                  variant={chartType === "bar" ? "primary" : "outline"}
-                  onClick={() => setChartType("bar")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-chart-bar mr-2"></i>
-                  Bar
-                </Button>
-                <Button
-                  size="sm"
-                  variant={chartType === "pie" ? "primary" : "outline"}
-                  onClick={() => setChartType("pie")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-chart-pie mr-2"></i>
-                  Pie
-                </Button>
+        <Card>
+          <div className="p-6 space-y-4">
+            <div className="flex flex-wrap gap-4 items-center">
+              {/* Chart Type Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Chart Type
+                </label>
+                <div className="flex gap-2">
+                  {(['line', 'bar', 'pie'] as ChartType[]).map((type) => (
+                    <Button
+                      key={type}
+                      variant={chartType === type ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setChartType(type)}
+                    >
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Data Type:</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={dataType === "members" ? "primary" : "outline"}
-                  onClick={() => setDataType("members")}
-                  className="min-w-[120px]"
-                >
-                  <i className="fas fa-users mr-2"></i>
-                  Members
-                </Button>
-                <Button
-                  size="sm"
-                  variant={dataType === "firstTimers" ? "primary" : "outline"}
-                  onClick={() => setDataType("firstTimers")}
-                  className="min-w-[120px]"
-                >
-                  <i className="fas fa-star mr-2"></i>
-                  First Timers
-                </Button>
+              {/* Data Type Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Data Type
+                </label>
+                <div className="flex gap-2">
+                  {(['members', 'firstTimers'] as DataType[]).map((type) => (
+                    <Button
+                      key={type}
+                      variant={dataType === type ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setDataType(type)}
+                    >
+                      {type === 'members' ? 'Members' : 'First Timers'}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Granularity:</span>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant={granularity === "weekly" ? "primary" : "outline"}
-                  onClick={() => setGranularity("weekly")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-calendar-week mr-2"></i>
-                  Weekly
-                </Button>
-                <Button
-                  size="sm"
-                  variant={granularity === "monthly" ? "primary" : "outline"}
-                  onClick={() => setGranularity("monthly")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-calendar-alt mr-2"></i>
-                  Monthly
-                </Button>
-                <Button
-                  size="sm"
-                  variant={granularity === "yearly" ? "primary" : "outline"}
-                  onClick={() => setGranularity("yearly")}
-                  className="min-w-[80px]"
-                >
-                  <i className="fas fa-calendar mr-2"></i>
-                  Yearly
-                </Button>
+              {/* Granularity Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Granularity
+                </label>
+                <div className="flex gap-2">
+                  {(['weekly', 'monthly', 'yearly'] as Granularity[]).map((gran) => (
+                    <Button
+                      key={gran}
+                      variant={granularity === gran ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setGranularity(gran)}
+                    >
+                      {gran.charAt(0).toUpperCase() + gran.slice(1)}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Date Range:</span>
-              <DateRangePicker
-                startDate={startDate}
-                endDate={endDate}
-                onDateRangeChange={(start, end) => {
-                  setStartDate(start);
-                  setEndDate(end);
-                }}
-                className="w-64"
-              />
-            </div>
+              {/* Date Range Picker */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Date Range
+                </label>
+                <DateRangePicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  onDateRangeChange={handleDateRangeChange}
+                />
+              </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Family:</span>
-              <SelectInput
-                value={familyFilter}
-                onChange={(value) => setFamilyFilter(value)}
-                className="w-40"
-              >
-                <option value="all">All Families</option>
-                {uniqueFamilies.map(family => (
-                  <option key={family} value={family}>{family}</option>
-                ))}
-              </SelectInput>
+              {/* Family Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Family Filter
+                </label>
+                <SelectInput
+                  value={familyFilter}
+                  onChange={(value) => setFamilyFilter(value)}
+                  options={[
+                    { value: 'all', label: 'All Families' },
+                    ...families.map(family => ({
+                      value: family.id.toString(),
+                      label: family.name
+                    }))
+                  ]}
+                  placeholder="Select family"
+                  className="w-48"
+                />
+              </div>
             </div>
           </div>
         </Card>
 
         {/* Summary Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">{summaryStats.totalMembers}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Total Members</div>
+          <Card>
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Total Members
+              </h3>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {summaryStats.totalMembers}
+              </p>
+            </div>
           </Card>
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">{summaryStats.totalFirstTimers}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Total First Timers</div>
+          <Card>
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Total First Timers
+              </h3>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {summaryStats.totalFirstTimers}
+              </p>
+            </div>
           </Card>
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">{summaryStats.averageMembers}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Avg Members/Event</div>
+          <Card>
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Average Members/Event
+              </h3>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {summaryStats.averageMembers}
+              </p>
+            </div>
           </Card>
-          <Card className="p-6 text-center">
-            <div className="text-3xl font-bold text-orange-600 mb-2">{summaryStats.averageFirstTimers}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Avg First Timers/Event</div>
+          <Card>
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Average First Timers/Event
+              </h3>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {summaryStats.averageFirstTimers}
+              </p>
+            </div>
           </Card>
         </div>
 
         {/* Chart */}
-        <Card className="p-6">
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="text-center">
-                <i className="fas fa-spinner animate-spin text-4xl text-blue-600 mb-4"></i>
-                <p className="text-gray-600 dark:text-gray-400">Loading chart data...</p>
+        <Card>
+          <div className="p-6">
+            {loading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-gray-500">Loading chart data...</div>
               </div>
-            </div>
-          ) : (
-            <div className="w-full h-96">
+            ) : (
               <ReactECharts
                 option={getChartOption()}
-                style={{ height: "100%", width: "100%" }}
-                opts={{ renderer: "canvas" }}
+                style={{ height: '400px' }}
+                opts={{ renderer: 'canvas' }}
               />
-            </div>
-          )}
+            )}
+          </div>
         </Card>
       </div>
     </DashboardLayout>

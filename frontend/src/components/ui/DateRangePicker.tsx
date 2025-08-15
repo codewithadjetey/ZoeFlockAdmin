@@ -6,8 +6,8 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
 interface DateRangePickerProps {
-  startDate: Date;
-  endDate: Date;
+  startDate: Date | null;
+  endDate: Date | null;
   onDateRangeChange: (startDate: Date, endDate: Date) => void;
   className?: string;
 }
@@ -21,8 +21,8 @@ export default function DateRangePicker({
   const [isOpen, setIsOpen] = useState(false);
   const [tempDateRange, setTempDateRange] = useState([
     {
-      startDate: startDate,
-      endDate: endDate,
+      startDate: startDate || new Date(),
+      endDate: endDate || new Date(),
       key: "selection",
     },
   ]);
@@ -32,8 +32,8 @@ export default function DateRangePicker({
   useEffect(() => {
     setTempDateRange([
       {
-        startDate: startDate,
-        endDate: endDate,
+        startDate: startDate || new Date(),
+        endDate: endDate || new Date(),
         key: "selection",
       },
     ]);
@@ -69,8 +69,8 @@ export default function DateRangePicker({
     // Reset to original values
     setTempDateRange([
       {
-        startDate: startDate,
-        endDate: endDate,
+        startDate: startDate || new Date(),
+        endDate: endDate || new Date(),
         key: "selection",
       },
     ]);
@@ -89,7 +89,7 @@ export default function DateRangePicker({
       >
         <i className="fas fa-calendar text-gray-500 dark:text-gray-400"></i>
         <span className="text-sm text-gray-700 dark:text-gray-300">
-          {formatDate(startDate)} - {formatDate(endDate)}
+          {formatDate(startDate || new Date())} - {formatDate(endDate || new Date())}
         </span>
         <i className={`fas fa-chevron-down text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}></i>
       </div>
@@ -100,7 +100,6 @@ export default function DateRangePicker({
             ranges={tempDateRange}
             onChange={handleDateRangeChange}
             rangeColors={["#3b82f6"]}
-            showSelectionPreview={true}
             moveRangeOnFirstSelection={false}
             months={1}
             direction="horizontal"

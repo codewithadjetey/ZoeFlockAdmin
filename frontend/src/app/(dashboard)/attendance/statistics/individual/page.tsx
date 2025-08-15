@@ -68,11 +68,11 @@ export default function IndividualAttendanceStatisticsPage() {
     { id: 7, title: "Christmas Celebration", category_id: 5 },
   ];
 
-  // Set default date range (last 30 days)
+  // Set default date range (one year ago to now)
   const setDefaultDateRange = () => {
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - 30);
+    start.setFullYear(start.getFullYear() - 1);
     
     console.log('Setting default date range:', {
       start: start.toISOString(),
