@@ -34,14 +34,6 @@ class AttendanceController extends Controller
                 // Get the member record for the authenticated user
                 $member = \App\Models\Member::where('user_id', $user->id)->first();
                 if ($member && $member->family) {
-                    // Only show attendance records for members from the same family
-                    \Log::info('Family Head filtering attendance', [
-                        'user_id' => $user->id,
-                        'member_id' => $member->id,
-                        'family_id' => $member->family->id,
-                        'event_id' => $eventId
-                    ]);
-                    
                     $attendances = Attendance::with(['member:id,first_name,last_name,email,profile_image_path'])
                         ->where('event_id', $eventId)
                         ->whereHas('member', function($query) use ($member) {

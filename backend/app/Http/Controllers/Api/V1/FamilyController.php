@@ -95,12 +95,23 @@ class FamilyController extends Controller
             $query->where('active', $request->boolean('active'));
         }
 
+        $members = Member::activeMembers()->get();
+
+        $user = Auth::user();
+        if ($user && $user->hasRole('family-head')) {
+            $member = Member::where('user_id', $user->id)->first();
+            if ($member) {
+                $query->where('id', $member->family->id);
+            }
+        }
+
         $families = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return response()->json([
             'success' => true,
             'message' => 'Families retrieved successfully',
-            'families' => $families
+            'families' => $families,
+            'members' => $members
         ]);
     }
 
