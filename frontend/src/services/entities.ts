@@ -11,6 +11,7 @@ export interface EntitiesResponse {
   data: {
     groups?: EntityOption[];
     families?: EntityOption[];
+    members?: EntityOption[];
   };
 }
 
@@ -66,5 +67,13 @@ export class EntitiesService {
       groups: response.data.groups || [],
       families: response.data.families || []
     };
+  }
+
+  /**
+   * Get members for form selection
+   */
+  static async getMembers(activeOnly: boolean = true): Promise<EntityOption[]> {
+    const response = await this.getEntities('members', activeOnly);
+    return response.data.members || [];
   }
 } 
