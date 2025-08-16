@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Event;
 use App\Models\Group;
 use App\Models\Family;
 use App\Models\Member;
-use Event;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -81,7 +82,7 @@ class EntityController extends Controller
     {
         // Validate the entities parameter
         $request->validate([
-            'entities' => 'required|string|regex:/^[a-zA-Z,]+$/'
+            'entities' => 'required|string|regex:/^[a-zA-Z\-,]+$/'
         ]);
 
         $entities = explode(',', strtolower(trim($request->entities)));
@@ -118,11 +119,11 @@ class EntityController extends Controller
                     $data['families'] = $query->orderBy('name')->get();
                     break;
                 case 'members':
-                    $query = Member::select('id', 'name');
+                    $query = Member::select('id', 'first_name', 'last_name');
                     if ($family) {
                         $family->familyMembers()->where('is_active', true)->get();
                     }
-                    $data['members'] = $query->orderBy('name')->get();
+                    $data['members'] = $query->orderBy('first_name')->get();
                     break;
                 case 'events':
                     $query = Event::select('id', 'name');
@@ -131,7 +132,13 @@ class EntityController extends Controller
                     }
                     $data['events'] = $query->orderBy('name')->get();
                     break;
-                    
+                case 'events-today':
+                    $today = Carbon::today();
+                    $query = Event::select('id', 'title');
+                    $query->whereDate('start_date', '<=', $today)
+                        ->whereDate('end_date', '>=', $today);
+                    $data['events'] = $query->orderBy('title')->get();
+                    break;
                 default:
                     // Skip unknown entities
                     break;
