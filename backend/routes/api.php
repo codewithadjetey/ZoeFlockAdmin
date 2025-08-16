@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\GeneralAttendanceController;
 use App\Http\Controllers\Api\V1\EventCategoryController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\RoleController;
+use App\Http\Controllers\Api\V1\PartnershipController;
 use App\Http\Controllers\Api\V1\FirstTimerController;
 
 // Get the API version from config
@@ -248,6 +249,10 @@ Route::prefix($apiVersion)->group(function () {
         Route::delete('/{role}', [RoleController::class, 'destroy']);
         Route::post('/{role}/duplicate', [RoleController::class, 'duplicate']);
     });
+
+    // Partnership management routes
+    Route::apiResource('partnerships', PartnershipController::class);
+    Route::post('partnerships/{id}/generate-schedule', [PartnershipController::class, 'generateSchedule']);
 
     // Route::prefix('donations')->group(function () {
     //     Route::get('/', [DonationController::class, 'index']);

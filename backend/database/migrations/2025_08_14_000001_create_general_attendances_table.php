@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('first_timers_count')->default(0);
             $table->text('notes')->nullable();
             $table->unsignedBigInteger('recorded_by');
+            $table->unsignedBigInteger('family_id')->nullable();
             $table->timestamps();
 
             $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');

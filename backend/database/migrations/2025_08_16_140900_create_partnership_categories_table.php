@@ -11,7 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // No longer needed: foreign key and index are created in the table creation migration.
+        Schema::create('partnership_categories', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->string('description')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**
@@ -19,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // No longer needed: do not drop foreign key or index here.
+        Schema::dropIfExists('partnership_categories');
     }
 };
