@@ -16,10 +16,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             AdminSeeder::class,
             RolePermissionSeeder::class,
-            UserSeeder::class,
             GroupSeeder::class,
             FamilySeeder::class,
-            MemberSeeder::class,
             EventCategorySeeder::class,
             EventSeeder::class,
             AttendanceSeeder::class,
