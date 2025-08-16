@@ -29,6 +29,9 @@ import {
   formatDateTimeForBackend,
   formatDateForBackend
 } from "@/utils/helpers";
+import QRCode from 'react-qr-code';
+import { useRef } from 'react';
+import ReactDOM from 'react-dom';
 
 interface EventCategoryModalProps {
   isOpen: boolean;
@@ -541,6 +544,9 @@ export default function EventCategoriesPage() {
     per_page: 15,
     total: 0
   });
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [qrCategory, setQrCategory] = useState<EventCategory | null>(null);
+  const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadCategories();
@@ -684,6 +690,61 @@ export default function EventCategoriesPage() {
     }
   };
 
+  const handleShowQr = (category: EventCategory) => {
+    setQrCategory(category);
+    setQrModalOpen(true);
+  };
+
+  const handleDownloadQr = () => {
+    if (!qrCategory) return;
+    const qrValue = `${window.location.origin}/first-timer/${getEncryptedId(qrCategory.id)}`;
+    // Create a hidden canvas for high-res QR code
+    const canvas = document.createElement('canvas');
+    const size = 800;
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, size, size);
+    // Use react-qr-code to render SVG, then draw to canvas
+    // Create a temporary SVG element
+    const tempDiv = document.createElement('div');
+    document.body.appendChild(tempDiv);
+    import('react-dom/client').then(ReactDOM => {
+      ReactDOM.createRoot(tempDiv).render(
+        React.createElement(QRCode, { value: qrValue, size: size })
+      );
+      setTimeout(() => {
+        const svg = tempDiv.querySelector('svg');
+        if (!svg) {
+          document.body.removeChild(tempDiv);
+          return;
+        }
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svg);
+        const img = new window.Image();
+        img.onload = function () {
+          ctx.drawImage(img, 0, 0, size, size);
+          const pngFile = canvas.toDataURL('image/png');
+          const downloadLink = document.createElement('a');
+          downloadLink.href = pngFile;
+          downloadLink.download = `event-category-qr.png`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+          document.body.removeChild(tempDiv);
+        };
+        img.src = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svgString)));
+      }, 100); // Wait for SVG to render
+    });
+  };
+
+  const getEncryptedId = (id: number) => {
+    // Placeholder: use base64 encoding for now
+    return btoa(String(id));
+  };
+
   const getCategoryStatusColor = (status: boolean) => {
     return status ? 'bg-green-500' : 'bg-red-500';
   };
@@ -751,6 +812,16 @@ export default function EventCategoriesPage() {
       sortable: true,
       render: (value: any, category: EventCategory) => (
         <span className="text-gray-600">{category.events?.length || 0}</span>
+      )
+    },
+    {
+      key: 'qr',
+      label: 'QR Code',
+      sortable: false,
+      render: (value: any, category: EventCategory) => (
+        <Button size="sm" variant="outline" onClick={() => handleShowQr(category)}>
+          <i className="fas fa-qrcode mr-2"></i> QR Code
+        </Button>
       )
     },
     {
@@ -969,6 +1040,9 @@ export default function EventCategoriesPage() {
             <i className="fas fa-trash"></i>
           </button>
         </div>
+        <Button size="sm" variant="outline" onClick={() => handleShowQr(category)}>
+          <i className="fas fa-qrcode mr-2"></i> QR Code
+        </Button>
       </div>
     </div>
   );
@@ -1189,6 +1263,26 @@ export default function EventCategoriesPage() {
         category={editingCategory}
         onSuccess={handleCategorySuccess}
       />
+
+      {/* QR Code Modal */}
+      <Modal isOpen={qrModalOpen} onClose={() => setQrModalOpen(false)} title="Event Category QR Code">
+        {qrCategory && (
+          <div className="flex flex-col items-center gap-4 p-4">
+            <div ref={qrRef}>
+              <QRCode value={`${window.location.origin}/first-timer/${getEncryptedId(qrCategory.id)}`} size={200} />
+            </div>
+            <div className="text-sm text-gray-600 break-all text-center mt-2">
+              {window.location.origin}/first-timer/{getEncryptedId(qrCategory.id)}
+            </div>
+            <button
+              className="mt-2 px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition"
+              onClick={handleDownloadQr}
+            >
+              <i className="fas fa-download mr-2"></i>Download QR Code
+            </button>
+          </div>
+        )}
+      </Modal>
     </DashboardLayout>
   );
 } 

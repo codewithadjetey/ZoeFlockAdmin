@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\GeneralAttendanceController;
 use App\Http\Controllers\Api\V1\EventCategoryController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\RoleController;
+use App\Http\Controllers\Api\V1\FirstTimerController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -36,6 +37,10 @@ $apiVersion = config('app.version', 'v1');
 // Version all API routes
 Route::prefix($apiVersion)->group(function () {
     // Public routes (no authentication required)
+    require __DIR__.'/frontend.php';
+    // Individual attendance statistics (should be inside the group if versioned)
+    Route::get('attendance/statistics/individual', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'getIndividualStatistics']);
+
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
@@ -51,6 +56,8 @@ Route::prefix($apiVersion)->group(function () {
     Route::get('/info', [DocumentationController::class, 'info']);
     Route::get('/health', [DocumentationController::class, 'health']);
 
+    // Public first-timer registration (QR/self-registration, no auth)
+
     // Protected routes (authentication required)
     Route::middleware('auth:sanctum')->group(function () {
     // Auth routes
@@ -62,7 +69,15 @@ Route::prefix($apiVersion)->group(function () {
         Route::post('/resend-verification-email', [EmailVerificationController::class, 'resendVerificationEmail']);
     });
 
-    // Member management routes
+    // create resource routes first-timers
+    Route::prefix('first-timers')->group(function () {
+        Route::get('/', [FirstTimerController::class, 'index']);
+        Route::post('/', [FirstTimerController::class, 'store']);
+        Route::get('/{firstTimer}', [FirstTimerController::class, 'show']);
+        Route::put('/{firstTimer}', [FirstTimerController::class, 'update']);
+        Route::delete('/{firstTimer}', [FirstTimerController::class, 'destroy']);
+    });
+
     Route::prefix('members')->group(function () {
         Route::get('/', [MemberController::class, 'index']);
         Route::post('/', [MemberController::class, 'store']);
