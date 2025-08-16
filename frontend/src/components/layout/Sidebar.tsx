@@ -41,6 +41,13 @@ const adminMenuItems = [
   { label: "Roles & Permissions", icon: "fas fa-shield-alt", href: "/admin/roles" },
 ];
 
+// Financials menu items
+const financialsMenuItems = [
+  { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships" },
+  { label: "Partnership Category", icon: "fas fa-list-alt", href: "/financials/partnership-categories" },
+  { label: "Reports", icon: "fas fa-chart-pie", href: "/financials/reports" },
+];
+
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -54,6 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [attendanceMenuOpen, setAttendanceMenuOpen] = useState(false);
+  const [financialsMenuOpen, setFinancialsMenuOpen] = useState(false);
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -114,6 +122,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
   const toggleAttendanceMenu = () => {
     setAttendanceMenuOpen(!attendanceMenuOpen);
+  };
+
+  const toggleFinancialsMenu = () => {
+    setFinancialsMenuOpen(!financialsMenuOpen);
   };
 
   // Get sidebar background based on theme and color mode
@@ -184,6 +196,49 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               </Link>
             );
           })}
+
+          {/* Financials Menu Section */}
+          <div className="pt-4 border-t border-white/10">
+            <button
+              onClick={toggleFinancialsMenu}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
+                pathname.startsWith('/financials')
+                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <i className="fas fa-wallet mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
+                <span className="relative z-10">Financials</span>
+              </div>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${financialsMenuOpen ? 'rotate-180' : ''}`}></i>
+            </button>
+            {/* Financials Submenu */}
+            {financialsMenuOpen && (
+              <div className="ml-4 mt-2 space-y-2">
+                {financialsMenuItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
+                        isActive
+                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
+                      }`}
+                      onClick={handleNavClick}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500/15 to-blue-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                      <span className="relative z-10 text-sm">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Events Menu Section */}
           <div className="pt-4 border-t border-white/10">
