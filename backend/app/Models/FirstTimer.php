@@ -27,6 +27,7 @@ class FirstTimer extends Model
         'assigned_member_id',
         'device_fingerprint',
         'last_submission_date',
+        'event_id'
     ];
 
     /**

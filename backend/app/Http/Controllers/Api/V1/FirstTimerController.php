@@ -28,8 +28,8 @@ class FirstTimerController extends Controller
             'invited_by' => 'nullable|string|max:255',
             'invited_by_member_id' => 'nullable|exists:members,id',
             'would_like_to_stay' => 'nullable|boolean',
-            'device_fingerprint' => 'nullable|string|max:255',
             'self_registered' => 'nullable|boolean',
+            'event_id' => 'required|exists:events,id',
         ]);
 
         if ($validator->fails()) {
@@ -39,27 +39,11 @@ class FirstTimerController extends Controller
         $data = $validator->validated();
         $today = Carbon::today();
 
-        // Restrict QR code submissions: only one per device/phone per day, and only on event days
-        if (!empty($data['self_registered']) && $data['self_registered']) {
-            // Check if today is an event day
-            $eventToday = Event::whereDate('start_datetime', '<=', $today)
-                ->whereDate('end_datetime', '>=', $today)
-                ->exists();
-            if (!$eventToday) {
-                return response()->json(['error' => 'Self-registration is only allowed on event days.'], 403);
-            }
-            // Check for existing submission today by device or phone
-            $existing = FirstTimer::where(function($q) use ($data) {
-                    $q->where('primary_mobile_number', $data['primary_mobile_number']);
-                    if (!empty($data['device_fingerprint'])) {
-                        $q->orWhere('device_fingerprint', $data['device_fingerprint']);
-                    }
-                })
-                ->whereDate('last_submission_date', $today)
-                ->first();
-            if ($existing) {
-                return response()->json(['error' => 'You have already submitted today.'], 429);
-            }
+     
+
+        $alreadyRegistered = FirstTimer::where('primary_mobile_number', $data['primary_mobile_number'])->where('event_id', $data['event_id'])->first();
+        if ($alreadyRegistered) {
+            return response()->json(['message' => 'First Timer already registered for this event.'], 429);
         }
 
         // Check if primary_mobile_number already exists
@@ -85,5 +69,72 @@ class FirstTimerController extends Controller
             $firstTimer = FirstTimer::create($data);
             return response()->json(['message' => 'First timer registered', 'data' => $firstTimer], 201);
         }
+    }
+
+    /**
+     * Display a paginated listing of the first timers with filters.
+     */
+    public function index(Request $request)
+    {
+        $query = FirstTimer::query();
+
+        // Filter by event_id
+        if ($request->has('event_id')) {
+            $query->where('event_id', $request->event_id);
+        }
+        // Filter by date
+        if ($request->has('date')) {
+            $query->whereDate('created_at', $request->date);
+        }
+        // Search by name or phone
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('primary_mobile_number', 'like', "%{$search}%");
+            });
+        }
+        // Pagination
+        $perPage = $request->get('per_page', 15);
+        $firstTimers = $query->paginate($perPage);
+        return response()->json(['success' => true, 'data' => $firstTimers]);
+    }
+
+    /**
+     * Display the specified first timer.
+     */
+    public function show($id)
+    {
+        $firstTimer = FirstTimer::find($id);
+        if (!$firstTimer) {
+            return response()->json(['success' => false, 'message' => 'First timer not found.'], 404);
+        }
+        return response()->json(['success' => true, 'data' => $firstTimer]);
+    }
+
+    /**
+     * Update the specified first timer.
+     */
+    public function update(Request $request, $id)
+    {
+        $firstTimer = FirstTimer::find($id);
+        if (!$firstTimer) {
+            return response()->json(['success' => false, 'message' => 'First timer not found.'], 404);
+        }
+        $firstTimer->update($request->all());
+        return response()->json(['success' => true, 'data' => $firstTimer]);
+    }
+
+    /**
+     * Remove the specified first timer.
+     */
+    public function destroy($id)
+    {
+        $firstTimer = FirstTimer::find($id);
+        if (!$firstTimer) {
+            return response()->json(['success' => false, 'message' => 'First timer not found.'], 404);
+        }
+        $firstTimer->delete();
+        return response()->json(['success' => true, 'message' => 'First timer deleted.']);
     }
 }

@@ -29,6 +29,7 @@ return new class extends Migration
             $table->foreignId('assigned_member_id')->nullable()->constrained('members')->onDelete('set null');
             $table->string('device_fingerprint')->nullable();
             $table->date('last_submission_date')->nullable();
+            $table->foreignId('event_id')->constrained('events')->onDelete('cascade');
             $table->timestamps();
             // Indexes for performance
             $table->index('primary_mobile_number');
