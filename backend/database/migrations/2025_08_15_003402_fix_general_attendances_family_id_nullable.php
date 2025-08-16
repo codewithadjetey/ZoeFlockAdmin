@@ -11,10 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('general_attendances', function (Blueprint $table) {
-            // Add foreign key constraint for family_id that allows null values
-            $table->foreign('family_id')->references('id')->on('families')->onDelete('set null');
-        });
+        // No longer needed: foreign key is created in the table creation migration.
     }
 
     /**
@@ -22,9 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('general_attendances', function (Blueprint $table) {
-            // Drop the foreign key constraint
-            $table->dropForeign(['family_id']);
-        });
+        // No longer needed: do not drop foreign key here.
     }
 };
