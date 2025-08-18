@@ -254,6 +254,15 @@ Route::prefix($apiVersion)->group(function () {
     Route::apiResource('partnerships', PartnershipController::class);
     Route::post('partnerships/{id}/generate-schedule', [PartnershipController::class, 'generateSchedule']);
 
+    // Partnership Category resource routes
+    Route::prefix('partnership-categories')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\V1\PartnershipCategoryController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\V1\PartnershipCategoryController::class, 'store']);
+        Route::get('/{id}', [\App\Http\Controllers\Api\V1\PartnershipCategoryController::class, 'show']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\V1\PartnershipCategoryController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\V1\PartnershipCategoryController::class, 'destroy']);
+    });
+
     // Route::prefix('donations')->group(function () {
     //     Route::get('/', [DonationController::class, 'index']);
     //     Route::post('/', [DonationController::class, 'store']);
