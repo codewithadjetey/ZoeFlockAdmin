@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { PartnershipsService, Partnership, PartnershipCategory } from '@/services/partnerships';
 import { MembersService, Member } from '@/services/members';
 import Button from '@/components/ui/Button';
+import { EntitiesService } from '@/services/entities';
 
 interface PartnershipModalProps {
   isOpen: boolean;
@@ -29,8 +30,10 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
   useEffect(() => {
     if (isOpen) {
       setForm(partnership || {});
-      PartnershipsService.listCategories().then(setCategories);
-      MembersService.getMembers().then((res) => setMembers(res.members.data || []));
+      EntitiesService.getEntities('members,partnership-categories').then((res) => {
+        setMembers(res.data.members || []);
+        setCategories(res.data.partnership_categories || []);
+      });
     }
   }, [isOpen, partnership]);
 
