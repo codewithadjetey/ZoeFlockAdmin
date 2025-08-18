@@ -5,6 +5,10 @@ import { PartnershipsService, Partnership, PartnershipCategory } from '@/service
 import { MembersService, Member } from '@/services/members';
 import Button from '@/components/ui/Button';
 import { EntitiesService } from '@/services/entities';
+import TextInput from '@/components/ui/TextInput';
+import Textarea from '@/components/ui/Textarea';
+import SelectInput from '@/components/ui/SelectInput';
+import Modal from '@/components/shared/Modal';
 
 interface PartnershipModalProps {
   isOpen: boolean;
@@ -26,6 +30,8 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
   const [members, setMembers] = useState<Member[]>([]);
   const [categories, setCategories] = useState<PartnershipCategory[]>([]);
   const [loading, setLoading] = useState(false);
+  // Add error state if you want to show validation errors
+  const [errors, setErrors] = useState<any>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -64,62 +70,75 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-lg p-8 relative">
-        <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-700" onClick={onClose}>&times;</button>
-        <h2 className="text-xl font-bold mb-6">{mode === 'create' ? 'Add Partnership' : 'Edit Partnership'}</h2>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="block mb-1 font-medium">Member</label>
-            <select name="member_id" value={form.member_id || ''} onChange={handleChange} className="w-full rounded border px-3 py-2">
-              <option value="">Select Member</option>
-              {members.map((m) => (
-                <option key={m.id} value={m.id}>{m.first_name} {m.last_name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Category</label>
-            <select name="category_id" value={form.category_id || ''} onChange={handleChange} className="w-full rounded border px-3 py-2">
-              <option value="">Select Category</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Pledge Amount</label>
-            <input type="number" name="pledge_amount" value={form.pledge_amount || ''} onChange={handleChange} className="w-full rounded border px-3 py-2" min="0" step="0.01" />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Frequency</label>
-            <select name="frequency" value={form.frequency || ''} onChange={handleChange} className="w-full rounded border px-3 py-2">
-              <option value="">Select Frequency</option>
-              {frequencyOptions.map((f) => (
-                <option key={f.value} value={f.value}>{f.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block mb-1 font-medium">Start Date</label>
-              <input type="date" name="start_date" value={form.start_date || ''} onChange={handleChange} className="w-full rounded border px-3 py-2" />
-            </div>
-            <div className="flex-1">
-              <label className="block mb-1 font-medium">End Date</label>
-              <input type="date" name="end_date" value={form.end_date || ''} onChange={handleChange} className="w-full rounded border px-3 py-2" />
-            </div>
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Notes</label>
-            <textarea name="notes" value={form.notes || ''} onChange={handleChange} className="w-full rounded border px-3 py-2" rows={2} />
-          </div>
-          <div className="flex justify-end gap-2 mt-6">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
-            <Button type="submit" variant="primary" loading={loading}>{mode === 'create' ? 'Save' : 'Update'}</Button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={mode === 'create' ? 'Add Partnership' : 'Edit Partnership'}
+      size="lg"
+    >
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        <SelectInput
+          label="Member"
+          value={form.member_id ? String(form.member_id) : ''}
+          onChange={val => setForm(prev => ({ ...prev, member_id: val }))}
+          options={members.map(m => ({ value: String(m.id), label: `${m.first_name} ${m.last_name}` }))}
+          placeholder="Select Member"
+          error={errors.member_id}
+        />
+        <SelectInput
+          label="Category"
+          value={form.category_id ? String(form.category_id) : ''}
+          onChange={val => setForm(prev => ({ ...prev, category_id: val }))}
+          options={categories.map(c => ({ value: String(c.id), label: c.name }))}
+          placeholder="Select Category"
+          error={errors.category_id}
+        />
+        <TextInput
+          label="Pledge Amount"
+          name="pledge_amount"
+          type="number"
+          value={form.pledge_amount || ''}
+          onChange={e => setForm(prev => ({ ...prev, pledge_amount: e.target.value }))}
+          min={0}
+          error={errors.pledge_amount}
+        />
+        <SelectInput
+          label="Frequency"
+          value={form.frequency || ''}
+          onChange={val => setForm(prev => ({ ...prev, frequency: val }))}
+          options={frequencyOptions}
+          placeholder="Select Frequency"
+          error={errors.frequency}
+        />
+        <TextInput
+          label="Start Date"
+          name="start_date"
+          type="date"
+          value={form.start_date || ''}
+          onChange={e => setForm(prev => ({ ...prev, start_date: e.target.value }))}
+          error={errors.start_date}
+        />
+        <TextInput
+          label="End Date"
+          name="end_date"
+          type="date"
+          value={form.end_date || ''}
+          onChange={e => setForm(prev => ({ ...prev, end_date: e.target.value }))}
+          error={errors.end_date}
+        />
+        <Textarea
+          label="Notes"
+          name="notes"
+          value={form.notes || ''}
+          onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
+          rows={3}
+          error={errors.notes}
+        />
+        <div className="flex justify-end gap-2 mt-6">
+          <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button type="submit" variant="primary" loading={loading}>{mode === 'create' ? 'Save' : 'Update'}</Button>
+        </div>
+      </form>
+    </Modal>
   );
 };
