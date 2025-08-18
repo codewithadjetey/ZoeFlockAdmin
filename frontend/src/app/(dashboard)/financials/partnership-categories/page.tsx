@@ -65,21 +65,19 @@ export default function PartnershipCategoriesPage() {
     } else if (selectedCategory) {
       await PartnershipCategoriesService.update(selectedCategory.id, data);
     }
-   
+    setIsModalOpen(false);
+    loadCategories();
+ 
    } catch (error: any) {
     switch (error.response.status) {
       case 422:
         setErrors(error.response.data.errors);
-        toast.error(error.response.data.message);
         break;
       default:
-        setErrors({});
         toast.error(error.response.data.message || 'An error occurred');
     }
    }
-   setIsModalOpen(false);
-   loadCategories();
-
+  
   };
 
   // Define columns for DataTable

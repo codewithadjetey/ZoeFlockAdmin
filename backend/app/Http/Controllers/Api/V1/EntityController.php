@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\Group;
 use App\Models\Family;
 use App\Models\Member;
+use App\Models\PartnershipCategory;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
@@ -138,6 +139,10 @@ class EntityController extends Controller
                     $query->whereDate('start_date', '<=', $today)
                         ->whereDate('end_date', '>=', $today);
                     $data['events'] = $query->orderBy('title')->get();
+                    break;
+                case 'partnership-categories':
+                    $query = PartnershipCategory::select('id', 'name', "description");
+                    $data['partnership_categories'] = $query->orderBy('name')->get();
                     break;
                 default:
                     // Skip unknown entities

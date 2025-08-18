@@ -36,7 +36,7 @@ export const  PartnershipCategoryModal: React.FC<PartnershipCategoryModalProps> 
     setLoading(true);
     try {
       onSave(form as PartnershipCategory);
-      onClose();
+      // Do not close modal here; parent will close it only on success
     } finally {
       setLoading(false);
     }
