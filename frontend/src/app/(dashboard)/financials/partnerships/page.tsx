@@ -26,8 +26,13 @@ export default function PartnershipsPage() {
   const loadPartnerships = async () => {
     setLoading(true);
     try {
-      const data = await PartnershipsService.list({ search, page, per_page: perPage });
-      setPartnerships(data.data.data);
+      const response = await PartnershipsService.list({ search, page, per_page: perPage });
+      const paginated = response.data;
+      setPartnerships(paginated.data || []);
+      setTotal(paginated.total || 0);
+      // Optionally sync page/perPage with backend:
+      // setPage(paginated.current_page);
+      // setPerPage(Number(paginated.per_page));
     } finally {
       setLoading(false);
     }
