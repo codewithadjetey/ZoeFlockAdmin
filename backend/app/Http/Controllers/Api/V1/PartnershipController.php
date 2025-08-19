@@ -41,7 +41,8 @@ class PartnershipController extends Controller
             'category_id' => 'required|exists:partnership_categories,id',
             'pledge_amount' => 'required|numeric|min:0',
             'frequency' => 'required|in:weekly,monthly,yearly,one-time',
-            'start_date' => 'required|date',
+            'due_date' => 'required_if:frequency,one-time|date',
+            'start_date' => 'required_if:frequency,weekly,monthly,yearly|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'notes' => 'nullable|string',
         ]);

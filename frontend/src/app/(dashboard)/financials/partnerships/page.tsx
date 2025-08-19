@@ -5,6 +5,9 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PartnershipsService, Partnership } from '@/services/partnerships';
 import { PartnershipModal } from '@/components/partnerships/PartnershipModal';
 import Button from '@/components/ui/Button';
+import DataTable, { Column } from '@/components/ui/DataTable';
+import { formatCurrency, formatDate } from '@/utils/helpers';
+import StatCard from '@/components/ui/StatCard';
 
 export default function PartnershipsPage() {
   const [partnerships, setPartnerships] = useState<Partnership[]>([]);
@@ -56,9 +59,90 @@ export default function PartnershipsPage() {
     loadPartnerships();
   };
 
+  // Statistics
+  const totalPledged = partnerships.reduce((sum, p) => sum + (p.pledge_amount || 0), 0);
+  const activeCount = partnerships.filter(p => p.status === 'active').length;
+  const completedCount = partnerships.filter(p => p.status === 'completed').length;
+
+  // DataTable columns
+  const columns: Column<Partnership>[] = [
+    {
+      key: 'member',
+      label: 'Member',
+      render: (v, row) => `${row.member?.first_name || ''} ${row.member?.last_name || ''}`.trim(),
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      render: (v, row) => row.category?.name || '',
+    },
+    {
+      key: 'pledge_amount',
+      label: 'Amount',
+      render: (v, row) => formatCurrency(row.pledge_amount || 0),
+    },
+    {
+      key: 'frequency',
+      label: 'Frequency',
+      render: (v, row) => row.frequency.charAt(0).toUpperCase() + row.frequency.slice(1),
+    },
+    {
+      key: 'start_date',
+      label: 'Start Date',
+      render: (v, row) => formatDate(row.start_date),
+    },
+    {
+      key: 'end_date',
+      label: 'End Date',
+      render: (v, row) => row.end_date ? formatDate(row.end_date) : '-',
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (v, row) => row.status ? row.status.charAt(0).toUpperCase() + row.status.slice(1) : '-',
+    },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (v, row) => (
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" onClick={() => handleEdit(row)}>Edit</Button>
+          <Button size="sm" variant="danger" onClick={() => handleDelete(row)}>Delete</Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
+        {/* Statistics Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <StatCard
+            icon="fas fa-users"
+            iconColor="text-blue-500"
+            iconBgColor="bg-blue-100"
+            title="Total Partnerships"
+            value={partnerships.length}
+            description="Total Partnerships"
+          />
+          <StatCard
+            icon="fas fa-hand-holding-usd"
+            iconColor="text-green-500"
+            iconBgColor="bg-green-100"
+            title="Total Pledged"
+            value={formatCurrency(totalPledged)}
+            description="Total Pledged Amount"
+          />
+          <StatCard
+            icon="fas fa-check-circle"
+            iconColor="text-purple-500"
+            iconBgColor="bg-purple-100"
+            title="Active / Completed"
+            value={`${activeCount} / ${completedCount}`}
+            description="Active / Completed Partnerships"
+          />
+        </div>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Partnerships</h1>
           <Button variant="primary" onClick={handleAdd}>Add Partnership</Button>
@@ -73,56 +157,22 @@ export default function PartnershipsPage() {
           />
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-0 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Member</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} className="text-center py-8 text-gray-400">Loading...</td></tr>
-              ) : partnerships.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-8 text-gray-400">No partnerships found.</td></tr>
-              ) : (
-                partnerships.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                    <td className="px-6 py-4 whitespace-nowrap">{p.member?.first_name} {p.member?.last_name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{p.category?.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{p.pledge_amount}</td>
-                    <td className="px-6 py-4 whitespace-nowrap capitalize">{p.frequency}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{p.start_date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{p.end_date || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap flex gap-2">
-                      <Button size="sm" variant="secondary" onClick={() => handleEdit(p)}>Edit</Button>
-                      <Button size="sm" variant="danger" onClick={() => handleDelete(p)}>Delete</Button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        {/* Pagination */}
-        <div className="flex justify-end items-center gap-2 mt-4">
-          <span>Page</span>
-          <input
-            type="number"
-            min={1}
-            value={page}
-            onChange={e => setPage(Number(e.target.value))}
-            className="w-16 rounded border px-2 py-1"
+          <DataTable
+            columns={columns}
+            data={partnerships}
+            loading={loading}
+            emptyMessage="No partnerships found."
+            pagination={{
+              currentPage: page,
+              totalPages: Math.ceil(total / perPage) || 1,
+              totalItems: total,
+              perPage: perPage,
+              onPageChange: setPage,
+              onPerPageChange: setPerPage,
+            }}
+            showPagination={true}
+            showPerPageSelector={true}
           />
-          <span>of {Math.ceil(total / perPage) || 1}</span>
-          <select value={perPage} onChange={e => setPerPage(Number(e.target.value))} className="rounded border px-2 py-1">
-            {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}
-          </select>
         </div>
         <PartnershipModal
           isOpen={isModalOpen}

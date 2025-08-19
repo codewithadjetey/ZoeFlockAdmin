@@ -85,9 +85,10 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
       isOpen={isOpen}
       onClose={onClose}
       title={mode === 'create' ? 'Add Partnership' : 'Edit Partnership'}
-      size="lg"
+      size="xxl"
     >
       <form className="space-y-4" onSubmit={handleSubmit}>
+        <div className="grid grid-cols-2 gap-4">
         <SearchableSelect
           label="Member"
           value={form.member_id ? String(form.member_id) : ''}
@@ -121,22 +122,38 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
           placeholder="Select Frequency"
           error={errors.frequency}
         />
+        <div className="col-span-2">
         <TextInput
-          label="Start Date"
-          name="start_date"
+          label="Due Date"
+          name="due_date"
           type="date"
-          value={form.start_date || ''}
-          onChange={e => setForm(prev => ({ ...prev, start_date: e.target.value }))}
-          error={errors.start_date}
+          value={form.due_date || ''}
+          onChange={e => setForm(prev => ({ ...prev, due_date: e.target.value }))}
+          error={errors.due_date}
         />
-        <TextInput
-          label="End Date"
-          name="end_date"
-          type="date"
-          value={form.end_date || ''}
-          onChange={e => setForm(prev => ({ ...prev, end_date: e.target.value }))}
-          error={errors.end_date}
-        />
+        </div>
+        {form.frequency !== 'one-time' && (
+          <>
+            <TextInput
+              label="Start Date"
+              name="start_date"
+              type="date"
+              value={form.start_date || ''}
+              onChange={e => setForm(prev => ({ ...prev, start_date: e.target.value }))}
+              error={errors.start_date}
+            />
+            <TextInput
+              label="End Date"
+              name="end_date"
+              type="date"
+              value={form.end_date || ''}
+              onChange={e => setForm(prev => ({ ...prev, end_date: e.target.value }))}
+              error={errors.end_date}
+            />
+          </>
+        )}
+
+        <div className="col-span-2">
         <Textarea
           label="Notes"
           name="notes"
@@ -145,6 +162,8 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
           rows={3}
           error={errors.notes}
         />
+        </div>
+        </div>
         <div className="flex justify-end gap-2 mt-6">
           <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
           <Button type="submit" variant="primary" loading={loading}>{mode === 'create' ? 'Save' : 'Update'}</Button>
