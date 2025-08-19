@@ -2,13 +2,15 @@
 
 import React, { useEffect, useState } from 'react';
 import { PartnershipsService, Partnership, PartnershipCategory } from '@/services/partnerships';
-import { MembersService, Member } from '@/services/members';
 import Button from '@/components/ui/Button';
-import { EntitiesService } from '@/services/entities';
+import { EntitiesService, EntityOption } from '@/services/entities';
 import TextInput from '@/components/ui/TextInput';
 import Textarea from '@/components/ui/Textarea';
 import SelectInput from '@/components/ui/SelectInput';
 import Modal from '@/components/shared/Modal';
+import { getMemberOptions, getPartnershipCategoryOptions } from '@/utils';
+import { SearchableSelect } from '../ui';
+import { toast } from 'react-toastify';
 
 interface PartnershipModalProps {
   isOpen: boolean;
@@ -27,7 +29,7 @@ const frequencyOptions = [
 
 export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onClose, partnership, onSave, mode }) => {
   const [form, setForm] = useState<Partial<Partnership>>({});
-  const [members, setMembers] = useState<Member[]>([]);
+  const [members, setMembers] = useState<EntityOption[]>([]);
   const [categories, setCategories] = useState<PartnershipCategory[]>([]);
   const [loading, setLoading] = useState(false);
   // Add error state if you want to show validation errors
@@ -50,6 +52,7 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     setLoading(true);
     try {
       let result;
@@ -59,9 +62,17 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
         result = await PartnershipsService.update(partnership.id, form);
       }
       onSave(result);
+      setErrors({});
+      toast.success(result.data.message);
       onClose();
-    } catch (err) {
-      // TODO: Show error toast
+    } catch (err: any) {
+      switch (err.response.status) {
+        case 422:
+          setErrors(err.response.data.errors);
+          break;
+        default:
+          toast.error(err.response.data.message || 'An error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -77,19 +88,19 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
       size="lg"
     >
       <form className="space-y-4" onSubmit={handleSubmit}>
-        <SelectInput
+        <SearchableSelect
           label="Member"
           value={form.member_id ? String(form.member_id) : ''}
-          onChange={val => setForm(prev => ({ ...prev, member_id: val }))}
-          options={members.map(m => ({ value: String(m.id), label: `${m.first_name} ${m.last_name}` }))}
+          onChange={val => setForm(prev => ({ ...prev, member_id: Number(val) }))}
+          options={getMemberOptions(members)}
           placeholder="Select Member"
           error={errors.member_id}
         />
-        <SelectInput
+        <SearchableSelect
           label="Category"
           value={form.category_id ? String(form.category_id) : ''}
-          onChange={val => setForm(prev => ({ ...prev, category_id: val }))}
-          options={categories.map(c => ({ value: String(c.id), label: c.name }))}
+          onChange={val => setForm(prev => ({ ...prev, category_id: Number(val) }))}
+          options={getPartnershipCategoryOptions(categories)}
           placeholder="Select Category"
           error={errors.category_id}
         />
@@ -97,15 +108,15 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
           label="Pledge Amount"
           name="pledge_amount"
           type="number"
-          value={form.pledge_amount || ''}
-          onChange={e => setForm(prev => ({ ...prev, pledge_amount: e.target.value }))}
+          value={form.pledge_amount ? String(form.pledge_amount) : ''}
+          onChange={e => setForm(prev => ({ ...prev, pledge_amount: Number(e.target.value) }))}
           min={0}
           error={errors.pledge_amount}
         />
         <SelectInput
           label="Frequency"
           value={form.frequency || ''}
-          onChange={val => setForm(prev => ({ ...prev, frequency: val }))}
+          onChange={val => setForm(prev => ({ ...prev, frequency: val as 'weekly' | 'monthly' | 'yearly' | 'one-time' }))}
           options={frequencyOptions}
           placeholder="Select Frequency"
           error={errors.frequency}

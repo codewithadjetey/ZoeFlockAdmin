@@ -22,7 +22,7 @@ export interface PartnershipCategory {
 export const PartnershipsService = {
   async list(params: any = {}) {
     const res = await api.get('/partnerships', { params });
-    return res.data.data;
+    return res.data;
   },
   async get(id: number) {
     const res = await api.get(`/partnerships/${id}`);

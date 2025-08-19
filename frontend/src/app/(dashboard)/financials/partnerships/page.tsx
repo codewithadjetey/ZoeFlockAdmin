@@ -21,7 +21,7 @@ export default function PartnershipsPage() {
     setLoading(true);
     try {
       const data = await PartnershipsService.list({ search, page, per_page: perPage });
-      setPartnerships(data.data || data);
+      setPartnerships(data.data.data || data);
       setTotal(data.total || 0);
     } finally {
       setLoading(false);
