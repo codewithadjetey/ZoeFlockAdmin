@@ -8,6 +8,8 @@ import Button from '@/components/ui/Button';
 import DataTable, { Column } from '@/components/ui/DataTable';
 import { formatCurrency, formatDate } from '@/utils/helpers';
 import StatCard from '@/components/ui/StatCard';
+import ViewToggle from '@/components/ui/ViewToggle';
+import ContentCard from '@/components/ui/ContentCard';
 
 export default function PartnershipsPage() {
   const [partnerships, setPartnerships] = useState<Partnership[]>([]);
@@ -19,6 +21,7 @@ export default function PartnershipsPage() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
   const loadPartnerships = async () => {
     setLoading(true);
@@ -155,24 +158,59 @@ export default function PartnershipsPage() {
             className="rounded border px-3 py-2 w-64"
           />
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-0 overflow-x-auto">
-          <DataTable
-            columns={columns}
-            data={partnerships}
-            loading={loading}
-            emptyMessage="No partnerships found."
-            pagination={{
-              currentPage: page,
-              totalPages: Math.ceil(total / perPage) || 1,
-              totalItems: total,
-              perPage: perPage,
-              onPageChange: setPage,
-              onPerPageChange: setPerPage,
-            }}
-            showPagination={true}
-            showPerPageSelector={true}
-          />
-        </div>
+        <ViewToggle
+          value={viewMode}
+          onChange={val => setViewMode(val as 'table' | 'grid')}
+          options={[
+            { value: 'table', label: 'Table', icon: 'fas fa-table' },
+            { value: 'grid', label: 'Grid', icon: 'fas fa-th-large' },
+          ]}
+          count={partnerships.length}
+          countLabel="Partnerships"
+        />
+        {viewMode === 'table' ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-0 overflow-x-auto">
+            <DataTable
+              columns={columns}
+              data={partnerships}
+              loading={loading}
+              emptyMessage="No partnerships found."
+              pagination={{
+                currentPage: page,
+                totalPages: Math.ceil(total / perPage) || 1,
+                totalItems: total,
+                perPage: perPage,
+                onPageChange: setPage,
+                onPerPageChange: setPerPage,
+              }}
+              showPagination={true}
+              showPerPageSelector={true}
+            />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {partnerships.map((p) => (
+              <ContentCard key={p.id}>
+                <div className="flex flex-col gap-2">
+                  <div className="font-semibold text-lg">{p.member?.first_name} {p.member?.last_name}</div>
+                  <div className="text-gray-500">{p.category?.name}</div>
+                  <div className="text-gray-700 font-bold">{formatCurrency(p.pledge_amount || 0)}</div>
+                  <div className="text-xs text-gray-400">Frequency: {p.frequency.charAt(0).toUpperCase() + p.frequency.slice(1)}</div>
+                  <div className="text-xs text-gray-400">Due: {p.due_date}</div>
+                  {p.start_date && <div className="text-xs text-gray-400">Start: {p.start_date}</div>}
+                  {p.end_date && <div className="text-xs text-gray-400">End: {p.end_date}</div>}
+                  <div className="flex gap-2 mt-2">
+                    <Button size="sm" variant="secondary" onClick={() => handleEdit(p)}>Edit</Button>
+                    <Button size="sm" variant="danger" onClick={() => handleDelete(p)}>Delete</Button>
+                  </div>
+                </div>
+              </ContentCard>
+            ))}
+            {partnerships.length === 0 && (
+              <div className="col-span-full text-center text-gray-400 py-8">No partnerships found.</div>
+            )}
+          </div>
+        )}
         <PartnershipModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
