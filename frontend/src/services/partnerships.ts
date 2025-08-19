@@ -28,10 +28,21 @@ export interface PartnershipCategory {
   description?: string;
 }
 
+export interface PartnershipListResponse {
+  success: boolean;
+  data: {
+    data: Partnership[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+}
+
 export const PartnershipsService = {
   async list(params: any = {}) {
     const res = await api.get('/partnerships', { params });
-    return res.data;
+    return res.data as PartnershipListResponse;
   },
   async get(id: number) {
     const res = await api.get(`/partnerships/${id}`);
