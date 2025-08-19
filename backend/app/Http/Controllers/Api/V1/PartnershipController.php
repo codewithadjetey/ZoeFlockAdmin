@@ -36,15 +36,16 @@ class PartnershipController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'member_id' => 'required|exists:members,id',
-            'category_id' => 'required|exists:partnership_categories,id',
-            'pledge_amount' => 'required|numeric|min:0',
-            'frequency' => 'required|in:weekly,monthly,yearly,one-time',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'notes' => 'nullable|string',
-        ]);
+            $validator = Validator::make($request->all(), [
+                'member_id' => 'required|exists:members,id',
+                'category_id' => 'required|exists:partnership_categories,id',
+                'pledge_amount' => 'required|numeric|min:0',
+                'frequency' => 'required|in:weekly,monthly,yearly,one-time',
+                'due_date' => 'required_if:frequency,one-time|date',
+                'start_date' => 'required_if:frequency,weekly,monthly,yearly|date',
+                'end_date' => 'nullable|date|after_or_equal:start_date',
+                'notes' => 'nullable|string',
+            ]);
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
@@ -87,7 +88,8 @@ class PartnershipController extends Controller
             'category_id' => 'sometimes|required|exists:partnership_categories,id',
             'pledge_amount' => 'sometimes|required|numeric|min:0',
             'frequency' => 'sometimes|required|in:weekly,monthly,yearly,one-time',
-            'start_date' => 'sometimes|required|date',
+            'due_date' => 'sometimes|required_if:frequency,one-time|date',
+            'start_date' => 'sometimes|required_if:frequency,weekly,monthly,yearly',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'notes' => 'nullable|string',
         ]);

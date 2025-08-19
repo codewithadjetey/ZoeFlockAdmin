@@ -160,3 +160,18 @@ export const formatDateForBackend = (dateValue: string): string => {
   const date = new Date(dateValue);
   return date.toISOString().split('T')[0];
 };
+
+export function getMemberOptions(members: Array<{ id?: number; first_name?: string; last_name?: string }>) {
+  return members.map(member => ({
+    value: member.id?.toString() || '',
+    label: `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim()
+  }));
+}
+
+export function getPartnershipCategoryOptions(categories: Array<{ id?: number; name?: string }>) {
+  return categories.map(category => ({
+    value: category.id?.toString() || '',
+    label: category.name ?? ''
+  }));
+}
+

@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { PartnershipCategory } from '@/services/partnershipCategories';
 import Button from '@/components/ui/Button';
+import TextInput from '@/components/ui/TextInput';
+import Textarea from '@/components/ui/Textarea';
 
 interface PartnershipCategoryModalProps {
   isOpen: boolean;
@@ -9,9 +11,12 @@ interface PartnershipCategoryModalProps {
   category?: PartnershipCategory | null;
   onSave: (data: PartnershipCategory) => void;
   mode: 'create' | 'edit';
+  TextInput?: typeof TextInput;
+  Textarea?: typeof Textarea;
+  errors: any;
 }
 
-export const PartnershipCategoryModal: React.FC<PartnershipCategoryModalProps> = ({ isOpen, onClose, category, onSave, mode }) => {
+export const  PartnershipCategoryModal: React.FC<PartnershipCategoryModalProps> = ({ isOpen, onClose, category, onSave, mode, TextInput = TextInputDefault, Textarea = TextareaDefault, errors = {} }) => {
   const [form, setForm] = useState<Partial<PartnershipCategory>>({});
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +36,7 @@ export const PartnershipCategoryModal: React.FC<PartnershipCategoryModalProps> =
     setLoading(true);
     try {
       onSave(form as PartnershipCategory);
-      onClose();
+      // Do not close modal here; parent will close it only on success
     } finally {
       setLoading(false);
     }
@@ -45,14 +50,21 @@ export const PartnershipCategoryModal: React.FC<PartnershipCategoryModalProps> =
         <button className="absolute top-4 right-4 text-gray-400 hover:text-gray-700" onClick={onClose}>&times;</button>
         <h2 className="text-xl font-bold mb-6">{mode === 'create' ? 'Add Category' : 'Edit Category'}</h2>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div>
-            <label className="block mb-1 font-medium">Name</label>
-            <input type="text" name="name" value={form.name || ''} onChange={handleChange} className="w-full rounded border px-3 py-2" required />
-          </div>
-          <div>
-            <label className="block mb-1 font-medium">Description</label>
-            <textarea name="description" value={form.description || ''} onChange={handleChange} className="w-full rounded border px-3 py-2" rows={2} />
-          </div>
+          <TextInput
+            label="Name"
+            name="name"
+            value={form.name || ''}
+            onChange={handleChange as any}
+            error={errors.name}
+          />
+          <Textarea
+            label="Description"
+            name="description"
+            value={form.description || ''}
+            onChange={handleChange as any}
+            rows={2}
+            error={errors.description}
+          />
           <div className="flex justify-end gap-2 mt-6">
             <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>Cancel</Button>
             <Button type="submit" variant="primary" loading={loading}>{mode === 'create' ? 'Save' : 'Update'}</Button>
@@ -62,3 +74,7 @@ export const PartnershipCategoryModal: React.FC<PartnershipCategoryModalProps> =
     </div>
   );
 };
+
+// Fallbacks for default usage
+const TextInputDefault = TextInput;
+const TextareaDefault = Textarea;

@@ -14,6 +14,7 @@ export interface EntitiesResponse {
     members?: EntityOption[];
     events?: EntityOption[];
     eventsToday?: EntityOption[];
+    partnership_categories?: EntityOption[];
   };
 }
 

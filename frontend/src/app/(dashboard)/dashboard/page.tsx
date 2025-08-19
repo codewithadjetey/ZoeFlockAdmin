@@ -289,7 +289,7 @@ export default function DashboardPage() {
               </dd>
               <p className="text-xs text-green-600 dark:text-green-400 mt-1">
                 {loading ? (
-                  <div className="animate-pulse bg-gray-300 dark:bg-gray-600 h-3 w-20 rounded"></div>
+                  <span className="inline-block animate-pulse bg-gray-300 dark:bg-gray-600 h-3 w-20 rounded"></span>
                 ) : (
                   stat.description
                 )}

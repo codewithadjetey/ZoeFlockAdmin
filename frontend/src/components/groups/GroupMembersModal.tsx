@@ -7,6 +7,7 @@ import { GroupsService } from '@/services/groups';
 import { MembersService, Member } from '@/services/members';
 import { Group } from '@/interfaces/groups';
 import { toast } from 'react-toastify';
+import { getMemberOptions } from '@/utils';
 
 interface GroupMembersModalProps {
   isOpen: boolean;
@@ -118,10 +119,8 @@ export const GroupMembersModal: React.FC<GroupMembersModalProps> = ({
     }
   };
 
-  const memberOptions = availableMembers.map(member => ({
-    value: member.id?.toString() || '',
-    label: `${member.first_name} ${member.last_name} (${member.email})`
-  }));
+
+  const memberOptions = getMemberOptions(availableMembers);
 
   const roleOptions = GroupsService.getMemberRoles().map(role => ({
     value: role,

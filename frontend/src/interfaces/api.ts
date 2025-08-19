@@ -44,4 +44,11 @@ export interface Paginated<T> {
   prev_page_url: string | null;
   to: number | null;
   total: number;
-} 
+}
+
+// general saved response
+export interface AcceptedResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
