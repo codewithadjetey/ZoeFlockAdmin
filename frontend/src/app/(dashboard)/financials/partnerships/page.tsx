@@ -30,9 +30,8 @@ export default function PartnershipsPage() {
       const paginated = response.data;
       setPartnerships(paginated.data || []);
       setTotal(paginated.total || 0);
-      // Optionally sync page/perPage with backend:
-      // setPage(paginated.current_page);
-      // setPerPage(Number(paginated.per_page));
+      setPage(paginated.current_page || 1);
+      setPerPage(paginated.per_page || 10);
     } finally {
       setLoading(false);
     }
