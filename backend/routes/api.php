@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\PartnershipController;
 use App\Http\Controllers\Api\V1\FirstTimerController;
+use App\Http\Controllers\Api\V1\ExpenseCategoryController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -262,6 +263,9 @@ Route::prefix($apiVersion)->group(function () {
         Route::put('/{id}', [\App\Http\Controllers\Api\V1\PartnershipCategoryController::class, 'update']);
         Route::delete('/{id}', [\App\Http\Controllers\Api\V1\PartnershipCategoryController::class, 'destroy']);
     });
+
+    // Expense Category resource routes
+    Route::apiResource('expense-categories', ExpenseCategoryController::class);
 
     // Route::prefix('donations')->group(function () {
     //     Route::get('/', [DonationController::class, 'index']);
