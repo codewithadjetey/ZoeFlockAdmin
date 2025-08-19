@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { PartnershipsService, Partnership, PartnershipCategory } from '@/services/partnerships';
+import { PartnershipsService, Partnership, PartnershipCategory, PartnershipResponse } from '@/services/partnerships';
 import Button from '@/components/ui/Button';
 import { EntitiesService, EntityOption } from '@/services/entities';
 import TextInput from '@/components/ui/TextInput';
@@ -55,16 +55,18 @@ export const PartnershipModal: React.FC<PartnershipModalProps> = ({ isOpen, onCl
     setErrors({});
     setLoading(true);
     try {
-      let result;
+      let result: PartnershipResponse | null = null;
       if (mode === 'create') {
         result = await PartnershipsService.create(form);
       } else if (partnership?.id) {
         result = await PartnershipsService.update(partnership.id, form);
       }
-      onSave(result);
-      setErrors({});
-      toast.success(result.data.message);
-      onClose();
+      if (result) {
+        onSave(result.data);
+        setErrors({});
+        toast.success(result.message);
+        onClose();
+      }
     } catch (err: any) {
       switch (err.response.status) {
         case 422:

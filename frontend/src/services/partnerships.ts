@@ -1,3 +1,4 @@
+import { AcceptedResponse } from '@/interfaces';
 import { api } from '@/utils/api';
 
 export interface Partnership {
@@ -6,11 +7,19 @@ export interface Partnership {
   category_id: number;
   pledge_amount: number;
   frequency: 'weekly' | 'monthly' | 'yearly' | 'one-time';
-  start_date: string;
+  due_date?: string;
+  start_date?: string;
   end_date?: string;
   notes?: string;
   member?: any;
   category?: any;
+}
+
+// /AcceptedResponse
+export interface PartnershipResponse extends AcceptedResponse<Partnership> {
+  data: Partnership;
+  message: string;
+  success: boolean;
 }
 
 export interface PartnershipCategory {
@@ -26,22 +35,18 @@ export const PartnershipsService = {
   },
   async get(id: number) {
     const res = await api.get(`/partnerships/${id}`);
-    return res.data.data;
+    return res.data;
   },
   async create(data: Partial<Partnership>) {
     const res = await api.post('/partnerships', data);
-    return res.data.data;
+    return res.data as PartnershipResponse;
   },
   async update(id: number, data: Partial<Partnership>) {
     const res = await api.put(`/partnerships/${id}`, data);
-    return res.data.data;
+    return res.data as PartnershipResponse;
   },
   async delete(id: number) {
     const res = await api.delete(`/partnerships/${id}`);
-    return res.data;
-  },
-  async listCategories() {
-    const res = await api.get('/partnership-categories');
-    return res.data.data;
-  },
+    return res.data as PartnershipResponse;
+  }
 };
