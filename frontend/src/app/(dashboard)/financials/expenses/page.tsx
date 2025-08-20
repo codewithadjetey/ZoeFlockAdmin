@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   PageHeader,
   DataTable,
@@ -11,6 +11,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import DataGrid from "@/components/ui/DataGrid";
 import ViewToggle from "@/components/ui/ViewToggle";
 import Modal from "@/components/shared/Modal";
+import { EntitiesService, EntityOption } from "@/services/entities";
 
 interface Expense {
   id: number;
@@ -23,12 +24,6 @@ interface Expense {
   is_paid: boolean;
 }
 
-const mockCategories = [
-  { id: 1, name: "Utilities" },
-  { id: 2, name: "Salaries" },
-  { id: 3, name: "Maintenance" },
-];
-
 const mockExpenses: Expense[] = [
   { id: 1, category_id: 1, category_name: "Utilities", description: "Electricity bill", amount: 120.5, paid_date: "2024-07-01", is_paid: true },
   { id: 2, category_id: 2, category_name: "Salaries", description: "July payroll", amount: 3000, paid_date: "2024-07-05", is_paid: true },
@@ -37,11 +32,11 @@ const mockExpenses: Expense[] = [
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
-  const [categories] = useState(mockCategories);
+  const [categories, setCategories] = useState<EntityOption[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [form, setForm] = useState({
-    category_id: categories[0]?.id || 1,
+    category_id: 1,
     description: "",
     amount: 0,
     paid_date: "",
@@ -49,6 +44,13 @@ export default function ExpensesPage() {
     is_paid: false,
   });
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+
+  useEffect(() => {
+    // Fetch categories dynamically (replace 'expense_categories' with the correct entity name if needed)
+    EntitiesService.getEntities('expense-categories').then((res) => {
+        setCategories(res.data.expense_categories || []);
+      });
+  }, [editingExpense]);
 
   const handleOpenModal = (expense?: Expense) => {
     if (expense) {
