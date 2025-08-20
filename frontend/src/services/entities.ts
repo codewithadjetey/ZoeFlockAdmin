@@ -16,6 +16,7 @@ export interface EntitiesResponse {
     eventsToday?: EntityOption[];
     partnership_categories?: EntityOption[];
     expense_categories?: EntityOption[];
+    income_categories?: EntityOption[];
   };
 }
 
@@ -84,5 +85,10 @@ export class EntitiesService {
   static async getExpenseCategories(activeOnly: boolean = true): Promise<EntityOption[]> {
     const response = await this.getEntities('expense_categories', activeOnly);
     return response.data.expense_categories || [];
+  }
+
+  static async getIncomeCategories(activeOnly: boolean = true): Promise<EntityOption[]> {
+    const response = await this.getEntities('income-categories', activeOnly);
+    return response.data.income_categories || [];
   }
 } 

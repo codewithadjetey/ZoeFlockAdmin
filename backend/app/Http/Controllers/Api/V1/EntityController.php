@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\ExpenseCategory;
 use App\Models\Group;
 use App\Models\Family;
+use App\Models\IncomeCategory;
 use App\Models\Member;
 use App\Models\PartnershipCategory;
 use Illuminate\Http\Request;
@@ -148,6 +149,10 @@ class EntityController extends Controller
                 case 'expense-categories':
                     $query = ExpenseCategory::where('is_active', true)->select('id', 'name', "description");
                     $data['expense_categories'] = $query->orderBy('name')->get();
+                    break;
+                case 'income-categories':
+                    $query = IncomeCategory::where('is_active', true)->select('id', 'name', "description");
+                    $data['income_categories'] = $query->orderBy('name')->get();
                     break;
                 default:
                     // Skip unknown entities
