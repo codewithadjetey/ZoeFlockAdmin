@@ -14,6 +14,7 @@ import Modal from "@/components/shared/Modal";
 import { EntitiesService, EntityOption } from "@/services/entities";
 import { ExpensesService } from "@/services/expenses";
 import { Expense, PaginatedResponse } from "@/interfaces/expenses";
+import SelectInput from "@/components/ui/SelectInput";
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -48,7 +49,7 @@ export default function ExpensesPage() {
       type: 'select',
       options: [
         { value: '', label: 'All Categories' },
-        ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+        ...categories.map((cat) => ({ value: String(cat.id), label: cat.name })),
       ],
     },
     {
@@ -226,6 +227,40 @@ export default function ExpensesPage() {
     </div>
   );
 
+  // Custom filter UI in a grid above the table (no card)
+  const renderFilters = (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <SelectInput
+        value={filters.category_id}
+        onChange={(val) => handleFiltersChange({ ...filters, category_id: val })}
+        options={[
+          { value: '', label: 'All Categories' },
+          ...categories.map((cat) => ({ value: String(cat.id), label: cat.name })),
+        ]}
+        placeholder="Filter by category"
+        label="Category"
+      />
+      <SelectInput
+        value={filters.is_paid}
+        onChange={(val) => handleFiltersChange({ ...filters, is_paid: val })}
+        options={[
+          { value: '', label: 'All' },
+          { value: 'true', label: 'Paid' },
+          { value: 'false', label: 'Unpaid' },
+        ]}
+        placeholder="Filter by paid status"
+        label="Paid Status"
+      />
+      <FormField label="Search">
+        <TextInput
+          value={filters.search}
+          onChange={(e) => handleFiltersChange({ ...filters, search: e.target.value })}
+          placeholder="Description or amount..."
+        />
+      </FormField>
+    </div>
+  );
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -252,26 +287,27 @@ export default function ExpensesPage() {
         {error && <p className="text-center py-4 text-red-500">{error}</p>}
         {!loading && !error && (
           <>
+            {renderFilters}
             {viewMode === 'table' ? (
-              <DataTable
-                columns={columns}
-                data={expenses}
-                loading={loading}
-                filters={expenseFilters}
-                onFiltersChange={handleFiltersChange}
-                pagination={{
-                  currentPage,
-                  totalPages,
-                  totalItems,
-                  perPage,
-                  onPageChange: setCurrentPage,
-                  onPerPageChange: (val) => {
-                    setPerPage(val);
-                    setCurrentPage(1);
-                  },
-                }}
-                emptyMessage="No expenses found."
-              />
+              <>
+                <DataTable
+                  columns={columns}
+                  data={expenses}
+                  loading={loading}
+                  pagination={{
+                    currentPage,
+                    totalPages,
+                    totalItems,
+                    perPage,
+                    onPageChange: setCurrentPage,
+                    onPerPageChange: (val) => {
+                      setPerPage(val);
+                      setCurrentPage(1);
+                    },
+                  }}
+                  emptyMessage="No expenses found."
+                />
+              </>
             ) : (
               <DataGrid
                 data={expenses}
@@ -298,16 +334,13 @@ export default function ExpensesPage() {
               className="space-y-4"
             >
               <FormField label="Category" required>
-                <select
-                  value={form.category_id}
-                  onChange={(e) => handleFormChange("category_id", Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <SelectInput
+                  value={String(form.category_id)}
+                  onChange={(val) => handleFormChange("category_id", Number(val))}
+                  options={categories.map((cat) => ({ value: String(cat.id), label: cat.name }))}
+                  placeholder="Select category"
                   required
-                >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
+                />
               </FormField>
               <FormField label="Description">
                 <TextInput
