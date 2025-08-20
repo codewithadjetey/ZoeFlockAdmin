@@ -1,12 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/TextInput';
-import { SelectInput } from '@/components/ui/SelectInput';
-import { ViewToggle } from '@/components/ui/ViewToggle';
-import { DataTable } from '@/components/ui/DataTable';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { PageHeader, Button, TextInput, SelectInput, ViewToggle, DataTable } from '@/components/ui';
 
 export default function ExpensesReportPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
@@ -14,6 +10,11 @@ export default function ExpensesReportPage() {
   const [endDate, setEndDate] = useState('2024-12-31');
   const [category, setCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
+
+  const viewOptions = [
+    { value: 'chart', label: 'Chart', icon: 'fas fa-chart-bar' },
+    { value: 'table', label: 'Table', icon: 'fas fa-table' }
+  ];
 
   const mockExpenseData = [
     { id: 1, category: 'Utilities', amount: 8500, count: 12, avgAmount: 708.33, trend: '+5.2%', budget: 8000 },
@@ -72,15 +73,10 @@ export default function ExpensesReportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <DashboardLayout>
       <PageHeader
         title="Expenses Report"
-        subtitle="Comprehensive expense tracking and analysis"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Reports', href: '/reports' },
-          { label: 'Expenses Report', href: '/reports/expenses' }
-        ]}
+        description="Comprehensive expense tracking and analysis"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -237,9 +233,11 @@ export default function ExpensesReportPage() {
             Expense Analysis
           </h2>
           <ViewToggle
-            viewMode={viewMode}
-            onViewChange={setViewMode}
+            value={viewMode}
+            onChange={setViewMode}
+            options={viewOptions}
             count={mockExpenseData.length}
+            countLabel="categories"
           />
         </div>
 
@@ -349,6 +347,6 @@ export default function ExpensesReportPage() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 } 

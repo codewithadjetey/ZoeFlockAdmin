@@ -1,11 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/TextInput';
-import { SelectInput } from '@/components/ui/SelectInput';
-import { DataTable } from '@/components/ui/DataTable';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { PageHeader, Button, TextInput, SelectInput, DataTable } from '@/components/ui';
 
 export default function ExportReportPage() {
   const [startDate, setStartDate] = useState('2024-01-01');
@@ -93,15 +90,10 @@ export default function ExportReportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <DashboardLayout>
       <PageHeader
         title="Export Report"
-        subtitle="Generate and export financial data in various formats"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Reports', href: '/reports' },
-          { label: 'Export Report', href: '/reports/export' }
-        ]}
+        description="Generate and export financial data in various formats"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -347,6 +339,6 @@ export default function ExportReportPage() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 } 

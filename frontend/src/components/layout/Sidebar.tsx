@@ -11,8 +11,8 @@ const navItems = [
   { label: "Groups", icon: "fas fa-layer-group", href: "/groups" },
   // { label: "Donations", icon: "fas fa-donate", href: "/donations" },
   { label: "First Timers", icon: "fas fa-user-plus", href: "/first-timers" },
-
   { label: "Communication", icon: "fas fa-envelope", href: "/communication" },
+  { label: "Reports", icon: "fas fa-chart-pie", href: "/reports" },
 ];
 
 // Attendance menu items
@@ -51,18 +51,15 @@ const financialsMenuItems = [
   { label: "Income Category", icon: "fas fa-folder-plus", href: "/financials/income-categories" },
   { label: "Expenses", icon: "fas fa-money-bill-wave", href: "/financials/expenses" },
   { label: "Expenses Category", icon: "fas fa-folder-open", href: "/financials/expenses-categories" },
-  { label: "Reports", icon: "fas fa-chart-pie", href: "/financials/reports" },
 ];
 
-const reportsMenuItems = [
-  { label: "Reports", icon: "fas fa-chart-bar", href: "/reports" },
-];
+
 
 const mainFinancialReportsMenuItems = [
-  { label: "Income Reports", icon: "fas fa-chart-line", href: "/income/reports" },
-  { label: "Expenses Report", icon: "fas fa-file-invoice-dollar", href: "/income/expenses-report" },
-  { label: "Income vs Expenses Report", icon: "fas fa-balance-scale", href: "/income/income-vs-expenses" },
-  { label: "Export Report", icon: "fas fa-file-excel", href: "/income/export" },
+  { label: "Income Reports", icon: "fas fa-chart-line", href: "/reports/income" },
+  { label: "Expenses Report", icon: "fas fa-file-invoice-dollar", href: "/reports/expenses" },
+  { label: "Income vs Expenses Report", icon: "fas fa-balance-scale", href: "/reports/income-vs-expenses" },
+  { label: "Export Report", icon: "fas fa-file-excel", href: "/reports/export" },
 ];
 
 interface SidebarProps {
@@ -79,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [attendanceMenuOpen, setAttendanceMenuOpen] = useState(false);
   const [financialsMenuOpen, setFinancialsMenuOpen] = useState(false);
-  const [incomeMenuOpen, setIncomeMenuOpen] = useState(false);
+  const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -146,9 +143,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     setFinancialsMenuOpen(!financialsMenuOpen);
   };
 
-  const toggleIncomeMenu = () => {
-    setIncomeMenuOpen(!incomeMenuOpen);
-  };
+
 
   // Get sidebar background based on theme and color mode
   const getSidebarBackground = () => {
@@ -262,27 +257,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             )}
           </div>
 
-          {/* Reports Menu Section */}
-          <div className="pt-4 border-t border-white/10">
-            {reportsMenuItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                    isActive
-                      ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                      : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
-                  }`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <i className={`${item.icon} mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
-                  <span className="relative z-10">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
+
 
           {/* Events Menu Section */}
           <div className="pt-4 border-t border-white/10">
@@ -463,9 +438,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           {/* Main Financial Reports Menu Section */}
           <div className="pt-4 border-t border-white/10">
             <button
-              onClick={() => setIncomeMenuOpen(!incomeMenuOpen)}
+              onClick={() => setReportsMenuOpen(!reportsMenuOpen)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                pathname.startsWith('/income')
+                pathname.startsWith('/reports')
                   ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
                   : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
               }`}
@@ -475,9 +450,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 <i className="fas fa-chart-bar mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
                 <span className="relative z-10">Reports</span>
               </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${incomeMenuOpen ? 'rotate-180' : ''}`}></i>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${reportsMenuOpen ? 'rotate-180' : ''}`}></i>
             </button>
-            {incomeMenuOpen && (
+            {reportsMenuOpen && (
               <div className="ml-4 mt-2 space-y-2">
                 {mainFinancialReportsMenuItems.map((item) => {
                   const isActive = pathname === item.href;

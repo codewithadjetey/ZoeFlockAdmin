@@ -1,13 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/TextInput';
-import { SelectInput } from '@/components/ui/SelectInput';
-import { ViewToggle } from '@/components/ui/ViewToggle';
-import { DataTable } from '@/components/ui/DataTable';
-import { DataGrid } from '@/components/ui/DataGrid';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { PageHeader, Button, TextInput, SelectInput, ViewToggle, DataTable, DataGrid } from '@/components/ui';
 
 export default function IncomeReportsPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
@@ -15,6 +10,11 @@ export default function IncomeReportsPage() {
   const [endDate, setEndDate] = useState('2024-12-31');
   const [category, setCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
+
+  const viewOptions = [
+    { value: 'chart', label: 'Chart', icon: 'fas fa-chart-area' },
+    { value: 'table', label: 'Table', icon: 'fas fa-table' }
+  ];
 
   const mockIncomeData = [
     { id: 1, category: 'Tithes', amount: 18500, count: 156, avgAmount: 118.59, trend: '+12.5%' },
@@ -70,15 +70,10 @@ export default function IncomeReportsPage() {
   const formatCurrency = (amount: number) => `$${amount.toLocaleString()}`;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <DashboardLayout>
       <PageHeader
         title="Income Reports"
-        subtitle="Comprehensive income analysis and reporting"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Reports', href: '/reports' },
-          { label: 'Income Reports', href: '/reports/income' }
-        ]}
+        description="Comprehensive income analysis and reporting"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -179,9 +174,11 @@ export default function IncomeReportsPage() {
             Income Analysis
           </h2>
           <ViewToggle
-            viewMode={viewMode}
-            onViewChange={setViewMode}
+            value={viewMode}
+            onChange={setViewMode}
+            options={viewOptions}
             count={mockIncomeData.length}
+            countLabel="categories"
           />
         </div>
 
@@ -283,6 +280,6 @@ export default function IncomeReportsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 } 

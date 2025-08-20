@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { StatCard } from '@/components/ui/StatCard';
-import { Button } from '@/components/ui/Button';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { PageHeader, StatCard, Button } from '@/components/ui';
 
 export default function ReportsPage() {
   const [isLoading] = useState(false);
@@ -80,14 +79,10 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <DashboardLayout>
       <PageHeader
         title="Financial Reports Dashboard"
-        subtitle="Comprehensive financial analysis and reporting tools"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Reports', href: '/reports' }
-        ]}
+        description="Comprehensive financial analysis and reporting tools"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -180,6 +175,6 @@ export default function ReportsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 } 

@@ -1,12 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Button } from '@/components/ui/Button';
-import { TextInput } from '@/components/ui/TextInput';
-import { SelectInput } from '@/components/ui/SelectInput';
-import { ViewToggle } from '@/components/ui/ViewToggle';
-import { DataTable } from '@/components/ui/DataTable';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { PageHeader, Button, TextInput, SelectInput, ViewToggle, DataTable } from '@/components/ui';
 
 export default function IncomeVsExpensesPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
@@ -14,6 +10,11 @@ export default function IncomeVsExpensesPage() {
   const [endDate, setEndDate] = useState('2024-12-31');
   const [period, setPeriod] = useState('monthly');
   const [isLoading, setIsLoading] = useState(false);
+
+  const viewOptions = [
+    { value: 'chart', label: 'Chart', icon: 'fas fa-balance-scale' },
+    { value: 'table', label: 'Table', icon: 'fas fa-table' }
+  ];
 
   const mockComparisonData = [
     { month: 'Jan', income: 3300, expenses: 2610, profit: 690, profitMargin: 20.9 },
@@ -66,15 +67,10 @@ export default function IncomeVsExpensesPage() {
   const overallProfitMargin = (totalProfit / totalIncome) * 100;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <DashboardLayout>
       <PageHeader
         title="Income vs Expenses Report"
-        subtitle="Comparative analysis and profitability insights"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Reports', href: '/reports' },
-          { label: 'Income vs Expenses Report', href: '/reports/income-vs-expenses' }
-        ]}
+        description="Comparative analysis and profitability insights"
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -215,9 +211,11 @@ export default function IncomeVsExpensesPage() {
             Comparative Analysis
           </h2>
           <ViewToggle
-            viewMode={viewMode}
-            onViewChange={setViewMode}
+            value={viewMode}
+            onChange={setViewMode}
+            options={viewOptions}
             count={mockComparisonData.length}
+            countLabel="periods"
           />
         </div>
 
@@ -352,6 +350,6 @@ export default function IncomeVsExpensesPage() {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 } 
