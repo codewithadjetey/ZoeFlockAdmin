@@ -1,9 +1,14 @@
 import { api } from '@/utils/api';
-import { Expense, PaginatedResponse } from '@/interfaces/expenses';
+import { Expense, ExpenseCategory, PaginatedResponse } from '@/interfaces/expenses';
 
 export const ExpensesService = {
   async getExpenses(params?: { page?: number; per_page?: number }): Promise<PaginatedResponse<Expense>> {
     const res = await api.get('/expenses', { params });
+    return res.data;
+  },
+
+  async getCategories(params?: { page?: number; per_page?: number }): Promise<PaginatedResponse<ExpenseCategory>> {
+    const res = await api.get('/expense-categories', { params });
     return res.data;
   },
 
