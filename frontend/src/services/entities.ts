@@ -15,6 +15,7 @@ export interface EntitiesResponse {
     events?: EntityOption[];
     eventsToday?: EntityOption[];
     partnership_categories?: EntityOption[];
+    expense_categories?: EntityOption[];
   };
 }
 
@@ -78,5 +79,10 @@ export class EntitiesService {
   static async getMembers(activeOnly: boolean = true): Promise<EntityOption[]> {
     const response = await this.getEntities('members', activeOnly);
     return response.data.members || [];
+  }
+
+  static async getExpenseCategories(activeOnly: boolean = true): Promise<EntityOption[]> {
+    const response = await this.getEntities('expense_categories', activeOnly);
+    return response.data.expense_categories || [];
   }
 } 

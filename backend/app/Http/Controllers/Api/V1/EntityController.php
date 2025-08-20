@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\ExpenseCategory;
 use App\Models\Group;
 use App\Models\Family;
 use App\Models\Member;
@@ -143,6 +144,10 @@ class EntityController extends Controller
                 case 'partnership-categories':
                     $query = PartnershipCategory::select('id', 'name', "description");
                     $data['partnership_categories'] = $query->orderBy('name')->get();
+                    break;
+                case 'expense-categories':
+                    $query = ExpenseCategory::where('is_active', true)->select('id', 'name', "description");
+                    $data['expense_categories'] = $query->orderBy('name')->get();
                     break;
                 default:
                     // Skip unknown entities
