@@ -35,10 +35,54 @@ export default function ExpensesPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState({
+    category_id: '',
+    is_paid: '',
+    search: '',
+  });
+
+  const expenseFilters = [
+    {
+      key: 'category_id',
+      label: 'Category',
+      type: 'select',
+      options: [
+        { value: '', label: 'All Categories' },
+        ...categories.map((cat) => ({ value: cat.id, label: cat.name })),
+      ],
+    },
+    {
+      key: 'is_paid',
+      label: 'Paid Status',
+      type: 'select',
+      options: [
+        { value: '', label: 'All' },
+        { value: 'true', label: 'Paid' },
+        { value: 'false', label: 'Unpaid' },
+      ],
+    },
+    {
+      key: 'search',
+      label: 'Search',
+      type: 'text',
+      placeholder: 'Description or amount...'
+    },
+  ];
+
+  const handleFiltersChange = (newFilters: Record<string, any>) => {
+    setFilters(newFilters);
+    setCurrentPage(1);
+  };
 
   useEffect(() => {
     setLoading(true);
-    ExpensesService.getExpenses({ page: currentPage, per_page: perPage })
+    ExpensesService.getExpenses({
+      page: currentPage,
+      per_page: perPage,
+      category_id: filters.category_id || undefined,
+      is_paid: filters.is_paid || undefined,
+      search: filters.search || undefined,
+    })
       .then((res) => {
         setExpenses(res.data);
         setTotalItems(res.meta.total);
@@ -46,7 +90,7 @@ export default function ExpensesPage() {
       })
       .catch(() => setError("Failed to load expenses."))
       .finally(() => setLoading(false));
-  }, [currentPage, perPage]);
+  }, [currentPage, perPage, filters]);
 
   useEffect(() => {
     EntitiesService.getEntities('expense-categories').then((res) => {
@@ -212,6 +256,20 @@ export default function ExpensesPage() {
               <DataTable
                 columns={columns}
                 data={expenses}
+                loading={loading}
+                filters={expenseFilters}
+                onFiltersChange={handleFiltersChange}
+                pagination={{
+                  currentPage,
+                  totalPages,
+                  totalItems,
+                  perPage,
+                  onPageChange: setCurrentPage,
+                  onPerPageChange: (val) => {
+                    setPerPage(val);
+                    setCurrentPage(1);
+                  },
+                }}
                 emptyMessage="No expenses found."
               />
             ) : (
