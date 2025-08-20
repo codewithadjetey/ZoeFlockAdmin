@@ -12,26 +12,11 @@ import DataGrid from "@/components/ui/DataGrid";
 import ViewToggle from "@/components/ui/ViewToggle";
 import Modal from "@/components/shared/Modal";
 import { EntitiesService, EntityOption } from "@/services/entities";
-
-interface Expense {
-  id: number;
-  category_id: number;
-  category_name: string;
-  description?: string;
-  amount: number;
-  paid_date: string;
-  due_date?: string;
-  is_paid: boolean;
-}
-
-const mockExpenses: Expense[] = [
-  { id: 1, category_id: 1, category_name: "Utilities", description: "Electricity bill", amount: 120.5, paid_date: "2024-07-01", is_paid: true },
-  { id: 2, category_id: 2, category_name: "Salaries", description: "July payroll", amount: 3000, paid_date: "2024-07-05", is_paid: true },
-  { id: 3, category_id: 3, category_name: "Maintenance", description: "AC repair", amount: 250, paid_date: "2024-07-10", is_paid: false, due_date: "2024-07-15" },
-];
+import { ExpensesService } from "@/services/expenses";
+import { Expense, PaginatedResponse } from "@/interfaces/expenses";
 
 export default function ExpensesPage() {
-  const [expenses, setExpenses] = useState<Expense[]>(mockExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<EntityOption[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
@@ -44,12 +29,29 @@ export default function ExpensesPage() {
     is_paid: false,
   });
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch categories dynamically (replace 'expense_categories' with the correct entity name if needed)
+    setLoading(true);
+    ExpensesService.getExpenses({ page: currentPage, per_page: perPage })
+      .then((res) => {
+        setExpenses(res.data);
+        setTotalItems(res.meta.total);
+        setTotalPages(res.meta.last_page);
+      })
+      .catch(() => setError("Failed to load expenses."))
+      .finally(() => setLoading(false));
+  }, [currentPage, perPage]);
+
+  useEffect(() => {
     EntitiesService.getEntities('expense-categories').then((res) => {
-        setCategories(res.data.expense_categories || []);
-      });
+      setCategories(res.data.expense_categories || []);
+    });
   }, [editingExpense]);
 
   const handleOpenModal = (expense?: Expense) => {
@@ -94,28 +96,41 @@ export default function ExpensesPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    if (editingExpense) {
-      setExpenses((prev) =>
-        prev.map((exp) =>
-          exp.id === editingExpense.id ? { ...editingExpense, ...form, category_name: categories.find(c => c.id === form.category_id)?.name || "" } : exp
-        )
-      );
-    } else {
-      setExpenses((prev) => [
-        ...prev,
-        {
-          id: prev.length + 1,
-          ...form,
-          category_name: categories.find(c => c.id === form.category_id)?.name || "",
-        },
-      ]);
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (editingExpense) {
+        const updated = await ExpensesService.updateExpense(editingExpense.id, form);
+        setExpenses((prev) => prev.map((exp) => (exp.id === updated.id ? updated : exp)));
+      } else {
+        const created = await ExpensesService.createExpense(form);
+        setExpenses((prev) => [created, ...prev]);
+      }
+      handleCloseModal();
+    } catch (e) {
+      setError("Failed to save expense.");
+    } finally {
+      setLoading(false);
     }
-    handleCloseModal();
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this expense?")) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await ExpensesService.deleteExpense(id);
+      setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+    } catch (e) {
+      setError("Failed to delete expense.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const columns = [
-    { key: "category_name", label: "Category" },
+    { key: "category", label: "Category", render: (_: any, row: Expense) => row.category?.name || "-" },
     { key: "description", label: "Description" },
     { key: "amount", label: "Amount" },
     { key: "paid_date", label: "Paid Date" },
@@ -133,9 +148,14 @@ export default function ExpensesPage() {
       key: "actions",
       label: "Actions",
       render: (_: any, row: Expense) => (
-        <Button size="sm" variant="outline" onClick={() => handleOpenModal(row)}>
-          <i className="fas fa-edit mr-1"></i>Edit
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => handleOpenModal(row)}>
+            <i className="fas fa-edit mr-1"></i>Edit
+          </Button>
+          <Button size="sm" variant="danger" onClick={() => handleDelete(row.id)}>
+            <i className="fas fa-trash mr-1"></i>Delete
+          </Button>
+        </div>
       ),
     },
   ];
@@ -143,7 +163,7 @@ export default function ExpensesPage() {
   const renderExpenseCard = (expense: Expense) => (
     <div className="rounded-xl shadow-lg p-6 bg-white dark:bg-gray-800 flex flex-col gap-2">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{expense.category_name}</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{expense.category?.name}</h3>
         <span className={`px-2 py-1 rounded text-xs font-semibold ${expense.is_paid ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
           {expense.is_paid ? "Paid" : "Unpaid"}
         </span>
@@ -177,25 +197,38 @@ export default function ExpensesPage() {
               { value: 'table', label: 'Table', icon: 'fas fa-table' },
               { value: 'grid', label: 'Grid', icon: 'fas fa-th' },
             ]}
-            count={expenses.length}
+            count={totalItems}
             countLabel="expenses"
           />
           <Button onClick={() => handleOpenModal()}>
             <i className="fas fa-plus mr-2"></i>New Expense
           </Button>
         </div>
-        {viewMode === 'table' ? (
-          <DataTable
-            columns={columns}
-            data={expenses}
-            emptyMessage="No expenses found."
-          />
-        ) : (
-          <DataGrid
-            data={expenses}
-            renderCard={renderExpenseCard}
-            columns={3}
-          />
+        {loading && <p className="text-center py-4">Loading expenses...</p>}
+        {error && <p className="text-center py-4 text-red-500">{error}</p>}
+        {!loading && !error && (
+          <>
+            {viewMode === 'table' ? (
+              <DataTable
+                columns={columns}
+                data={expenses}
+                emptyMessage="No expenses found."
+              />
+            ) : (
+              <DataGrid
+                data={expenses}
+                renderCard={renderExpenseCard}
+                columns={3}
+              />
+            )}
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2 mt-4">
+                <Button onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1}>Previous</Button>
+                <span>Page {currentPage} of {totalPages}</span>
+                <Button onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages}>Next</Button>
+              </div>
+            )}
+          </>
         )}
         {showModal && (
           <Modal isOpen={showModal} onClose={handleCloseModal} title={editingExpense ? "Edit Expense" : "New Expense"} size="md">
@@ -260,7 +293,7 @@ export default function ExpensesPage() {
                 <Button variant="outline" onClick={handleCloseModal} type="button">
                   Cancel
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={loading}>
                   {editingExpense ? "Update" : "Create"}
                 </Button>
               </div>
