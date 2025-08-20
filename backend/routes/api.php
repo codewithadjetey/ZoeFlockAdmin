@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\PartnershipController;
 use App\Http\Controllers\Api\V1\FirstTimerController;
 use App\Http\Controllers\Api\V1\ExpenseCategoryController;
+use App\Http\Controllers\Api\V1\ExpenseController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -266,6 +267,9 @@ Route::prefix($apiVersion)->group(function () {
 
     // Expense Category resource routes
     Route::apiResource('expense-categories', ExpenseCategoryController::class);
+
+    // Expense resource routes
+    Route::apiResource('expenses', ExpenseController::class);
 
     // Route::prefix('donations')->group(function () {
     //     Route::get('/', [DonationController::class, 'index']);
