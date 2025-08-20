@@ -20,6 +20,8 @@ use App\Http\Controllers\Api\V1\PartnershipController;
 use App\Http\Controllers\Api\V1\FirstTimerController;
 use App\Http\Controllers\Api\V1\ExpenseCategoryController;
 use App\Http\Controllers\Api\V1\ExpenseController;
+use App\Http\Controllers\Api\V1\IncomeController;
+use App\Http\Controllers\Api\V1\IncomeCategoryController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -270,6 +272,12 @@ Route::prefix($apiVersion)->group(function () {
 
     // Expense resource routes
     Route::apiResource('expenses', ExpenseController::class);
+
+    // Income Category resource routes
+    Route::apiResource('income-categories', IncomeCategoryController::class);
+
+    // Income resource routes
+    Route::apiResource('incomes', IncomeController::class);
 
     // Route::prefix('donations')->group(function () {
     //     Route::get('/', [DonationController::class, 'index']);

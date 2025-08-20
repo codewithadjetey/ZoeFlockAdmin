@@ -47,9 +47,15 @@ const adminMenuItems = [
 const financialsMenuItems = [
   { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships" },
   { label: "Partnership Category", icon: "fas fa-list-alt", href: "/financials/partnership-categories" },
+  { label: "Income", icon: "fas fa-coins", href: "/financials/income" },
+  { label: "Income Category", icon: "fas fa-folder-plus", href: "/financials/income-categories" },
   { label: "Expenses", icon: "fas fa-money-bill-wave", href: "/financials/expenses" },
   { label: "Expenses Category", icon: "fas fa-folder-open", href: "/financials/expenses-categories" },
   { label: "Reports", icon: "fas fa-chart-pie", href: "/financials/reports" },
+];
+
+const reportsMenuItems = [
+  { label: "Reports", icon: "fas fa-chart-bar", href: "/reports" },
 ];
 
 interface SidebarProps {
@@ -242,6 +248,28 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 })}
               </div>
             )}
+          </div>
+
+          {/* Reports Menu Section */}
+          <div className="pt-4 border-t border-white/10">
+            {reportsMenuItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
+                    isActive
+                      ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
+                      : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
+                  }`}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <i className={`${item.icon} mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                  <span className="relative z-10">{item.label}</span>
+                </Link>
+              );
+            })}
           </div>
 
           {/* Events Menu Section */}
