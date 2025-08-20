@@ -22,15 +22,23 @@ export default function ExpensesCategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [form, setForm] = useState({ name: "", description: "", is_active: true });
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch categories on mount
+  // Fetch categories on mount and when page/perPage changes
   useEffect(() => {
     setLoading(true);
-    ExpensesService.getCategories()
-      .then(setCategories)
+    ExpensesService.getCategories({ page: currentPage, per_page: perPage })
+      .then((res) => {
+        setCategories(res.data);
+        setTotalItems(res.meta.total);
+        setTotalPages(res.meta.last_page);
+      })
       .catch(() => setError("Failed to load categories."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [currentPage, perPage]);
 
   const handleOpenModal = (category?: ExpenseCategory) => {
     if (category) {
@@ -150,7 +158,7 @@ export default function ExpensesCategoriesPage() {
               { value: 'table', label: 'Table', icon: 'fas fa-table' },
               { value: 'grid', label: 'Grid', icon: 'fas fa-th' },
             ]}
-            count={categories.length}
+            count={totalItems}
             countLabel="categories"
           />
           <Button onClick={() => handleOpenModal()}>
@@ -161,6 +169,18 @@ export default function ExpensesCategoriesPage() {
           <DataTable
             columns={columns}
             data={categories}
+            loading={loading}
+            pagination={{
+              currentPage,
+              totalPages,
+              totalItems,
+              perPage,
+              onPageChange: setCurrentPage,
+              onPerPageChange: (val) => {
+                setPerPage(val);
+                setCurrentPage(1);
+              },
+            }}
             emptyMessage="No expense categories found."
           />
         ) : (

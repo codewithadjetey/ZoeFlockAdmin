@@ -8,9 +8,19 @@ use Illuminate\Http\Request;
 
 class ExpenseCategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(ExpenseCategory::all());
+        $perPage = $request->input('per_page', 10);
+        $categories = ExpenseCategory::orderBy('id', 'desc')->paginate($perPage);
+        return response()->json([
+            'data' => $categories->items(),
+            'meta' => [
+                'current_page' => $categories->currentPage(),
+                'last_page' => $categories->lastPage(),
+                'per_page' => $categories->perPage(),
+                'total' => $categories->total(),
+            ],
+        ]);
     }
 
     public function store(Request $request)
