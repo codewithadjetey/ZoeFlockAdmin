@@ -47,6 +47,8 @@ const adminMenuItems = [
 const financialsMenuItems = [
   { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships" },
   { label: "Partnership Category", icon: "fas fa-list-alt", href: "/financials/partnership-categories" },
+  { label: "Income", icon: "fas fa-coins", href: "/financials/income" },
+  { label: "Income Category", icon: "fas fa-folder-plus", href: "/financials/income-categories" },
   { label: "Expenses", icon: "fas fa-money-bill-wave", href: "/financials/expenses" },
   { label: "Expenses Category", icon: "fas fa-folder-open", href: "/financials/expenses-categories" },
   { label: "Reports", icon: "fas fa-chart-pie", href: "/financials/reports" },
