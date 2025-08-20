@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   PageHeader,
   DataTable,
@@ -11,26 +11,26 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import DataGrid from "@/components/ui/DataGrid";
 import ViewToggle from "@/components/ui/ViewToggle";
 import Modal from "@/components/shared/Modal";
-
-interface ExpenseCategory {
-  id: number;
-  name: string;
-  description?: string;
-  is_active: boolean;
-}
-
-const mockCategories: ExpenseCategory[] = [
-  { id: 1, name: "Utilities", description: "Electricity, water, etc.", is_active: true },
-  { id: 2, name: "Salaries", description: "Staff and payroll", is_active: true },
-  { id: 3, name: "Maintenance", description: "Repairs and maintenance", is_active: false },
-];
+import { ExpensesService } from "@/services/expenses";
+import { ExpenseCategory } from "@/interfaces/expenses";
 
 export default function ExpensesCategoriesPage() {
-  const [categories, setCategories] = useState<ExpenseCategory[]>(mockCategories);
+  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ExpenseCategory | null>(null);
   const [form, setForm] = useState({ name: "", description: "", is_active: true });
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+
+  // Fetch categories on mount
+  useEffect(() => {
+    setLoading(true);
+    ExpensesService.getCategories()
+      .then(setCategories)
+      .catch(() => setError("Failed to load categories."))
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleOpenModal = (category?: ExpenseCategory) => {
     if (category) {
@@ -57,20 +57,37 @@ export default function ExpensesCategoriesPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
-    if (editingCategory) {
-      setCategories((prev) =>
-        prev.map((cat) =>
-          cat.id === editingCategory.id ? { ...cat, ...form } : cat
-        )
-      );
-    } else {
-      setCategories((prev) => [
-        ...prev,
-        { id: prev.length + 1, ...form },
-      ]);
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (editingCategory) {
+        const updated = await ExpensesService.updateCategory(editingCategory.id, form);
+        setCategories((prev) => prev.map((cat) => (cat.id === updated.id ? updated : cat)));
+      } else {
+        const created = await ExpensesService.createCategory(form);
+        setCategories((prev) => [...prev, created]);
+      }
+      handleCloseModal();
+    } catch (e) {
+      setError("Failed to save category.");
+    } finally {
+      setLoading(false);
     }
-    handleCloseModal();
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this category?")) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await ExpensesService.deleteCategory(id);
+      setCategories((prev) => prev.filter((cat) => cat.id !== id));
+    } catch (e) {
+      setError("Failed to delete category.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const columns = [
@@ -89,9 +106,14 @@ export default function ExpensesCategoriesPage() {
       key: "actions",
       label: "Actions",
       render: (_: any, row: ExpenseCategory) => (
-        <Button size="sm" variant="outline" onClick={() => handleOpenModal(row)}>
-          <i className="fas fa-edit mr-1"></i>Edit
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => handleOpenModal(row)}>
+            <i className="fas fa-edit mr-1"></i>Edit
+          </Button>
+          <Button size="sm" variant="danger" onClick={() => handleDelete(row.id)}>
+            <i className="fas fa-trash mr-1"></i>Delete
+          </Button>
+        </div>
       ),
     },
   ];
