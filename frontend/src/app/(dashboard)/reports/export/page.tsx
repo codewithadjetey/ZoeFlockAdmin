@@ -96,7 +96,6 @@ export default function ExportReportPage() {
         description="Generate and export financial data in various formats"
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Export Configuration */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
@@ -338,7 +337,6 @@ export default function ExportReportPage() {
             </div>
           </div>
         </div>
-      </div>
     </DashboardLayout>
   );
 } 
