@@ -43,6 +43,7 @@ const allMenuItems = [
   { label: "Roles & Permissions", icon: "fas fa-shield-alt", href: "/admin/roles", type: "admin" },
   
   // Reports menu items
+  { label: "Reports", icon: "fas fa-chart-bar", href: "/reports", type: "reports" },
   { label: "Income Reports", icon: "fas fa-chart-line", href: "/reports/income", type: "reports" },
   { label: "Expenses Report", icon: "fas fa-file-invoice-dollar", href: "/reports/expenses", type: "reports" },
   { label: "Income vs Expenses Report", icon: "fas fa-balance-scale", href: "/reports/income-vs-expenses", type: "reports" },
