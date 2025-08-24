@@ -4,59 +4,55 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 
-const navItems = [
-  { label: "Dashboard", icon: "fas fa-home", href: "/dashboard" },
-  { label: "Members", icon: "fas fa-users", href: "/members" },
-  { label: "Families", icon: "fas fa-house-user", href: "/families" },
-  { label: "Groups", icon: "fas fa-layer-group", href: "/groups" },
-  // { label: "Donations", icon: "fas fa-donate", href: "/donations" },
-  { label: "First Timers", icon: "fas fa-user-plus", href: "/first-timers" },
-
-  { label: "Communication", icon: "fas fa-envelope", href: "/communication" },
+// Consolidated menu items array
+const allMenuItems = [
+  // Main navigation items
+  { label: "Dashboard", icon: "fas fa-home", href: "/dashboard", type: "main" },
+  { label: "Members", icon: "fas fa-users", href: "/members", type: "main" },
+  { label: "Families", icon: "fas fa-house-user", href: "/families", type: "main" },
+  { label: "Groups", icon: "fas fa-layer-group", href: "/groups", type: "main" },
+  { label: "First Timers", icon: "fas fa-user-plus", href: "/first-timers", type: "main" },
+  { label: "Communication", icon: "fas fa-envelope", href: "/communication", type: "main" },
+  
+  // Financials menu items
+  { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships", type: "financials" },
+  { label: "Partnership Category", icon: "fas fa-list-alt", href: "/financials/partnership-categories", type: "financials" },
+  { label: "Income", icon: "fas fa-coins", href: "/financials/income", type: "financials" },
+  { label: "Income Category", icon: "fas fa-folder-plus", href: "/financials/income-categories", type: "financials" },
+  { label: "Expenses", icon: "fas fa-money-bill-wave", href: "/financials/expenses", type: "financials" },
+  { label: "Expenses Category", icon: "fas fa-folder-open", href: "/financials/expenses-categories", type: "financials" },
+  
+  // Events menu items
+  { label: "Events", icon: "fas fa-calendar", href: "/events", type: "events" },
+  { label: "Event Categories", icon: "fas fa-tags", href: "/event-categories", type: "events" },
+  
+  // Attendance menu items
+  { label: "Manage Attendance", icon: "fas fa-clipboard-check", href: "/attendance", type: "attendance" },
+  { label: "Individual Statistics", icon: "fas fa-chart-line", href: "/attendance/statistics/individual", type: "attendance" },
+  { label: "General Statistics", icon: "fas fa-chart-bar", href: "/attendance/statistics/general", type: "attendance" },
+  
+  // Settings menu items
+  { label: "General", icon: "fas fa-cog", href: "/settings", type: "settings" },
+  { label: "Appearance", icon: "fas fa-palette", href: "/settings/appearance", type: "settings" },
+  { label: "Notifications", icon: "fas fa-bell", href: "/settings/notifications", type: "settings" },
+  { label: "Security", icon: "fas fa-shield-alt", href: "/settings/security", type: "settings" },
+  { label: "Backup", icon: "fas fa-database", href: "/settings/backup", type: "settings" },
+  
+  // Admin menu items
+  { label: "Users", icon: "fas fa-user-cog", href: "/admin/users", type: "admin" },
+  { label: "Roles & Permissions", icon: "fas fa-shield-alt", href: "/admin/roles", type: "admin" },
+  
+  // Reports menu items
+  { label: "Income Reports", icon: "fas fa-chart-line", href: "/reports/income", type: "reports" },
+  { label: "Expenses Report", icon: "fas fa-file-invoice-dollar", href: "/reports/expenses", type: "reports" },
+  { label: "Income vs Expenses Report", icon: "fas fa-balance-scale", href: "/reports/income-vs-expenses", type: "reports" },
+  { label: "Export Report", icon: "fas fa-file-excel", href: "/reports/export", type: "reports" },
 ];
 
-// Attendance menu items
-const attendanceMenuItems = [
-  { label: "Manage Attendance", icon: "fas fa-clipboard-check", href: "/attendance" },
-  { label: "Individual Statistics", icon: "fas fa-chart-line", href: "/attendance/statistics/individual" },
-  { label: "General Statistics", icon: "fas fa-chart-bar", href: "/attendance/statistics/general" },
-];
-
-// Events menu items
-const eventsMenuItems = [
-  { label: "Events", icon: "fas fa-calendar", href: "/events" },
-  { label: "Event Categories", icon: "fas fa-tags", href: "/event-categories" },
-];
-
-// Settings menu items
-const settingsMenuItems = [
-  { label: "General", icon: "fas fa-cog", href: "/settings" },
-  { label: "Appearance", icon: "fas fa-palette", href: "/settings/appearance" },
-  { label: "Notifications", icon: "fas fa-bell", href: "/settings/notifications" },
-  { label: "Security", icon: "fas fa-shield-alt", href: "/settings/security" },
-  { label: "Backup", icon: "fas fa-database", href: "/settings/backup" },
-];
-
-// Admin menu items
-const adminMenuItems = [
-  { label: "Users", icon: "fas fa-user-cog", href: "/admin/users" },
-  { label: "Roles & Permissions", icon: "fas fa-shield-alt", href: "/admin/roles" },
-];
-
-// Financials menu items
-const financialsMenuItems = [
-  { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships" },
-  { label: "Partnership Category", icon: "fas fa-list-alt", href: "/financials/partnership-categories" },
-  { label: "Income", icon: "fas fa-coins", href: "/financials/income" },
-  { label: "Income Category", icon: "fas fa-folder-plus", href: "/financials/income-categories" },
-  { label: "Expenses", icon: "fas fa-money-bill-wave", href: "/financials/expenses" },
-  { label: "Expenses Category", icon: "fas fa-folder-open", href: "/financials/expenses-categories" },
-  { label: "Reports", icon: "fas fa-chart-pie", href: "/financials/reports" },
-];
-
-const reportsMenuItems = [
-  { label: "Reports", icon: "fas fa-chart-bar", href: "/reports" },
-];
+// Helper function to get menu items by type
+const getMenuItemsByType = (type: string) => {
+  return allMenuItems.filter(item => item.type === type);
+};
 
 interface SidebarProps {
   isOpen: boolean;
@@ -67,11 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const pathname = usePathname();
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { currentTheme, colorMode } = useTheme();
-  const [eventsMenuOpen, setEventsMenuOpen] = useState(false);
-  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
-  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
-  const [attendanceMenuOpen, setAttendanceMenuOpen] = useState(false);
-  const [financialsMenuOpen, setFinancialsMenuOpen] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -118,25 +110,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
     }
   };
 
-  const toggleEventsMenu = () => {
-    setEventsMenuOpen(!eventsMenuOpen);
+  const toggleSubmenu = (menuType: string) => {
+    setOpenSubmenu(openSubmenu === menuType ? null : menuType);
   };
 
-  const toggleSettingsMenu = () => {
-    setSettingsMenuOpen(!settingsMenuOpen);
-  };
 
-  const toggleAdminMenu = () => {
-    setAdminMenuOpen(!adminMenuOpen);
-  };
-
-  const toggleAttendanceMenu = () => {
-    setAttendanceMenuOpen(!attendanceMenuOpen);
-  };
-
-  const toggleFinancialsMenu = () => {
-    setFinancialsMenuOpen(!financialsMenuOpen);
-  };
 
   // Get sidebar background based on theme and color mode
   const getSidebarBackground = () => {
@@ -185,9 +163,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           </div>
         </div>
 
-        {/* Modern Navigation */}
+                  {/* Modern Navigation */}
         <nav className="flex-1 px-6 py-8 space-y-3 overflow-y-auto">
-          {navItems.map((item) => {
+          {getMenuItemsByType("main").map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
@@ -210,7 +188,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           {/* Financials Menu Section */}
           <div className="pt-4 border-t border-white/10">
             <button
-              onClick={toggleFinancialsMenu}
+              onClick={() => toggleSubmenu('financials')}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                 pathname.startsWith('/financials')
                   ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
@@ -222,12 +200,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 <i className="fas fa-wallet mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
                 <span className="relative z-10">Financials</span>
               </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${financialsMenuOpen ? 'rotate-180' : ''}`}></i>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'financials' ? 'rotate-180' : ''}`}></i>
             </button>
             {/* Financials Submenu */}
-            {financialsMenuOpen && (
+            {openSubmenu === 'financials' && (
               <div className="ml-4 mt-2 space-y-2">
-                {financialsMenuItems.map((item) => {
+                {getMenuItemsByType("financials").map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
@@ -250,32 +228,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             )}
           </div>
 
-          {/* Reports Menu Section */}
-          <div className="pt-4 border-t border-white/10">
-            {reportsMenuItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={`flex items-center px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                    isActive
-                      ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                      : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
-                  }`}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  <i className={`${item.icon} mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
-                  <span className="relative z-10">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
+
 
           {/* Events Menu Section */}
           <div className="pt-4 border-t border-white/10">
             <button
-              onClick={toggleEventsMenu}
+              onClick={() => toggleSubmenu('events')}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                 pathname.startsWith('/events') || pathname.startsWith('/event-categories')
                   ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
@@ -287,13 +245,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 <i className="fas fa-calendar-alt mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
                 <span className="relative z-10">Events</span>
               </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${eventsMenuOpen ? 'rotate-180' : ''}`}></i>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'events' ? 'rotate-180' : ''}`}></i>
             </button>
 
             {/* Events Submenu */}
-            {eventsMenuOpen && (
+            {openSubmenu === 'events' && (
               <div className="ml-4 mt-2 space-y-2">
-                {eventsMenuItems.map((item) => {
+                {getMenuItemsByType("events").map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
@@ -319,7 +277,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           {/* Attendance Menu Section */}
           <div className="pt-4 border-t border-white/10">
             <button
-              onClick={toggleAttendanceMenu}
+              onClick={() => toggleSubmenu('attendance')}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                 pathname.startsWith('/attendance')
                   ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
@@ -331,13 +289,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 <i className="fas fa-clipboard-check mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
                 <span className="relative z-10">Attendance</span>
               </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${attendanceMenuOpen ? 'rotate-180' : ''}`}></i>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'attendance' ? 'rotate-180' : ''}`}></i>
             </button>
 
             {/* Attendance Submenu */}
-            {attendanceMenuOpen && (
+            {openSubmenu === 'attendance' && (
               <div className="ml-4 mt-2 space-y-2">
-                {attendanceMenuItems.map((item) => {
+                {getMenuItemsByType("attendance").map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
@@ -363,7 +321,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           {/* Settings Menu Section */}
           <div className="pt-4 border-t border-white/10">
             <button
-              onClick={toggleSettingsMenu}
+              onClick={() => toggleSubmenu('settings')}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                 pathname.startsWith('/settings')
                   ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
@@ -375,13 +333,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 <i className="fas fa-cog mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
                 <span className="relative z-10">Settings</span>
               </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${settingsMenuOpen ? 'rotate-180' : ''}`}></i>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'settings' ? 'rotate-180' : ''}`}></i>
             </button>
 
             {/* Settings Submenu */}
-            {settingsMenuOpen && (
+            {openSubmenu === 'settings' && (
               <div className="ml-4 mt-2 space-y-2">
-                {settingsMenuItems.map((item) => {
+                {getMenuItemsByType("settings").map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
@@ -407,7 +365,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           {/* Admin Menu Section */}
           <div className="pt-4 border-t border-white/10">
             <button
-              onClick={toggleAdminMenu}
+              onClick={() => toggleSubmenu('admin')}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
                 pathname.startsWith('/admin')
                   ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
@@ -419,13 +377,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 <i className="fas fa-user-shield mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
                 <span className="relative z-10">Admin</span>
               </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${adminMenuOpen ? 'rotate-180' : ''}`}></i>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'admin' ? 'rotate-180' : ''}`}></i>
             </button>
 
             {/* Admin Submenu */}
-            {adminMenuOpen && (
+            {openSubmenu === 'admin' && (
               <div className="ml-4 mt-2 space-y-2">
-                {adminMenuItems.map((item) => {
+                {getMenuItemsByType("admin").map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
@@ -439,6 +397,47 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                       onClick={handleNavClick}
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                      <span className="relative z-10 text-sm">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Main Financial Reports Menu Section */}
+          <div className="pt-4 border-t border-white/10">
+            <button
+              onClick={() => toggleSubmenu('reports')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
+                pathname.startsWith('/reports')
+                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <i className="fas fa-chart-bar mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
+                <span className="relative z-10">Reports</span>
+              </div>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'reports' ? 'rotate-180' : ''}`}></i>
+            </button>
+            {openSubmenu === 'reports' && (
+              <div className="ml-4 mt-2 space-y-2">
+                {getMenuItemsByType("reports").map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
+                        isActive
+                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
+                      }`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500/15 to-blue-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
                       <span className="relative z-10 text-sm">{item.label}</span>
                     </Link>
