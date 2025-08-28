@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\ExpenseCategoryController;
 use App\Http\Controllers\Api\V1\ExpenseController;
 use App\Http\Controllers\Api\V1\IncomeController;
 use App\Http\Controllers\Api\V1\IncomeCategoryController;
+use App\Http\Controllers\Api\V1\TitheController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -203,6 +204,17 @@ Route::prefix($apiVersion)->group(function () {
     });
     });
 
+    // Barcode-based attendance routes
+    Route::prefix('attendance')->group(function () {
+        Route::post('/scan-barcode', [AttendanceController::class, 'scanBarcode']);
+    });
+
+    // Member barcode routes
+    Route::prefix('members')->group(function () {
+        Route::get('/{memberId}/barcode', [AttendanceController::class, 'getMemberBarcode']);
+        Route::post('/{memberId}/generate-barcode', [AttendanceController::class, 'generateMemberBarcode']);
+    });
+
     // Event Categories management routes
     Route::prefix('event-categories')->group(function () {
         Route::get('/', [EventCategoryController::class, 'index']);
@@ -278,6 +290,39 @@ Route::prefix($apiVersion)->group(function () {
 
     // Income resource routes
     Route::apiResource('incomes', IncomeController::class);
+
+    // Tithe management routes
+    Route::prefix('tithes')->group(function () {
+        Route::get('/', [TitheController::class, 'index']);
+        Route::post('/', [TitheController::class, 'store']);
+        Route::get('/statistics', [TitheController::class, 'statistics']);
+        Route::get('/{tithe}', [TitheController::class, 'show']);
+        Route::put('/{tithe}', [TitheController::class, 'update']);
+        Route::delete('/{tithe}', [TitheController::class, 'destroy']);
+        Route::post('/{tithe}/mark-paid', [TitheController::class, 'markAsPaid']);
+        
+        // Tithe payment routes
+        Route::prefix('{tithe}/payments')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Api\V1\TithePaymentController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Api\V1\TithePaymentController::class, 'store']);
+            Route::get('/{payment}', [\App\Http\Controllers\Api\V1\TithePaymentController::class, 'show']);
+            Route::put('/{payment}', [\App\Http\Controllers\Api\V1\TithePaymentController::class, 'update']);
+            Route::delete('/{payment}', [\App\Http\Controllers\Api\V1\TithePaymentController::class, 'destroy']);
+        });
+    });
+
+    // Reports routes
+    Route::prefix('reports')->group(function () {
+        Route::get('/income', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getIncomeReport']);
+        Route::get('/expenses', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getExpenseReport']);
+        Route::get('/comparison', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getComparisonReport']);
+        Route::post('/export', [\App\Http\Controllers\Api\V1\ReportsController::class, 'exportReport']);
+        Route::get('/export/history', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getExportHistory']);
+        Route::get('/export/{id}/download', [\App\Http\Controllers\Api\V1\ReportsController::class, 'downloadReport']);
+        Route::delete('/export/{id}', [\App\Http\Controllers\Api\V1\ReportsController::class, 'deleteExport']);
+        Route::get('/dashboard-summary', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getDashboardSummary']);
+        Route::get('/insights', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getFinancialInsights']);
+    });
 
     // Route::prefix('donations')->group(function () {
     //     Route::get('/', [DonationController::class, 'index']);
