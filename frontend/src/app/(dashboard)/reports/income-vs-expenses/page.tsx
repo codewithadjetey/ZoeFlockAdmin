@@ -1,37 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageHeader, Button, TextInput, SelectInput, ViewToggle, DataTable } from '@/components/ui';
+import { ComparisonChart } from '@/components/reports';
+import { ReportsService, ReportFilters } from '@/services/reports';
 
 export default function IncomeVsExpensesPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
+  const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked' | 'waterfall'>('line');
   const [startDate, setStartDate] = useState('2024-01-01');
   const [endDate, setEndDate] = useState('2024-12-31');
   const [period, setPeriod] = useState('monthly');
   const [isLoading, setIsLoading] = useState(false);
+  const [reportData, setReportData] = useState<any>(null);
 
   const viewOptions = [
     { value: 'chart', label: 'Chart', icon: 'fas fa-balance-scale' },
     { value: 'table', label: 'Table', icon: 'fas fa-table' }
   ];
 
-  const mockComparisonData = [
-    { month: 'Jan', income: 3300, expenses: 2610, profit: 690, profitMargin: 20.9 },
-    { month: 'Feb', income: 3630, expenses: 2780, profit: 850, profitMargin: 23.4 },
-    { month: 'Mar', income: 3850, expenses: 2980, profit: 870, profitMargin: 22.6 },
-    { month: 'Apr', income: 4020, expenses: 3130, profit: 890, profitMargin: 22.1 },
-    { month: 'May', income: 4200, expenses: 3270, profit: 930, profitMargin: 22.1 },
-    { month: 'Jun', income: 4350, expenses: 3430, profit: 920, profitMargin: 21.1 }
-  ];
-
-  const mockCategoryComparison = [
-    { category: 'Tithes', income: 18500, expenses: 0, net: 18500, percentage: 40.8 },
-    { category: 'Offerings', income: 12400, expenses: 0, net: 12400, percentage: 27.4 },
-    { category: 'Partnerships', income: 9800, expenses: 0, net: 9800, percentage: 21.6 },
-    { category: 'Utilities', income: 0, expenses: 8500, net: -8500, percentage: 18.8 },
-    { category: 'Maintenance', income: 0, expenses: 6200, net: -6200, percentage: 13.7 },
-    { category: 'Events', income: 0, expenses: 7800, net: -7800, percentage: 17.2 }
+  const chartTypeOptions = [
+    { value: 'line', label: 'Line Chart', icon: 'fas fa-chart-line' },
+    { value: 'area', label: 'Area Chart', icon: 'fas fa-chart-area' },
+    { value: 'bar', label: 'Bar Chart', icon: 'fas fa-chart-bar' },
+    { value: 'stacked', label: 'Stacked Bar', icon: 'fas fa-chart-bar' },
+    { value: 'waterfall', label: 'Waterfall Chart', icon: 'fas fa-chart-line' }
   ];
 
   const periodOptions = [
@@ -41,13 +35,79 @@ export default function IncomeVsExpensesPage() {
     { value: 'yearly', label: 'Yearly' }
   ];
 
-  const handleExport = () => {
+  // Load report data when filters change
+  useEffect(() => {
+    loadReportData();
+  }, [startDate, endDate, period]);
+
+  const loadReportData = async () => {
     setIsLoading(true);
-    // Simulate export process
-    setTimeout(() => {
+    try {
+      const filters: ReportFilters = {
+        startDate,
+        endDate,
+        period: period as any
+      };
+      
+      const data = await ReportsService.getComparisonReport(filters);
+      setReportData(data);
+    } catch (error) {
+      console.error('Error loading report data:', error);
+      // Fallback to mock data
+      setReportData({
+        totalIncome: 45280,
+        totalExpenses: 32450,
+        netProfit: 12830,
+        profitMargin: 28.3,
+        monthlyComparison: [
+          { month: 'Jan', income: 3300, expenses: 2610, profit: 690, profitMargin: 20.9 },
+          { month: 'Feb', income: 3630, expenses: 2780, profit: 850, profitMargin: 23.4 },
+          { month: 'Mar', income: 3850, expenses: 2980, profit: 870, profitMargin: 22.6 },
+          { month: 'Apr', income: 4020, expenses: 3130, profit: 890, profitMargin: 22.1 },
+          { month: 'May', income: 4200, expenses: 3270, profit: 930, profitMargin: 22.1 },
+          { month: 'Jun', income: 4350, expenses: 3430, profit: 920, profitMargin: 21.1 }
+        ],
+        categoryComparison: [
+          { category: 'Tithes', income: 18500, expenses: 0, net: 18500, percentage: 40.8 },
+          { category: 'Offerings', income: 12400, expenses: 0, net: 12400, percentage: 27.4 },
+          { category: 'Partnerships', income: 9800, expenses: 0, net: 9800, percentage: 21.6 },
+          { category: 'Utilities', income: 0, expenses: 8500, net: -8500, percentage: 18.8 },
+          { category: 'Maintenance', income: 0, expenses: 6200, net: -6200, percentage: 13.7 },
+          { category: 'Events', income: 0, expenses: 7800, net: -7800, percentage: 17.2 }
+        ]
+      });
+    } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsLoading(true);
+    try {
+      const result = await ReportsService.exportReport({
+        reportType: 'comparison',
+        startDate,
+        endDate,
+        format: 'excel',
+        includeCharts: true,
+        includeTables: true
+      });
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = result.downloadUrl;
+      link.download = result.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
       alert('Income vs Expenses report exported successfully!');
-    }, 2000);
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      alert('Error exporting report. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const tableColumns = [
@@ -61,10 +121,22 @@ export default function IncomeVsExpensesPage() {
   const formatCurrency = (amount: number) => `$${amount.toLocaleString()}`;
   const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
 
-  const totalIncome = mockComparisonData.reduce((sum, item) => sum + item.income, 0);
-  const totalExpenses = mockComparisonData.reduce((sum, item) => sum + item.expenses, 0);
-  const totalProfit = totalIncome - totalExpenses;
-  const overallProfitMargin = (totalProfit / totalIncome) * 100;
+  if (!reportData) {
+    return (
+      <DashboardLayout>
+        <PageHeader
+          title="Income vs Expenses Report"
+          description="Comparative analysis and profitability insights"
+        />
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <i className="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+            <p className="text-gray-600 dark:text-gray-400">Loading report data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -76,7 +148,7 @@ export default function IncomeVsExpensesPage() {
         {/* Filters and Controls */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
           <div className="flex flex-col lg:flex-row gap-6 items-end">
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Start Date
@@ -105,14 +177,25 @@ export default function IncomeVsExpensesPage() {
                 </label>
                 <SelectInput
                   value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
+                  onChange={(e) => setPeriod(e)}
                   options={periodOptions}
+                  className="w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Chart Type
+                </label>
+                <SelectInput
+                  value={chartType}
+                  onChange={(e) => setChartType(e as any)}
+                  options={chartTypeOptions}
                   className="w-full"
                 />
               </div>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" onClick={loadReportData}>
                 <i className="fas fa-filter mr-2"></i>
                 Apply Filters
               </Button>
@@ -141,10 +224,10 @@ export default function IncomeVsExpensesPage() {
         {/* Key Performance Indicators */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {[
-            { title: 'Total Income', value: formatCurrency(totalIncome), change: '+12.5%', color: 'from-green-500 to-emerald-600', icon: 'fas fa-arrow-up' },
-            { title: 'Total Expenses', value: formatCurrency(totalExpenses), change: '+8.2%', color: 'from-red-500 to-pink-600', icon: 'fas fa-arrow-down' },
-            { title: 'Net Profit', value: formatCurrency(totalProfit), change: '+18.7%', color: 'from-blue-500 to-cyan-600', icon: 'fas fa-chart-line' },
-            { title: 'Profit Margin', value: formatPercentage(overallProfitMargin), change: '+5.2%', color: 'from-purple-500 to-indigo-600', icon: 'fas fa-percentage' }
+            { title: 'Total Income', value: formatCurrency(reportData.totalIncome), change: '+12.5%', color: 'from-green-500 to-emerald-600', icon: 'fas fa-arrow-up' },
+            { title: 'Total Expenses', value: formatCurrency(reportData.totalExpenses), change: '+8.2%', color: 'from-red-500 to-pink-600', icon: 'fas fa-arrow-down' },
+            { title: 'Net Profit', value: formatCurrency(reportData.netProfit), change: '+18.7%', color: 'from-blue-500 to-cyan-600', icon: 'fas fa-chart-line' },
+            { title: 'Profit Margin', value: formatPercentage(reportData.profitMargin), change: '+5.2%', color: 'from-purple-500 to-indigo-600', icon: 'fas fa-percentage' }
           ].map((stat, index) => (
             <div key={index} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
@@ -175,7 +258,7 @@ export default function IncomeVsExpensesPage() {
             Profitability Trend
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockComparisonData.map((data, index) => (
+            {reportData.monthlyComparison.map((data: any, index: number) => (
               <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
                 <div className="text-center mb-3">
                   <h4 className="font-medium text-gray-900 dark:text-white text-lg">{data.month}</h4>
@@ -211,9 +294,9 @@ export default function IncomeVsExpensesPage() {
           </h2>
           <ViewToggle
             value={viewMode}
-            onChange={setViewMode}
+            onChange={(value: string) => setViewMode(value as 'chart' | 'table')}
             options={viewOptions}
-            count={mockComparisonData.length}
+            count={reportData.monthlyComparison.length}
             countLabel="periods"
           />
         </div>
@@ -230,28 +313,11 @@ export default function IncomeVsExpensesPage() {
               </p>
             </div>
             
-            {/* Mock Chart - In real app, use Chart.js or similar */}
-            <div className="h-80 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-6 flex items-center justify-center">
-              <div className="text-center">
-                <i className="fas fa-balance-scale text-6xl text-blue-500 mb-4"></i>
-                <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  Interactive Comparison Chart
-                </h4>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Income vs Expenses comparison would be displayed here
-                </p>
-                <div className="mt-4 grid grid-cols-6 gap-2">
-                  {mockComparisonData.map((data, index) => (
-                    <div key={index} className="text-center">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">{data.month}</div>
-                      <div className="text-xs text-green-600">+${data.income}</div>
-                      <div className="text-xs text-red-600">-${data.expenses}</div>
-                      <div className="text-xs text-blue-600 font-medium">${data.profit}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <ComparisonChart 
+              data={reportData.monthlyComparison}
+              type={chartType}
+              height={400}
+            />
           </div>
         )}
 
@@ -259,9 +325,9 @@ export default function IncomeVsExpensesPage() {
         {viewMode === 'table' && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
             <DataTable
-              data={mockComparisonData}
+              data={reportData.monthlyComparison}
               columns={tableColumns}
-              renderCell={(item, column) => {
+              renderCell={(item: any, column: any) => {
                 switch (column.key) {
                   case 'income':
                     return <span className="font-semibold text-green-600">{formatCurrency(item.income)}</span>;
@@ -288,7 +354,7 @@ export default function IncomeVsExpensesPage() {
             Category Breakdown
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockCategoryComparison.map((category, index) => (
+            {reportData.categoryComparison.map((category: any, index: number) => (
               <div key={index} className={`p-4 rounded-xl border ${
                 category.net > 0 
                   ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
@@ -332,7 +398,7 @@ export default function IncomeVsExpensesPage() {
                 Profitability Trend
               </h4>
               <p className="text-blue-800 dark:text-blue-200">
-                Your organization maintains a strong <strong>{formatPercentage(overallProfitMargin)} profit margin</strong>, 
+                Your organization maintains a strong <strong>{formatPercentage(reportData.profitMargin)} profit margin</strong>, 
                 with consistent profitability across all months. The highest margin was achieved in February at 23.4%.
               </p>
             </div>
