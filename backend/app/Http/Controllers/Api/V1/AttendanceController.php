@@ -581,4 +581,164 @@ class AttendanceController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Scan member ID to mark attendance
+     */
+    public function scanMemberId(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'member_identification_id' => 'required|string',
+                'event_id' => 'required|integer|exists:events,id',
+                'notes' => 'nullable|string'
+            ]);
+
+            // Find member by member_identification_id
+            $member = \App\Models\Member::where('member_identification_id', $request->member_identification_id)
+                ->where('is_active', true)
+                ->first();
+
+            if (!$member) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Member not found or inactive'
+                ], 404);
+            }
+
+            // Check if event exists and is active
+            $event = Event::findOrFail($request->event_id);
+            
+            // Check if attendance already exists
+            $existingAttendance = Attendance::where('event_id', $request->event_id)
+                ->where('member_id', $member->id)
+                ->first();
+
+            if ($existingAttendance) {
+                // Update existing attendance
+                $existingAttendance->update([
+                    'status' => 'present',
+                    'check_in_time' => now()->format('H:i:s'),
+                    'notes' => $request->notes,
+                    'updated_at' => now()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Attendance updated successfully',
+                    'data' => [
+                        'member' => [
+                            'id' => $member->id,
+                            'name' => $member->full_name,
+                            'email' => $member->email
+                        ],
+                        'event' => [
+                            'id' => $event->id,
+                            'name' => $event->name,
+                            'date' => $event->date
+                        ],
+                        'attendance' => $existingAttendance,
+                        'action' => 'updated'
+                    ]
+                ]);
+            }
+
+            // Create new attendance record
+            $attendance = Attendance::create([
+                'event_id' => $request->event_id,
+                'member_id' => $member->id,
+                'status' => 'present',
+                'check_in_time' => now()->format('H:i:s'),
+                'notes' => $request->notes,
+                'recorded_by' => Auth::id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance marked successfully',
+                'data' => [
+                    'member' => [
+                        'id' => $member->id,
+                        'name' => $member->full_name,
+                        'email' => $member->email
+                    ],
+                    'event' => [
+                        'id' => $event->id,
+                        'name' => $event->name,
+                        'date' => $event->date
+                    ],
+                    'attendance' => $attendance,
+                    'action' => 'created'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark attendance',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get member identification ID
+     */
+    public function getMemberIdentificationId(int $memberId): JsonResponse
+    {
+        try {
+            $member = \App\Models\Member::findOrFail($memberId);
+            
+            if (!$member->member_identification_id) {
+                // Generate member ID if not exists
+                $member->member_identification_id = \App\Models\Member::generateUniqueMemberId();
+                $member->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'member_id' => $member->id,
+                    'member_identification_id' => $member->member_identification_id,
+                    'member_name' => $member->full_name
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve member identification ID',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generate new member identification ID
+     */
+    public function generateMemberIdentificationId(int $memberId): JsonResponse
+    {
+        try {
+            $member = \App\Models\Member::findOrFail($memberId);
+            
+            // Generate new unique member ID
+            $member->member_identification_id = \App\Models\Member::generateUniqueMemberId();
+            $member->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'New member identification ID generated successfully',
+                'data' => [
+                    'member_id' => $member->id,
+                    'member_identification_id' => $member->member_identification_id,
+                    'member_name' => $member->full_name
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to generate member identification ID',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 } 

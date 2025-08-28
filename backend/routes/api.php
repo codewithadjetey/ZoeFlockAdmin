@@ -204,15 +204,15 @@ Route::prefix($apiVersion)->group(function () {
     });
     });
 
-    // Barcode-based attendance routes
+    // Member ID-based attendance routes
     Route::prefix('attendance')->group(function () {
-        Route::post('/scan-barcode', [AttendanceController::class, 'scanBarcode']);
+        Route::post('/scan-member-id', [AttendanceController::class, 'scanMemberId']);
     });
 
-    // Member barcode routes
+    // Member identification ID routes
     Route::prefix('members')->group(function () {
-        Route::get('/{memberId}/barcode', [AttendanceController::class, 'getMemberBarcode']);
-        Route::post('/{memberId}/generate-barcode', [AttendanceController::class, 'generateMemberBarcode']);
+        Route::get('/{memberId}/identification-id', [AttendanceController::class, 'getMemberIdentificationId']);
+        Route::post('/{memberId}/generate-identification-id', [AttendanceController::class, 'generateMemberIdentificationId']);
     });
 
     // Event Categories management routes

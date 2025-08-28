@@ -225,4 +225,60 @@ class Family extends Model
     {
         return $this->events()->past();
     }
+
+    /**
+     * Get family's tithes
+     */
+    public function tithes()
+    {
+        return \App\Models\Tithe::whereIn('member_id', $this->members->pluck('id'));
+    }
+
+    /**
+     * Get family's active tithes
+     */
+    public function activeTithes()
+    {
+        return $this->tithes()->active();
+    }
+
+    /**
+     * Get family's unpaid tithes
+     */
+    public function unpaidTithes()
+    {
+        return $this->tithes()->unpaid();
+    }
+
+    /**
+     * Get family's overdue tithes
+     */
+    public function overdueTithes()
+    {
+        return $this->tithes()->overdue();
+    }
+
+    /**
+     * Get family's total tithe amount
+     */
+    public function getTotalTitheAmountAttribute()
+    {
+        return $this->tithes()->sum('amount');
+    }
+
+    /**
+     * Get family's total paid tithe amount
+     */
+    public function getTotalPaidTitheAmountAttribute()
+    {
+        return $this->tithes()->paid()->sum('paid_amount');
+    }
+
+    /**
+     * Get family's outstanding tithe amount
+     */
+    public function getOutstandingTitheAmountAttribute()
+    {
+        return $this->tithes()->unpaid()->sum('amount');
+    }
 } 

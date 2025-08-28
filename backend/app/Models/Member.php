@@ -34,6 +34,7 @@ class Member extends Model
         'is_active',
         'notes',
         'profile_image_path',
+        'member_identification_id',
         'user_id',
         'created_by',
         'updated_by',
@@ -319,5 +320,94 @@ class Member extends Model
     public function scopeActiveMembers($query)
     {
         return $query->where('is_active', true);
+    }
+
+    /**
+     * Get member's tithes
+     */
+    public function tithes()
+    {
+        return $this->hasMany(Tithe::class);
+    }
+
+    /**
+     * Get member's active tithes
+     */
+    public function activeTithes()
+    {
+        return $this->hasMany(Tithe::class)->active();
+    }
+
+    /**
+     * Get member's unpaid tithes
+     */
+    public function unpaidTithes()
+    {
+        return $this->hasMany(Tithe::class)->unpaid();
+    }
+
+    /**
+     * Get member's overdue tithes
+     */
+    public function overdueTithes()
+    {
+        return $this->hasMany(Tithe::class)->overdue();
+    }
+
+    /**
+     * Get member's total tithe amount
+     */
+    public function getTotalTitheAmountAttribute()
+    {
+        return $this->tithes()->sum('amount');
+    }
+
+    /**
+     * Get member's total paid tithe amount
+     */
+    public function getTotalPaidTitheAmountAttribute()
+    {
+        return $this->tithes()->paid()->sum('paid_amount');
+    }
+
+    /**
+     * Get member's outstanding tithe amount
+     */
+    public function getOutstandingTitheAmountAttribute()
+    {
+        return $this->tithes()->unpaid()->sum('amount');
+    }
+
+    /**
+     * Generate a unique member identification ID
+     * Format: yyyymmdd + 6 random digits
+     */
+    public static function generateUniqueMemberId(): string
+    {
+        do {
+            // Format: yyyymmdd + 6 random digits
+            $date = now()->format('Ymd');
+            $random = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+            $memberId = $date . $random;
+            
+            // Check if this ID already exists
+            $exists = static::where('member_identification_id', $memberId)->exists();
+        } while ($exists);
+
+        return $memberId;
+    }
+
+    /**
+     * Boot method to auto-generate member ID on creation
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($member) {
+            if (empty($member->member_identification_id)) {
+                $member->member_identification_id = static::generateUniqueMemberId();
+            }
+        });
     }
 } 
