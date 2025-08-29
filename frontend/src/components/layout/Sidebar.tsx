@@ -17,6 +17,7 @@ const allMenuItems = [
   // Financials menu items
   { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships", type: "financials" },
   { label: "Partnership Category", icon: "fas fa-list-alt", href: "/financials/partnership-categories", type: "financials" },
+  { label: "Tithes", icon: "fas fa-church", href: "/financials/tithes", type: "financials" },
   { label: "Income", icon: "fas fa-coins", href: "/financials/income", type: "financials" },
   { label: "Income Category", icon: "fas fa-folder-plus", href: "/financials/income-categories", type: "financials" },
   { label: "Expenses", icon: "fas fa-money-bill-wave", href: "/financials/expenses", type: "financials" },
@@ -44,6 +45,7 @@ const allMenuItems = [
   
   // Reports menu items
   { label: "Reports", icon: "fas fa-chart-bar", href: "/reports", type: "reports" },
+  { label: "Tithe Reports", icon: "fas fa-church", href: "/financials/tithes/reports", type: "reports" },
   { label: "Income Reports", icon: "fas fa-chart-line", href: "/reports/income", type: "reports" },
   { label: "Expenses Report", icon: "fas fa-file-invoice-dollar", href: "/reports/expenses", type: "reports" },
   { label: "Income vs Expenses Report", icon: "fas fa-balance-scale", href: "/reports/income-vs-expenses", type: "reports" },

@@ -355,4 +355,75 @@ export class AttendanceService {
         return 'fas fa-question-circle';
     }
   }
+
+  /**
+   * Scan member ID to mark attendance
+   */
+  static async scanMemberId(data: {
+    member_identification_id: string;
+    event_id: number;
+    notes?: string;
+  }): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      member: {
+        id: number;
+        name: string;
+        email: string;
+      };
+      event: {
+        id: number;
+        name: string;
+        date: string;
+      };
+      attendance: any;
+      action: 'created' | 'updated';
+    };
+  }> {
+    const response = await http({ 
+      method: 'post', 
+      url: '/attendance/scan-member-id',
+      data 
+    });
+    return response.data;
+  }
+
+  /**
+   * Get member identification ID
+   */
+  static async getMemberIdentificationId(memberId: number): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      member_id: number;
+      member_identification_id: string;
+      member_name: string;
+    };
+  }> {
+    const response = await http({ 
+      method: 'get', 
+      url: `/members/${memberId}/identification-id`
+    });
+    return response.data;
+  }
+
+  /**
+   * Generate new member identification ID
+   */
+  static async generateMemberIdentificationId(memberId: number): Promise<{
+    success: boolean;
+    message: string;
+    data: {
+      member_id: number;
+      member_identification_id: string;
+      member_name: string;
+    };
+  }> {
+    const response = await http({ 
+      method: 'post', 
+      url: `/members/${memberId}/generate-identification-id`
+    });
+    return response.data;
+  }
 } 

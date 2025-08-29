@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageHeader, Button, TextInput, SelectInput, DataTable } from '@/components/ui';
+import { ReportsService } from '@/services/reports';
 
 export default function ExportReportPage() {
   const [startDate, setStartDate] = useState('2024-01-01');
@@ -12,13 +13,28 @@ export default function ExportReportPage() {
   const [includeCharts, setIncludeCharts] = useState(true);
   const [includeTables, setIncludeTables] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [exportHistory, setExportHistory] = useState([
-    { id: 1, name: 'Q1 Financial Report', type: 'Quarterly', format: 'Excel', date: '2024-04-01', status: 'completed', size: '2.4 MB' },
-    { id: 2, name: 'Annual Income Summary', type: 'Annual', format: 'PDF', date: '2024-01-15', status: 'completed', size: '1.8 MB' },
-    { id: 3, name: 'Monthly Expense Report', type: 'Monthly', format: 'Excel', date: '2024-03-31', status: 'completed', size: '856 KB' },
-    { id: 4, name: 'Partnership Analysis', type: 'Custom', format: 'Excel', date: '2024-02-28', status: 'completed', size: '1.2 MB' },
-    { id: 5, name: 'Budget vs Actual Q2', type: 'Quarterly', format: 'PDF', date: '2024-06-30', status: 'processing', size: '--' }
-  ]);
+  const [exportHistory, setExportHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadExportHistory();
+  }, []);
+
+  const loadExportHistory = async () => {
+    try {
+      const history = await ReportsService.getExportHistory();
+      setExportHistory(history);
+    } catch (error) {
+      console.error('Error loading export history:', error);
+      // Fallback to mock data
+      setExportHistory([
+        { id: 1, name: 'Q1 Financial Report', type: 'Quarterly', format: 'Excel', date: '2024-04-01', status: 'completed', size: '2.4 MB' },
+        { id: 2, name: 'Annual Income Summary', type: 'Annual', format: 'PDF', date: '2024-01-15', status: 'completed', size: '1.8 MB' },
+        { id: 3, name: 'Monthly Expense Report', type: 'Monthly', format: 'Excel', date: '2024-03-31', status: 'completed', size: '856 KB' },
+        { id: 4, name: 'Partnership Analysis', type: 'Custom', format: 'Excel', date: '2024-02-28', status: 'completed', size: '1.2 MB' },
+        { id: 5, name: 'Budget vs Actual Q2', type: 'Quarterly', format: 'PDF', date: '2024-06-30', status: 'processing', size: '--' }
+      ]);
+    }
+  };
 
   const reportTypeOptions = [
     { value: 'comprehensive', label: 'Comprehensive Financial Report' },
@@ -36,11 +52,19 @@ export default function ExportReportPage() {
     { value: 'json', label: 'JSON Data' }
   ];
 
-  const handleExport = () => {
+  const handleExport = async () => {
     setIsLoading(true);
-    // Simulate export process
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const result = await ReportsService.exportReport({
+        reportType: reportType as any,
+        startDate,
+        endDate,
+        format: format as any,
+        includeCharts,
+        includeTables
+      });
+
+      // Add to export history
       const newExport = {
         id: exportHistory.length + 1,
         name: `${reportType.charAt(0).toUpperCase() + reportType.slice(1)} Report`,
@@ -51,19 +75,51 @@ export default function ExportReportPage() {
         size: `${(Math.random() * 3 + 0.5).toFixed(1)} MB`
       };
       setExportHistory([newExport, ...exportHistory]);
-      alert('Report exported successfully!');
-    }, 3000);
-  };
 
-  const downloadExport = (exportItem: any) => {
-    if (exportItem.status === 'completed') {
-      // Simulate download
-      alert(`Downloading ${exportItem.name}...`);
+      // Create download link
+      const link = document.createElement('a');
+      link.href = result.downloadUrl;
+      link.download = result.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert('Report exported successfully!');
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      alert('Error exporting report. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const deleteExport = (id: number) => {
-    setExportHistory(exportHistory.filter(item => item.id !== id));
+  const downloadExport = async (exportItem: any) => {
+    if (exportItem.status === 'completed') {
+      try {
+        const blob = await ReportsService.downloadReport(exportItem.id);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = exportItem.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error downloading report:', error);
+        alert('Error downloading report. Please try again.');
+      }
+    }
+  };
+
+  const deleteExport = async (id: number) => {
+    try {
+      await ReportsService.deleteExport(id);
+      setExportHistory(exportHistory.filter(item => item.id !== id));
+    } catch (error) {
+      console.error('Error deleting export:', error);
+      alert('Error deleting export. Please try again.');
+    }
   };
 
   const tableColumns = [
@@ -113,7 +169,7 @@ export default function ExportReportPage() {
                 </label>
                 <SelectInput
                   value={reportType}
-                  onChange={(e) => setReportType(e.target.value)}
+                  onChange={(e) => setReportType(e)}
                   options={reportTypeOptions}
                   className="w-full"
                 />
@@ -150,7 +206,7 @@ export default function ExportReportPage() {
                 </label>
                 <SelectInput
                   value={format}
-                  onChange={(e) => setFormat(e.target.value)}
+                  onChange={(e) => setFormat(e)}
                   options={formatOptions}
                   className="w-full"
                 />
@@ -240,7 +296,7 @@ export default function ExportReportPage() {
           <DataTable
             data={exportHistory}
             columns={tableColumns}
-            renderCell={(item, column) => {
+            renderCell={(item: any, column: any) => {
               switch (column.key) {
                 case 'status':
                   return getStatusBadge(item.status);

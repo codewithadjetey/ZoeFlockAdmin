@@ -1,17 +1,60 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageHeader, StatCard, Button } from '@/components/ui';
+import { ReportsService } from '@/services/reports';
 
 export default function ReportsPage() {
-  const [isLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      // Load dashboard summary
+      const summary = await ReportsService.getDashboardSummary();
+      setDashboardData(summary);
+
+      // Load recent activity (mock data for now)
+      setRecentActivity([
+        { type: 'Income', amount: '+$2,500', description: 'Tithes received', time: '2 hours ago', color: 'text-green-600' },
+        { type: 'Expense', amount: '-$850', description: 'Utility payment', time: '4 hours ago', color: 'text-red-600' },
+        { type: 'Income', amount: '+$1,200', description: 'Partnership contribution', time: '1 day ago', color: 'text-green-600' },
+        { type: 'Expense', amount: '-$320', description: 'Office supplies', time: '2 days ago', color: 'text-red-600' },
+        { type: 'Income', amount: '+$800', description: 'Offering collection', time: '3 days ago', color: 'text-green-600' }
+      ]);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      // Fallback to mock data
+      setDashboardData({
+        totalIncome: 45280,
+        totalExpenses: 32450,
+        netProfit: 12830,
+        pendingPayments: 5200,
+        monthlyTrends: [
+          { month: 'Jan', income: 3300, expenses: 2610, profit: 690 },
+          { month: 'Feb', income: 3630, expenses: 2780, profit: 850 },
+          { month: 'Mar', income: 3850, expenses: 2980, profit: 870 },
+          { month: 'Apr', income: 4020, expenses: 3130, profit: 890 },
+          { month: 'May', income: 4200, expenses: 3270, profit: 930 },
+          { month: 'Jun', income: 4350, expenses: 3430, profit: 920 }
+        ]
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const overviewStats = [
     {
       title: 'Total Income',
-      value: '$45,280',
+      value: dashboardData ? `$${dashboardData.totalIncome.toLocaleString()}` : '$45,280',
       change: '+12.5%',
       changeType: 'positive',
       icon: 'fas fa-arrow-up',
@@ -19,7 +62,7 @@ export default function ReportsPage() {
     },
     {
       title: 'Total Expenses',
-      value: '$32,450',
+      value: dashboardData ? `$${dashboardData.totalExpenses.toLocaleString()}` : '$32,450',
       change: '+8.2%',
       changeType: 'negative',
       icon: 'fas fa-arrow-down',
@@ -27,7 +70,7 @@ export default function ReportsPage() {
     },
     {
       title: 'Net Profit',
-      value: '$12,830',
+      value: dashboardData ? `$${dashboardData.netProfit.toLocaleString()}` : '$12,830',
       change: '+18.7%',
       changeType: 'positive',
       icon: 'fas fa-chart-line',
@@ -35,7 +78,7 @@ export default function ReportsPage() {
     },
     {
       title: 'Pending Payments',
-      value: '$5,200',
+      value: dashboardData ? `$${dashboardData.pendingPayments.toLocaleString()}` : '$5,200',
       change: '-3.1%',
       changeType: 'neutral',
       icon: 'fas fa-clock',
@@ -78,6 +121,23 @@ export default function ReportsPage() {
     }
   ];
 
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <PageHeader
+          title="Financial Reports Dashboard"
+          description="Comprehensive financial analysis and reporting tools"
+        />
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <i className="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+            <p className="text-gray-600 dark:text-gray-400">Loading financial data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <PageHeader
@@ -96,7 +156,7 @@ export default function ReportsPage() {
               changeType={stat.changeType}
               icon={stat.icon}
               color={stat.color}
-              isLoading={isLoading}
+              isLoading={false}
             />
           ))}
         </div>
@@ -151,13 +211,7 @@ export default function ReportsPage() {
           </div>
           
           <div className="space-y-4">
-            {[
-              { type: 'Income', amount: '+$2,500', description: 'Tithes received', time: '2 hours ago', color: 'text-green-600' },
-              { type: 'Expense', amount: '-$850', description: 'Utility payment', time: '4 hours ago', color: 'text-red-600' },
-              { type: 'Income', amount: '+$1,200', description: 'Partnership contribution', time: '1 day ago', color: 'text-green-600' },
-              { type: 'Expense', amount: '-$320', description: 'Office supplies', time: '2 days ago', color: 'text-red-600' },
-              { type: 'Income', amount: '+$800', description: 'Offering collection', time: '3 days ago', color: 'text-green-600' }
-            ].map((activity, index) => (
+            {recentActivity.map((activity, index) => (
               <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
                 <div className="flex items-center space-x-4">
                   <div className={`w-3 h-3 rounded-full ${activity.color.replace('text-', 'bg-')}`}></div>
@@ -172,7 +226,32 @@ export default function ReportsPage() {
               </div>
             ))}
           </div>
-      </div>
+        </div>
+
+        {/* Monthly Trends Summary */}
+        {dashboardData && dashboardData.monthlyTrends && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mt-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Monthly Financial Trends</h3>
+              <Button variant="outline" size="sm">
+                View Detailed Trends
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+              {dashboardData.monthlyTrends.map((month: any, index: number) => (
+                <div key={index} className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                  <div className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{month.month}</div>
+                  <div className="space-y-1">
+                    <div className="text-sm text-green-600">+${month.income.toLocaleString()}</div>
+                    <div className="text-sm text-red-600">-${month.expenses.toLocaleString()}</div>
+                    <div className="text-sm font-medium text-blue-600">${month.profit.toLocaleString()}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
     </DashboardLayout>
   );
 } 

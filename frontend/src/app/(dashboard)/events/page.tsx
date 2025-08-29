@@ -127,6 +127,11 @@ export default function EventsPage() {
     }
   };
 
+  const handleScanCodes = (event: Event) => {
+    // Navigate to the attendance scanning page for this specific event
+    window.open(`/scan-attendance-event/${event.id}`, '_blank');
+  };
+
   const formatEventDate = (dateString: string | undefined) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -253,6 +258,18 @@ export default function EventsPage() {
           >
             <i className="fas fa-edit"></i>
           </button>
+          
+          {/* Scan Codes Button - Only show for published events */}
+          {event.status === 'published' && (
+            <button 
+              className="text-purple-600 hover:text-purple-700 text-sm p-1 rounded hover:bg-purple-50 dark:hover:bg-purple-900/20"
+              onClick={() => handleScanCodes(event)}
+              title="Scan Attendance Codes"
+            >
+              <i className="fas fa-qrcode"></i>
+            </button>
+          )}
+          
           {event.status === 'draft' && (
             <button 
               className="text-green-600 hover:text-green-700 text-sm p-1 rounded hover:bg-green-50 dark:hover:bg-green-900/20"
@@ -455,7 +472,7 @@ export default function EventsPage() {
         </div>
       </div>
       
-      <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
         <div className="flex space-x-2">
           <button 
             className="text-blue-600 hover:text-blue-700 text-sm"
@@ -463,6 +480,18 @@ export default function EventsPage() {
           >
             <i className="fas fa-edit"></i>
           </button>
+          
+          {/* Scan Codes Button - Only show for published events */}
+          {event.status === 'published' && (
+            <button 
+              className="text-purple-600 hover:text-purple-700 text-sm"
+              onClick={() => handleScanCodes(event)}
+              title="Scan Attendance Codes"
+            >
+              <i className="fas fa-qrcode"></i>
+            </button>
+          )}
+          
           {event.status === 'draft' && (
             <button 
               className="text-green-600 hover:text-green-700 text-sm"

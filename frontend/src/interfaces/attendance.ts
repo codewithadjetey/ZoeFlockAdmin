@@ -90,6 +90,7 @@ export interface Member {
   last_name: string;
   email: string;
   profile_image_path?: string;
+  member_identification_id: string;
 }
 
 export interface User {

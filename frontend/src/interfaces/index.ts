@@ -3,4 +3,5 @@ export * from '@/interfaces/auth';
 export * from '@/interfaces/api';
 export * from '@/interfaces/components';
 export * from '@/interfaces/events';
-export * from '@/interfaces/attendance'; 
+export * from '@/interfaces/attendance';
+export * from '@/interfaces/tithe'; 

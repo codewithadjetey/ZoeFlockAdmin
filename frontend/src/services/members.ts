@@ -19,6 +19,7 @@ export interface Member {
   is_active: boolean;
   notes?: string;
   profile_image_path?: string;
+  member_identification_id: string;
   created_by?: number;
   updated_by?: number;
   created_at?: string;
