@@ -29,7 +29,6 @@ const allMenuItems = [
   
   // Attendance menu items
   { label: "Manage Attendance", icon: "fas fa-clipboard-check", href: "/attendance", type: "attendance" },
-  { label: "Barcode Scanner", icon: "fas fa-qrcode", href: "/attendance/scanner", type: "attendance" },
   { label: "Individual Statistics", icon: "fas fa-chart-line", href: "/attendance/statistics/individual", type: "attendance" },
   { label: "General Statistics", icon: "fas fa-chart-bar", href: "/attendance/statistics/general", type: "attendance" },
   
