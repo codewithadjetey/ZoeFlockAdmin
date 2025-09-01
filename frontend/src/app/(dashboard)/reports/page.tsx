@@ -10,6 +10,8 @@ export default function ReportsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [financialInsights, setFinancialInsights] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -17,35 +19,26 @@ export default function ReportsPage() {
 
   const loadDashboardData = async () => {
     try {
+      setIsLoading(true);
+      setError(null);
+      
       // Load dashboard summary
       const summary = await ReportsService.getDashboardSummary();
       setDashboardData(summary);
 
-      // Load recent activity (mock data for now)
-      setRecentActivity([
-        { type: 'Income', amount: '+$2,500', description: 'Tithes received', time: '2 hours ago', color: 'text-green-600' },
-        { type: 'Expense', amount: '-$850', description: 'Utility payment', time: '4 hours ago', color: 'text-red-600' },
-        { type: 'Income', amount: '+$1,200', description: 'Partnership contribution', time: '1 day ago', color: 'text-green-600' },
-        { type: 'Expense', amount: '-$320', description: 'Office supplies', time: '2 days ago', color: 'text-red-600' },
-        { type: 'Income', amount: '+$800', description: 'Offering collection', time: '3 days ago', color: 'text-green-600' }
-      ]);
+      // Load financial insights
+      const insights = await ReportsService.getFinancialInsights();
+      setFinancialInsights(insights);
+
+      // Load recent activity from API
+      const activity = await ReportsService.getRecentActivity();
+      setRecentActivity(activity);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      // Fallback to mock data
-      setDashboardData({
-        totalIncome: 45280,
-        totalExpenses: 32450,
-        netProfit: 12830,
-        pendingPayments: 5200,
-        monthlyTrends: [
-          { month: 'Jan', income: 3300, expenses: 2610, profit: 690 },
-          { month: 'Feb', income: 3630, expenses: 2780, profit: 850 },
-          { month: 'Mar', income: 3850, expenses: 2980, profit: 870 },
-          { month: 'Apr', income: 4020, expenses: 3130, profit: 890 },
-          { month: 'May', income: 4200, expenses: 3270, profit: 930 },
-          { month: 'Jun', income: 4350, expenses: 3430, profit: 920 }
-        ]
-      });
+      setError('Failed to load dashboard data. Please try again.');
+      setDashboardData(null);
+      setFinancialInsights(null);
+      setRecentActivity([]);
     } finally {
       setIsLoading(false);
     }
@@ -54,35 +47,35 @@ export default function ReportsPage() {
   const overviewStats = [
     {
       title: 'Total Income',
-      value: dashboardData ? `$${dashboardData.totalIncome.toLocaleString()}` : '$45,280',
-      change: '+12.5%',
-      changeType: 'positive',
+      value: dashboardData ? `$${dashboardData.totalIncome.toLocaleString()}` : '$0',
+      description: 'Total income for current period',
       icon: 'fas fa-arrow-up',
-      color: 'from-green-500 to-emerald-600'
+      iconColor: 'text-green-600',
+      iconBgColor: 'bg-green-100 dark:bg-green-900/20'
     },
     {
       title: 'Total Expenses',
-      value: dashboardData ? `$${dashboardData.totalExpenses.toLocaleString()}` : '$32,450',
-      change: '+8.2%',
-      changeType: 'negative',
+      value: dashboardData ? `$${dashboardData.totalExpenses.toLocaleString()}` : '$0',
+      description: 'Total expenses for current period',
       icon: 'fas fa-arrow-down',
-      color: 'from-red-500 to-pink-600'
+      iconColor: 'text-red-600',
+      iconBgColor: 'bg-red-100 dark:bg-red-900/20'
     },
     {
       title: 'Net Profit',
-      value: dashboardData ? `$${dashboardData.netProfit.toLocaleString()}` : '$12,830',
-      change: '+18.7%',
-      changeType: 'positive',
+      value: dashboardData ? `$${dashboardData.netProfit.toLocaleString()}` : '$0',
+      description: 'Net profit for current period',
       icon: 'fas fa-chart-line',
-      color: 'from-blue-500 to-cyan-600'
+      iconColor: 'text-blue-600',
+      iconBgColor: 'bg-blue-100 dark:bg-blue-900/20'
     },
     {
       title: 'Pending Payments',
-      value: dashboardData ? `$${dashboardData.pendingPayments.toLocaleString()}` : '$5,200',
-      change: '-3.1%',
-      changeType: 'neutral',
+      value: dashboardData ? `$${dashboardData.pendingPayments.toLocaleString()}` : '$0',
+      description: 'Pending payments to be received',
       icon: 'fas fa-clock',
-      color: 'from-yellow-500 to-orange-600'
+      iconColor: 'text-yellow-600',
+      iconBgColor: 'bg-yellow-100 dark:bg-yellow-900/20'
     }
   ];
 
@@ -138,86 +131,177 @@ export default function ReportsPage() {
     );
   }
 
+  if (error) {
+    return (
+      <DashboardLayout>
+        <PageHeader
+          title="Financial Reports Dashboard"
+          description="Comprehensive financial analysis and reporting tools"
+          actions={
+            <Button
+              onClick={loadDashboardData}
+              disabled={isLoading}
+              variant="outline"
+              size="sm"
+            >
+              <i className="fas fa-sync-alt mr-2"></i>
+              Retry
+            </Button>
+          }
+        />
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <i className="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+            <Button onClick={loadDashboardData} variant="primary">
+              <i className="fas fa-sync-alt mr-2"></i>
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <PageHeader
         title="Financial Reports Dashboard"
         description="Comprehensive financial analysis and reporting tools"
+        actions={
+          <Button
+            onClick={loadDashboardData}
+            disabled={isLoading}
+            variant="outline"
+            size="sm"
+          >
+            {isLoading ? (
+              <>
+                <i className="fas fa-spinner fa-spin mr-2"></i>
+                Refreshing...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-sync-alt mr-2"></i>
+                Refresh Data
+              </>
+            )}
+          </Button>
+        }
       />
 
-        {/* Overview Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {overviewStats.map((stat, index) => (
-            <StatCard
-              key={index}
-              title={stat.title}
-              value={stat.value}
-              change={stat.change}
-              changeType={stat.changeType}
-              icon={stat.icon}
-              color={stat.color}
-              isLoading={false}
-            />
-          ))}
-        </div>
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {overviewStats.map((stat, index) => (
+          <StatCard
+            key={index}
+            title={stat.title}
+            value={stat.value}
+            description={stat.description}
+            icon={stat.icon}
+            iconColor={stat.iconColor}
+            iconBgColor={stat.iconBgColor}
+          />
+        ))}
+      </div>
 
-        {/* Quick Reports Navigation */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {quickReports.map((report, index) => (
-            <Link
-              key={index}
-              href={report.href}
-              className="group block"
-            >
-              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-transparent">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${report.color} flex items-center justify-center text-white text-2xl group-hover:scale-110 transition-transform duration-300`}>
-                    <i className={report.icon}></i>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Quick Access</div>
-                    <i className="fas fa-arrow-right text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors duration-300"></i>
-                  </div>
+      {/* Quick Reports Navigation */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {quickReports.map((report, index) => (
+          <Link
+            key={index}
+            href={report.href}
+            className="group block"
+          >
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-200 dark:border-gray-700 hover:border-transparent">
+              <div className="flex items-start justify-between mb-4">
+                <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${report.color} flex items-center justify-center text-white text-2xl group-hover:scale-110 transition-transform duration-300`}>
+                  <i className={report.icon}></i>
                 </div>
-                
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
-                  {report.title}
-                </h3>
-                
-                <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-                  {report.description}
-                </p>
-                
-                <div className="space-y-2">
-                  {report.stats.map((stat, statIndex) => (
-                    <div key={statIndex} className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
-                      {stat}
-                    </div>
-                  ))}
+                <div className="text-right">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">Quick Access</div>
+                  <i className="fas fa-arrow-right text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors duration-300"></i>
                 </div>
               </div>
-            </Link>
-          ))}
-        </div>
+              
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
+                {report.title}
+              </h3>
+              
+              <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+                {report.description}
+              </p>
+              
+              <div className="space-y-2">
+                {report.stats.map((stat, statIndex) => (
+                  <div key={statIndex} className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full mr-3"></div>
+                    {stat}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Recent Financial Activity</h3>
-            <Button variant="outline" size="sm">
-              View All
-            </Button>
+      {/* Financial Insights */}
+      {financialInsights && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            Financial Insights
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+              <h4 className="font-medium text-green-900 dark:text-green-100 mb-3 flex items-center">
+                <i className="fas fa-lightbulb mr-2"></i>
+                Growth Opportunities
+              </h4>
+              <ul className="text-green-800 dark:text-green-200 space-y-2">
+                {financialInsights.growthOpportunities?.map((opportunity: string, index: number) => (
+                  <li key={index} className="flex items-start">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span>{opportunity}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+              <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                <i className="fas fa-exclamation-triangle mr-2"></i>
+                Risk Factors
+              </h4>
+              <ul className="text-blue-800 dark:text-blue-200 space-y-2">
+                {financialInsights.riskFactors?.map((risk: string, index: number) => (
+                  <li key={index} className="flex items-start">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span>{risk}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          
+        </div>
+      )}
+
+      {/* Recent Activity */}
+      {recentActivity.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            Recent Activity
+          </h3>
           <div className="space-y-4">
             {recentActivity.map((activity, index) => (
               <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-3 h-3 rounded-full ${activity.color.replace('text-', 'bg-')}`}></div>
+                <div className="flex items-center">
+                  <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${
+                    activity.type === 'Income' ? 'from-green-500 to-emerald-600' : 'from-red-500 to-pink-600'
+                  } flex items-center justify-center text-white mr-4`}>
+                    <i className={`fas ${activity.type === 'Income' ? 'fa-arrow-up' : 'fa-arrow-down'}`}></i>
+                  </div>
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-white">{activity.description}</div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{activity.time}</div>
+                    <p className="font-medium text-gray-900 dark:text-white">{activity.description}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{activity.time}</p>
                   </div>
                 </div>
                 <div className={`font-semibold ${activity.color}`}>
@@ -227,31 +311,21 @@ export default function ReportsPage() {
             ))}
           </div>
         </div>
+      )}
 
-        {/* Monthly Trends Summary */}
-        {dashboardData && dashboardData.monthlyTrends && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mt-8">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Monthly Financial Trends</h3>
-              <Button variant="outline" size="sm">
-                View Detailed Trends
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-              {dashboardData.monthlyTrends.map((month: any, index: number) => (
-                <div key={index} className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{month.month}</div>
-                  <div className="space-y-1">
-                    <div className="text-sm text-green-600">+${month.income.toLocaleString()}</div>
-                    <div className="text-sm text-red-600">-${month.expenses.toLocaleString()}</div>
-                    <div className="text-sm font-medium text-blue-600">${month.profit.toLocaleString()}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* Empty State for Recent Activity */}
+      {recentActivity.length === 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            Recent Activity
+          </h3>
+          <div className="text-center py-8">
+            <i className="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
+            <p className="text-gray-600 dark:text-gray-400">No recent activity found</p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">Recent transactions will appear here</p>
           </div>
-        )}
+        </div>
+      )}
     </DashboardLayout>
   );
 } 
