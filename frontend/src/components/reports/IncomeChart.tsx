@@ -25,7 +25,7 @@ interface IncomeChartProps {
     partnerships: number;
     total: number;
   }>;
-  type: 'line' | 'area' | 'bar' | 'stacked';
+  type: 'line' | 'area' | 'bar';
   height?: number;
 }
 
@@ -65,30 +65,30 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
               }}
             />
             <Legend />
-            <Line 
+            {/* <Line 
               type="monotone" 
               dataKey="tithes" 
               stroke="#10B981" 
               strokeWidth={3}
               dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6, stroke: '#10B981', strokeWidth: 2 }}
-            />
-            <Line 
+            /> */}
+            {/* <Line 
               type="monotone" 
               dataKey="offerings" 
               stroke="#3B82F6" 
               strokeWidth={3}
               dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
-            />
-            <Line 
+            /> */}
+            {/* <Line 
               type="monotone" 
               dataKey="partnerships" 
               stroke="#8B5CF6" 
               strokeWidth={3}
               dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
               activeDot={{ r: 6, stroke: '#8B5CF6', strokeWidth: 2 }}
-            />
+            /> */}
             <Line 
               type="monotone" 
               dataKey="total" 
@@ -125,7 +125,7 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
               }}
             />
             <Legend />
-            <Area 
+            {/* <Area 
               type="monotone" 
               dataKey="tithes" 
               stackId="1"
@@ -148,7 +148,7 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
               stroke="#8B5CF6" 
               fill="#8B5CF6"
               fillOpacity={0.6}
-            />
+            /> */}
             <Area 
               type="monotone" 
               dataKey="total" 
@@ -184,9 +184,9 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
               }}
             />
             <Legend />
-            <Bar dataKey="tithes" fill="#10B981" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="offerings" fill="#3B82F6" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="partnerships" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
+            {/* <Bar dataKey="tithes" fill="#10B981" radius={[4, 4, 0, 0]} /> */}
+            {/* <Bar dataKey="offerings" fill="#3B82F6" radius={[4, 4, 0, 0]} /> */}
+            {/* <Bar dataKey="partnerships" fill="#8B5CF6" radius={[4, 4, 0, 0]} /> */}
             <Bar dataKey="total" fill="#F59E0B" radius={[4, 4, 0, 0]} />
           </BarChart>
         );
@@ -216,7 +216,9 @@ export const IncomeChart: React.FC<IncomeChartProps> = ({
               }}
             />
             <Legend />
-            <Bar dataKey="tithes" stackId="a" fill="#10B981" radius={[4, 4, 0, 0]} />
+            {/* <Bar dataKey="tithes" stackId="a" fill="#10B981" radius={[4, 4, 0, 0]} /> */}
+            {/* <Bar dataKey="offerings" stackId="a" fill="#3B82F6" radius={[4, 4, 0, 0]} /> */}
+            {/* <Bar dataKey="partnerships" stackId="a" fill="#8B5CF6" radius={[4, 4, 0, 0]} /> */}
             <Bar dataKey="offerings" stackId="a" fill="#3B82F6" radius={[4, 4, 0, 0]} />
             <Bar dataKey="partnerships" stackId="a" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
           </BarChart>
