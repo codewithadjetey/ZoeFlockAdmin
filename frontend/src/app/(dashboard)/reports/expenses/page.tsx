@@ -8,12 +8,49 @@ import { ReportsService, ReportFilters } from '@/services/reports';
 import { ExpenseCategory } from '@/interfaces/expenses';
 import { EntitiesService, EntityOption } from '@/services/entities';
 
+interface CategoryBreakdownItem {
+  category: string;
+  amount: number;
+  budget: number;
+  count: number;
+  avgAmount: number;
+  trend: string;
+  status: string;
+}
+
+interface TableColumn {
+  key: string;
+  label: string;
+}
+
+interface MonthlyTrendItem {
+  month: string;
+  total: number;
+  [key: string]: number | string;
+}
+
 export default function ExpensesReportsPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
-  const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('bar');
-  const [startDate, setStartDate] = useState('2024-01-01');
-  const [endDate, setEndDate] = useState('2024-12-31');
+  const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('line');
+  
+  // Set default date range to 1 year ago from today
+  const getDefaultDateRange = () => {
+    const today = new Date();
+    const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+    const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    return {
+      startDate: oneYearAgo.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    };
+  };
+  
+  const defaultDates = getDefaultDateRange();
+  const [startDate, setStartDate] = useState(defaultDates.startDate);
+  const [endDate, setEndDate] = useState(defaultDates.endDate);
   const [category, setCategory] = useState('all');
+  const [showTotal, setShowTotal] = useState(true);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
   const [categories, setCategories] = useState<EntityOption[]>([]);
@@ -28,7 +65,6 @@ export default function ExpensesReportsPage() {
     { value: 'line', label: 'Line Chart', icon: 'fas fa-chart-line' },
     { value: 'area', label: 'Area Chart', icon: 'fas fa-chart-area' },
     { value: 'bar', label: 'Bar Chart', icon: 'fas fa-chart-bar' },
-    // { value: 'stacked', label: 'Stacked Bar', icon: 'fas fa-chart-bar' }
   ];
 
   // Load categories on component mount
@@ -67,29 +103,75 @@ export default function ExpensesReportsPage() {
       setReportData(data);
     } catch (error) {
       console.error('Error loading report data:', error);
-      // Fallback to mock data
-      setReportData({
-        totalExpenses: 28450,
-        totalBudget: 32000,
-        variance: 3550,
-        averagePerMonth: 2370.83,
-        categoryBreakdown: [
-          { category: 'Utilities', amount: 8500, budget: 9000, count: 12, avgAmount: 708.33, trend: '+5.2%', status: 'under_budget' },
-          { category: 'Maintenance', amount: 7200, budget: 8000, count: 8, avgAmount: 900.00, trend: '+3.1%', status: 'under_budget' },
-          { category: 'Office Supplies', amount: 4500, budget: 5000, count: 15, avgAmount: 300.00, trend: '+1.8%', status: 'under_budget' },
-          { category: 'Events', amount: 3800, budget: 3500, count: 6, avgAmount: 633.33, trend: '+12.5%', status: 'over_budget' },
-          { category: 'Technology', amount: 3200, budget: 3000, count: 4, avgAmount: 800.00, trend: '+8.7%', status: 'over_budget' },
-          { category: 'Miscellaneous', amount: 1250, budget: 1500, count: 10, avgAmount: 125.00, trend: '-2.3%', status: 'under_budget' }
-        ],
-        monthlyTrends: [
-          { month: 'Jan', utilities: 680, maintenance: 580, office: 380, events: 280, tech: 250, total: 2170 },
-          { month: 'Feb', utilities: 720, maintenance: 620, office: 420, events: 320, tech: 280, total: 2360 },
-          { month: 'Mar', utilities: 750, maintenance: 650, office: 450, events: 380, tech: 320, total: 2550 },
-          { month: 'Apr', utilities: 780, maintenance: 680, office: 480, events: 420, tech: 350, total: 2710 },
-          { month: 'May', utilities: 820, maintenance: 720, office: 520, events: 480, tech: 380, total: 2920 },
-          { month: 'Jun', utilities: 850, maintenance: 750, office: 550, events: 520, tech: 420, total: 3090 }
-        ]
+      // Generate dynamic mock data based on loaded categories
+      const dynamicCategories = categories.length > 0 ? categories.map(cat => cat.name.toLowerCase()) : ['utilities', 'maintenance', 'office', 'events', 'tech'];
+      
+      // Generate monthly trends based on the selected date range
+      const generateMonthlyData = () => {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const months: Array<{ month: string; total: number; [key: string]: number | string }> = [];
+        
+        let current = new Date(start.getFullYear(), start.getMonth(), 1);
+        
+        while (current <= end) {
+          const monthName = current.toLocaleDateString('en-US', { month: 'short' });
+          const monthData: { month: string; total: number; [key: string]: number | string } = {
+            month: monthName,
+            total: 0
+          };
+          
+          // Generate data for each category
+          dynamicCategories.forEach((cat, index) => {
+            const baseAmount = 300 + (index * 100) + Math.random() * 200;
+            const amount = Math.round(baseAmount + (Math.random() * 100));
+            monthData[cat] = amount;
+            monthData.total += amount;
+          });
+          
+          months.push(monthData);
+          
+          // Move to next month
+          current.setMonth(current.getMonth() + 1);
+        }
+        
+        return months;
+      };
+      
+      const monthlyTrends = generateMonthlyData();
+      
+      // Generate category breakdown
+      const categoryBreakdown = dynamicCategories.map((cat, index) => {
+        const amount = 2000 + (index * 1000) + Math.random() * 2000;
+        const budget = amount * (0.8 + Math.random() * 0.4);
+        const trend = (Math.random() > 0.5 ? '+' : '-') + (Math.random() * 15).toFixed(1) + '%';
+        const status = amount > budget ? 'over_budget' : 'under_budget';
+        
+        return {
+          category: cat.charAt(0).toUpperCase() + cat.slice(1),
+          amount: Math.round(amount),
+          budget: Math.round(budget),
+          count: Math.floor(Math.random() * 20) + 5,
+          avgAmount: Math.round(amount / (Math.floor(Math.random() * 20) + 5)),
+          trend,
+          status
+        };
       });
+      
+      const totalExpenses = categoryBreakdown.reduce((sum, cat) => sum + cat.amount, 0);
+      const totalBudget = categoryBreakdown.reduce((sum, cat) => sum + cat.budget, 0);
+      
+      setReportData({
+        totalExpenses,
+        totalBudget,
+        variance: totalBudget - totalExpenses,
+        averagePerMonth: totalExpenses / monthlyTrends.length,
+        categoryBreakdown,
+        monthlyTrends
+      });
+      
+      // Set selected categories for chart
+      setSelectedCategories(dynamicCategories);
     } finally {
       setIsLoading(false);
     }
@@ -131,12 +213,44 @@ export default function ExpensesReportsPage() {
 
   const tableColumns = [
     { key: 'category', label: 'Category' },
-    { key: 'amount', label: 'Total Amount' },
-    { key: 'budget', label: 'Budget' },
+    { 
+      key: 'amount', 
+      label: 'Total Amount',
+      render: (value: number) => <span className="font-semibold text-red-600">{formatCurrency(value)}</span>
+    },
+    { 
+      key: 'budget', 
+      label: 'Budget',
+      render: (value: number) => <span className="text-blue-600">{formatCurrency(value)}</span>
+    },
     { key: 'count', label: 'Transactions' },
-    { key: 'avgAmount', label: 'Average Amount' },
-    { key: 'trend', label: 'Trend' },
-    { key: 'status', label: 'Status' }
+    { 
+      key: 'avgAmount', 
+      label: 'Average Amount',
+      render: (value: number) => <span className="text-gray-600 dark:text-gray-400">{formatCurrency(value)}</span>
+    },
+    { 
+      key: 'trend', 
+      label: 'Trend',
+      render: (value: string) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          value.startsWith('+') 
+            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
+            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+        }`}>
+          {value}
+        </span>
+      )
+    },
+    { 
+      key: 'status', 
+      label: 'Status',
+      render: (value: string) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(value)}`}>
+          {getStatusLabel(value)}
+        </span>
+      )
+    }
   ];
 
   const formatCurrency = (amount: number) => `$${amount.toLocaleString()}`;
@@ -337,19 +451,125 @@ export default function ExpensesReportsPage() {
       {viewMode === 'chart' && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
           <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Monthly Expenses Trends
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Expenses breakdown by category over the selected period
-            </p>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Monthly Expenses Trends
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Expenses breakdown by category over the selected period
+                </p>
+              </div>
+              
+              {/* Chart Controls */}
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="showTotal"
+                    checked={showTotal}
+                    onChange={(e) => setShowTotal(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                  />
+                  <label htmlFor="showTotal" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Show Total
+                  </label>
+                </div>
+                
+                {selectedCategories.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Categories:</span>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCategories.map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => {
+                            if (selectedCategories.includes(cat)) {
+                              setSelectedCategories(selectedCategories.filter(c => c !== cat));
+                            } else {
+                              setSelectedCategories([...selectedCategories, cat]);
+                            }
+                          }}
+                          className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                            selectedCategories.includes(cat)
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                          }`}
+                        >
+                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedCategories.length === 0 && (
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    No categories available
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
-          <ExpensesChart 
-            data={reportData.monthlyTrends}
-            type={chartType}
-            height={400}
-          />
+          {/* Chart Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Highest Month</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">
+                {reportData.monthlyTrends.length > 0 ? 
+                  reportData.monthlyTrends.reduce((max: MonthlyTrendItem, item: MonthlyTrendItem) => 
+                    item.total > max.total ? item : max
+                  ).month
+                  : 'No data'
+                }
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {reportData.monthlyTrends.length > 0 ? 
+                  `$${reportData.monthlyTrends.reduce((max: MonthlyTrendItem, item: MonthlyTrendItem) => 
+                    item.total > max.total ? item : max
+                  ).total.toLocaleString()}`
+                  : 'No data'
+                }
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Monthly</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">
+                {reportData.monthlyTrends.length > 0 ? 
+                  `$${(reportData.monthlyTrends.reduce((sum: number, item: MonthlyTrendItem) => sum + item.total, 0) / reportData.monthlyTrends.length).toFixed(0)}`
+                  : 'No data'
+                }
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Trend</p>
+              <p className="text-lg font-bold text-green-600">
+                {reportData.monthlyTrends.length > 1 ? 
+                  (Number(reportData.monthlyTrends[reportData.monthlyTrends.length - 1].total) > Number(reportData.monthlyTrends[0].total) ? '+' : '') +
+                  ((Number(reportData.monthlyTrends[reportData.monthlyTrends.length - 1].total) - Number(reportData.monthlyTrends[0].total)) / Number(reportData.monthlyTrends[0].total) * 100).toFixed(1) + '%'
+                  : '0%'
+                }
+              </p>
+            </div>
+          </div>
+          
+          {reportData.monthlyTrends.length > 0 ? (
+            <ExpensesChart 
+              data={reportData.monthlyTrends}
+              type={chartType}
+              height={400}
+              categories={selectedCategories}
+              showTotal={showTotal}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-64 bg-gray-50 dark:bg-gray-700 rounded-xl">
+              <div className="text-center">
+                <i className="fas fa-chart-line text-4xl text-gray-400 mb-4"></i>
+                <p className="text-gray-500 dark:text-gray-400">No chart data available</p>
+              </div>
+            </div>
+          )}
+          
         </div>
       )}
 
@@ -359,37 +579,14 @@ export default function ExpensesReportsPage() {
           <DataTable
             data={reportData.categoryBreakdown}
             columns={tableColumns}
-            renderCell={(item, column) => {
-              switch (column.key) {
-                case 'amount':
-                  return <span className="font-semibold text-red-600">{formatCurrency(item.amount)}</span>;
-                case 'budget':
-                  return <span className="text-blue-600">{formatCurrency(item.budget)}</span>;
-                case 'avgAmount':
-                  return <span className="text-gray-600 dark:text-gray-400">{formatCurrency(item.avgAmount)}</span>;
-                case 'trend':
-                  return (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.trend.startsWith('+') 
-                        ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' 
-                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                    }`}>
-                      {item.trend}
-                    </span>
-                  );
-                case 'status':
-                  return (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
-                      {getStatusLabel(item.status)}
-                    </span>
-                  );
-                default:
-                  return item[column.key as keyof typeof item];
-              }
+            pagination={{
+              currentPage: 1,
+              totalPages: 1,
+              totalItems: reportData.categoryBreakdown.length,
+              perPage: reportData.categoryBreakdown.length,
+              onPageChange: () => {},
+              onPerPageChange: () => {}
             }}
-            searchable={false}
-            sortable={true}
-            pagination={false}
           />
         </div>
       )}
@@ -399,38 +596,43 @@ export default function ExpensesReportsPage() {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
           Category Breakdown
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reportData.categoryBreakdown.map((category, index) => (
-            <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-gray-900 dark:text-white">{category.category}</h4>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(category.status)}`}>
-                  {getStatusLabel(category.status)}
-                </span>
+                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {reportData.categoryBreakdown.length > 0 ? 
+            reportData.categoryBreakdown.map((category: CategoryBreakdownItem, index: number) => (
+              <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-900 dark:text-white">{category.category}</h4>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(category.status)}`}>
+                    {getStatusLabel(category.status)}
+                  </span>
+                </div>
+                <div className="text-2xl font-bold text-red-600 mb-2">
+                  {formatCurrency(category.amount)}
+                </div>
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="text-blue-600">
+                    Budget: {formatCurrency(category.budget)}
+                  </span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {category.count} transactions
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Avg: {formatCurrency(category.avgAmount)}
+                  </span>
+                  <span className={`font-medium ${
+                    category.trend.startsWith('+') ? 'text-red-600' : 'text-green-600'
+                  }`}>
+                    {category.trend}
+                  </span>
+                </div>
               </div>
-              <div className="text-2xl font-bold text-red-600 mb-2">
-                {formatCurrency(category.amount)}
+            )) : (
+              <div className="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
+                No category data available
               </div>
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-blue-600">
-                  Budget: {formatCurrency(category.budget)}
-                </span>
-                <span className="text-gray-600 dark:text-gray-400">
-                  {category.count} transactions
-                </span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Avg: {formatCurrency(category.avgAmount)}
-                </span>
-                <span className={`font-medium ${
-                  category.trend.startsWith('+') ? 'text-red-600' : 'text-green-600'
-                }`}>
-                  {category.trend}
-                </span>
-              </div>
-            </div>
-          ))}
+            )}
         </div>
       </div>
     </DashboardLayout>

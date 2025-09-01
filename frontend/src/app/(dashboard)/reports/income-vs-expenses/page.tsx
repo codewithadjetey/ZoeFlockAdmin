@@ -5,6 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageHeader, Button, TextInput, SelectInput, ViewToggle, DataTable } from '@/components/ui';
 import { ComparisonChart } from '@/components/reports';
 import { ReportsService, ReportFilters } from '@/services/reports';
+import { EntitiesService, EntityOption } from '@/services/entities';
 
 export default function IncomeVsExpensesReportsPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
@@ -13,6 +14,8 @@ export default function IncomeVsExpensesReportsPage() {
   const [endDate, setEndDate] = useState('2024-12-31');
   const [isLoading, setIsLoading] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
+  const [categories, setCategories] = useState<EntityOption[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const viewOptions = [
     { value: 'chart', label: 'Chart', icon: 'fas fa-chart-area' },
@@ -31,8 +34,25 @@ export default function IncomeVsExpensesReportsPage() {
     loadReportData();
   }, [startDate, endDate]);
 
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+
+  const loadCategories = async () => {
+    try {
+      const response = await EntitiesService.getIncomeCategories();
+      setCategories(response);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      setError('Failed to load income categories');
+    }
+  };
+
   const loadReportData = async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
       const filters: ReportFilters = {
         startDate,

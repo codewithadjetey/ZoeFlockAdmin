@@ -18,12 +18,7 @@ import {
 interface ExpensesChartProps {
   data: Array<{
     month: string;
-    utilities: number;
-    maintenance: number;
-    office: number;
-    events: number;
-    tech: number;
-    total: number;
+    [key: string]: number | string;
   }>;
   budgetData?: Array<{
     month: string;
@@ -32,17 +27,39 @@ interface ExpensesChartProps {
   }>;
   type: 'line' | 'area' | 'bar' | 'stacked' | 'budget-comparison';
   height?: number;
+  categories?: string[];
+  showTotal?: boolean;
 }
 
-const COLORS = ['#EF4444', '#F97316', '#EAB308', '#8B5CF6', '#06B6D4'];
+const COLORS = [
+  '#EF4444', // Red
+  '#F97316', // Orange
+  '#EAB308', // Yellow
+  '#8B5CF6', // Purple
+  '#06B6D4', // Cyan
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#EC4899', // Pink
+  '#84CC16', // Lime
+  '#6366F1'  // Indigo
+];
 
 export const ExpensesChart: React.FC<ExpensesChartProps> = ({ 
   data, 
   budgetData,
   type = 'line', 
-  height = 400 
+  height = 400,
+  categories,
+  showTotal = true
 }) => {
   const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
+
+  // Extract categories from data if not provided
+  const chartCategories = categories || 
+    (data.length > 0 ? Object.keys(data[0]).filter(key => key !== 'month' && key !== 'total') : []);
+
+  // Filter out 'total' from categories if showTotal is false
+  const displayCategories = showTotal ? chartCategories : chartCategories.filter(cat => cat !== 'total');
 
   const renderChart = () => {
     switch (type) {
@@ -71,54 +88,25 @@ export const ExpensesChart: React.FC<ExpensesChartProps> = ({
               }}
             />
             <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="utilities" 
-              stroke="#EF4444" 
-              strokeWidth={3}
-              dot={{ fill: '#EF4444', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: '#EF4444', strokeWidth: 2 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="maintenance" 
-              stroke="#F97316" 
-              strokeWidth={3}
-              dot={{ fill: '#F97316', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: '#F97316', strokeWidth: 2 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="office" 
-              stroke="#EAB308" 
-              strokeWidth={3}
-              dot={{ fill: '#EAB308', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: '#EAB308', strokeWidth: 2 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="events" 
-              stroke="#8B5CF6" 
-              strokeWidth={3}
-              dot={{ fill: '#8B5CF6', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: '#8B5CF6', strokeWidth: 2 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="tech" 
-              stroke="#06B6D4" 
-              strokeWidth={3}
-              dot={{ fill: '#06B6D4', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, stroke: '#06B6D4', strokeWidth: 2 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="total" 
-              stroke="#F59E0B" 
-              strokeWidth={4}
-              dot={{ fill: '#F59E0B', strokeWidth: 2, r: 5 }}
-              activeDot={{ r: 7, stroke: '#F59E0B', strokeWidth: 2 }}
-            />
+            {displayCategories.map((category, index) => (
+              <Line 
+                key={category}
+                type="monotone" 
+                dataKey={category} 
+                stroke={COLORS[index % COLORS.length]} 
+                strokeWidth={category === 'total' ? 4 : 3}
+                dot={{ 
+                  fill: COLORS[index % COLORS.length], 
+                  strokeWidth: 2, 
+                  r: category === 'total' ? 5 : 4 
+                }}
+                activeDot={{ 
+                  r: category === 'total' ? 7 : 6, 
+                  stroke: COLORS[index % COLORS.length], 
+                  strokeWidth: 2 
+                }}
+              />
+            ))}
           </LineChart>
         );
 
@@ -147,46 +135,17 @@ export const ExpensesChart: React.FC<ExpensesChartProps> = ({
               }}
             />
             <Legend />
-            <Area 
-              type="monotone" 
-              dataKey="utilities" 
-              stackId="1"
-              stroke="#EF4444" 
-              fill="#EF4444"
-              fillOpacity={0.6}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="maintenance" 
-              stackId="1"
-              stroke="#F97316" 
-              fill="#F97316"
-              fillOpacity={0.6}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="office" 
-              stackId="1"
-              stroke="#EAB308" 
-              fill="#EAB308"
-              fillOpacity={0.6}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="events" 
-              stackId="1"
-              stroke="#8B5CF6" 
-              fill="#8B5CF6"
-              fillOpacity={0.6}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="tech" 
-              stackId="1"
-              stroke="#06B6D4" 
-              fill="#06B6D4"
-              fillOpacity={0.6}
-            />
+            {displayCategories.map((category, index) => (
+              <Area 
+                key={category}
+                type="monotone" 
+                dataKey={category} 
+                stackId="1"
+                stroke={COLORS[index % COLORS.length]} 
+                fill={COLORS[index % COLORS.length]}
+                fillOpacity={0.6}
+              />
+            ))}
           </AreaChart>
         );
 
@@ -215,12 +174,14 @@ export const ExpensesChart: React.FC<ExpensesChartProps> = ({
               }}
             />
             <Legend />
-            <Bar dataKey="utilities" fill="#EF4444" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="maintenance" fill="#F97316" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="office" fill="#EAB308" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="events" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="tech" fill="#06B6D4" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="total" fill="#F59E0B" radius={[4, 4, 0, 0]} />
+            {displayCategories.map((category, index) => (
+              <Bar 
+                key={category}
+                dataKey={category} 
+                fill={COLORS[index % COLORS.length]} 
+                radius={[4, 4, 0, 0]} 
+              />
+            ))}
           </BarChart>
         );
 
@@ -249,11 +210,15 @@ export const ExpensesChart: React.FC<ExpensesChartProps> = ({
               }}
             />
             <Legend />
-            <Bar dataKey="utilities" stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="maintenance" stackId="a" fill="#F97316" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="office" stackId="a" fill="#EAB308" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="events" stackId="a" fill="#8B5CF6" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="tech" stackId="a" fill="#06B6D4" radius={[4, 4, 0, 0]} />
+            {displayCategories.filter(cat => cat !== 'total').map((category, index) => (
+              <Bar 
+                key={category}
+                dataKey={category} 
+                stackId="a" 
+                fill={COLORS[index % COLORS.length]} 
+                radius={[4, 4, 0, 0]} 
+              />
+            ))}
           </BarChart>
         );
 

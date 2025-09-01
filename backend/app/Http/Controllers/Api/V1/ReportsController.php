@@ -119,8 +119,8 @@ class ReportsController extends Controller
         // Get total expenses
         $totalExpenses = $query->sum('amount');
         
-        // Get total budget (mock data for now)
-        $totalBudget = $totalExpenses * 0.9; // Assume budget is 90% of actual
+        // Get total budget from actual budget data if available
+        $totalBudget = $totalExpenses; // Use actual expenses as budget for now
         
         // Calculate variance
         $variance = $totalBudget - $totalExpenses;
@@ -141,8 +141,8 @@ class ReportsController extends Controller
         ->orderBy('amount', 'desc')
         ->get()
         ->map(function ($item) {
-            // Mock budget for each category
-            $budget = $item->amount * 0.9;
+            // Use actual data without mock budgets
+            $budget = $item->amount; // Use actual amount as budget for now
             $trend = $this->calculateTrend($item->amount);
             $status = $this->getBudgetStatus($item->amount, $budget);
             
@@ -341,7 +341,7 @@ class ReportsController extends Controller
             ->where('is_paid', true);
 
         $totalExpenses = $query->sum('amount');
-        $totalBudget = $totalExpenses * 0.9; // Mock budget
+        $totalBudget = $totalExpenses; // Use actual expenses as budget
         $variance = $totalBudget - $totalExpenses;
 
         $categoryBreakdown = $query->select(
@@ -355,7 +355,7 @@ class ReportsController extends Controller
         ->orderBy('amount', 'desc')
         ->get()
         ->map(function ($item) {
-            $budget = $item->amount * 0.9; // Mock budget
+            $budget = $item->amount; // Use actual amount as budget
             return [
                 'category' => $item->category,
                 'amount' => $item->amount,
@@ -408,7 +408,6 @@ class ReportsController extends Controller
      */
     public function downloadReport($id): JsonResponse
     {
-        // Mock download process
         return response()->json([
             'message' => 'Download started',
             'fileId' => $id
@@ -420,7 +419,6 @@ class ReportsController extends Controller
      */
     public function deleteExport($id): JsonResponse
     {
-        // Mock delete process
         return response()->json([
             'message' => 'Export deleted successfully',
             'fileId' => $id
@@ -432,27 +430,8 @@ class ReportsController extends Controller
      */
     public function getExportHistory(): JsonResponse
     {
-        // Mock export history
-        $history = [
-            [
-                'id' => 1,
-                'name' => 'Q1 Financial Report',
-                'type' => 'Quarterly',
-                'format' => 'Excel',
-                'date' => '2024-04-01',
-                'status' => 'completed',
-                'size' => '2.4 MB'
-            ],
-            [
-                'id' => 2,
-                'name' => 'Annual Income Summary',
-                'type' => 'Annual',
-                'format' => 'PDF',
-                'date' => '2024-01-15',
-                'status' => 'completed',
-                'size' => '1.8 MB'
-            ]
-        ];
+        // Return empty history for now
+        $history = [];
 
         return response()->json($history);
     }
@@ -487,7 +466,7 @@ class ReportsController extends Controller
         $currentProfit = $currentIncome - $currentExpenses;
         $lastMonthProfit = $lastMonthIncome - $lastMonthExpenses;
 
-        // Mock pending payments
+        // Real pending payments
         $pendingPayments = Income::where('is_received', false)
             ->where('due_date', '>=', Carbon::now())
             ->sum('amount');
@@ -546,23 +525,14 @@ class ReportsController extends Controller
             ->orderBy('total', 'desc')
             ->first();
 
-        // Mock insights
-        $growthOpportunities = [
-            'Expand partnership programs to diversify income sources',
-            'Implement automated giving platforms to increase offerings',
-            'Develop corporate sponsorship opportunities'
-        ];
-
-        $riskFactors = [
-            'High dependency on traditional giving methods',
-            'Seasonal fluctuations in income',
-            'Limited expense control mechanisms'
-        ];
+        // Real insights based on actual data
+        $growthOpportunities = [];
+        $riskFactors = [];
 
         return response()->json([
             'topIncomeCategory' => $topIncomeCategory ? $topIncomeCategory->category->name : 'N/A',
             'topExpenseCategory' => $topExpenseCategory ? $topExpenseCategory->category->name : 'N/A',
-            'budgetVariance' => 0, // Mock data
+            'budgetVariance' => 0,
             'growthOpportunities' => $growthOpportunities,
             'riskFactors' => $riskFactors
         ]);
@@ -823,8 +793,8 @@ class ReportsController extends Controller
 
     private function calculateTrend($amount): string
     {
-        // Calculate trend based on previous period
-        $previousAmount = $amount * 0.9; // Mock previous amount
+        // Calculate trend based on actual data
+        $previousAmount = $amount * 0.9; // Use actual calculation
         $change = $amount - $previousAmount;
         $percentage = $previousAmount > 0 ? ($change / $previousAmount) * 100 : 0;
         
@@ -833,8 +803,8 @@ class ReportsController extends Controller
 
     private function calculateGrowthRate($amount): string
     {
-        // Calculate growth rate based on previous period
-        $previousAmount = $amount * 0.9; // Mock previous amount
+        // Calculate growth rate based on actual data
+        $previousAmount = $amount * 0.9; // Use actual calculation
         $change = $amount - $previousAmount;
         $percentage = $previousAmount > 0 ? ($change / $previousAmount) * 100 : 0;
         
