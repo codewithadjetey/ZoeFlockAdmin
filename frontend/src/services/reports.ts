@@ -185,5 +185,17 @@ export const ReportsService = {
   }> {
     const res = await api.get('/reports/insights');
     return res.data;
+  },
+
+  // Get recent activity
+  async getRecentActivity(): Promise<Array<{
+    type: 'Income' | 'Expense';
+    amount: string;
+    description: string;
+    time: string;
+    color: string;
+  }>> {
+    const res = await api.get('/reports/recent-activity');
+    return res.data;
   }
 }; 
