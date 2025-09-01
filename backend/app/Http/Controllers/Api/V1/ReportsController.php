@@ -302,22 +302,22 @@ class ReportsController extends Controller
         $averageAmount = $totalTransactions > 0 ? $totalIncome / $totalTransactions : 0;
 
         $categoryBreakdown = $query->select(
-            'income_categories.name as category',
-            DB::raw('SUM(incomes.amount) as amount'),
-            DB::raw('COUNT(*) as count'),
-            DB::raw('AVG(incomes.amount) as avg_amount')
+            'income_categories.name as category_name',
+            DB::raw('SUM(incomes.amount) as total_amount'),
+            DB::raw('COUNT(*) as transaction_count'),
+            DB::raw('AVG(incomes.amount) as average_amount')
         )
         ->join('income_categories', 'incomes.category_id', '=', 'income_categories.id')
         ->groupBy('income_categories.id', 'income_categories.name')
-        ->orderBy('amount', 'desc')
+        ->orderBy('total_amount', 'desc')
         ->get()
         ->map(function ($item) {
             return [
-                'category' => $item->category,
-                'amount' => $item->amount,
-                'count' => $item->count,
-                'avgAmount' => round($item->avg_amount, 2),
-                'trend' => $this->calculateTrend($item->amount)
+                'category' => $item->category_name,
+                'amount' => $item->total_amount,
+                'count' => $item->transaction_count,
+                'avgAmount' => round($item->average_amount, 2),
+                'trend' => $this->calculateTrend($item->total_amount)
             ];
         });
 
@@ -672,16 +672,21 @@ class ReportsController extends Controller
             )
             ->join('income_categories', 'incomes.category_id', '=', 'income_categories.id')
             ->groupBy('income_categories.name')
-            ->get()
-            ->keyBy('category');
+            ->get();
 
-            $months[] = [
+            // Create dynamic structure based on actual categories
+            $monthData = [
                 'month' => $current->format('M'),
-                'tithes' => $monthlyData->get('Tithes')->amount ?? 0,
-                'offerings' => $monthlyData->get('Offerings')->amount ?? 0,
-                'partnerships' => $monthlyData->get('Partnerships')->amount ?? 0,
                 'total' => $monthlyData->sum('amount')
             ];
+
+            // Add each category dynamically
+            foreach ($monthlyData as $data) {
+                $categoryKey = strtolower(str_replace(' ', '_', $data->category));
+                $monthData[$categoryKey] = $data->amount;
+            }
+
+            $months[] = $monthData;
             $current->addMonth();
         }
 
@@ -768,8 +773,8 @@ class ReportsController extends Controller
             ->whereBetween('incomes.received_date', [$startDate, $endDate])
             ->where('incomes.is_received', true)
             ->select(
-                'income_categories.name as name',
-                DB::raw('SUM(incomes.amount) as amount')
+                'income_categories.name as category_name',
+                DB::raw('SUM(incomes.amount) as total_amount')
             )
             ->groupBy('income_categories.id', 'income_categories.name')
             ->get();
@@ -780,36 +785,36 @@ class ReportsController extends Controller
             ->whereBetween('expenses.paid_date', [$startDate, $endDate])
             ->where('expenses.is_paid', true)
             ->select(
-                'expense_categories.name as name',
-                DB::raw('SUM(expenses.amount) as amount')
+                'expense_categories.name as category_name',
+                DB::raw('SUM(expenses.amount) as total_amount')
             )
             ->groupBy('expense_categories.id', 'expense_categories.name')
             ->get();
 
-        $totalIncome = $incomeCategories->sum('amount');
-        $totalExpenses = $expenseCategories->sum('amount');
+        $totalIncome = $incomeCategories->sum('total_amount');
+        $totalExpenses = $expenseCategories->sum('total_amount');
 
         $comparison = [];
 
         // Add income categories
         foreach ($incomeCategories as $category) {
             $comparison[] = [
-                'category' => $category->name,
-                'income' => $category->amount,
+                'category' => $category->category_name,
+                'income' => $category->total_amount,
                 'expenses' => 0,
-                'net' => $category->amount,
-                'percentage' => $totalIncome > 0 ? ($category->amount / $totalIncome) * 100 : 0
+                'net' => $category->total_amount,
+                'percentage' => $totalIncome > 0 ? ($category->total_amount / $totalIncome) * 100 : 0
             ];
         }
 
         // Add expense categories
         foreach ($expenseCategories as $category) {
             $comparison[] = [
-                'category' => $category->name,
+                'category' => $category->category_name,
                 'income' => 0,
-                'expenses' => $category->amount,
-                'net' => -$category->amount,
-                'percentage' => $totalExpenses > 0 ? -($category->amount / $totalExpenses) * 100 : 0
+                'expenses' => $category->total_amount,
+                'net' => -$category->total_amount,
+                'percentage' => $totalExpenses > 0 ? -($category->total_amount / $totalExpenses) * 100 : 0
             ];
         }
 
