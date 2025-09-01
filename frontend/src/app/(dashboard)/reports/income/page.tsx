@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageHeader, Button, TextInput, SelectInput, ViewToggle, DataTable, DataGrid } from '@/components/ui';
 import { IncomeChart } from '@/components/reports';
 import { ReportsService, ReportFilters } from '@/services/reports';
-import { IncomeCategory } from '@/interfaces/income';
+import { EntitiesService, EntityOption } from '@/services/entities';
 
 export default function IncomeReportsPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
@@ -15,7 +15,7 @@ export default function IncomeReportsPage() {
   const [category, setCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
-  const [categories, setCategories] = useState<IncomeCategory[]>([]);
+  const [categories, setCategories] = useState<EntityOption[]>([]);
 
   const viewOptions = [
     { value: 'chart', label: 'Chart', icon: 'fas fa-chart-area' },
@@ -31,9 +31,10 @@ export default function IncomeReportsPage() {
 
   // Load categories on component mount
   useEffect(() => {
-    loadCategories();
+    EntitiesService.getIncomeCategories().then((res) => {
+      setCategories(res);
+    });
   }, []);
-
   // Load report data when filters change
   useEffect(() => {
     loadReportData();
