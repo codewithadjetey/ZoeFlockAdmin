@@ -179,18 +179,38 @@ class ExportService
         // Monthly trends
         $sheet->setCellValue("A" . ($row + 2), 'MONTHLY TRENDS');
         $sheet->setCellValue("A" . ($row + 3), 'Month');
-        $sheet->setCellValue("B" . ($row + 3), 'Tithes');
-        $sheet->setCellValue("C" . ($row + 3), 'Offerings');
-        $sheet->setCellValue("D" . ($row + 3), 'Partnerships');
-        $sheet->setCellValue("E" . ($row + 3), 'Total');
+        
+        // Get dynamic categories from the first trend entry
+        $categories = [];
+        if (!empty($data['monthlyTrends'])) {
+            $firstTrend = $data['monthlyTrends'][0];
+            foreach ($firstTrend as $key => $value) {
+                if ($key !== 'month' && $key !== 'total') {
+                    $categories[] = $key;
+                }
+            }
+        }
+        
+        // Add category headers dynamically
+        $col = 'B';
+        foreach ($categories as $category) {
+            $sheet->setCellValue($col . ($row + 3), ucfirst(str_replace('_', ' ', $category)));
+            $col++;
+        }
+        $sheet->setCellValue($col . ($row + 3), 'Total');
 
         $row += 4;
         foreach ($data['monthlyTrends'] as $trend) {
             $sheet->setCellValue("A{$row}", $trend['month']);
-            $sheet->setCellValue("B{$row}", '$' . number_format($trend['tithes'], 2));
-            $sheet->setCellValue("C{$row}", '$' . number_format($trend['offerings'], 2));
-            $sheet->setCellValue("D{$row}", '$' . number_format($trend['partnerships'], 2));
-            $sheet->setCellValue("E{$row}", '$' . number_format($trend['total'], 2));
+            
+            // Add category values dynamically
+            $col = 'B';
+            foreach ($categories as $category) {
+                $value = $trend[$category] ?? 0;
+                $sheet->setCellValue($col . $row, '$' . number_format($value, 2));
+                $col++;
+            }
+            $sheet->setCellValue($col . $row, '$' . number_format($trend['total'], 2));
             $row++;
         }
     }
