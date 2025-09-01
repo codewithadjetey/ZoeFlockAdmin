@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/useToast';
 import { titheService } from '@/services/tithes';
 import { TitheStatistics } from '@/interfaces';
 import { formatCurrency, formatDate } from '@/utils/helpers';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 export default function TitheReportsPage() {
   const { showToast } = useToast();
@@ -62,6 +63,7 @@ export default function TitheReportsPage() {
   }
 
   return (
+    <DashboardLayout>
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
@@ -247,5 +249,6 @@ export default function TitheReportsPage() {
         </div>
       </div>
     </div>
+    </DashboardLayout>
   );
 } 
