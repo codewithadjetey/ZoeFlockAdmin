@@ -296,6 +296,11 @@ Route::prefix($apiVersion)->group(function () {
         Route::get('/', [TitheController::class, 'index']);
         Route::post('/', [TitheController::class, 'store']);
         Route::get('/statistics', [TitheController::class, 'statistics']);
+        Route::get('/monthly-trends', [TitheController::class, 'monthlyTrends']);
+        Route::get('/member-performance', [TitheController::class, 'memberPerformance']);
+        Route::get('/frequency-analysis', [TitheController::class, 'frequencyAnalysis']);
+        Route::get('/recent-activity', [TitheController::class, 'recentActivity']);
+        Route::post('/export', [TitheController::class, 'exportReport']);
         Route::get('/{tithe}', [TitheController::class, 'show']);
         Route::put('/{tithe}', [TitheController::class, 'update']);
         Route::delete('/{tithe}', [TitheController::class, 'destroy']);
