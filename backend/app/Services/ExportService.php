@@ -21,7 +21,8 @@ class ExportService
         $sheet = $spreadsheet->getActiveSheet();
 
         // Set title
-        $sheet->setCellValue('A1', strtoupper($reportType) . ' REPORT');
+        $title = in_array($reportType, ['summary', 'detailed', 'member_performance']) ? 'TITHE ' . strtoupper($reportType) . ' REPORT' : strtoupper($reportType) . ' REPORT';
+        $sheet->setCellValue('A1', $title);
         $sheet->setCellValue('A2', 'Period: ' . $startDate . ' to ' . $endDate);
         $sheet->setCellValue('A3', 'Generated: ' . Carbon::now()->format('Y-m-d H:i:s'));
 
@@ -36,6 +37,11 @@ class ExportService
             case 'comparison':
                 $this->addComparisonDataToExcel($sheet, $data);
                 break;
+            case 'summary':
+            case 'detailed':
+            case 'member_performance':
+                $this->addTitheDataToExcel($sheet, $data, $reportType);
+                break;
             default:
                 $this->addGeneralDataToExcel($sheet, $data);
         }
@@ -46,7 +52,8 @@ class ExportService
         }
 
         // Create filename
-        $filename = "financial_report_{$reportType}_{$startDate}_{$endDate}.xlsx";
+        $prefix = in_array($reportType, ['summary', 'detailed', 'member_performance']) ? 'tithe_report' : 'financial_report';
+        $filename = "{$prefix}_{$reportType}_{$startDate}_{$endDate}.xlsx";
         $filepath = storage_path("app/public/exports/{$filename}");
 
         // Ensure directory exists
@@ -81,7 +88,8 @@ class ExportService
         $dompdf->render();
 
         // Create filename
-        $filename = "financial_report_{$reportType}_{$startDate}_{$endDate}.pdf";
+        $prefix = in_array($reportType, ['summary', 'detailed', 'member_performance']) ? 'tithe_report' : 'financial_report';
+        $filename = "{$prefix}_{$reportType}_{$startDate}_{$endDate}.pdf";
         $filepath = storage_path("app/public/exports/{$filename}");
 
         // Ensure directory exists
@@ -112,12 +120,18 @@ class ExportService
             case 'comparison':
                 $this->addComparisonDataToExcel($sheet, $data);
                 break;
+            case 'summary':
+            case 'detailed':
+            case 'member_performance':
+                $this->addTitheDataToExcel($sheet, $data, $reportType);
+                break;
             default:
                 $this->addGeneralDataToExcel($sheet, $data);
         }
 
         // Create filename
-        $filename = "financial_report_{$reportType}_{$startDate}_{$endDate}.csv";
+        $prefix = in_array($reportType, ['summary', 'detailed', 'member_performance']) ? 'tithe_report' : 'financial_report';
+        $filename = "{$prefix}_{$reportType}_{$startDate}_{$endDate}.csv";
         $filepath = storage_path("app/public/exports/{$filename}");
 
         // Ensure directory exists
@@ -284,7 +298,7 @@ class ExportService
         <html>
         <head>
             <meta charset="utf-8">
-            <title>' . strtoupper($reportType) . ' Report</title>
+            <title>' . (in_array($reportType, ['summary', 'detailed', 'member_performance']) ? 'Tithe ' . ucfirst($reportType) : ucfirst($reportType)) . ' Report</title>
             <style>
                 body { font-family: Arial, sans-serif; margin: 20px; }
                 .header { text-align: center; margin-bottom: 30px; }
@@ -302,7 +316,7 @@ class ExportService
         </head>
         <body>
             <div class="header">
-                <div class="title">' . strtoupper($reportType) . ' REPORT</div>
+                <div class="title">' . (in_array($reportType, ['summary', 'detailed', 'member_performance']) ? 'TITHE ' . strtoupper($reportType) : strtoupper($reportType)) . ' REPORT</div>
                 <div class="subtitle">Period: ' . $startDate . ' to ' . $endDate . '</div>
                 <div class="subtitle">Generated: ' . Carbon::now()->format('Y-m-d H:i:s') . '</div>
             </div>';
@@ -317,6 +331,11 @@ class ExportService
                 break;
             case 'comparison':
                 $html .= $this->generateComparisonPdfContent($data);
+                break;
+            case 'summary':
+            case 'detailed':
+            case 'member_performance':
+                $html .= $this->generateTithePdfContent($data, $reportType);
                 break;
             default:
                 $html .= $this->generateGeneralPdfContent($data);
@@ -511,6 +530,183 @@ class ExportService
         }
 
         $html .= '</div></div>';
+
+        return $html;
+    }
+
+    /**
+     * Add tithe data to Excel sheet
+     */
+    private function addTitheDataToExcel($sheet, $data, $reportType): void
+    {
+        $row = 5; // Start after title and metadata
+
+        switch ($reportType) {
+            case 'summary':
+                // Add summary data
+                $sheet->setCellValue("A{$row}", 'Metric');
+                $sheet->setCellValue("B{$row}", 'Value');
+                $row++;
+
+                foreach ($data['data'] as $item) {
+                    $sheet->setCellValue("A{$row}", $item[0]);
+                    $sheet->setCellValue("B{$row}", $item[1]);
+                    $row++;
+                }
+                break;
+
+            case 'detailed':
+                // Add detailed tithe data
+                $sheet->setCellValue("A{$row}", 'Member');
+                $sheet->setCellValue("B{$row}", 'Amount');
+                $sheet->setCellValue("C{$row}", 'Frequency');
+                $sheet->setCellValue("D{$row}", 'Start Date');
+                $sheet->setCellValue("E{$row}", 'Status');
+                $sheet->setCellValue("F{$row}", 'Paid Amount');
+                $sheet->setCellValue("G{$row}", 'Outstanding');
+                $sheet->setCellValue("H{$row}", 'Created By');
+                $sheet->setCellValue("I{$row}", 'Created Date');
+                $row++;
+
+                foreach ($data['data'] as $item) {
+                    $sheet->setCellValue("A{$row}", $item[0]);
+                    $sheet->setCellValue("B{$row}", $item[1]);
+                    $sheet->setCellValue("C{$row}", $item[2]);
+                    $sheet->setCellValue("D{$row}", $item[3]);
+                    $sheet->setCellValue("E{$row}", $item[4]);
+                    $sheet->setCellValue("F{$row}", $item[5]);
+                    $sheet->setCellValue("G{$row}", $item[6]);
+                    $sheet->setCellValue("H{$row}", $item[7]);
+                    $sheet->setCellValue("I{$row}", $item[8]);
+                    $row++;
+                }
+                break;
+
+            case 'member_performance':
+                // Add member performance data
+                $sheet->setCellValue("A{$row}", 'Member');
+                $sheet->setCellValue("B{$row}", 'Total Tithes');
+                $sheet->setCellValue("C{$row}", 'Total Amount');
+                $sheet->setCellValue("D{$row}", 'Total Paid');
+                $sheet->setCellValue("E{$row}", 'Total Outstanding');
+                $sheet->setCellValue("F{$row}", 'Payment Rate');
+                $row++;
+
+                foreach ($data['data'] as $item) {
+                    $sheet->setCellValue("A{$row}", $item[0]);
+                    $sheet->setCellValue("B{$row}", $item[1]);
+                    $sheet->setCellValue("C{$row}", $item[2]);
+                    $sheet->setCellValue("D{$row}", $item[3]);
+                    $sheet->setCellValue("E{$row}", $item[4]);
+                    $sheet->setCellValue("F{$row}", $item[5]);
+                    $row++;
+                }
+                break;
+        }
+    }
+
+    /**
+     * Generate tithe PDF content
+     */
+    private function generateTithePdfContent($data, $reportType): string
+    {
+        $html = '';
+
+        switch ($reportType) {
+            case 'summary':
+                $html .= '
+                <div class="section">
+                    <div class="section-title">Tithe Summary</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>';
+
+                foreach ($data['data'] as $item) {
+                    $html .= '
+                            <tr>
+                                <td>' . $item[0] . '</td>
+                                <td>' . $item[1] . '</td>
+                            </tr>';
+                }
+
+                $html .= '</tbody></table></div>';
+                break;
+
+            case 'detailed':
+                $html .= '
+                <div class="section">
+                    <div class="section-title">Detailed Tithe Report</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Amount</th>
+                                <th>Frequency</th>
+                                <th>Start Date</th>
+                                <th>Status</th>
+                                <th>Paid Amount</th>
+                                <th>Outstanding</th>
+                                <th>Created By</th>
+                                <th>Created Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>';
+
+                foreach ($data['data'] as $item) {
+                    $html .= '
+                            <tr>
+                                <td>' . $item[0] . '</td>
+                                <td>' . $item[1] . '</td>
+                                <td>' . $item[2] . '</td>
+                                <td>' . $item[3] . '</td>
+                                <td>' . $item[4] . '</td>
+                                <td>' . $item[5] . '</td>
+                                <td>' . $item[6] . '</td>
+                                <td>' . $item[7] . '</td>
+                                <td>' . $item[8] . '</td>
+                            </tr>';
+                }
+
+                $html .= '</tbody></table></div>';
+                break;
+
+            case 'member_performance':
+                $html .= '
+                <div class="section">
+                    <div class="section-title">Member Performance Report</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Member</th>
+                                <th>Total Tithes</th>
+                                <th>Total Amount</th>
+                                <th>Total Paid</th>
+                                <th>Total Outstanding</th>
+                                <th>Payment Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>';
+
+                foreach ($data['data'] as $item) {
+                    $html .= '
+                            <tr>
+                                <td>' . $item[0] . '</td>
+                                <td>' . $item[1] . '</td>
+                                <td>' . $item[2] . '</td>
+                                <td>' . $item[3] . '</td>
+                                <td>' . $item[4] . '</td>
+                                <td>' . $item[5] . '</td>
+                            </tr>';
+                }
+
+                $html .= '</tbody></table></div>';
+                break;
+        }
 
         return $html;
     }
