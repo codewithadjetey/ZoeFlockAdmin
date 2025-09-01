@@ -322,6 +322,7 @@ Route::prefix($apiVersion)->group(function () {
         Route::delete('/export/{id}', [\App\Http\Controllers\Api\V1\ReportsController::class, 'deleteExport']);
         Route::get('/dashboard-summary', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getDashboardSummary']);
         Route::get('/insights', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getFinancialInsights']);
+        Route::get('/recent-activity', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getRecentActivity']);
     });
 
     // Route::prefix('donations')->group(function () {
