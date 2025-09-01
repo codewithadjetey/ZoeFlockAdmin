@@ -26,7 +26,7 @@ export default function ExpensesReportsPage() {
     { value: 'line', label: 'Line Chart', icon: 'fas fa-chart-line' },
     { value: 'area', label: 'Area Chart', icon: 'fas fa-chart-area' },
     { value: 'bar', label: 'Bar Chart', icon: 'fas fa-chart-bar' },
-    { value: 'stacked', label: 'Stacked Bar', icon: 'fas fa-chart-bar' }
+    // { value: 'stacked', label: 'Stacked Bar', icon: 'fas fa-chart-bar' }
   ];
 
   // Load categories on component mount
