@@ -6,6 +6,7 @@ import { PageHeader, Button, TextInput, SelectInput, ViewToggle, DataTable } fro
 import { ExpensesChart } from '@/components/reports';
 import { ReportsService, ReportFilters } from '@/services/reports';
 import { ExpenseCategory } from '@/interfaces/expenses';
+import { EntitiesService, EntityOption } from '@/services/entities';
 
 export default function ExpensesReportsPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
@@ -15,7 +16,8 @@ export default function ExpensesReportsPage() {
   const [category, setCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
-  const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [categories, setCategories] = useState<EntityOption[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const viewOptions = [
     { value: 'chart', label: 'Chart', icon: 'fas fa-chart-area' },
@@ -41,16 +43,18 @@ export default function ExpensesReportsPage() {
 
   const loadCategories = async () => {
     try {
-      const response = await fetch('/api/expense-categories');
-      const data = await response.json();
-      setCategories(data.data || []);
+      const response = await EntitiesService.getExpenseCategories();
+      setCategories(response);
     } catch (error) {
       console.error('Error loading categories:', error);
+      setError('Failed to load expense categories');
     }
   };
 
   const loadReportData = async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
       const filters: ReportFilters = {
         startDate,

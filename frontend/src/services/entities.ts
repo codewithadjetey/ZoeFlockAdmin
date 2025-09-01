@@ -83,7 +83,7 @@ export class EntitiesService {
   }
 
   static async getExpenseCategories(activeOnly: boolean = true): Promise<EntityOption[]> {
-    const response = await this.getEntities('expense_categories', activeOnly);
+    const response = await this.getEntities('expense-categories', activeOnly);
     return response.data.expense_categories || [];
   }
 
