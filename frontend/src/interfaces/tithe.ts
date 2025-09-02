@@ -109,6 +109,63 @@ export interface TitheStatistics {
   monthly_tithes: number;
 }
 
+export interface TitheMonthlyTrend {
+  period: string;
+  total_tithes: number;
+  total_amount: number;
+  total_paid: number;
+  total_outstanding: number;
+  paid_count: number;
+  unpaid_count: number;
+  payment_rate: number;
+}
+
+export interface TitheMemberPerformance {
+  member: {
+    id: number;
+    name: string;
+  };
+  total_tithes: number;
+  total_amount: number;
+  total_paid: number;
+  total_outstanding: number;
+  paid_count: number;
+  unpaid_count: number;
+  overdue_count: number;
+  payment_rate: number;
+  average_amount: number;
+}
+
+export interface TitheFrequencyAnalysis {
+  weekly: {
+    count: number;
+    total_amount: number;
+    paid_amount: number;
+    outstanding: number;
+    paid_count: number;
+    unpaid_count: number;
+    percentage: number;
+  };
+  monthly: {
+    count: number;
+    total_amount: number;
+    paid_amount: number;
+    outstanding: number;
+    paid_count: number;
+    unpaid_count: number;
+    percentage: number;
+  };
+}
+
+export interface TitheRecentActivity {
+  type: 'Tithe' | 'Payment';
+  amount: string;
+  description: string;
+  time: string;
+  color: string;
+  status: string;
+}
+
 export const TITHE_FREQUENCIES = {
   weekly: 'Weekly',
   monthly: 'Monthly',

@@ -18,6 +18,13 @@ class Income extends Model
         'is_received',
     ];
 
+    protected $casts = [
+        'received_date' => 'datetime',
+        'due_date' => 'datetime',
+        'is_received' => 'boolean',
+        'amount' => 'decimal:2',
+    ];
+
     public function category()
     {
         return $this->belongsTo(IncomeCategory::class, 'category_id');

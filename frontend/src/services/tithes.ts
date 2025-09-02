@@ -3,9 +3,13 @@ import {
   Tithe,
   CreateTitheRequest,
   UpdateTitheRequest,
-  MarkTitheAsPaidRequest,
+  MarkTithePaidRequest,
   TitheFilters,
   TitheStatistics,
+  TitheMonthlyTrend,
+  TitheMemberPerformance,
+  TitheFrequencyAnalysis,
+  TitheRecentActivity,
   AddTithePaymentRequest,
   UpdateTithePaymentRequest,
   TithePayment,
@@ -64,7 +68,7 @@ export const titheService = {
   /**
    * Mark a tithe as paid
    */
-  async markTitheAsPaid(id: number, data: MarkTitheAsPaidRequest) {
+  async markTitheAsPaid(id: number, data: MarkTithePaidRequest) {
     const response = await http({ method: 'post', url: `/tithes/${id}/mark-paid`, data });
     return response.data;
   },
@@ -79,6 +83,66 @@ export const titheService = {
     if (filters?.end_date) params.append('end_date', filters.end_date);
 
     const response = await http({ method: 'get', url: `/tithes/statistics?${params.toString()}` });
+    return response.data;
+  },
+
+  /**
+   * Get monthly trends for tithes
+   */
+  async getMonthlyTrends(filters?: { start_date?: string; end_date?: string }): Promise<{ data: TitheMonthlyTrend[] }> {
+    const params = new URLSearchParams();
+    
+    if (filters?.start_date) params.append('start_date', filters.start_date);
+    if (filters?.end_date) params.append('end_date', filters.end_date);
+
+    const response = await http({ method: 'get', url: `/tithes/monthly-trends?${params.toString()}` });
+    return response.data;
+  },
+
+  /**
+   * Get member performance analytics
+   */
+  async getMemberPerformance(filters?: { start_date?: string; end_date?: string }): Promise<{ data: TitheMemberPerformance[] }> {
+    const params = new URLSearchParams();
+    
+    if (filters?.start_date) params.append('start_date', filters.start_date);
+    if (filters?.end_date) params.append('end_date', filters.end_date);
+
+    const response = await http({ method: 'get', url: `/tithes/member-performance?${params.toString()}` });
+    return response.data;
+  },
+
+  /**
+   * Get frequency analysis
+   */
+  async getFrequencyAnalysis(filters?: { start_date?: string; end_date?: string }): Promise<{ data: TitheFrequencyAnalysis }> {
+    const params = new URLSearchParams();
+    
+    if (filters?.start_date) params.append('start_date', filters.start_date);
+    if (filters?.end_date) params.append('end_date', filters.end_date);
+
+    const response = await http({ method: 'get', url: `/tithes/frequency-analysis?${params.toString()}` });
+    return response.data;
+  },
+
+  /**
+   * Get recent tithe activity
+   */
+  async getRecentActivity(): Promise<{ data: TitheRecentActivity[] }> {
+    const response = await http({ method: 'get', url: '/tithes/recent-activity' });
+    return response.data;
+  },
+
+  /**
+   * Export tithe report
+   */
+  async exportReport(data: {
+    format: 'excel' | 'pdf' | 'csv';
+    type: 'summary' | 'detailed' | 'member_performance';
+    start_date?: string;
+    end_date?: string;
+  }) {
+    const response = await http({ method: 'post', url: '/tithes/export', data });
     return response.data;
   },
 

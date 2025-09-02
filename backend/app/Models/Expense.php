@@ -18,6 +18,13 @@ class Expense extends Model
         'is_paid',
     ];
 
+    protected $casts = [
+        'paid_date' => 'datetime',
+        'due_date' => 'datetime',
+        'is_paid' => 'boolean',
+        'amount' => 'decimal:2',
+    ];
+
     public function category()
     {
         return $this->belongsTo(ExpenseCategory::class, 'category_id');
