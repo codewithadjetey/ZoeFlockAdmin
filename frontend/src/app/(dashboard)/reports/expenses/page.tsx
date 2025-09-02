@@ -65,6 +65,7 @@ export default function ExpensesReportsPage() {
     { value: 'line', label: 'Line Chart', icon: 'fas fa-chart-line' },
     { value: 'area', label: 'Area Chart', icon: 'fas fa-chart-area' },
     { value: 'bar', label: 'Bar Chart', icon: 'fas fa-chart-bar' },
+    { value: 'stacked', label: 'Stacked Bar', icon: 'fas fa-chart-bar' }
   ];
 
   // Load categories on component mount
@@ -348,7 +349,7 @@ export default function ExpensesReportsPage() {
               </label>
               <SelectInput
                 value={chartType}
-                onChange={(e) => setChartType(e as any)}
+                onChange={(value) => setChartType(value as 'line' | 'area' | 'bar' | 'stacked')}
                 options={chartTypeOptions}
                 className="w-full"
               />
@@ -451,122 +452,37 @@ export default function ExpensesReportsPage() {
       {viewMode === 'chart' && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-8">
           <div className="mb-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                  Monthly Expenses Trends
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Expenses breakdown by category over the selected period
-                </p>
-              </div>
-              
-              {/* Chart Controls */}
-              <div className="flex flex-wrap gap-3 items-center">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="showTotal"
-                    checked={showTotal}
-                    onChange={(e) => setShowTotal(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                  />
-                  <label htmlFor="showTotal" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Show Total
-                  </label>
-                </div>
-                
-                {selectedCategories.length > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Categories:</span>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedCategories.map((cat) => (
-                        <button
-                          key={cat}
-                          onClick={() => {
-                            if (selectedCategories.includes(cat)) {
-                              setSelectedCategories(selectedCategories.filter(c => c !== cat));
-                            } else {
-                              setSelectedCategories([...selectedCategories, cat]);
-                            }
-                          }}
-                          className={`px-2 py-1 text-xs rounded-full transition-colors ${
-                            selectedCategories.includes(cat)
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-                          }`}
-                        >
-                          {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {selectedCategories.length === 0 && (
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    No categories available
-                  </div>
-                )}
-              </div>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Monthly Expenses Trends
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Expenses breakdown by category over the selected period
+            </p>
           </div>
           
-          {/* Chart Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Highest Month</p>
-              <p className="text-lg font-bold text-gray-900 dark:text-white">
-                {reportData.monthlyTrends.length > 0 ? 
-                  reportData.monthlyTrends.reduce((max: MonthlyTrendItem, item: MonthlyTrendItem) => 
-                    item.total > max.total ? item : max
-                  ).month
-                  : 'No data'
-                }
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {reportData.monthlyTrends.length > 0 ? 
-                  `$${reportData.monthlyTrends.reduce((max: MonthlyTrendItem, item: MonthlyTrendItem) => 
-                    item.total > max.total ? item : max
-                  ).total.toLocaleString()}`
-                  : 'No data'
-                }
-              </p>
+          {isLoading ? (
+            <div className="flex items-center justify-center" style={{ height: 400 }}>
+              <div className="text-center">
+                <i className="fas fa-spinner fa-spin text-2xl text-blue-600 mb-2"></i>
+                <p className="text-gray-500">Loading chart data...</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Monthly</p>
-              <p className="text-lg font-bold text-gray-900 dark:text-white">
-                {reportData.monthlyTrends.length > 0 ? 
-                  `$${(reportData.monthlyTrends.reduce((sum: number, item: MonthlyTrendItem) => sum + item.total, 0) / reportData.monthlyTrends.length).toFixed(0)}`
-                  : 'No data'
-                }
-              </p>
+          ) : error ? (
+            <div className="flex items-center justify-center" style={{ height: 400 }}>
+              <div className="text-center">
+                <i className="fas fa-exclamation-triangle text-2xl text-red-600 mb-2"></i>
+                <p className="text-red-500">{error}</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Trend</p>
-              <p className="text-lg font-bold text-green-600">
-                {reportData.monthlyTrends.length > 1 ? 
-                  (Number(reportData.monthlyTrends[reportData.monthlyTrends.length - 1].total) > Number(reportData.monthlyTrends[0].total) ? '+' : '') +
-                  ((Number(reportData.monthlyTrends[reportData.monthlyTrends.length - 1].total) - Number(reportData.monthlyTrends[0].total)) / Number(reportData.monthlyTrends[0].total) * 100).toFixed(1) + '%'
-                  : '0%'
-                }
-              </p>
-            </div>
-          </div>
-          
-          {reportData.monthlyTrends.length > 0 ? (
+          ) : reportData && reportData.monthlyTrends ? (
             <ExpensesChart 
               data={reportData.monthlyTrends}
               type={chartType}
               height={400}
-              categories={selectedCategories}
-              showTotal={showTotal}
             />
           ) : (
-            <div className="flex items-center justify-center h-64 bg-gray-50 dark:bg-gray-700 rounded-xl">
-              <div className="text-center">
-                <i className="fas fa-chart-line text-4xl text-gray-400 mb-4"></i>
-                <p className="text-gray-500 dark:text-gray-400">No chart data available</p>
-              </div>
+            <div className="flex items-center justify-center" style={{ height: 400 }}>
+              <p className="text-gray-500">No data available for chart</p>
             </div>
           )}
           

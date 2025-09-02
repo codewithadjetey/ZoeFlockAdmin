@@ -685,18 +685,21 @@ class ReportsController extends Controller
             )
             ->join('expense_categories', 'expenses.category_id', '=', 'expense_categories.id')
             ->groupBy('expense_categories.name')
-            ->get()
-            ->keyBy('category');
+            ->get();
 
-            $months[] = [
+            // Create dynamic structure based on actual categories
+            $monthData = [
                 'month' => $current->format('M'),
-                'utilities' => $monthlyData->get('Utilities')->amount ?? 0,
-                'maintenance' => $monthlyData->get('Maintenance')->amount ?? 0,
-                'office' => $monthlyData->get('Office Supplies')->amount ?? 0,
-                'events' => $monthlyData->get('Events')->amount ?? 0,
-                'tech' => $monthlyData->get('Technology')->amount ?? 0,
                 'total' => $monthlyData->sum('amount')
             ];
+
+            // Add each category dynamically
+            foreach ($monthlyData as $data) {
+                $categoryKey = strtolower(str_replace(' ', '_', $data->category));
+                $monthData[$categoryKey] = $data->amount;
+            }
+
+            $months[] = $monthData;
             $current->addMonth();
         }
 
