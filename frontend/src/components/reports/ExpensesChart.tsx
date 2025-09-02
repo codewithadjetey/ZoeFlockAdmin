@@ -61,6 +61,17 @@ export const ExpensesChart: React.FC<ExpensesChartProps> = ({
   // Filter out 'total' from categories if showTotal is false
   const displayCategories = showTotal ? chartCategories : chartCategories.filter(cat => cat !== 'total');
 
+
+
+  // Add safety check for empty data
+  if (!data || data.length === 0) {
+    return (
+      <div className="w-full flex items-center justify-center" style={{ height }}>
+        <p className="text-gray-500">No data available</p>
+      </div>
+    );
+  }
+
   const renderChart = () => {
     switch (type) {
       case 'line':
@@ -270,10 +281,20 @@ export const ExpensesChart: React.FC<ExpensesChartProps> = ({
     }
   };
 
+  const chartElement = renderChart();
+  
+  if (!chartElement) {
+    return (
+      <div className="w-full flex items-center justify-center" style={{ height }}>
+        <p className="text-gray-500">No data available for this chart type</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
-        {renderChart()}
+        {chartElement}
       </ResponsiveContainer>
     </div>
   );
