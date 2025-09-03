@@ -61,14 +61,19 @@ function initializeSidebar() {
 
 // Load all components when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    // Determine the correct path based on current page location
+    const currentPath = window.location.pathname;
+    const isInPagesDirectory = currentPath.includes('/pages/');
+    const basePath = isInPagesDirectory ? '../' : '';
+    
     // Load header
-    loadComponent('header-placeholder', 'include/header.html');
+    loadComponent('header-placeholder', basePath + 'include/header.html');
     
     // Load sidebar
-    loadComponent('sidebar-placeholder', 'include/sidebar.html');
+    loadComponent('sidebar-placeholder', basePath + 'include/sidebar.html');
     
     // Load footer
-    loadComponent('footer-placeholder', 'include/footer.html');
+    loadComponent('footer-placeholder', basePath + 'include/footer.html');
     
     // Set active navigation after components are loaded
     setTimeout(() => {
