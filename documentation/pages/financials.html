@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Financial Management - Zoe Flock Admin Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div id="sidebar-placeholder"></div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Financial Management</h1>
+          </div>
+
+          <div class="content-area">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Financial Management</li>
+              </ol>
+            </nav>
+
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i>
+              <strong>Overview:</strong> Manage church finances including tithes, donations, expenses, and generate financial reports.
+            </div>
+
+            <h2>Tithe Management</h2>
+            <p>Track member tithes with support for partial payments and multiple payment methods:</p>
+
+            <div class="row">
+              <div class="col-lg-8">
+                <h3>Recording Tithes</h3>
+                <ol>
+                  <li><strong>Navigate to Tithes:</strong> Click "Tithes" in the sidebar</li>
+                  <li><strong>Add New Tithe:</strong> Click "Add New Tithe" button</li>
+                  <li><strong>Select Member:</strong> Choose the member from the dropdown</li>
+                  <li><strong>Enter Amount:</strong> Input the tithe amount</li>
+                  <li><strong>Choose Payment Method:</strong> Select from available options</li>
+                  <li><strong>Add Reference:</strong> Optional reference number or notes</li>
+                  <li><strong>Save Tithe:</strong> Click "Save Tithe" to record</li>
+                </ol>
+
+                <h3>Partial Payment System</h3>
+                <div class="alert alert-success">
+                  <i class="bi bi-cash-stack"></i>
+                  <strong>Advanced Feature:</strong> Members can pay tithes in partial amounts over time.
+                </div>
+                <ul>
+                  <li><strong>Multiple Payments:</strong> Record multiple payments towards a single tithe</li>
+                  <li><strong>Balance Tracking:</strong> Automatic calculation of remaining balance</li>
+                  <li><strong>Payment History:</strong> Complete audit trail of all payments</li>
+                  <li><strong>Status Updates:</strong> Automatic status changes when fully paid</li>
+                </ul>
+              </div>
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-cash-coin"></i> Payment Methods</h5>
+                    <ul class="list-unstyled">
+                      <li class="mb-2"><i class="bi bi-cash text-success"></i> Cash</li>
+                      <li class="mb-2"><i class="bi bi-bank text-primary"></i> Check</li>
+                      <li class="mb-2"><i class="bi bi-arrow-left-right text-info"></i> Bank Transfer</li>
+                      <li class="mb-2"><i class="bi bi-phone text-warning"></i> Mobile Money</li>
+                      <li class="mb-2"><i class="bi bi-three-dots text-secondary"></i> Other</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Donation Management</h2>
+            <p>Track various types of donations and offerings:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h4>Types of Donations</h4>
+                <ul>
+                  <li><strong>General Offerings:</strong> Regular Sunday offerings</li>
+                  <li><strong>Special Offerings:</strong> Designated for specific purposes</li>
+                  <li><strong>Building Fund:</strong> Contributions for construction projects</li>
+                  <li><strong>Missions:</strong> Support for missionary work</li>
+                  <li><strong>Benevolence:</strong> Help for members in need</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h4>Recording Donations</h4>
+                <ol>
+                  <li>Go to "Donations" section</li>
+                  <li>Click "Add New Donation"</li>
+                  <li>Select donation type</li>
+                  <li>Enter amount and details</li>
+                  <li>Choose payment method</li>
+                  <li>Save donation record</li>
+                </ol>
+              </div>
+            </div>
+
+            <h2>Expense Management</h2>
+            <p>Track church expenses and maintain financial accountability:</p>
+
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Expense Category</th>
+                    <th>Description</th>
+                    <th>Examples</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Utilities</strong></td>
+                    <td>Basic facility costs</td>
+                    <td>Electricity, water, internet</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Maintenance</strong></td>
+                    <td>Building and equipment upkeep</td>
+                    <td>Repairs, cleaning supplies</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Ministry</strong></td>
+                    <td>Program and activity costs</td>
+                    <td>Bible study materials, events</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Staff</strong></td>
+                    <td>Personnel-related expenses</td>
+                    <td>Salaries, benefits, training</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Outreach</strong></td>
+                    <td>Community and mission work</td>
+                    <td>Charity, evangelism materials</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2>Financial Reports</h2>
+            <p>Generate comprehensive financial reports and analytics:</p>
+
+            <div class="row">
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-graph-up text-success" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Income Reports</h6>
+                    <p class="card-text small">Tithes, donations, and other income</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-graph-down text-danger" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Expense Reports</h6>
+                    <p class="card-text small">Detailed expense breakdown</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-pie-chart text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Budget Analysis</h6>
+                    <p class="card-text small">Compare actual vs. budgeted amounts</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-calendar-check text-warning" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Periodic Reports</h6>
+                    <p class="card-text small">Monthly, quarterly, yearly summaries</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Budget Management</h2>
+            <p>Set up and monitor church budgets:</p>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Budget Planning Process</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>Setting Up Budgets:</h6>
+                    <ol>
+                      <li>Define budget categories</li>
+                      <li>Set monthly/quarterly limits</li>
+                      <li>Assign responsible parties</li>
+                      <li>Establish approval processes</li>
+                    </ol>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Monitoring Budgets:</h6>
+                    <ul>
+                      <li>Regular budget vs. actual reports</li>
+                      <li>Alert system for overruns</li>
+                      <li>Budget adjustment procedures</li>
+                      <li>Year-end budget analysis</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Financial Security</h2>
+            <p>Maintain proper financial controls and security:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-shield-check"></i> Security Measures</h5>
+                    <ul>
+                      <li>User access controls</li>
+                      <li>Audit trail logging</li>
+                      <li>Data encryption</li>
+                      <li>Regular backups</li>
+                      <li>Multi-factor authentication</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-clipboard-data"></i> Compliance</h5>
+                    <ul>
+                      <li>Financial record keeping</li>
+                      <li>Tax reporting requirements</li>
+                      <li>Donor acknowledgment</li>
+                      <li>Audit preparation</li>
+                      <li>Regulatory compliance</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Best Practices</h2>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-check-circle"></i> Financial Best Practices</h5>
+                    <ul>
+                      <li>Record all transactions promptly</li>
+                      <li>Use proper categorization</li>
+                      <li>Maintain backup documentation</li>
+                      <li>Review reports regularly</li>
+                      <li>Implement approval workflows</li>
+                      <li>Conduct periodic audits</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Common Mistakes</h5>
+                    <ul>
+                      <li>Delaying transaction recording</li>
+                      <li>Incorrect categorization</li>
+                      <li>Missing documentation</li>
+                      <li>Ignoring budget limits</li>
+                      <li>Poor access controls</li>
+                      <li>Inadequate backup procedures</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Reporting Schedule</h2>
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Report Type</th>
+                    <th>Frequency</th>
+                    <th>Purpose</th>
+                    <th>Recipients</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Daily Summary</strong></td>
+                    <td>Daily</td>
+                    <td>Track daily income and expenses</td>
+                    <td>Finance team</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Weekly Report</strong></td>
+                    <td>Weekly</td>
+                    <td>Monitor weekly financial trends</td>
+                    <td>Pastors, finance committee</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Monthly Statement</strong></td>
+                    <td>Monthly</td>
+                    <td>Comprehensive monthly overview</td>
+                    <td>Church board, members</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Quarterly Analysis</strong></td>
+                    <td>Quarterly</td>
+                    <td>Budget performance review</td>
+                    <td>Leadership team</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Annual Report</strong></td>
+                    <td>Annually</td>
+                    <td>Complete financial year summary</td>
+                    <td>All stakeholders</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Important:</strong> Always maintain accurate financial records and ensure proper authorization for all financial transactions.
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="../js/includes.js"></script>
+  </body>
+</html> 
