@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\IncomeController;
 use App\Http\Controllers\Api\V1\IncomeCategoryController;
 use App\Http\Controllers\Api\V1\TitheController;
 use App\Http\Controllers\Api\V1\ImportController;
+use App\Http\Controllers\Api\V1\BackupController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -337,6 +338,18 @@ Route::prefix($apiVersion)->group(function () {
         Route::get('/sample/{type}', [ImportController::class, 'downloadSample'])->name('api.v1.import.sample');
         Route::post('/{type}', [ImportController::class, 'processImport'])->name('api.v1.import.process');
         Route::get('/audit-logs', [ImportController::class, 'getAuditLogs']);
+    });
+
+    // Backup management routes
+    Route::prefix('backups')->group(function () {
+        Route::get('/', [BackupController::class, 'index']);
+        Route::post('/', [BackupController::class, 'store']);
+        Route::get('/stats', [BackupController::class, 'stats']);
+        Route::post('/process', [BackupController::class, 'process']);
+        Route::get('/{backup}', [BackupController::class, 'show']);
+        Route::get('/{backup}/download', [BackupController::class, 'download']);
+        Route::post('/{backup}/restore', [BackupController::class, 'restore']);
+        Route::delete('/{backup}', [BackupController::class, 'destroy']);
     });
 
     // Route::prefix('donations')->group(function () {
