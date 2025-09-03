@@ -2,16 +2,21 @@
 import React from 'react'
 import { ReactNode } from 'react';
 import { ProtectedRoute } from '@/components/auth/AuthGuard';
+import { DashboardLayout } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default function Layout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   
   console.log('DashboardLayout Debug:', { isAuthenticated, isLoading });
   
   return ( 
     <ProtectedRoute>
-      {children}
+      <DashboardLayout>
+        <div className="space-y-6">
+          {children}
+        </div>
+      </DashboardLayout>
     </ProtectedRoute>
   )
 } 
