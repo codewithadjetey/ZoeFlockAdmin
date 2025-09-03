@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
+/**
+ * @OA\Tag(
+ *     name="Import",
+ *     description="API Endpoints for data import functionality"
+ * )
+ */
 class ImportController extends Controller
 {
     protected $importService;
@@ -21,6 +27,78 @@ class ImportController extends Controller
 
     /**
      * Get import options and sample files
+     * 
+     * @OA\Get(
+     *     path="/api/v1/import",
+     *     summary="Get import options and sample files",
+     *     tags={"Import"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Import options retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Import system available"),
+     *             @OA\Property(property="available_imports", type="object",
+     *                 @OA\Property(property="families", type="object",
+     *                     @OA\Property(property="name", type="string", example="Import Families"),
+     *                     @OA\Property(property="description", type="string", example="Import family data with family heads"),
+     *                     @OA\Property(property="sample_file", type="string", example="http://example.com/api/v1/import/sample/families"),
+     *                     @OA\Property(property="endpoint", type="string", example="http://example.com/api/v1/import/process/families"),
+     *                     @OA\Property(property="type", type="string", example="families")
+     *                 ),
+     *                 @OA\Property(property="groups", type="object",
+     *                     @OA\Property(property="name", type="string", example="Import Groups"),
+     *                     @OA\Property(property="description", type="string", example="Import group data with leaders"),
+     *                     @OA\Property(property="sample_file", type="string", example="http://example.com/api/v1/import/sample/groups"),
+     *                     @OA\Property(property="endpoint", type="string", example="http://example.com/api/v1/import/process/groups"),
+     *                     @OA\Property(property="type", type="string", example="groups")
+     *                 ),
+     *                 @OA\Property(property="members", type="object",
+     *                     @OA\Property(property="name", type="string", example="Import Members"),
+     *                     @OA\Property(property="description", type="string", example="Import member data with family assignments"),
+     *                     @OA\Property(property="sample_file", type="string", example="http://example.com/api/v1/import/sample/members"),
+     *                     @OA\Property(property="endpoint", type="string", example="http://example.com/api/v1/import/process/members"),
+     *                     @OA\Property(property="type", type="string", example="members")
+     *                 ),
+     *                 @OA\Property(property="event_categories", type="object",
+     *                     @OA\Property(property="name", type="string", example="Import Event Categories"),
+     *                     @OA\Property(property="description", type="string", example="Import event category data. Required fields: name, description, color, attendance_type, recurrence_pattern, weekdays"),
+     *                     @OA\Property(property="sample_file", type="string", example="http://example.com/api/v1/import/sample/event_categories"),
+     *                     @OA\Property(property="endpoint", type="string", example="http://example.com/api/v1/import/process/event_categories"),
+     *                     @OA\Property(property="type", type="string", example="event_categories")
+     *                 ),
+     *                 @OA\Property(property="partnership_categories", type="object",
+     *                     @OA\Property(property="name", type="string", example="Import Partnership Categories"),
+     *                     @OA\Property(property="description", type="string", example="Import partnership category data. Required fields: name, description"),
+     *                     @OA\Property(property="sample_file", type="string", example="http://example.com/api/v1/import/sample/partnership_categories"),
+     *                     @OA\Property(property="endpoint", type="string", example="http://example.com/api/v1/import/process/partnership_categories"),
+     *                     @OA\Property(property="type", type="string", example="partnership_categories")
+     *                 ),
+     *                 @OA\Property(property="income_categories", type="object",
+     *                     @OA\Property(property="name", type="string", example="Import Income Categories"),
+     *                     @OA\Property(property="description", type="string", example="Import income category data"),
+     *                     @OA\Property(property="sample_file", type="string", example="http://example.com/api/v1/import/sample/income_categories"),
+     *                     @OA\Property(property="endpoint", type="string", example="http://example.com/api/v1/import/process/income_categories"),
+     *                     @OA\Property(property="type", type="string", example="income_categories")
+     *                 ),
+     *                 @OA\Property(property="expense_categories", type="object",
+     *                     @OA\Property(property="name", type="string", example="Import Expense Categories"),
+     *                     @OA\Property(property="description", type="string", example="Import expense category data"),
+     *                     @OA\Property(property="sample_file", type="string", example="http://example.com/api/v1/import/sample/expense_categories"),
+     *                     @OA\Property(property="endpoint", type="string", example="http://example.com/api/v1/import/process/expense_categories"),
+     *                     @OA\Property(property="type", type="string", example="expense_categories")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function index()
     {
@@ -82,6 +160,43 @@ class ImportController extends Controller
 
     /**
      * Download sample file for specific import type
+     * 
+     * @OA\Get(
+     *     path="/api/v1/import/sample/{type}",
+     *     summary="Download sample file for specific import type",
+     *     tags={"Import"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="path",
+     *         description="Import type",
+     *         required=true,
+     *         @OA\Schema(type="string", enum={"families", "groups", "members", "event_categories", "partnership_categories", "income_categories", "expense_categories"})
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Sample file downloaded successfully",
+     *         @OA\MediaType(
+     *             mediaType="text/csv",
+     *             @OA\Schema(type="string", format="binary")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid import type",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Invalid import type"),
+     *             @OA\Property(property="available_types", type="array", @OA\Items(type="string"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function downloadSample(string $type)
     {
@@ -119,6 +234,77 @@ class ImportController extends Controller
 
     /**
      * Process import file
+     * 
+     * @OA\Post(
+     *     path="/api/v1/import/process/{type}",
+     *     summary="Process import file",
+     *     tags={"Import"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="type",
+     *         in="path",
+     *         description="Import type",
+     *         required=true,
+     *         @OA\Schema(type="string", enum={"families", "groups", "members", "event_categories", "partnership_categories", "income_categories", "expense_categories"})
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="file",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Import file (CSV, XLSX, XLS)"
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Import completed successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Import completed"),
+     *             @OA\Property(property="result", type="object",
+     *                 @OA\Property(property="total_rows", type="integer", example=100),
+     *                 @OA\Property(property="success_count", type="integer", example=95),
+     *                 @OA\Property(property="skipped_count", type="integer", example=3),
+     *                 @OA\Property(property="error_count", type="integer", example=2),
+     *                 @OA\Property(property="errors", type="array", @OA\Items(type="string"))
+     *             ),
+     *             @OA\Property(property="summary", type="object",
+     *                 @OA\Property(property="total_rows", type="integer", example=100),
+     *                 @OA\Property(property="successful", type="integer", example=95),
+     *                 @OA\Property(property="skipped", type="integer", example=3),
+     *                 @OA\Property(property="errors", type="integer", example=2)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Import failed"),
+     *             @OA\Property(property="error", type="string", example="Error message")
+     *         )
+     *     )
+     * )
      */
     public function processImport(Request $request, string $type)
     {
@@ -190,6 +376,78 @@ class ImportController extends Controller
 
     /**
      * Get audit logs for imports
+     * 
+     * @OA\Get(
+     *     path="/api/v1/import/audit-logs",
+     *     summary="Get audit logs for imports",
+     *     tags={"Import"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="Start date for filtering logs (Y-m-d)",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="End date for filtering logs (Y-m-d)",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="model_type",
+     *         in="query",
+     *         description="Filter by model type",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter by status",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of logs per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=15)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Audit logs retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Audit logs retrieved successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array", @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="user_id", type="integer", example=1),
+     *                     @OA\Property(property="action", type="string", example="import"),
+     *                     @OA\Property(property="model_type", type="string", example="App\\Models\\Member"),
+     *                     @OA\Property(property="model_id", type="integer", example=123),
+     *                     @OA\Property(property="old_values", type="object"),
+     *                     @OA\Property(property="new_values", type="object"),
+     *                     @OA\Property(property="status", type="string", example="success"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                     @OA\Property(property="user", type="object")
+     *                 )),
+     *                 @OA\Property(property="meta", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function getAuditLogs(Request $request)
     {

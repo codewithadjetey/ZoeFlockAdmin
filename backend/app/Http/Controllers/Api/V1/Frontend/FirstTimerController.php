@@ -10,9 +10,59 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
+/**
+ * @OA\Tag(
+ *     name="Frontend First Timers",
+ *     description="Public API Endpoints for first timer registration (no authentication required)"
+ * )
+ */
 class FirstTimerController extends Controller
 {
-    //get today's event based on category id and today's date
+    /**
+     * Get today's event based on category id and today's date
+     * 
+     * @OA\Get(
+     *     path="/api/v1/frontend/event-category/{categoryId}/today",
+     *     summary="Get today's event for a specific category",
+     *     tags={"Frontend First Timers"},
+     *     @OA\Parameter(
+     *         name="categoryId",
+     *         in="path",
+     *         description="Event category ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Today's event retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="category_id", type="integer", example=1),
+     *                 @OA\Property(property="title", type="string", example="Sunday Service"),
+     *                 @OA\Property(property="description", type="string", example="Weekly Sunday worship service"),
+     *                 @OA\Property(property="start_date", type="string", format="date-time"),
+     *                 @OA\Property(property="end_date", type="string", format="date-time"),
+     *                 @OA\Property(property="start_time", type="string", example="10:00:00"),
+     *                 @OA\Property(property="end_time", type="string", example="12:00:00"),
+     *                 @OA\Property(property="location", type="string", example="Main Auditorium"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event category or event not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event category not found.")
+     *         )
+     *     )
+     * )
+     */
     public function getTodayEvent($categoryId)
     {
         $eventCategory = EventCategory::find($categoryId);
@@ -35,7 +85,91 @@ class FirstTimerController extends Controller
         ]);
     }
 
-
+    /**
+     * Create first timer guest registration
+     * 
+     * @OA\Post(
+     *     path="/api/v1/frontend/first-timer",
+     *     summary="Register a first timer guest",
+     *     tags={"Frontend First Timers"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name", "primary_mobile_number", "event_id"},
+     *             @OA\Property(property="name", type="string", example="John Doe", description="Full name of the first timer"),
+     *             @OA\Property(property="location", type="string", example="New York", description="Location/address"),
+     *             @OA\Property(property="primary_mobile_number", type="string", example="+1234567890", description="Primary mobile number"),
+     *             @OA\Property(property="secondary_mobile_number", type="string", example="+1234567891", description="Secondary mobile number"),
+     *             @OA\Property(property="how_was_service", type="string", example="Amazing experience", description="Feedback about the service"),
+     *             @OA\Property(property="is_first_time", type="boolean", example=true, description="Whether this is their first time"),
+     *             @OA\Property(property="has_permanent_place_of_worship", type="boolean", example=false, description="Whether they have a permanent place of worship"),
+     *             @OA\Property(property="invited_by", type="string", example="Jane Smith", description="Name of person who invited them"),
+     *             @OA\Property(property="invited_by_member_id", type="integer", example=1, description="ID of member who invited them"),
+     *             @OA\Property(property="would_like_to_stay", type="boolean", example=true, description="Whether they would like to stay"),
+     *             @OA\Property(property="device_fingerprint", type="string", example="abc123", description="Device fingerprint for rate limiting"),
+     *             @OA\Property(property="self_registered", type="boolean", example=true, description="Whether they self-registered"),
+     *             @OA\Property(property="event_id", type="integer", example=1, description="Event ID they are registering for")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="First timer registered successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="First timer registered"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="John Doe"),
+     *                 @OA\Property(property="location", type="string", example="New York"),
+     *                 @OA\Property(property="primary_mobile_number", type="string", example="+1234567890"),
+     *                 @OA\Property(property="secondary_mobile_number", type="string", example="+1234567891"),
+     *                 @OA\Property(property="how_was_service", type="string", example="Amazing experience"),
+     *                 @OA\Property(property="is_first_time", type="boolean", example=true),
+     *                 @OA\Property(property="has_permanent_place_of_worship", type="boolean", example=false),
+     *                 @OA\Property(property="invited_by", type="string", example="Jane Smith"),
+     *                 @OA\Property(property="invited_by_member_id", type="integer", example=1),
+     *                 @OA\Property(property="would_like_to_stay", type="boolean", example=true),
+     *                 @OA\Property(property="device_fingerprint", type="string", example="abc123"),
+     *                 @OA\Property(property="self_registered", type="boolean", example=true),
+     *                 @OA\Property(property="event_id", type="integer", example=1),
+     *                 @OA\Property(property="visit_count", type="integer", example=1),
+     *                 @OA\Property(property="status", type="string", example="first_timer"),
+     *                 @OA\Property(property="last_submission_date", type="string", format="date"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Visit updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Visit updated"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Self-registration not allowed",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Self-registration is only allowed on event days.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=429,
+     *         description="Rate limit exceeded or already registered",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="You have reached the maximum number of submissions for today.")
+     *         )
+     *     )
+     * )
+     */
     public function createFirstTimerGuest(Request $request)
     {
         $validator = Validator::make($request->all(), [

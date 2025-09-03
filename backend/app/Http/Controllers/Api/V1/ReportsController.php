@@ -12,10 +12,88 @@ use App\Models\ExpenseCategory;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+/**
+ * @OA\Tag(
+ *     name="Reports",
+ *     description="API Endpoints for financial reports and analytics"
+ * )
+ */
 class ReportsController extends Controller
 {
     /**
      * Get income report data
+     * 
+     * @OA\Get(
+     *     path="/api/v1/reports/income",
+     *     summary="Get income report data",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="Start date for report (Y-m-d)",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="End date for report (Y-m-d)",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="query",
+     *         description="Filter by income category",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="period",
+     *         in="query",
+     *         description="Report period",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"daily", "weekly", "monthly", "quarterly", "yearly"})
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Income report retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="totalIncome", type="number", format="float", example=50000.00),
+     *             @OA\Property(property="totalTransactions", type="integer", example=150),
+     *             @OA\Property(property="averageAmount", type="number", format="float", example=333.33),
+     *             @OA\Property(property="growthRate", type="string", example="+15.5%"),
+     *             @OA\Property(property="categoryBreakdown", type="array", @OA\Items(
+     *                 @OA\Property(property="category", type="string", example="Sunday Offering"),
+     *                 @OA\Property(property="amount", type="number", format="float", example=25000.00),
+     *                 @OA\Property(property="count", type="integer", example=75),
+     *                 @OA\Property(property="avgAmount", type="number", format="float", example=333.33),
+     *                 @OA\Property(property="trend", type="string", example="+12.3%")
+     *             )),
+     *             @OA\Property(property="monthlyTrends", type="array", @OA\Items(
+     *                 @OA\Property(property="month", type="string", example="Jan"),
+     *                 @OA\Property(property="total", type="number", format="float", example=8000.00),
+     *                 @OA\Property(property="sunday_offering", type="number", format="float", example=4000.00)
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The end date must be a date after start date"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
      */
     public function getIncomeReport(Request $request): JsonResponse
     {
@@ -91,6 +169,80 @@ class ReportsController extends Controller
 
     /**
      * Get expense report data
+     * 
+     * @OA\Get(
+     *     path="/api/v1/reports/expenses",
+     *     summary="Get expense report data",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="Start date for report (Y-m-d)",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="End date for report (Y-m-d)",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="query",
+     *         description="Filter by expense category",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="period",
+     *         in="query",
+     *         description="Report period",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"daily", "weekly", "monthly", "quarterly", "yearly"})
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Expense report retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="totalExpenses", type="number", format="float", example=30000.00),
+     *             @OA\Property(property="totalBudget", type="number", format="float", example=30000.00),
+     *             @OA\Property(property="variance", type="number", format="float", example=0.00),
+     *             @OA\Property(property="averagePerMonth", type="number", format="float", example=3000.00),
+     *             @OA\Property(property="categoryBreakdown", type="array", @OA\Items(
+     *                 @OA\Property(property="category", type="string", example="Utilities"),
+     *                 @OA\Property(property="amount", type="number", format="float", example=8000.00),
+     *                 @OA\Property(property="budget", type="number", format="float", example=8000.00),
+     *                 @OA\Property(property="count", type="integer", example=12),
+     *                 @OA\Property(property="avgAmount", type="number", format="float", example=666.67),
+     *                 @OA\Property(property="trend", type="string", example="+5.2%"),
+     *                 @OA\Property(property="status", type="string", example="on_budget")
+     *             )),
+     *             @OA\Property(property="monthlyTrends", type="array", @OA\Items(
+     *                 @OA\Property(property="month", type="string", example="Jan"),
+     *                 @OA\Property(property="total", type="number", format="float", example=2500.00),
+     *                 @OA\Property(property="utilities", type="number", format="float", example=800.00)
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The end date must be a date after start date"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
      */
     public function getExpenseReport(Request $request): JsonResponse
     {
@@ -172,6 +324,73 @@ class ReportsController extends Controller
 
     /**
      * Get income vs expenses comparison report
+     * 
+     * @OA\Get(
+     *     path="/api/v1/reports/comparison",
+     *     summary="Get income vs expenses comparison report",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="start_date",
+     *         in="query",
+     *         description="Start date for report (Y-m-d)",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="end_date",
+     *         in="query",
+     *         description="End date for report (Y-m-d)",
+     *         required=true,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="period",
+     *         in="query",
+     *         description="Report period",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"daily", "weekly", "monthly", "quarterly", "yearly"})
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Comparison report retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="totalIncome", type="number", format="float", example=50000.00),
+     *             @OA\Property(property="totalExpenses", type="number", format="float", example=30000.00),
+     *             @OA\Property(property="netProfit", type="number", format="float", example=20000.00),
+     *             @OA\Property(property="profitMargin", type="number", format="float", example=40.00),
+     *             @OA\Property(property="monthlyComparison", type="array", @OA\Items(
+     *                 @OA\Property(property="month", type="string", example="Jan"),
+     *                 @OA\Property(property="income", type="number", format="float", example=8000.00),
+     *                 @OA\Property(property="expenses", type="number", format="float", example=5000.00),
+     *                 @OA\Property(property="profit", type="number", format="float", example=3000.00),
+     *                 @OA\Property(property="profitMargin", type="number", format="float", example=37.50)
+     *             )),
+     *             @OA\Property(property="categoryComparison", type="array", @OA\Items(
+     *                 @OA\Property(property="category", type="string", example="Sunday Offering"),
+     *                 @OA\Property(property="income", type="number", format="float", example=25000.00),
+     *                 @OA\Property(property="expenses", type="number", format="float", example=0.00),
+     *                 @OA\Property(property="net", type="number", format="float", example=25000.00),
+     *                 @OA\Property(property="percentage", type="number", format="float", example=50.00)
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The end date must be a date after start date"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
      */
     public function getComparisonReport(Request $request): JsonResponse
     {
@@ -216,6 +435,56 @@ class ReportsController extends Controller
 
     /**
      * Export report
+     * 
+     * @OA\Post(
+     *     path="/api/v1/reports/export",
+     *     summary="Export financial report",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"reportType", "startDate", "endDate", "format"},
+     *             @OA\Property(property="reportType", type="string", enum={"comprehensive", "income", "expenses", "comparison", "budget", "custom"}, example="comprehensive", description="Type of report to export"),
+     *             @OA\Property(property="startDate", type="string", format="date", example="2024-01-01", description="Start date for report"),
+     *             @OA\Property(property="endDate", type="string", format="date", example="2024-12-31", description="End date for report"),
+     *             @OA\Property(property="format", type="string", enum={"excel", "pdf", "csv", "json"}, example="excel", description="Export format"),
+     *             @OA\Property(property="includeCharts", type="boolean", example=true, description="Include charts in export"),
+     *             @OA\Property(property="includeTables", type="boolean", example=true, description="Include tables in export")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Report exported successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="downloadUrl", type="string", example="/storage/exports/financial_report_2024.xlsx"),
+     *             @OA\Property(property="filename", type="string", example="financial_report_2024.xlsx"),
+     *             @OA\Property(property="message", type="string", example="Report exported successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The end date must be a date after start date"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Failed to export report")
+     *         )
+     *     )
+     * )
      */
     public function exportReport(Request $request): JsonResponse
     {
@@ -405,6 +674,42 @@ class ReportsController extends Controller
 
     /**
      * Download exported report
+     * 
+     * @OA\Get(
+     *     path="/api/v1/reports/download/{id}",
+     *     summary="Download exported report",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Export ID",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Download started",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Download started"),
+     *             @OA\Property(property="fileId", type="string", example="export_123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Export not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Export not found")
+     *         )
+     *     )
+     * )
      */
     public function downloadReport($id): JsonResponse
     {
@@ -416,6 +721,42 @@ class ReportsController extends Controller
 
     /**
      * Delete exported report
+     * 
+     * @OA\Delete(
+     *     path="/api/v1/reports/exports/{id}",
+     *     summary="Delete exported report",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         description="Export ID",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Export deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Export deleted successfully"),
+     *             @OA\Property(property="fileId", type="string", example="export_123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Export not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Export not found")
+     *         )
+     *     )
+     * )
      */
     public function deleteExport($id): JsonResponse
     {
@@ -427,6 +768,35 @@ class ReportsController extends Controller
 
     /**
      * Get export history
+     * 
+     * @OA\Get(
+     *     path="/api/v1/reports/exports",
+     *     summary="Get export history",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Export history retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="id", type="string", example="export_123"),
+     *                 @OA\Property(property="filename", type="string", example="financial_report_2024.xlsx"),
+     *                 @OA\Property(property="type", type="string", example="comprehensive"),
+     *                 @OA\Property(property="format", type="string", example="excel"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="download_url", type="string", example="/storage/exports/financial_report_2024.xlsx")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function getExportHistory(): JsonResponse
     {
@@ -438,6 +808,36 @@ class ReportsController extends Controller
 
     /**
      * Get dashboard summary
+     * 
+     * @OA\Get(
+     *     path="/api/v1/reports/dashboard-summary",
+     *     summary="Get dashboard summary",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Dashboard summary retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="totalIncome", type="number", format="float", example=8000.00),
+     *             @OA\Property(property="totalExpenses", type="number", format="float", example=5000.00),
+     *             @OA\Property(property="netProfit", type="number", format="float", example=3000.00),
+     *             @OA\Property(property="pendingPayments", type="number", format="float", example=2000.00),
+     *             @OA\Property(property="monthlyTrends", type="array", @OA\Items(
+     *                 @OA\Property(property="month", type="string", example="Jan"),
+     *                 @OA\Property(property="income", type="number", format="float", example=8000.00),
+     *                 @OA\Property(property="expenses", type="number", format="float", example=5000.00),
+     *                 @OA\Property(property="profit", type="number", format="float", example=3000.00)
+     *             ))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function getDashboardSummary(): JsonResponse
     {
@@ -502,6 +902,31 @@ class ReportsController extends Controller
 
     /**
      * Get financial insights
+     * 
+     * @OA\Get(
+     *     path="/api/v1/reports/financial-insights",
+     *     summary="Get financial insights",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Financial insights retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="topIncomeCategory", type="string", example="Sunday Offering"),
+     *             @OA\Property(property="topExpenseCategory", type="string", example="Utilities"),
+     *             @OA\Property(property="budgetVariance", type="number", format="float", example=0.00),
+     *             @OA\Property(property="growthOpportunities", type="array", @OA\Items(type="string")),
+     *             @OA\Property(property="riskFactors", type="array", @OA\Items(type="string"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function getFinancialInsights(): JsonResponse
     {
@@ -540,6 +965,34 @@ class ReportsController extends Controller
 
     /**
      * Get recent activity
+     * 
+     * @OA\Get(
+     *     path="/api/v1/reports/recent-activity",
+     *     summary="Get recent financial activity",
+     *     tags={"Reports"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Recent activity retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="type", type="string", example="Income"),
+     *                 @OA\Property(property="amount", type="string", example="+$500.00"),
+     *                 @OA\Property(property="description", type="string", example="Sunday Offering received"),
+     *                 @OA\Property(property="time", type="string", example="2 hours ago"),
+     *                 @OA\Property(property="color", type="string", example="text-green-600")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function getRecentActivity(): JsonResponse
     {
