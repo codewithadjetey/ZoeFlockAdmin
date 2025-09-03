@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, ViewToggle, DataGrid, DataTable, Button, StatCard, SearchInput, SelectInput } from "@/components/ui";
 import FirstTimerModal, { FirstTimer } from "@/components/first-timers/FirstTimerModal";
 import { FirstTimersService } from '@/services/firstTimers';
@@ -151,7 +150,7 @@ export default function FirstTimersAdminPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="First Timers"
         description="Manage and view all first timers and visitors."
@@ -213,6 +212,6 @@ export default function FirstTimersAdminPage() {
         mode={modalMode}
         errors={errors}
       />
-    </DashboardLayout>
+    </>
   );
 }

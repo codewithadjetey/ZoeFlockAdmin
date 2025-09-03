@@ -212,7 +212,7 @@ export default function DonationsPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>>
       <PageHeader
         title="Donations"
         description="Track and manage church donations"
@@ -294,6 +294,6 @@ export default function DonationsPage() {
           data={filteredDonations}
         />
       )}
-    </DashboardLayout>
+     </>
   );
 } 

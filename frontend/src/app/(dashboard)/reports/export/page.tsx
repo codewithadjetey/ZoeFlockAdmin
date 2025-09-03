@@ -146,7 +146,7 @@ export default function ExportReportPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>>
       <PageHeader
         title="Export Report"
         description="Generate and export financial data in various formats"
@@ -393,6 +393,6 @@ export default function ExportReportPage() {
             </div>
           </div>
         </div>
-    </DashboardLayout>
+     </>
   );
 } 

@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState({
@@ -37,7 +36,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       {/* Page Header */}
       <section className="mb-8">
         <div className="bg-white rounded-2xl shadow-lg p-8">
@@ -203,6 +202,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 } 

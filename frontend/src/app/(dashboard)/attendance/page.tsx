@@ -904,16 +904,16 @@ export default function AttendancePage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>>
         <div className="flex items-center justify-center min-h-screen">
           <LoadingSpinner size="lg" />
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="space-y-6">
         <PageHeader
           title="Attendance Management"
@@ -1521,6 +1521,6 @@ export default function AttendancePage() {
         )}
 
       </div>
-    </DashboardLayout>
+     </>
   );
 } 

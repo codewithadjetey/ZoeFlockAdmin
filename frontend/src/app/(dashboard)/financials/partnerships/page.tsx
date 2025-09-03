@@ -120,7 +120,7 @@ export default function PartnershipsPage() {
   ];
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col gap-6">
         {/* Statistics Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -223,6 +223,6 @@ export default function PartnershipsPage() {
           mode={modalMode}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 }

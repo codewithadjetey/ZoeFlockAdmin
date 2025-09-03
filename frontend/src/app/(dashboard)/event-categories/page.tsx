@@ -1052,7 +1052,7 @@ export default function EventCategoriesPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Event Categories"
         description="Manage event categories and their recurrence settings. Create categories to organize your events."
@@ -1283,6 +1283,6 @@ export default function EventCategoriesPage() {
           </div>
         )}
       </Modal>
-    </DashboardLayout>
+    </>
   );
 } 

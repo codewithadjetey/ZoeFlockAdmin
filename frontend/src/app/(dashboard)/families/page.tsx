@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import FamilyModal from "@/components/families/FamilyModal";
 import { FamilyMembersModal } from "@/components/families/FamilyMembersModal";
 import FamilyFilters from "@/components/families/FamilyFilters";
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui";
 import { getImageUrl } from "@/utils/helpers";
 import type { Column, Filter, SortConfig } from "@/components/ui/DataTable";
+import { DashboardLayout } from "@/components/layout";
 
 export default function FamiliesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -348,7 +348,7 @@ export default function FamiliesPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-6">
         <PageHeader
           title="Families"
@@ -497,6 +497,7 @@ export default function FamiliesPage() {
         onClose={() => setIsMemberModalOpen(false)}
         family={selectedFamilyForMembers}
       />
-    </DashboardLayout>
+
+      </>
   );
 } 

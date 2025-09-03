@@ -142,7 +142,7 @@ export default function IncomeVsExpensesReportsPage() {
 
   if (!reportData) {
     return (
-      <DashboardLayout>
+      <>>
         <PageHeader
           title="Income vs Expenses Reports"
           description="Comprehensive financial comparison and analysis"
@@ -153,12 +153,12 @@ export default function IncomeVsExpensesReportsPage() {
             <p className="text-gray-600 dark:text-gray-400">Loading report data...</p>
           </div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>>
       <PageHeader
         title="Income vs Expenses Reports"
         description="Comprehensive financial comparison and analysis"
@@ -463,6 +463,6 @@ export default function IncomeVsExpensesReportsPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+     </>
   );
 } 

@@ -262,7 +262,7 @@ export default function ExpensesPage() {
   );
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-6">
         <PageHeader
           title="Expenses Management"
@@ -392,6 +392,6 @@ export default function ExpensesPage() {
           </Modal>
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 }

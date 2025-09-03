@@ -240,7 +240,7 @@ export default function IncomePage() {
   );
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="space-y-6">
         <PageHeader
           title="Income Management"
@@ -361,6 +361,6 @@ export default function IncomePage() {
           </Modal>
         )}
       </div>
-    </DashboardLayout>
+     </>
   );
 }

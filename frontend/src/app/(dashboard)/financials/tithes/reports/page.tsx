@@ -144,20 +144,20 @@ export default function TitheReportsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-2 text-gray-600">Loading tithe analytics...</p>
           </div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout>
+      <>>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <i className="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
@@ -168,12 +168,12 @@ export default function TitheReportsPage() {
             </Button>
           </div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -512,6 +512,6 @@ export default function TitheReportsPage() {
           </div>
         )}
       </div>
-    </DashboardLayout>
+     </>
   );
 } 

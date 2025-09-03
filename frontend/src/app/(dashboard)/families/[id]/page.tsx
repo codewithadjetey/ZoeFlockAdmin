@@ -62,26 +62,26 @@ export default function FamilyDetailPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>>
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Loading family...</div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   if (!family) {
     return (
-      <DashboardLayout>
+      <>>
         <div className="flex items-center justify-center h-64">
           <div className="text-lg text-red-600">Family not found</div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="space-y-6">
         <PageHeader
           title={family.name}
@@ -239,6 +239,6 @@ export default function FamilyDetailPage() {
         onClose={() => setIsMemberModalOpen(false)}
         family={family}
       />
-    </DashboardLayout>
+     </>
   );
 } 

@@ -225,17 +225,17 @@ export default function EventCategoryDetailPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <>>
         <div className="flex justify-center items-center h-64">
           <LoadingSpinner size="lg" />
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   if (!category) {
     return (
-      <DashboardLayout>
+      <>>
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Category Not Found
@@ -247,12 +247,12 @@ export default function EventCategoryDetailPage() {
             Back to Categories
           </Button>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="space-y-6">
         <PageHeader
           title={category.name}
@@ -436,6 +436,6 @@ export default function EventCategoryDetailPage() {
           />
         </ContentCard>
       </div>
-    </DashboardLayout>
+     </>
   );
 } 

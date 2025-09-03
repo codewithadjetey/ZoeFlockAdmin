@@ -214,7 +214,7 @@ export default function IndividualAttendanceStatisticsPage() {
   const averageAttendance = totalRecords > 0 ? Math.round(totalPresent / totalRecords) : 0;
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="space-y-6">
         <PageHeader
           title="Individual Attendance Statistics"
@@ -364,6 +364,6 @@ export default function IndividualAttendanceStatisticsPage() {
           </div>
         </Card>
       </div>
-    </DashboardLayout>
+     </>
   );
 } 

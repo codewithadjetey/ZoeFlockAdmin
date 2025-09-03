@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { DashboardLayout } from "@/components/layout";
+
 import { Button, DataTable, SearchInput, Alert } from "@/components/ui";
 import UserModal from "@/components/admin/UserModal";
 import { api } from "@/utils/api";
@@ -284,7 +284,7 @@ const UsersPage = () => {
           />
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 

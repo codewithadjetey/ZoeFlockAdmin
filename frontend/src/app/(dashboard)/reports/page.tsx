@@ -116,7 +116,7 @@ export default function ReportsPage() {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
+      <>>
         <PageHeader
           title="Financial Reports Dashboard"
           description="Comprehensive financial analysis and reporting tools"
@@ -127,13 +127,13 @@ export default function ReportsPage() {
             <p className="text-gray-600 dark:text-gray-400">Loading financial data...</p>
           </div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout>
+      <>>
         <PageHeader
           title="Financial Reports Dashboard"
           description="Comprehensive financial analysis and reporting tools"
@@ -159,12 +159,12 @@ export default function ReportsPage() {
             </Button>
           </div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>>
       <PageHeader
         title="Financial Reports Dashboard"
         description="Comprehensive financial analysis and reporting tools"
@@ -326,6 +326,6 @@ export default function ReportsPage() {
           </div>
         </div>
       )}
-    </DashboardLayout>
+     </>
   );
 } 
