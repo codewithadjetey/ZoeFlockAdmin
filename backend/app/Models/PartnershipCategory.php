@@ -10,6 +10,8 @@ class PartnershipCategory extends Model
     protected $fillable = [
         'name',
         'description',
+        'amount',
+        'frequency',
     ];
 
     public function partnerships(): HasMany

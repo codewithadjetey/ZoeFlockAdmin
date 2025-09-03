@@ -29,6 +29,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->text('notes')->nullable();
             $table->string(column: 'profile_image_path')->nullable();
+            $table->string('member_identification_id')->nullable()->unique();
             $table->boolean(column: 'deleted')->default(0);
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');

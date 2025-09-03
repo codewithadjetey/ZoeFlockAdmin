@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('members', function (Blueprint $table) {
-            $table->string('barcode')->unique()->nullable()->after('profile_image_path');
-            $table->index('barcode');
+        Schema::table('partnership_categories', function (Blueprint $table) {
+            $table->decimal('amount', 10, 2)->nullable()->after('description');
+            $table->string('frequency')->nullable()->after('amount');
         });
     }
 
@@ -22,9 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('members', function (Blueprint $table) {
-            $table->dropIndex(['barcode']);
-            $table->dropColumn('barcode');
+        Schema::table('partnership_categories', function (Blueprint $table) {
+            $table->dropColumn(['amount', 'frequency']);
         });
     }
-}; 
+};
