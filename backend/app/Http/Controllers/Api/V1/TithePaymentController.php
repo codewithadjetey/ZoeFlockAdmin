@@ -11,10 +11,107 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @OA\Tag(
+ *     name="Tithe Payments",
+ *     description="API Endpoints for tithe payment management"
+ * )
+ */
 class TithePaymentController extends Controller
 {
     /**
      * Add a partial payment to a tithe
+     * 
+     * @OA\Post(
+     *     path="/api/v1/tithes/{tithe}/payments",
+     *     summary="Add a partial payment to a tithe",
+     *     tags={"Tithe Payments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="tithe",
+     *         in="path",
+     *         description="Tithe ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"amount", "payment_method"},
+     *             @OA\Property(property="amount", type="number", format="float", example=50.00, description="Payment amount"),
+     *             @OA\Property(property="payment_method", type="string", enum={"cash", "check", "bank_transfer", "mobile_money", "other"}, example="cash", description="Payment method"),
+     *             @OA\Property(property="reference_number", type="string", example="REF123456", description="Payment reference number"),
+     *             @OA\Property(property="notes", type="string", example="Partial payment", description="Payment notes"),
+     *             @OA\Property(property="payment_date", type="string", format="date", example="2024-01-15", description="Payment date")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Payment added successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="member_id", type="integer", example=1),
+     *                 @OA\Property(property="amount", type="number", format="float", example=100.00),
+     *                 @OA\Property(property="frequency", type="string", example="monthly"),
+     *                 @OA\Property(property="start_date", type="string", format="date-time"),
+     *                 @OA\Property(property="next_due_date", type="string", format="date-time"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="is_paid", type="boolean", example=false),
+     *                 @OA\Property(property="paid_amount", type="number", format="float", example=50.00),
+     *                 @OA\Property(property="remaining_amount", type="number", format="float", example=50.00),
+     *                 @OA\Property(property="notes", type="string", example="Monthly tithe"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                 @OA\Property(property="member", type="object"),
+     *                 @OA\Property(property="creator", type="object"),
+     *                 @OA\Property(property="payments", type="array", @OA\Items(type="object"))
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Payment added successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad request",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="This tithe is already fully paid")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Unauthorized to access this tithe")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Error adding payment")
+     *         )
+     *     )
+     * )
      */
     public function store(Request $request, Tithe $tithe): JsonResponse
     {
@@ -96,6 +193,63 @@ class TithePaymentController extends Controller
 
     /**
      * Get payment history for a tithe
+     * 
+     * @OA\Get(
+     *     path="/api/v1/tithes/{tithe}/payments",
+     *     summary="Get payment history for a tithe",
+     *     tags={"Tithe Payments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="tithe",
+     *         in="path",
+     *         description="Tithe ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Payment history retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="array", @OA\Items(
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="tithe_id", type="integer", example=1),
+     *                 @OA\Property(property="amount", type="number", format="float", example=50.00),
+     *                 @OA\Property(property="payment_method", type="string", example="cash"),
+     *                 @OA\Property(property="reference_number", type="string", example="REF123456"),
+     *                 @OA\Property(property="notes", type="string", example="Partial payment"),
+     *                 @OA\Property(property="payment_date", type="string", format="date-time"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                 @OA\Property(property="recorder", type="object")
+     *             )),
+     *             @OA\Property(property="message", type="string", example="Payment history retrieved successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Unauthorized to access this tithe")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Error retrieving payment history")
+     *         )
+     *     )
+     * )
      */
     public function index(Request $request, Tithe $tithe): JsonResponse
     {
@@ -131,6 +285,78 @@ class TithePaymentController extends Controller
 
     /**
      * Get a specific payment
+     * 
+     * @OA\Get(
+     *     path="/api/v1/tithes/{tithe}/payments/{payment}",
+     *     summary="Get a specific payment",
+     *     tags={"Tithe Payments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="tithe",
+     *         in="path",
+     *         description="Tithe ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="payment",
+     *         in="path",
+     *         description="Payment ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Payment retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="tithe_id", type="integer", example=1),
+     *                 @OA\Property(property="amount", type="number", format="float", example=50.00),
+     *                 @OA\Property(property="payment_method", type="string", example="cash"),
+     *                 @OA\Property(property="reference_number", type="string", example="REF123456"),
+     *                 @OA\Property(property="notes", type="string", example="Partial payment"),
+     *                 @OA\Property(property="payment_date", type="string", format="date-time"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                 @OA\Property(property="recorder", type="object")
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Payment retrieved successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Unauthorized to access this tithe")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Payment not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Payment not found for this tithe")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Error retrieving payment")
+     *         )
+     *     )
+     * )
      */
     public function show(Tithe $tithe, TithePayment $payment): JsonResponse
     {
@@ -171,6 +397,125 @@ class TithePaymentController extends Controller
 
     /**
      * Update a payment
+     * 
+     * @OA\Put(
+     *     path="/api/v1/tithes/{tithe}/payments/{payment}",
+     *     summary="Update a payment",
+     *     tags={"Tithe Payments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="tithe",
+     *         in="path",
+     *         description="Tithe ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="payment",
+     *         in="path",
+     *         description="Payment ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="amount", type="number", format="float", example=50.00, description="Payment amount"),
+     *             @OA\Property(property="payment_method", type="string", enum={"cash", "check", "bank_transfer", "mobile_money", "other"}, example="cash", description="Payment method"),
+     *             @OA\Property(property="reference_number", type="string", example="REF123456", description="Payment reference number"),
+     *             @OA\Property(property="notes", type="string", example="Updated payment", description="Payment notes"),
+     *             @OA\Property(property="payment_date", type="string", format="date", example="2024-01-15", description="Payment date")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Payment updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="payment", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="tithe_id", type="integer", example=1),
+     *                     @OA\Property(property="amount", type="number", format="float", example=50.00),
+     *                     @OA\Property(property="payment_method", type="string", example="cash"),
+     *                     @OA\Property(property="reference_number", type="string", example="REF123456"),
+     *                     @OA\Property(property="notes", type="string", example="Updated payment"),
+     *                     @OA\Property(property="payment_date", type="string", format="date-time"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                     @OA\Property(property="recorder", type="object")
+     *                 ),
+     *                 @OA\Property(property="tithe", type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="member_id", type="integer", example=1),
+     *                     @OA\Property(property="amount", type="number", format="float", example=100.00),
+     *                     @OA\Property(property="frequency", type="string", example="monthly"),
+     *                     @OA\Property(property="start_date", type="string", format="date-time"),
+     *                     @OA\Property(property="next_due_date", type="string", format="date-time"),
+     *                     @OA\Property(property="is_active", type="boolean", example=true),
+     *                     @OA\Property(property="is_paid", type="boolean", example=false),
+     *                     @OA\Property(property="paid_amount", type="number", format="float", example=50.00),
+     *                     @OA\Property(property="remaining_amount", type="number", format="float", example=50.00),
+     *                     @OA\Property(property="notes", type="string", example="Monthly tithe"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                     @OA\Property(property="member", type="object"),
+     *                     @OA\Property(property="creator", type="object"),
+     *                     @OA\Property(property="payments", type="array", @OA\Items(type="object"))
+     *                 )
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Payment updated successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Bad request",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="New payment amount would exceed remaining tithe amount")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Unauthorized to update payments")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Payment not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Payment not found for this tithe")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Error updating payment")
+     *         )
+     *     )
+     * )
      */
     public function update(Request $request, Tithe $tithe, TithePayment $payment): JsonResponse
     {
@@ -269,6 +614,84 @@ class TithePaymentController extends Controller
 
     /**
      * Delete a payment
+     * 
+     * @OA\Delete(
+     *     path="/api/v1/tithes/{tithe}/payments/{payment}",
+     *     summary="Delete a payment",
+     *     tags={"Tithe Payments"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="tithe",
+     *         in="path",
+     *         description="Tithe ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="payment",
+     *         in="path",
+     *         description="Payment ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Payment deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="member_id", type="integer", example=1),
+     *                 @OA\Property(property="amount", type="number", format="float", example=100.00),
+     *                 @OA\Property(property="frequency", type="string", example="monthly"),
+     *                 @OA\Property(property="start_date", type="string", format="date-time"),
+     *                 @OA\Property(property="next_due_date", type="string", format="date-time"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="is_paid", type="boolean", example=false),
+     *                 @OA\Property(property="paid_amount", type="number", format="float", example=0.00),
+     *                 @OA\Property(property="remaining_amount", type="number", format="float", example=100.00),
+     *                 @OA\Property(property="notes", type="string", example="Monthly tithe"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time"),
+     *                 @OA\Property(property="member", type="object"),
+     *                 @OA\Property(property="creator", type="object"),
+     *                 @OA\Property(property="payments", type="array", @OA\Items(type="object"))
+     *             ),
+     *             @OA\Property(property="message", type="string", example="Payment deleted successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Unauthorized to delete payments")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Payment not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Payment not found for this tithe")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Error deleting payment")
+     *         )
+     *     )
+     * )
      */
     public function destroy(Tithe $tithe, TithePayment $payment): JsonResponse
     {

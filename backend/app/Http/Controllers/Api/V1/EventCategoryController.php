@@ -11,10 +11,91 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 
+/**
+ * @OA\Tag(
+ *     name="Event Categories",
+ *     description="API Endpoints for event category management"
+ * )
+ */
 class EventCategoryController extends Controller
 {
     /**
      * Display a listing of event categories
+     * 
+     * @OA\Get(
+     *     path="/api/v1/event-categories",
+     *     summary="Get all event categories",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="is_active",
+     *         in="query",
+     *         description="Filter by active status",
+     *         required=false,
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Parameter(
+     *         name="is_recurring",
+     *         in="query",
+     *         description="Filter by recurring status",
+     *         required=false,
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Parameter(
+     *         name="attendance_type",
+     *         in="query",
+     *         description="Filter by attendance type",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"individual","general","none"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search by name or description",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of records per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=15)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event categories retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="data", type="array", @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="name", type="string", example="Sunday Service"),
+     *                     @OA\Property(property="description", type="string", example="Weekly worship service"),
+     *                     @OA\Property(property="color", type="string", example="#FF5733"),
+     *                     @OA\Property(property="icon", type="string", example="church"),
+     *                     @OA\Property(property="attendance_type", type="string", example="individual"),
+     *                     @OA\Property(property="is_active", type="boolean", example=true),
+     *                     @OA\Property(property="is_recurring", type="boolean", example=true),
+     *                     @OA\Property(property="recurrence_pattern", type="string", example="weekly"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time")
+     *                 )),
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="last_page", type="integer", example=1),
+     *                 @OA\Property(property="per_page", type="integer", example=15),
+     *                 @OA\Property(property="total", type="integer", example=1)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     )
+     * )
      */
     public function index(Request $request): JsonResponse
     {
@@ -58,6 +139,82 @@ class EventCategoryController extends Controller
 
     /**
      * Store a newly created event category
+     * 
+     * @OA\Post(
+     *     path="/api/v1/event-categories",
+     *     summary="Create a new event category",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name","attendance_type"},
+     *             @OA\Property(property="name", type="string", example="Sunday Service", description="Category name"),
+     *             @OA\Property(property="description", type="string", example="Weekly worship service", description="Category description"),
+     *             @OA\Property(property="color", type="string", example="#FF5733", description="Category color"),
+     *             @OA\Property(property="icon", type="string", example="church", description="Category icon"),
+     *             @OA\Property(property="attendance_type", type="string", enum={"individual","general","none"}, example="individual", description="Type of attendance tracking"),
+     *             @OA\Property(property="is_active", type="boolean", example=true, description="Is category active"),
+     *             @OA\Property(property="is_recurring", type="boolean", example=true, description="Is category recurring"),
+     *             @OA\Property(property="recurrence_pattern", type="string", enum={"daily","weekly","monthly","yearly"}, example="weekly", description="Recurrence pattern"),
+     *             @OA\Property(property="recurrence_settings", type="object", description="Recurrence settings"),
+     *             @OA\Property(property="default_start_time", type="string", example="10:00:00", description="Default start time"),
+     *             @OA\Property(property="default_duration", type="integer", example=120, description="Default duration in minutes"),
+     *             @OA\Property(property="start_date_time", type="string", example="2024-01-01 10:00:00", description="Start date time for one-time events"),
+     *             @OA\Property(property="end_date_time", type="string", example="2024-01-01 12:00:00", description="End date time for one-time events"),
+     *             @OA\Property(property="recurrence_start_date", type="string", example="2024-01-01", description="Recurrence start date"),
+     *             @OA\Property(property="recurrence_end_date", type="string", example="2024-12-31", description="Recurrence end date"),
+     *             @OA\Property(property="default_location", type="string", example="Main Hall", description="Default location"),
+     *             @OA\Property(property="default_description", type="string", example="Default event description", description="Default event description")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Event category created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Event category created successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Sunday Service"),
+     *                 @OA\Property(property="description", type="string", example="Weekly worship service"),
+     *                 @OA\Property(property="color", type="string", example="#FF5733"),
+     *                 @OA\Property(property="icon", type="string", example="church"),
+     *                 @OA\Property(property="attendance_type", type="string", example="individual"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="is_recurring", type="boolean", example=true),
+     *                 @OA\Property(property="recurrence_pattern", type="string", example="weekly"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to create event category"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
      */
     public function store(Request $request): JsonResponse
     {
@@ -126,6 +283,55 @@ class EventCategoryController extends Controller
 
     /**
      * Display the specified event category
+     * 
+     * @OA\Get(
+     *     path="/api/v1/event-categories/{category}",
+     *     summary="Get a specific event category",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="path",
+     *         description="Event category ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event category retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Sunday Service"),
+     *                 @OA\Property(property="description", type="string", example="Weekly worship service"),
+     *                 @OA\Property(property="color", type="string", example="#FF5733"),
+     *                 @OA\Property(property="icon", type="string", example="church"),
+     *                 @OA\Property(property="attendance_type", type="string", example="individual"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="is_recurring", type="boolean", example=true),
+     *                 @OA\Property(property="recurrence_pattern", type="string", example="weekly"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event category not found")
+     *         )
+     *     )
+     * )
      */
     public function show(EventCategory $category): JsonResponse
     {
@@ -139,6 +345,97 @@ class EventCategoryController extends Controller
 
     /**
      * Update the specified event category
+     * 
+     * @OA\Put(
+     *     path="/api/v1/event-categories/{category}",
+     *     summary="Update an event category",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="path",
+     *         description="Event category ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name","attendance_type"},
+     *             @OA\Property(property="name", type="string", example="Sunday Service", description="Category name"),
+     *             @OA\Property(property="description", type="string", example="Weekly worship service", description="Category description"),
+     *             @OA\Property(property="color", type="string", example="#FF5733", description="Category color"),
+     *             @OA\Property(property="icon", type="string", example="church", description="Category icon"),
+     *             @OA\Property(property="attendance_type", type="string", enum={"individual","general","none"}, example="individual", description="Type of attendance tracking"),
+     *             @OA\Property(property="is_active", type="boolean", example=true, description="Is category active"),
+     *             @OA\Property(property="is_recurring", type="boolean", example=true, description="Is category recurring"),
+     *             @OA\Property(property="recurrence_pattern", type="string", enum={"daily","weekly","monthly","yearly"}, example="weekly", description="Recurrence pattern"),
+     *             @OA\Property(property="recurrence_settings", type="object", description="Recurrence settings"),
+     *             @OA\Property(property="default_start_time", type="string", example="10:00:00", description="Default start time"),
+     *             @OA\Property(property="default_duration", type="integer", example=120, description="Default duration in minutes"),
+     *             @OA\Property(property="start_date_time", type="string", example="2024-01-01 10:00:00", description="Start date time for one-time events"),
+     *             @OA\Property(property="end_date_time", type="string", example="2024-01-01 12:00:00", description="End date time for one-time events"),
+     *             @OA\Property(property="recurrence_start_date", type="string", example="2024-01-01", description="Recurrence start date"),
+     *             @OA\Property(property="recurrence_end_date", type="string", example="2024-12-31", description="Recurrence end date"),
+     *             @OA\Property(property="default_location", type="string", example="Main Hall", description="Default location"),
+     *             @OA\Property(property="default_description", type="string", example="Default event description", description="Default event description")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event category updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Event category updated successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Sunday Service"),
+     *                 @OA\Property(property="description", type="string", example="Weekly worship service"),
+     *                 @OA\Property(property="color", type="string", example="#FF5733"),
+     *                 @OA\Property(property="icon", type="string", example="church"),
+     *                 @OA\Property(property="attendance_type", type="string", example="individual"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="is_recurring", type="boolean", example=true),
+     *                 @OA\Property(property="recurrence_pattern", type="string", example="weekly"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event category not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation failed"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to update event category"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
      */
     public function update(Request $request, EventCategory $category): JsonResponse
     {
@@ -206,6 +503,60 @@ class EventCategoryController extends Controller
 
     /**
      * Remove the specified event category
+     * 
+     * @OA\Delete(
+     *     path="/api/v1/event-categories/{category}",
+     *     summary="Delete an event category",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="path",
+     *         description="Event category ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Event category deleted successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Event category deleted successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event category not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Cannot delete category with events",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Cannot delete category with existing events. Please delete or reassign events first.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to delete event category"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
      */
     public function destroy(EventCategory $category): JsonResponse
     {
@@ -242,6 +593,80 @@ class EventCategoryController extends Controller
 
     /**
      * Get all events for a specific category
+     * 
+     * @OA\Get(
+     *     path="/api/v1/event-categories/{category}/events",
+     *     summary="Get events for a specific category",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="path",
+     *         description="Event category ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Filter by event status",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="date_from",
+     *         in="query",
+     *         description="Filter by start date from",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="date_to",
+     *         in="query",
+     *         description="Filter by start date to",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of records per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=15)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category events retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="category", type="object"),
+     *                 @OA\Property(property="events", type="object",
+     *                     @OA\Property(property="data", type="array", @OA\Items(type="object")),
+     *                     @OA\Property(property="current_page", type="integer", example=1),
+     *                     @OA\Property(property="last_page", type="integer", example=1),
+     *                     @OA\Property(property="per_page", type="integer", example=15),
+     *                     @OA\Property(property="total", type="integer", example=1)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event category not found")
+     *         )
+     *     )
+     * )
      */
     public function getCategoryEvents(Request $request, EventCategory $category): JsonResponse
     {
@@ -283,6 +708,73 @@ class EventCategoryController extends Controller
 
     /**
      * Generate events for a category based on recurrence settings
+     * 
+     * @OA\Post(
+     *     path="/api/v1/event-categories/{category}/generate-events",
+     *     summary="Generate recurring events for a category",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="path",
+     *         description="Event category ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="from_date", type="string", example="2024-01-01", description="Start date for generation"),
+     *             @OA\Property(property="count", type="integer", example=10, description="Number of events to generate"),
+     *             @OA\Property(property="auto_publish", type="boolean", example=false, description="Auto publish generated events")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Events generated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="10 events generated successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="category", type="object"),
+     *                 @OA\Property(property="generated_count", type="integer", example=10),
+     *                 @OA\Property(property="events", type="array", @OA\Items(type="object"))
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event category not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error or category not configured for recurring events",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="This category is not configured for recurring events")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to generate events"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
      */
     public function generateEvents(Request $request, EventCategory $category): JsonResponse
     {
@@ -358,6 +850,70 @@ class EventCategoryController extends Controller
 
     /**
      * Generate a single one-time event for a category
+     * 
+     * @OA\Post(
+     *     path="/api/v1/event-categories/{category}/generate-one-time-event",
+     *     summary="Generate a one-time event for a category",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="path",
+     *         description="Event category ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="auto_publish", type="boolean", example=false, description="Auto publish generated event")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="One-time event generated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="One-time event generated successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="category", type="object"),
+     *                 @OA\Property(property="event", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event category not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error or category not suitable for one-time events",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="This category is configured for recurring events. Use generateEvents instead.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to generate one-time event"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
      */
     public function generateOneTimeEvent(Request $request, EventCategory $category): JsonResponse
     {
@@ -440,6 +996,53 @@ class EventCategoryController extends Controller
 
     /**
      * Toggle category active status
+     * 
+     * @OA\Post(
+     *     path="/api/v1/event-categories/{category}/toggle-status",
+     *     summary="Toggle category active status",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="path",
+     *         description="Event category ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category status updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Category status updated successfully"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event category not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to update category status"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
      */
     public function toggleStatus(EventCategory $category): JsonResponse
     {
@@ -466,6 +1069,62 @@ class EventCategoryController extends Controller
 
     /**
      * Get category statistics
+     * 
+     * @OA\Get(
+     *     path="/api/v1/event-categories/{category}/statistics",
+     *     summary="Get category statistics",
+     *     tags={"Event Categories"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="path",
+     *         description="Event category ID",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Category statistics retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="total_events", type="integer", example=50),
+     *                 @OA\Property(property="published_events", type="integer", example=30),
+     *                 @OA\Property(property="draft_events", type="integer", example=15),
+     *                 @OA\Property(property="cancelled_events", type="integer", example=5),
+     *                 @OA\Property(property="upcoming_events", type="integer", example=10),
+     *                 @OA\Property(property="past_events", type="integer", example=40),
+     *                 @OA\Property(property="attendance_type", type="string", example="individual"),
+     *                 @OA\Property(property="is_recurring", type="boolean", example=true),
+     *                 @OA\Property(property="recurrence_pattern", type="string", example="weekly")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthenticated")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Event category not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Event category not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Failed to get category statistics"),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
      */
     public function getStatistics(EventCategory $category): JsonResponse
     {
