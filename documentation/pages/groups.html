@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Groups Management - Zoe Flock Admin Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div id="sidebar-placeholder"></div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Groups Management</h1>
+          </div>
+
+          <div class="content-area">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Groups Management</li>
+              </ol>
+            </nav>
+
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i>
+              <strong>Overview:</strong> Create and manage ministry groups, committees, and small groups within your church.
+            </div>
+
+            <h2>Understanding Groups</h2>
+            <p>Groups in Zoe Flock Admin help organize members into ministry teams, committees, and small groups:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-collection"></i> Group Types</h5>
+                    <ul>
+                      <li><strong>Ministry Teams:</strong> Worship, ushering, children's ministry</li>
+                      <li><strong>Committees:</strong> Finance, building, outreach committees</li>
+                      <li><strong>Small Groups:</strong> Bible study, prayer, fellowship groups</li>
+                      <li><strong>Age Groups:</strong> Youth, young adults, seniors</li>
+                      <li><strong>Interest Groups:</strong> Music, sports, crafts</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-people"></i> Group Benefits</h5>
+                    <ul>
+                      <li><strong>Better Organization:</strong> Structure ministry activities</li>
+                      <li><strong>Communication:</strong> Group-specific messaging</li>
+                      <li><strong>Attendance Tracking:</strong> Monitor group participation</li>
+                      <li><strong>Leadership:</strong> Assign group leaders and roles</li>
+                      <li><strong>Reporting:</strong> Generate group-specific reports</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Creating Groups</h2>
+            <p>Follow these steps to create and manage groups in your church:</p>
+
+            <div class="row">
+              <div class="col-lg-8">
+                <h3>Step-by-Step Group Creation</h3>
+                <ol>
+                  <li><strong>Navigate to Groups:</strong> Click "Groups" in the sidebar navigation</li>
+                  <li><strong>Create New Group:</strong> Click the "Add New Group" button</li>
+                  <li><strong>Enter Group Details:</strong>
+                    <ul>
+                      <li><strong>Group Name:</strong> Enter a descriptive group name</li>
+                      <li><strong>Description:</strong> Add group purpose and activities</li>
+                      <li><strong>Category:</strong> Select group type (ministry, committee, etc.)</li>
+                      <li><strong>Meeting Schedule:</strong> Set regular meeting times</li>
+                      <li><strong>Location:</strong> Specify meeting location</li>
+                    </ul>
+                  </li>
+                  <li><strong>Assign Leadership:</strong> Select group leader and co-leaders</li>
+                  <li><strong>Add Members:</strong> Select members to join the group</li>
+                  <li><strong>Set Permissions:</strong> Configure group access levels</li>
+                  <li><strong>Save Group:</strong> Click "Save Group" to create</li>
+                </ol>
+              </div>
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-lightbulb"></i> Pro Tips</h5>
+                    <ul class="list-unstyled">
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Use clear, descriptive names</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Assign capable leaders</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Set realistic meeting schedules</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Include group descriptions</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Group Leadership</h2>
+            <p>Effective group leadership is crucial for successful ministry:</p>
+
+            <div class="alert alert-success">
+              <i class="bi bi-person-check"></i>
+              <strong>Leadership Features:</strong> Group leaders can manage members, schedule meetings, and track attendance.
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>Responsibilities</th>
+                    <th>Permissions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Group Leader</strong></td>
+                    <td>Primary group coordinator and decision maker</td>
+                    <td><span class="badge bg-success">Full Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Co-Leader</strong></td>
+                    <td>Assist leader and manage group activities</td>
+                    <td><span class="badge bg-primary">High Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Secretary</strong></td>
+                    <td>Record minutes and manage communications</td>
+                    <td><span class="badge bg-info">Medium Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Member</strong></td>
+                    <td>Participate in group activities</td>
+                    <td><span class="badge bg-secondary">Basic Access</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2>Managing Group Members</h2>
+            <p>Add, remove, and manage group membership:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h4>Adding Members to Groups</h4>
+                <ol>
+                  <li>Go to the group details page</li>
+                  <li>Click "Add Member" or "Manage Members"</li>
+                  <li>Search for existing members</li>
+                  <li>Select members to add</li>
+                  <li>Assign roles (leader, co-leader, member)</li>
+                  <li>Set join date and notes</li>
+                  <li>Save member assignments</li>
+                </ol>
+              </div>
+              <div class="col-md-6">
+                <h4>Removing Group Members</h4>
+                <ol>
+                  <li>Navigate to group member management</li>
+                  <li>Find the member to remove</li>
+                  <li>Click "Remove" or "Leave Group"</li>
+                  <li>Confirm the removal action</li>
+                  <li>Update group statistics</li>
+                </ol>
+              </div>
+            </div>
+
+            <h2>Group Categories</h2>
+            <p>Organize groups by categories for better management:</p>
+
+            <div class="row">
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-music-note text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Worship Ministry</h6>
+                    <p class="card-text small">Choir, musicians, sound team</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Children's Ministry</h6>
+                    <p class="card-text small">Sunday school, youth programs</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-heart text-warning" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Outreach</h6>
+                    <p class="card-text small">Evangelism, community service</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-book text-info" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Bible Study</h6>
+                    <p class="card-text small">Small groups, discipleship</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Group Communication</h2>
+            <p>Facilitate effective communication within groups:</p>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Communication Features</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>Group Messaging:</h6>
+                    <ul>
+                      <li><strong>Group Announcements:</strong> Send messages to all group members</li>
+                      <li><strong>Meeting Reminders:</strong> Automated meeting notifications</li>
+                      <li><strong>Event Updates:</strong> Share group event information</li>
+                      <li><strong>Prayer Requests:</strong> Share prayer needs within group</li>
+                    </ul>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Communication Channels:</h6>
+                    <ul>
+                      <li><strong>Email Notifications:</strong> Send emails to group members</li>
+                      <li><strong>SMS Messages:</strong> Text messages for urgent updates</li>
+                      <li><strong>In-App Messages:</strong> Internal messaging system</li>
+                      <li><strong>Meeting Notes:</strong> Share meeting minutes and updates</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Group Attendance Tracking</h2>
+            <p>Monitor group participation and engagement:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-clipboard-check"></i> Attendance Features</h5>
+                    <ul>
+                      <li><strong>Meeting Attendance:</strong> Track who attends group meetings</li>
+                      <li><strong>Participation Records:</strong> Monitor member involvement</li>
+                      <li><strong>Attendance Reports:</strong> Generate group attendance statistics</li>
+                      <li><strong>Engagement Analysis:</strong> Identify active vs. inactive members</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-graph-up"></i> Reporting</h5>
+                    <ul>
+                      <li><strong>Group Statistics:</strong> View group growth and activity</li>
+                      <li><strong>Member Engagement:</strong> Track individual participation</li>
+                      <li><strong>Meeting History:</strong> Review past meeting attendance</li>
+                      <li><strong>Trend Analysis:</strong> Monitor group health over time</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Group Events and Activities</h2>
+            <p>Organize and track group events:</p>
+
+            <div class="alert alert-info">
+              <i class="bi bi-calendar-event"></i>
+              <strong>Event Management:</strong> Create and manage group-specific events and activities.
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h4>Creating Group Events</h4>
+                <ol>
+                  <li>Go to group details page</li>
+                  <li>Click "Add Event" or "Schedule Meeting"</li>
+                  <li>Enter event details (name, date, time, location)</li>
+                  <li>Set event type (meeting, activity, training)</li>
+                  <li>Add event description and notes</li>
+                  <li>Invite group members</li>
+                  <li>Save the event</li>
+                </ol>
+              </div>
+              <div class="col-md-6">
+                <h4>Event Management</h4>
+                <ul>
+                  <li><strong>Recurring Events:</strong> Set up regular meetings</li>
+                  <li><strong>Event Reminders:</strong> Send notifications before events</li>
+                  <li><strong>Attendance Tracking:</strong> Record who attended</li>
+                  <li><strong>Event Notes:</strong> Share meeting minutes and updates</li>
+                </ul>
+              </div>
+            </div>
+
+            <h2>Group Statistics and Reports</h2>
+            <p>Generate comprehensive group reports:</p>
+
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Report Type</th>
+                    <th>Description</th>
+                    <th>Use Case</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Group Overview</strong></td>
+                    <td>Summary of group membership and activity</td>
+                    <td>Leadership review and planning</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Attendance Report</strong></td>
+                    <td>Detailed attendance records and patterns</td>
+                    <td>Monitor member engagement</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Member Analysis</strong></td>
+                    <td>Individual member participation statistics</td>
+                    <td>Identify active and inactive members</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Event Summary</strong></td>
+                    <td>Overview of group events and activities</td>
+                    <td>Evaluate group effectiveness</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Growth Report</strong></td>
+                    <td>Track group growth and member changes</td>
+                    <td>Long-term planning and strategy</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2>Importing Group Data</h2>
+            <p>Import group information from external sources:</p>
+
+            <div class="alert alert-info">
+              <i class="bi bi-upload"></i>
+              <strong>Import Feature:</strong> Use the Import/Export section to bulk import group data from CSV or Excel files.
+            </div>
+
+            <ol>
+              <li><strong>Prepare Data:</strong> Organize group data in the correct format</li>
+              <li><strong>Download Template:</strong> Get the import template from Import/Export section</li>
+              <li><strong>Fill Template:</strong> Add your group data to the template</li>
+              <li><strong>Upload File:</strong> Upload the completed template</li>
+              <li><strong>Review Data:</strong> Check the imported data for accuracy</li>
+              <li><strong>Confirm Import:</strong> Complete the import process</li>
+            </ol>
+
+            <h2>Best Practices</h2>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-check-circle"></i> Group Management Best Practices</h5>
+                    <ul>
+                      <li>Use clear, descriptive group names</li>
+                      <li>Assign capable and committed leaders</li>
+                      <li>Set realistic meeting schedules</li>
+                      <li>Keep group information updated</li>
+                      <li>Track attendance regularly</li>
+                      <li>Communicate effectively with members</li>
+                      <li>Review group effectiveness periodically</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Common Mistakes</h5>
+                    <ul>
+                      <li>Not assigning clear leadership</li>
+                      <li>Unrealistic meeting schedules</li>
+                      <li>Poor communication with members</li>
+                      <li>Not tracking attendance</li>
+                      <li>Ignoring group feedback</li>
+                      <li>Not reviewing group effectiveness</li>
+                      <li>Overloading group leaders</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Important:</strong> Effective group management leads to better member engagement and ministry effectiveness.
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="../js/includes.js"></script>
+  </body>
+</html> 

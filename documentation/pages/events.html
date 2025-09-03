@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Events & Attendance Management - Zoe Flock Admin Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div id="sidebar-placeholder"></div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Events & Attendance Management</h1>
+          </div>
+
+          <div class="content-area">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Events & Attendance</li>
+              </ol>
+            </nav>
+
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i>
+              <strong>Overview:</strong> Create and manage church events, track attendance, and generate attendance reports.
+            </div>
+
+            <h2>Creating Events</h2>
+            <p>Events are the foundation of attendance tracking. Here's how to create and manage them:</p>
+
+            <div class="row">
+              <div class="col-lg-8">
+                <h3>Step-by-Step Event Creation</h3>
+                <ol>
+                  <li><strong>Navigate to Events:</strong> Click "Events" in the sidebar</li>
+                  <li><strong>Create New Event:</strong> Click "Create New Event" button</li>
+                  <li><strong>Fill Event Details:</strong>
+                    <ul>
+                      <li><strong>Event Name:</strong> Descriptive name (e.g., "Sunday Service")</li>
+                      <li><strong>Event Category:</strong> Select appropriate category</li>
+                      <li><strong>Date & Time:</strong> Set start and end times</li>
+                      <li><strong>Location:</strong> Event venue or location</li>
+                      <li><strong>Description:</strong> Additional details about the event</li>
+                      <li><strong>Recurring:</strong> Set if event repeats regularly</li>
+                    </ul>
+                  </li>
+                  <li><strong>Save Event:</strong> Click "Save Event" to create</li>
+                </ol>
+              </div>
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-lightbulb"></i> Pro Tips</h5>
+                    <ul class="list-unstyled">
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Use clear, descriptive event names</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Set up recurring events for regular services</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Include location details for members</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Add descriptions for special events</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Event Categories</h2>
+            <p>Organize events by categories for better management:</p>
+
+            <div class="row">
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-church text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Sunday Services</h6>
+                    <p class="card-text small">Regular weekly worship services</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Bible Study</h6>
+                    <p class="card-text small">Group Bible study sessions</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-music-note text-warning" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Choir Practice</h6>
+                    <p class="card-text small">Music and choir rehearsals</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-calendar-event text-info" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Special Events</h6>
+                    <p class="card-text small">Weddings, funerals, celebrations</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Recording Attendance</h2>
+            <p>Track member attendance for each event:</p>
+
+            <div class="row">
+              <div class="col-lg-8">
+                <h3>Manual Attendance Recording</h3>
+                <ol>
+                  <li><strong>Select Event:</strong> Go to "Attendance" and choose the event</li>
+                  <li><strong>Record Attendance:</strong> Click "Record Attendance"</li>
+                  <li><strong>Mark Attendance:</strong> Check boxes for present members</li>
+                  <li><strong>Add Notes:</strong> Optional notes for absences</li>
+                  <li><strong>Save:</strong> Click "Save Attendance"</li>
+                </ol>
+
+                <h3>Barcode Attendance System</h3>
+                <div class="alert alert-success">
+                  <i class="bi bi-upc-scan"></i>
+                  <strong>Advanced Feature:</strong> Use barcode scanning for quick attendance recording.
+                </div>
+                <ol>
+                  <li><strong>Generate Barcodes:</strong> Create barcodes for members</li>
+                  <li><strong>Scan Attendance:</strong> Use mobile device to scan member barcodes</li>
+                  <li><strong>Automatic Recording:</strong> Attendance is recorded automatically</li>
+                </ol>
+              </div>
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-clipboard-check"></i> Attendance Tips</h5>
+                    <ul class="list-unstyled">
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Record attendance promptly</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Use barcode system for large events</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Add notes for absences</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Review attendance regularly</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Attendance Statistics</h2>
+            <p>View and analyze attendance patterns:</p>
+
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Report Type</th>
+                    <th>Description</th>
+                    <th>Use Case</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Individual Attendance</strong></td>
+                    <td>Track attendance for specific members</td>
+                    <td>Monitor member participation</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Event Attendance</strong></td>
+                    <td>View attendance for specific events</td>
+                    <td>Evaluate event success</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Family Attendance</strong></td>
+                    <td>Track attendance by family units</td>
+                    <td>Family engagement analysis</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Trend Analysis</strong></td>
+                    <td>View attendance patterns over time</td>
+                    <td>Long-term planning</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2>Managing Events</h2>
+            <p>Edit, delete, and manage existing events:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h4>Editing Events</h4>
+                <ul>
+                  <li>Click on the event name to edit</li>
+                  <li>Modify event details as needed</li>
+                  <li>Update recurring event settings</li>
+                  <li>Save changes</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h4>Deleting Events</h4>
+                <ul>
+                  <li>Select the event to delete</li>
+                  <li>Confirm deletion action</li>
+                  <li>Note: This also deletes attendance records</li>
+                  <li>Use with caution</li>
+                </ul>
+              </div>
+            </div>
+
+            <h2>Recurring Events</h2>
+            <p>Set up events that repeat regularly:</p>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Recurring Event Options</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>Frequency Options:</h6>
+                    <ul>
+                      <li><strong>Daily:</strong> Events that occur every day</li>
+                      <li><strong>Weekly:</strong> Events that occur weekly (e.g., Sunday services)</li>
+                      <li><strong>Monthly:</strong> Events that occur monthly</li>
+                      <li><strong>Custom:</strong> Specific recurring patterns</li>
+                    </ul>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Benefits:</h6>
+                    <ul>
+                      <li>Automatic event creation</li>
+                      <li>Consistent attendance tracking</li>
+                      <li>Reduced manual work</li>
+                      <li>Better organization</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Best Practices</h2>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-check-circle"></i> Do's</h5>
+                    <ul>
+                      <li>Create events well in advance</li>
+                      <li>Use descriptive event names</li>
+                      <li>Record attendance promptly</li>
+                      <li>Review attendance reports regularly</li>
+                      <li>Set up recurring events for regular services</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-x-circle"></i> Don'ts</h5>
+                    <ul>
+                      <li>Don't delete events with attendance records</li>
+                      <li>Don't use vague event names</li>
+                      <li>Don't delay attendance recording</li>
+                      <li>Don't ignore attendance patterns</li>
+                      <li>Don't forget to set event categories</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Important:</strong> Regular attendance tracking helps identify members who may need pastoral care or follow-up.
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="../js/includes.js"></script>
+  </body>
+</html> 

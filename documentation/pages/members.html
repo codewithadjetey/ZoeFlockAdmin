@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Member Management - Zoe Flock Admin Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div id="sidebar-placeholder"></div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Member Management</h1>
+          </div>
+
+          <div class="content-area">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Member Management</li>
+              </ol>
+            </nav>
+
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i>
+              <strong>Quick Tip:</strong> You can manage all church members from this section. Add new members, update information, and track their attendance and contributions.
+            </div>
+
+            <h2>Adding New Members</h2>
+            <p>To add a new member to your church database:</p>
+            
+            <div class="row">
+              <div class="col-md-8">
+                <ol>
+                  <li>Navigate to the <strong>Members</strong> section in the main dashboard</li>
+                  <li>Click the <strong>"Add New Member"</strong> button</li>
+                  <li>Fill in the required information:
+                    <ul>
+                      <li>Personal details (name, date of birth, contact information)</li>
+                      <li>Family information (if applicable)</li>
+                      <li>Emergency contact details</li>
+                      <li>Membership date</li>
+                    </ul>
+                  </li>
+                  <li>Click <strong>"Save Member"</strong> to add them to the database</li>
+                </ol>
+              </div>
+              <div class="col-md-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-lightbulb"></i> Pro Tip</h5>
+                    <p class="card-text">Always include a photo of the member for easier identification during events and attendance tracking.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Managing Member Information</h2>
+            <p>Once a member is added, you can:</p>
+            
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-pencil-square"></i> Edit Information</h5>
+                    <p class="card-text">Update personal details, contact information, and membership status.</p>
+                    <a href="#" class="btn btn-primary btn-sm">Learn More</a>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-archive"></i> Archive Members</h5>
+                    <p class="card-text">Archive inactive members while preserving their data and history.</p>
+                    <a href="#" class="btn btn-primary btn-sm">Learn More</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Family Management</h2>
+            <p>Organize members into families for better relationship tracking:</p>
+            
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Feature</th>
+                    <th>Description</th>
+                    <th>Benefits</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Family Head</strong></td>
+                    <td>Designate a primary contact for each family</td>
+                    <td>Easier communication and coordination</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Family Members</strong></td>
+                    <td>Link multiple members to a single family unit</td>
+                    <td>Better organization and relationship tracking</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Family Events</strong></td>
+                    <td>Track attendance and participation as a family</td>
+                    <td>Improved event planning and follow-up</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2>Member Categories</h2>
+            <p>The system supports different member categories:</p>
+            
+            <div class="row">
+              <div class="col-md-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-person-check text-success" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Active Members</h6>
+                    <p class="card-text small">Regular attendees</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-person-plus text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">New Members</h6>
+                    <p class="card-text small">Recently joined</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-person-x text-warning" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Inactive Members</h6>
+                    <p class="card-text small">Not attending regularly</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-person-dash text-danger" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Former Members</h6>
+                    <p class="card-text small">No longer attending</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Search and Filter</h2>
+            <p>Find members quickly using the search and filter options:</p>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <h5>Search Options</h5>
+                <ul>
+                  <li><strong>Name Search:</strong> Find members by first or last name</li>
+                  <li><strong>Phone Search:</strong> Search by phone number</li>
+                  <li><strong>Email Search:</strong> Find by email address</li>
+                  <li><strong>ID Search:</strong> Search by member ID</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h5>Filter Options</h5>
+                <ul>
+                  <li><strong>Age Groups:</strong> Filter by age ranges</li>
+                  <li><strong>Membership Status:</strong> Active, inactive, new, former</li>
+                  <li><strong>Family:</strong> Filter by family units</li>
+                  <li><strong>Date Range:</strong> Filter by join date</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="alert alert-warning mt-4">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Important:</strong> Always ensure member data is kept secure and confidential. Only authorized users should have access to member information.
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="../js/includes.js"></script>
+  </body>
+</html> 

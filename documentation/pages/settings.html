@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>System Settings - Zoe Flock Admin Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div id="sidebar-placeholder"></div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">System Settings</h1>
+          </div>
+
+          <div class="content-area">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">System Settings</li>
+              </ol>
+            </nav>
+
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i>
+              <strong>Overview:</strong> Configure system settings, user permissions, and customize the church management system.
+            </div>
+
+            <h2>User Management</h2>
+            <p>Manage system users and their access permissions:</p>
+
+            <div class="row">
+              <div class="col-lg-8">
+                <h3>User Roles and Permissions</h3>
+                <div class="table-responsive">
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Role</th>
+                        <th>Permissions</th>
+                        <th>Access Level</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Super Admin</strong></td>
+                        <td>Full system access, user management, settings</td>
+                        <td><span class="badge bg-danger">Highest</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Admin</strong></td>
+                        <td>Most features, limited user management</td>
+                        <td><span class="badge bg-warning">High</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Pastor</strong></td>
+                        <td>Member management, events, attendance, tithes</td>
+                        <td><span class="badge bg-primary">Medium</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Family Head</strong></td>
+                        <td>Family members, limited attendance</td>
+                        <td><span class="badge bg-info">Limited</span></td>
+                      </tr>
+                      <tr>
+                        <td><strong>Member</strong></td>
+                        <td>View own information, limited access</td>
+                        <td><span class="badge bg-secondary">Basic</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <h3>Adding New Users</h3>
+                <ol>
+                  <li><strong>Navigate to Users:</strong> Go to "Users" in the sidebar</li>
+                  <li><strong>Add New User:</strong> Click "Add New User" button</li>
+                  <li><strong>Fill User Details:</strong>
+                    <ul>
+                      <li>Full Name</li>
+                      <li>Email Address</li>
+                      <li>Username</li>
+                      <li>Password</li>
+                      <li>Role Assignment</li>
+                    </ul>
+                  </li>
+                  <li><strong>Set Permissions:</strong> Configure specific access rights</li>
+                  <li><strong>Save User:</strong> Click "Save User" to create</li>
+                </ol>
+              </div>
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-shield-lock"></i> Security Tips</h5>
+                    <ul class="list-unstyled">
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Use strong passwords</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Enable two-factor authentication</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Regular password updates</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Monitor user activity</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Limit admin access</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Church Information</h2>
+            <p>Configure basic church information and contact details:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Basic Information</h5>
+                    <ul>
+                      <li><strong>Church Name:</strong> Official church name</li>
+                      <li><strong>Address:</strong> Physical location</li>
+                      <li><strong>Phone:</strong> Contact number</li>
+                      <li><strong>Email:</strong> Official email address</li>
+                      <li><strong>Website:</strong> Church website URL</li>
+                      <li><strong>Logo:</strong> Upload church logo</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title">Service Times</h5>
+                    <ul>
+                      <li><strong>Sunday Service:</strong> Main worship time</li>
+                      <li><strong>Midweek Service:</strong> Bible study time</li>
+                      <li><strong>Youth Service:</strong> Youth meeting time</li>
+                      <li><strong>Prayer Meeting:</strong> Prayer session time</li>
+                      <li><strong>Office Hours:</strong> Administrative hours</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>System Configuration</h2>
+            <p>Customize system behavior and appearance:</p>
+
+            <div class="row">
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-palette text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Appearance</h6>
+                    <p class="card-text small">Theme, colors, and layout</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-globe text-success" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Localization</h6>
+                    <p class="card-text small">Language and region settings</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-bell text-warning" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Notifications</h6>
+                    <p class="card-text small">Email and system alerts</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-gear text-info" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Advanced</h6>
+                    <p class="card-text small">System performance and security</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Email Configuration</h2>
+            <p>Set up email notifications and communication:</p>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Email Settings</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>SMTP Configuration:</h6>
+                    <ul>
+                      <li><strong>SMTP Server:</strong> Email server address</li>
+                      <li><strong>Port:</strong> SMTP port number</li>
+                      <li><strong>Username:</strong> Email account username</li>
+                      <li><strong>Password:</strong> Email account password</li>
+                      <li><strong>Encryption:</strong> SSL/TLS settings</li>
+                    </ul>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Notification Types:</h6>
+                    <ul>
+                      <li><strong>Welcome Emails:</strong> New member notifications</li>
+                      <li><strong>Event Reminders:</strong> Upcoming event alerts</li>
+                      <li><strong>Attendance Reports:</strong> Weekly/monthly summaries</li>
+                      <li><strong>Financial Reports:</strong> Tithe and donation summaries</li>
+                      <li><strong>System Alerts:</strong> Important system notifications</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Backup and Maintenance</h2>
+            <p>Ensure data safety and system performance:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-cloud-arrow-up"></i> Backup Settings</h5>
+                    <ul>
+                      <li><strong>Automatic Backups:</strong> Schedule regular backups</li>
+                      <li><strong>Backup Location:</strong> Local or cloud storage</li>
+                      <li><strong>Retention Period:</strong> How long to keep backups</li>
+                      <li><strong>Backup Content:</strong> What data to include</li>
+                      <li><strong>Test Restore:</strong> Verify backup integrity</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-tools"></i> Maintenance Tasks</h5>
+                    <ul>
+                      <li><strong>Database Optimization:</strong> Regular cleanup</li>
+                      <li><strong>Log Rotation:</strong> Manage system logs</li>
+                      <li><strong>Cache Clearing:</strong> Clear temporary files</li>
+                      <li><strong>Security Updates:</strong> Keep system updated</li>
+                      <li><strong>Performance Monitoring:</strong> Track system health</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Data Management</h2>
+            <p>Manage data import, export, and cleanup:</p>
+
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Operation</th>
+                    <th>Description</th>
+                    <th>Frequency</th>
+                    <th>Access Level</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Data Import</strong></td>
+                    <td>Import member data from CSV/Excel</td>
+                    <td>As needed</td>
+                    <td>Admin+</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Data Export</strong></td>
+                    <td>Export data for backup or analysis</td>
+                    <td>Monthly</td>
+                    <td>Admin+</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Data Cleanup</strong></td>
+                    <td>Remove duplicate or outdated records</td>
+                    <td>Quarterly</td>
+                    <td>Admin+</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Archive Data</strong></td>
+                    <td>Move old data to archive</td>
+                    <td>Annually</td>
+                    <td>Admin+</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Purge Data</strong></td>
+                    <td>Permanently delete old data</td>
+                    <td>As needed</td>
+                    <td>Super Admin</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2>API Configuration</h2>
+            <p>Configure API access for integrations:</p>
+
+            <div class="alert alert-success">
+              <i class="bi bi-code-slash"></i>
+              <strong>API Access:</strong> Configure API keys and endpoints for third-party integrations.
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h4>API Settings</h4>
+                <ul>
+                  <li><strong>API Keys:</strong> Generate and manage access keys</li>
+                  <li><strong>Rate Limiting:</strong> Set request limits</li>
+                  <li><strong>Authentication:</strong> Configure security methods</li>
+                  <li><strong>Endpoints:</strong> Available API endpoints</li>
+                  <li><strong>Documentation:</strong> API usage guides</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h4>Integration Options</h4>
+                <ul>
+                  <li><strong>Payment Gateways:</strong> Online payment processing</li>
+                  <li><strong>Email Services:</strong> External email providers</li>
+                  <li><strong>Calendar Sync:</strong> Event calendar integration</li>
+                  <li><strong>Accounting Software:</strong> Financial system integration</li>
+                  <li><strong>Social Media:</strong> Social platform connections</li>
+                </ul>
+              </div>
+            </div>
+
+            <h2>Audit and Logging</h2>
+            <p>Track system activity and maintain accountability:</p>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Audit Trail</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>Tracked Activities:</h6>
+                    <ul>
+                      <li>User login/logout</li>
+                      <li>Data modifications</li>
+                      <li>Financial transactions</li>
+                      <li>System configuration changes</li>
+                      <li>File uploads/downloads</li>
+                    </ul>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Log Management:</h6>
+                    <ul>
+                      <li>Log retention period</li>
+                      <li>Log file rotation</li>
+                      <li>Log analysis tools</li>
+                      <li>Alert notifications</li>
+                      <li>Compliance reporting</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Best Practices</h2>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-check-circle"></i> Configuration Best Practices</h5>
+                    <ul>
+                      <li>Regular security reviews</li>
+                      <li>Backup before major changes</li>
+                      <li>Test settings in staging environment</li>
+                      <li>Document configuration changes</li>
+                      <li>Monitor system performance</li>
+                      <li>Keep software updated</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Common Issues</h5>
+                    <ul>
+                      <li>Weak password policies</li>
+                      <li>Inadequate backup procedures</li>
+                      <li>Missing security updates</li>
+                      <li>Poor access controls</li>
+                      <li>Insufficient monitoring</li>
+                      <li>Lack of documentation</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Important:</strong> Always test configuration changes in a safe environment before applying them to production.
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="../js/includes.js"></script>
+  </body>
+</html> 

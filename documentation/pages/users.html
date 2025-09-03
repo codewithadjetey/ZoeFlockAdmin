@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Users Management - Zoe Flock Admin Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div id="sidebar-placeholder"></div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Users Management</h1>
+          </div>
+
+          <div class="content-area">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Users Management</li>
+              </ol>
+            </nav>
+
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i>
+              <strong>Overview:</strong> Manage system users, roles, and permissions for secure access control.
+            </div>
+
+            <h2>Understanding Users Management</h2>
+            <p>Zoe Flock Admin provides comprehensive user management with role-based access control:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-person-gear"></i> User Features</h5>
+                    <ul>
+                      <li><strong>User Accounts:</strong> Create and manage user accounts</li>
+                      <li><strong>Role Management:</strong> Assign roles and permissions</li>
+                      <li><strong>Access Control:</strong> Control system access</li>
+                      <li><strong>Security:</strong> Password policies and authentication</li>
+                      <li><strong>Audit Trail:</strong> Track user activities</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-shield-check"></i> Benefits</h5>
+                    <ul>
+                      <li><strong>Security:</strong> Protect sensitive data</li>
+                      <li><strong>Access Control:</strong> Limit system access</li>
+                      <li><strong>Accountability:</strong> Track user actions</li>
+                      <li><strong>Compliance:</strong> Meet security requirements</li>
+                      <li><strong>Efficiency:</strong> Streamline user management</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>User Roles and Permissions</h2>
+            <p>Understand the different user roles and their permissions:</p>
+
+            <div class="alert alert-success">
+              <i class="bi bi-lightning"></i>
+              <strong>Quick Access:</strong> Click "Users" in the Administration section of the sidebar.
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Role</th>
+                    <th>Permissions</th>
+                    <th>Access Level</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Administrator</strong></td>
+                    <td>Full system access and control</td>
+                    <td><span class="badge bg-danger">Full Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Pastor</strong></td>
+                    <td>Member management, financial reports</td>
+                    <td><span class="badge bg-primary">High Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Secretary</strong></td>
+                    <td>Data entry, basic reporting</td>
+                    <td><span class="badge bg-info">Medium Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Family Head</strong></td>
+                    <td>Family management, attendance</td>
+                    <td><span class="badge bg-warning">Limited Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Member</strong></td>
+                    <td>View own information</td>
+                    <td><span class="badge bg-secondary">Basic Access</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2>Creating User Accounts</h2>
+            <p>Create new user accounts with appropriate roles:</p>
+
+            <div class="row">
+              <div class="col-lg-8">
+                <h3>Step-by-Step User Creation</h3>
+                <ol>
+                  <li><strong>Navigate to Users:</strong> Click "Users" in the sidebar</li>
+                  <li><strong>Add New User:</strong> Click "Add New User" button</li>
+                  <li><strong>Enter User Details:</strong> Add name, email, phone</li>
+                  <li><strong>Set Username:</strong> Choose unique username</li>
+                  <li><strong>Set Password:</strong> Create secure password</li>
+                  <li><strong>Assign Role:</strong> Select appropriate role</li>
+                  <li><strong>Set Permissions:</strong> Configure specific permissions</li>
+                  <li><strong>Save User:</strong> Click "Save User" to create</li>
+                </ol>
+              </div>
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-lightbulb"></i> Pro Tips</h5>
+                    <ul class="list-unstyled">
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Use strong passwords</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Assign minimal permissions</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Use unique usernames</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Verify email addresses</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Role Management</h2>
+            <p>Manage user roles and permissions:</p>
+
+            <div class="alert alert-info">
+              <i class="bi bi-shield-alt"></i>
+              <strong>Role Management:</strong> Access role management through "Roles & Permissions" in the sidebar.
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h4>Creating Custom Roles</h4>
+                <ol>
+                  <li><strong>Access Role Management:</strong> Go to "Roles & Permissions"</li>
+                  <li><strong>Create New Role:</strong> Click "Add New Role"</li>
+                  <li><strong>Define Role Name:</strong> Enter descriptive role name</li>
+                  <li><strong>Set Permissions:</strong> Select specific permissions</li>
+                  <li><strong>Save Role:</strong> Create the custom role</li>
+                </ol>
+              </div>
+              <div class="col-md-6">
+                <h4>Permission Categories</h4>
+                <ul>
+                  <li><strong>Member Management:</strong> Add, edit, delete members</li>
+                  <li><strong>Financial Management:</strong> Access financial data</li>
+                  <li><strong>Event Management:</strong> Create and manage events</li>
+                  <li><strong>Reporting:</strong> Generate and view reports</li>
+                  <li><strong>System Administration:</strong> Manage system settings</li>
+                </ul>
+              </div>
+            </div>
+
+            <h2>User Security</h2>
+            <p>Implement security measures for user accounts:</p>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Security Features</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>Password Policies:</h6>
+                    <ul>
+                      <li><strong>Minimum Length:</strong> Require strong passwords</li>
+                      <li><strong>Complexity Requirements:</strong> Mix of characters</li>
+                      <li><strong>Password Expiration:</strong> Regular password changes</li>
+                      <li><strong>Password History:</strong> Prevent reuse</li>
+                    </ul>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Account Security:</h6>
+                    <ul>
+                      <li><strong>Account Lockout:</strong> Lock after failed attempts</li>
+                      <li><strong>Session Management:</strong> Control login sessions</li>
+                      <li><strong>Two-Factor Authentication:</strong> Enhanced security</li>
+                      <li><strong>Audit Logging:</strong> Track user activities</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>User Activity Monitoring</h2>
+            <p>Monitor user activities and system access:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h4>Activity Tracking</h4>
+                <ul>
+                  <li><strong>Login History:</strong> Track login attempts</li>
+                  <li><strong>Action Logs:</strong> Record user actions</li>
+                  <li><strong>Data Access:</strong> Monitor data access</li>
+                  <li><strong>System Changes:</strong> Track configuration changes</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h4>Audit Reports</h4>
+                <ul>
+                  <li><strong>User Activity Reports:</strong> Individual user activity</li>
+                  <li><strong>System Access Reports:</strong> Overall system usage</li>
+                  <li><strong>Security Reports:</strong> Security-related events</li>
+                  <li><strong>Compliance Reports:</strong> Regulatory compliance</li>
+                </ul>
+              </div>
+            </div>
+
+            <h2>User Account Management</h2>
+            <p>Manage existing user accounts:</p>
+
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Action</th>
+                    <th>Description</th>
+                    <th>Use Case</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Edit User</strong></td>
+                    <td>Update user information and permissions</td>
+                    <td>Role changes, contact updates</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Disable User</strong></td>
+                    <td>Temporarily disable user access</td>
+                    <td>Leave of absence, security</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Delete User</strong></td>
+                    <td>Permanently remove user account</td>
+                    <td>Termination, cleanup</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Reset Password</strong></td>
+                    <td>Reset user password</td>
+                    <td>Forgotten passwords</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Unlock Account</strong></td>
+                    <td>Unlock locked user accounts</td>
+                    <td>Account lockout resolution</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2>Best Practices</h2>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-check-circle"></i> User Management Best Practices</h5>
+                    <ul>
+                      <li>Use strong password policies</li>
+                      <li>Assign minimal required permissions</li>
+                      <li>Regularly review user access</li>
+                      <li>Monitor user activities</li>
+                      <li>Keep user information updated</li>
+                      <li>Implement account lockout policies</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Common Mistakes</h5>
+                    <ul>
+                      <li>Using weak passwords</li>
+                      <li>Giving excessive permissions</li>
+                      <li>Not monitoring user activities</li>
+                      <li>Forgetting to disable old accounts</li>
+                      <li>Not updating user information</li>
+                      <li>Ignoring security alerts</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Important:</strong> Proper user management is crucial for system security and data protection.
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="../js/includes.js"></script>
+  </body>
+</html> 

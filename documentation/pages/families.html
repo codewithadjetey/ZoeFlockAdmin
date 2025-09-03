@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Family Management - Zoe Flock Admin Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../css/style.css" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Sidebar -->
+        <div id="sidebar-placeholder"></div>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">Family Management</h1>
+          </div>
+
+          <div class="content-area">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Family Management</li>
+              </ol>
+            </nav>
+
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle"></i>
+              <strong>Overview:</strong> Organize church members into family units for better relationship tracking and communication.
+            </div>
+
+            <h2>Understanding Family Structure</h2>
+            <p>Zoe Flock Admin allows you to organize members into family units, making it easier to:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-house-heart"></i> Family Benefits</h5>
+                    <ul>
+                      <li><strong>Better Organization:</strong> Group related members together</li>
+                      <li><strong>Family Head:</strong> Designate a primary contact person</li>
+                      <li><strong>Attendance Tracking:</strong> Track family attendance patterns</li>
+                      <li><strong>Communication:</strong> Send messages to entire families</li>
+                      <li><strong>Financial Management:</strong> Track family tithes and donations</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-people"></i> Family Roles</h5>
+                    <ul>
+                      <li><strong>Family Head:</strong> Primary contact and decision maker</li>
+                      <li><strong>Spouse:</strong> Partner of the family head</li>
+                      <li><strong>Children:</strong> Dependent family members</li>
+                      <li><strong>Extended Family:</strong> Other relatives living together</li>
+                      <li><strong>Dependents:</strong> Non-relatives under family care</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Creating Families</h2>
+            <p>Follow these steps to create and manage families in your church:</p>
+
+            <div class="row">
+              <div class="col-lg-8">
+                <h3>Step-by-Step Family Creation</h3>
+                <ol>
+                  <li><strong>Navigate to Families:</strong> Click "Families" in the sidebar navigation</li>
+                  <li><strong>Create New Family:</strong> Click the "Add New Family" button</li>
+                  <li><strong>Enter Family Details:</strong>
+                    <ul>
+                      <li><strong>Family Name:</strong> Enter the family surname or name</li>
+                      <li><strong>Family Head:</strong> Select the primary contact person</li>
+                      <li><strong>Address:</strong> Enter the family's address</li>
+                      <li><strong>Phone:</strong> Primary contact number</li>
+                      <li><strong>Email:</strong> Family email address</li>
+                    </ul>
+                  </li>
+                  <li><strong>Add Family Members:</strong> Select existing members to add to the family</li>
+                  <li><strong>Set Relationships:</strong> Define how each member relates to the family head</li>
+                  <li><strong>Save Family:</strong> Click "Save Family" to create the family unit</li>
+                </ol>
+              </div>
+              <div class="col-lg-4">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-lightbulb"></i> Pro Tips</h5>
+                    <ul class="list-unstyled">
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Use consistent family naming</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Designate a clear family head</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Include all family members</li>
+                      <li class="mb-2"><i class="bi bi-check text-success"></i> Update family info regularly</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Family Head Role</h2>
+            <p>The Family Head feature provides special permissions and responsibilities:</p>
+
+            <div class="alert alert-success">
+              <i class="bi bi-shield-check"></i>
+              <strong>Family Head Feature:</strong> Family heads can manage attendance for their family members and view family-specific reports.
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Permission</th>
+                    <th>Description</th>
+                    <th>Access Level</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>View Family Members</strong></td>
+                    <td>See all family member profiles</td>
+                    <td><span class="badge bg-success">Full Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Record Family Attendance</strong></td>
+                    <td>Mark attendance for family members</td>
+                    <td><span class="badge bg-success">Full Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>View Family Reports</strong></td>
+                    <td>Access family-specific statistics</td>
+                    <td><span class="badge bg-success">Full Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Update Family Info</strong></td>
+                    <td>Edit family contact details</td>
+                    <td><span class="badge bg-success">Full Access</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Add Family Members</strong></td>
+                    <td>Add new members to the family</td>
+                    <td><span class="badge bg-warning">Limited</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h2>Managing Family Members</h2>
+            <p>Add, remove, and manage family members:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h4>Adding Members to Families</h4>
+                <ol>
+                  <li>Go to the family details page</li>
+                  <li>Click "Add Family Member"</li>
+                  <li>Search for existing members</li>
+                  <li>Select the member to add</li>
+                  <li>Choose the relationship type</li>
+                  <li>Save the family member</li>
+                </ol>
+              </div>
+              <div class="col-md-6">
+                <h4>Removing Family Members</h4>
+                <ol>
+                  <li>Navigate to family details</li>
+                  <li>Find the member to remove</li>
+                  <li>Click the "Remove" button</li>
+                  <li>Confirm the removal</li>
+                  <li>Member becomes unassigned</li>
+                </ol>
+              </div>
+            </div>
+
+            <h2>Family Statistics</h2>
+            <p>View comprehensive family statistics and reports:</p>
+
+            <div class="row">
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-house text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Total Families</h6>
+                    <p class="card-text small">All registered families</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-people text-success" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Family Members</h6>
+                    <p class="card-text small">Total family members</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-person-check text-warning" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Active Families</h6>
+                    <p class="card-text small">Families with recent activity</p>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6 col-lg-3 mb-3">
+                <div class="card text-center">
+                  <div class="card-body">
+                    <i class="bi bi-graph-up text-info" style="font-size: 2rem;"></i>
+                    <h6 class="card-title mt-2">Growth Rate</h6>
+                    <p class="card-text small">Family growth over time</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Family Attendance Tracking</h2>
+            <p>Track attendance patterns for entire families:</p>
+
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title">Family Attendance Features</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6>Attendance Recording:</h6>
+                    <ul>
+                      <li><strong>Family Head Access:</strong> Family heads can record attendance for all family members</li>
+                      <li><strong>Bulk Operations:</strong> Mark entire families present/absent at once</li>
+                      <li><strong>Individual Tracking:</strong> Track each member's attendance separately</li>
+                      <li><strong>Family Patterns:</strong> Analyze family attendance trends</li>
+                    </ul>
+                  </div>
+                  <div class="col-md-6">
+                    <h6>Reporting:</h6>
+                    <ul>
+                      <li><strong>Family Reports:</strong> Generate family-specific attendance reports</li>
+                      <li><strong>Comparison Analysis:</strong> Compare family attendance patterns</li>
+                      <li><strong>Trend Analysis:</strong> Track family engagement over time</li>
+                      <li><strong>Export Options:</strong> Export family data for analysis</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Family Communication</h2>
+            <p>Communicate effectively with families:</p>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-envelope"></i> Communication Methods</h5>
+                    <ul>
+                      <li><strong>Family Head Contact:</strong> Primary communication through family head</li>
+                      <li><strong>Group Messages:</strong> Send messages to entire families</li>
+                      <li><strong>Event Notifications:</strong> Notify families about upcoming events</li>
+                      <li><strong>Emergency Alerts:</strong> Send urgent messages when needed</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-phone"></i> Contact Management</h5>
+                    <ul>
+                      <li><strong>Primary Contact:</strong> Family head's contact information</li>
+                      <li><strong>Secondary Contact:</strong> Backup contact person</li>
+                      <li><strong>Address Management:</strong> Family address and location</li>
+                      <li><strong>Communication Preferences:</strong> Preferred contact methods</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2>Importing Family Data</h2>
+            <p>Import family information from external sources:</p>
+
+            <div class="alert alert-info">
+              <i class="bi bi-upload"></i>
+              <strong>Import Feature:</strong> Use the Import/Export section to bulk import family data from CSV or Excel files.
+            </div>
+
+            <ol>
+              <li><strong>Prepare Data:</strong> Organize family data in the correct format</li>
+              <li><strong>Download Template:</strong> Get the import template from Import/Export section</li>
+              <li><strong>Fill Template:</strong> Add your family data to the template</li>
+              <li><strong>Upload File:</strong> Upload the completed template</li>
+              <li><strong>Review Data:</strong> Check the imported data for accuracy</li>
+              <li><strong>Confirm Import:</strong> Complete the import process</li>
+            </ol>
+
+            <h2>Best Practices</h2>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-check-circle"></i> Family Management Best Practices</h5>
+                    <ul>
+                      <li>Use consistent family naming conventions</li>
+                      <li>Designate a clear family head for each family</li>
+                      <li>Keep family contact information updated</li>
+                      <li>Regularly review family member relationships</li>
+                      <li>Use family attendance tracking for better engagement</li>
+                      <li>Communicate primarily through family heads</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card">
+                  <div class="card-body">
+                    <h5 class="card-title"><i class="bi bi-exclamation-triangle"></i> Common Mistakes</h5>
+                    <ul>
+                      <li>Not designating a family head</li>
+                      <li>Inconsistent family naming</li>
+                      <li>Outdated contact information</li>
+                      <li>Missing family member relationships</li>
+                      <li>Not using family attendance features</li>
+                      <li>Ignoring family communication preferences</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+              <strong>Important:</strong> Family organization helps improve member engagement and communication effectiveness.
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="../js/includes.js"></script>
+  </body>
+</html> 
