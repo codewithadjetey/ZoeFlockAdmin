@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   PageHeader, 
   SearchInput, 
@@ -419,7 +418,7 @@ export default function GroupsPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Groups"
         description="Manage church groups, ministries, and fellowships. Organize members into different communities."
@@ -554,6 +553,6 @@ export default function GroupsPage() {
         onClose={() => setIsMembersModalOpen(false)}
         group={selectedGroup}
       />
-    </DashboardLayout>
+    </>
   );
 } 

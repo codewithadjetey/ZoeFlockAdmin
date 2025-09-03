@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   PageHeader, 
   Button,
@@ -42,6 +41,7 @@ import {
   Phone,
   Bell
 } from "lucide-react";
+import { DashboardLayout } from "@/components/layout";
 
 interface Communication {
   id: string;
@@ -368,7 +368,7 @@ export default function CommunicationPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Communication Management"
         description="Manage all church communications including emails, SMS, push notifications, and announcements"
@@ -774,6 +774,6 @@ export default function CommunicationPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+    </>
   );
 } 

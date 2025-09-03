@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   PageHeader, 
   ContentCard,
@@ -189,7 +188,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Settings"
         description="Manage your account and application preferences"
@@ -239,6 +238,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 } 

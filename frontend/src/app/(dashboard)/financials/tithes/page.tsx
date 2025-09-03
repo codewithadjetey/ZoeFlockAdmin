@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/useToast';
 import { titheService } from '@/services/tithes';
 import { Tithe, TitheFilters as TitheFiltersType, TitheStatistics, TITHE_FREQUENCIES, TITHE_STATUSES } from '@/interfaces';
 import { formatCurrency, formatDate } from '@/utils/helpers';
-import { DashboardLayout } from '@/components/layout';
+
 
 export default function TithesPage() {
   const { showToast } = useToast();
@@ -274,7 +274,7 @@ export default function TithesPage() {
   ];
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Tithe Management"
         description="Manage church member tithes and recurring payments"
@@ -404,6 +404,6 @@ export default function TithesPage() {
         tithe={selectedTithe}
       />
     </div>
-    </DashboardLayout>
+    </>
   );
 } 

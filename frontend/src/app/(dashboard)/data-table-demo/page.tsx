@@ -5,8 +5,8 @@ import DataTableDemo from '@/components/ui/DataTableDemo';
 
 export default function DataTableDemoPage() {
   return (
-    <DashboardLayout>
+    <>>
       <DataTableDemo />
-    </DashboardLayout>
+     </>
   );
 } 

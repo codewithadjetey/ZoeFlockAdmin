@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   PageHeader, 
   SearchInput, 
@@ -526,7 +525,7 @@ export default function EventsPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title="Events"
         description="View and manage church events and activities. Events are created through event categories."
@@ -711,6 +710,6 @@ export default function EventsPage() {
         event={editingEvent}
         onSuccess={handleEventSuccess}
       />
-    </DashboardLayout>
+    </>
   );
 } 

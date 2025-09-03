@@ -162,7 +162,7 @@ export default function IncomeReportsPage() {
   // Loading state
   if (isLoading && !reportData) {
     return (
-      <DashboardLayout>
+      <>>
         <PageHeader
           title="Income Reports"
           description="Comprehensive income analysis and reporting"
@@ -173,14 +173,14 @@ export default function IncomeReportsPage() {
             <p className="text-gray-600 dark:text-gray-400">Loading report data...</p>
           </div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   // Error state
   if (error && !reportData) {
     return (
-      <DashboardLayout>
+      <>>
         <PageHeader
           title="Income Reports"
           description="Comprehensive income analysis and reporting"
@@ -195,14 +195,14 @@ export default function IncomeReportsPage() {
             </Button>
           </div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   // No data state
   if (!reportData) {
     return (
-      <DashboardLayout>
+      <>>
         <PageHeader
           title="Income Reports"
           description="Comprehensive income analysis and reporting"
@@ -213,12 +213,12 @@ export default function IncomeReportsPage() {
             <p className="text-gray-600 dark:text-gray-400">No income data available for the selected period.</p>
           </div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>>
       <PageHeader
         title="Income Reports"
         description="Comprehensive income analysis and reporting"
@@ -445,6 +445,6 @@ export default function IncomeReportsPage() {
           ))}
         </div> */}
       {/* </div> */}
-    </DashboardLayout>
+     </>
   );
 } 

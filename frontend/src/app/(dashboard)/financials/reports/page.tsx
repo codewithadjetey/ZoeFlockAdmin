@@ -28,7 +28,7 @@ export default function FinancialReportsPage() {
   }));
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="flex flex-col gap-6">
         <h1 className="text-2xl font-bold">Financial Reports</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -77,6 +77,6 @@ export default function FinancialReportsPage() {
           Charts and advanced analytics coming soon...
         </div>
       </div>
-    </DashboardLayout>
+     </>
   );
 }

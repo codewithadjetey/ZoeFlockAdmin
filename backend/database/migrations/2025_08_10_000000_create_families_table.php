@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->boolean('active')->default(true);
             $table->boolean('deleted')->default(false);
-            $table->foreignId('family_head_id')->constrained('members')->onDelete('cascade');
+            $table->foreignId('family_head_id')->nullable()->constrained('members')->onDelete('set null');
             $table->timestamps();
 
             // Indexes for better performance

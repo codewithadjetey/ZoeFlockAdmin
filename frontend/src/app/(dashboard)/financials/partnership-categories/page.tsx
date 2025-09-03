@@ -97,7 +97,7 @@ export default function PartnershipCategoriesPage() {
   ];
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Partnership Category</h1>
@@ -139,6 +139,6 @@ export default function PartnershipCategoriesPage() {
           errors={errors}
         />
       </div>
-    </DashboardLayout>
+    </>
   );
 }

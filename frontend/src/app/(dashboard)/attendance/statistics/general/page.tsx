@@ -346,7 +346,7 @@ export default function GeneralAttendanceStatisticsPage() {
   const summaryStats = getSummaryStats();
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="space-y-6">
         <PageHeader
           title="General Attendance Statistics"
@@ -491,6 +491,6 @@ export default function GeneralAttendanceStatisticsPage() {
           </div>
         </Card>
       </div>
-    </DashboardLayout>
+     </>
   );
 } 

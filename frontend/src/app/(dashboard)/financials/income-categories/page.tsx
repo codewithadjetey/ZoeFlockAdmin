@@ -143,7 +143,7 @@ export default function IncomeCategoriesPage() {
   );
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="space-y-6">
         <PageHeader
           title="Income Categories"
@@ -232,6 +232,6 @@ export default function IncomeCategoriesPage() {
           </Modal>
         )}
       </div>
-    </DashboardLayout>
+     </>
   );
 }

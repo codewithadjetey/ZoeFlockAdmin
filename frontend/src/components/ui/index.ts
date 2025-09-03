@@ -49,6 +49,12 @@ export { default as ColorInput } from './ColorInput';
 export { default as Toast } from './Toast';
 export { default as ToastContainer } from './ToastContainer';
 
+// Progress Component
+export { default as Progress } from './Progress';
+
+// Separator Component
+export { default as Separator } from './Separator';
+
 // Additional missing components
 export { default as Textarea } from './Textarea';
 export { default as Label } from './FormField';

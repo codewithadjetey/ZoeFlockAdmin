@@ -320,7 +320,7 @@ export default function FilesPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>>
       <PageHeader
         title="Files Management"
         description="Manage and organize all church files, documents, and resources"
@@ -704,6 +704,6 @@ export default function FilesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DashboardLayout>
+     </>
   );
 } 

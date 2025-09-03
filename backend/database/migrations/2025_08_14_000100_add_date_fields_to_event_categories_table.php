@@ -27,7 +27,6 @@ return new class extends Migration
     {
         Schema::table('event_categories', function (Blueprint $table) {
             $table->dropColumn([
-                'default_event_date',
                 'recurrence_start_date', 
                 'recurrence_end_date'
             ]);

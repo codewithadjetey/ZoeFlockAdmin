@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   PageHeader, 
   SearchInput, 
@@ -343,7 +342,7 @@ export default function MembersPage() {
   );
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader
         title={isFamilyHead() ? "Family Members" : "Member Directory"}
         description={isFamilyHead() ? "Manage and view members in your family" : "Manage and view all church members"}
@@ -437,6 +436,6 @@ export default function MembersPage() {
         onSave={handleSave}
         mode={modalMode}
       />
-    </DashboardLayout>
+    </>
   );
 } 

@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   PageHeader, 
   StatCard,
@@ -224,7 +223,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <DashboardLayout>
+    <>
       {/* Modern Welcome Section */}
       <section className="mb-8">
         <div className="welcome-gradient rounded-3xl shadow-2xl p-8 text-white relative overflow-hidden">
@@ -472,6 +471,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
-    </DashboardLayout>
+    </>
   );
 } 

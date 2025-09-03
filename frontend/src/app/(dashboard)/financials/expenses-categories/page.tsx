@@ -144,7 +144,7 @@ export default function ExpensesCategoriesPage() {
   );
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-6">
         <PageHeader
           title="Expenses Categories"
@@ -233,6 +233,6 @@ export default function ExpensesCategoriesPage() {
           </Modal>
         )}
       </div>
-    </DashboardLayout>
+    </>
   );
 }

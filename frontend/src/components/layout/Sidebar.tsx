@@ -12,7 +12,18 @@ const allMenuItems = [
   { label: "Families", icon: "fas fa-house-user", href: "/families", type: "main" },
   { label: "Groups", icon: "fas fa-layer-group", href: "/groups", type: "main" },
   { label: "First Timers", icon: "fas fa-user-plus", href: "/first-timers", type: "main" },
-  { label: "Communication", icon: "fas fa-envelope", href: "/communication", type: "main" },
+  // { label: "Communication", icon: "fas fa-envelope", href: "/communication", type: "main" },
+  
+  // Import/Export menu items
+  { label: "Import/Export", icon: "fas fa-upload", href: "/import-export", type: "import" },
+  { label: "Members Import", icon: "fas fa-users", href: "/import-export/members", type: "import" },
+  { label: "Families Import", icon: "fas fa-house-user", href: "/import-export/families", type: "import" },
+  { label: "Groups Import", icon: "fas fa-layer-group", href: "/import-export/groups", type: "import" },
+  { label: "Event Categories Import", icon: "fas fa-tags", href: "/import-export/event_categories", type: "import" },
+  { label: "Partnership Categories Import", icon: "fas fa-list-alt", href: "/import-export/partnership_categories", type: "import" },
+  { label: "Income Categories Import", icon: "fas fa-folder-plus", href: "/import-export/income-categories", type: "import" },
+  { label: "Expense Categories Import", icon: "fas fa-folder-open", href: "/import-export/expense-categories", type: "import" },
+  { label: "Audit Logs", icon: "fas fa-history", href: "/import-export/audit-logs", type: "import" },
   
   // Financials menu items
   { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships", type: "financials" },
@@ -187,6 +198,50 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               </Link>
             );
           })}
+
+          {/* Import/Export Menu Section */}
+          <div className="pt-4 border-t border-white/10">
+            <button
+              onClick={() => toggleSubmenu('import')}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
+                pathname.startsWith('/import-export')
+                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
+                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
+              }`}
+            >
+              <div className="flex items-center">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                <i className="fas fa-upload mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
+                <span className="relative z-10">Import/Export</span>
+              </div>
+              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'import' ? 'rotate-180' : ''}`}></i>
+            </button>
+
+            {/* Import/Export Submenu */}
+            {openSubmenu === 'import' && (
+              <div className="ml-4 mt-2 space-y-2">
+                {getMenuItemsByType("import").map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
+                        isActive
+                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
+                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
+                      }`}
+                      onClick={handleNavClick}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-orange-500/15 to-yellow-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                      <span className="relative z-10 text-sm">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Financials Menu Section */}
           <div className="pt-4 border-t border-white/10">

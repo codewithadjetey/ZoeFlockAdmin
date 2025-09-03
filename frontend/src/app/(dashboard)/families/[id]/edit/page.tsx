@@ -70,26 +70,26 @@ export default function EditFamilyPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>>
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Loading family...</div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   if (!family) {
     return (
-      <DashboardLayout>
+      <>>
         <div className="flex items-center justify-center h-64">
           <div className="text-lg text-red-600">Family not found</div>
         </div>
-      </DashboardLayout>
+       </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>>
       <div className="space-y-6">
         <PageHeader
           title={`Edit ${family.name}`}
@@ -109,6 +109,6 @@ export default function EditFamilyPage() {
           mode="edit"
         />
       </div>
-    </DashboardLayout>
+     </>
   );
 } 
