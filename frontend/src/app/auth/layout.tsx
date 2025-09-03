@@ -2,6 +2,7 @@
 import React from 'react'
 import { ReactNode } from 'react';
 import { GuestRoute } from '@/components/auth/AuthGuard';
+import ToastContainer from "@/components/ui/ToastContainer";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return ( 
@@ -11,6 +12,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           {children}
         </div>
       </section>
+      <ToastContainer />
     </GuestRoute>
   )
 }
