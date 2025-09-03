@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useBackupStats } from "@/hooks/useBackupStats";
 
 // Consolidated menu items array
 const allMenuItems = [
@@ -48,11 +49,13 @@ const allMenuItems = [
   { label: "Appearance", icon: "fas fa-palette", href: "/settings/appearance", type: "settings" },
   { label: "Notifications", icon: "fas fa-bell", href: "/settings/notifications", type: "settings" },
   { label: "Security", icon: "fas fa-shield-alt", href: "/settings/security", type: "settings" },
-  { label: "Backup", icon: "fas fa-database", href: "/settings/backup", type: "settings" },
+  
+  // System menu items
   
   // Admin menu items
   { label: "Users", icon: "fas fa-user-cog", href: "/admin/users", type: "admin" },
   { label: "Roles & Permissions", icon: "fas fa-shield-alt", href: "/admin/roles", type: "admin" },
+  { label: "Backup & Restore", icon: "fas fa-database", href: "/backups", type: "admin" },
   
   // Reports menu items
   { label: "Reports", icon: "fas fa-chart-bar", href: "/reports", type: "reports" },
@@ -78,6 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { currentTheme, colorMode } = useTheme();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  const { hasPendingBackups, hasFailedBackups } = useBackupStats();
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -420,6 +424,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             )}
           </div>
 
+
+
           {/* Admin Menu Section */}
           <div className="pt-4 border-t border-white/10">
             <button
@@ -443,6 +449,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
               <div className="ml-4 mt-2 space-y-2">
                 {getMenuItemsByType("admin").map((item) => {
                   const isActive = pathname === item.href;
+                  const isBackup = item.href === '/backups';
                   return (
                     <Link
                       key={item.label}
@@ -457,6 +464,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
                       <span className="relative z-10 text-sm">{item.label}</span>
+                      {isBackup && (hasPendingBackups || hasFailedBackups) && (
+                        <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse flex items-center justify-center">
+                          <span className="text-xs text-white font-bold">
+                            {hasFailedBackups ? '!' : hasPendingBackups ? 'P' : ''}
+                          </span>
+                        </div>
+                      )}
                     </Link>
                   );
                 })}

@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, Input, SelectInput, DataTable, Alert } from '@/components/ui';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -45,7 +39,7 @@ interface AuditLog {
 
 export default function AuditLogsPage() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { showToast } = useToast();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -73,11 +67,7 @@ export default function AuditLogsPage() {
       setLogs(response.data.data.data || []);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load audit logs',
-        variant: 'destructive',
-      });
+      showToast('Failed to load audit logs', 'error');
     } finally {
       setLoading(false);
     }
