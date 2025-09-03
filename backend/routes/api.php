@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\ExpenseController;
 use App\Http\Controllers\Api\V1\IncomeController;
 use App\Http\Controllers\Api\V1\IncomeCategoryController;
 use App\Http\Controllers\Api\V1\TitheController;
+use App\Http\Controllers\Api\V1\ImportController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -328,6 +329,14 @@ Route::prefix($apiVersion)->group(function () {
         Route::get('/dashboard-summary', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getDashboardSummary']);
         Route::get('/insights', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getFinancialInsights']);
         Route::get('/recent-activity', [\App\Http\Controllers\Api\V1\ReportsController::class, 'getRecentActivity']);
+    });
+
+    // Import/Export routes
+    Route::prefix('import')->group(function () {
+        Route::get('/', [ImportController::class, 'index']);
+        Route::get('/sample/{type}', [ImportController::class, 'downloadSample'])->name('api.v1.import.sample');
+        Route::post('/{type}', [ImportController::class, 'processImport'])->name('api.v1.import.process');
+        Route::get('/audit-logs', [ImportController::class, 'getAuditLogs']);
     });
 
     // Route::prefix('donations')->group(function () {
