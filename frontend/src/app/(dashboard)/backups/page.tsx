@@ -332,13 +332,7 @@ export default function BackupsPage() {
               </p>
             </div>
             <div className="mt-6 md:mt-0 flex space-x-4">
-              <Button 
-                onClick={() => toast.success('Test success message!')}
-                className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                Test Toast
-              </Button>
-              <Button 
+z              <Button 
                 onClick={handleProcessBackups} 
                 disabled={processing}
                 className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105"

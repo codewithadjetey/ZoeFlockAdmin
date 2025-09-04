@@ -367,6 +367,22 @@ Route::prefix($apiVersion)->group(function () {
             Route::get('/insights', [ReportsController::class, 'getFinancialInsights'])->middleware('permission:get-financial-insights');
             Route::get('/recent-activity', [ReportsController::class, 'getRecentActivity'])->middleware('permission:get-recent-activity');
         });
+    // Dashboard routes
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/data', [DashboardController::class, 'getDashboardData']);
+    });
+
+    // Backup management routes
+    Route::prefix('backups')->group(function () {
+        Route::get('/', [BackupController::class, 'index']);
+        Route::post('/', [BackupController::class, 'store']);
+        Route::get('/stats', [BackupController::class, 'stats']);
+        Route::post('/process', [BackupController::class, 'process']);
+        Route::get('/{backup}', [BackupController::class, 'show']);
+        Route::get('/{backup}/download', [BackupController::class, 'download']);
+        Route::post('/{backup}/restore', [BackupController::class, 'restore']);
+        Route::delete('/{backup}', [BackupController::class, 'destroy']);
+    });
 
         // Import/Export routes
         Route::prefix('import')->group(function () {
