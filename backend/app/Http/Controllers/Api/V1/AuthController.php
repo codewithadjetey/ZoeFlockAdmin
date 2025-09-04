@@ -478,6 +478,16 @@ class AuthController extends Controller
             'date_of_birth' => 'nullable|date',
             'gender' => 'nullable|in:male,female,other',
             'profile_picture' => 'nullable|string',
+            'email_notifications_enabled' => 'nullable|boolean',
+            'email_notification_types' => 'nullable|array',
+            'email_notification_types.*' => 'string|in:events,attendance,reports,announcements,reminders',
+            'sms_notifications_enabled' => 'nullable|boolean',
+            'sms_notification_types' => 'nullable|array',
+            'sms_notification_types.*' => 'string|in:events,attendance,reports,announcements,reminders',
+            'whatsapp_notifications_enabled' => 'nullable|boolean',
+            'whatsapp_notification_types' => 'nullable|array',
+            'whatsapp_notification_types.*' => 'string|in:events,attendance,reports,announcements,reminders',
+            'whatsapp_number' => 'nullable|string|max:20',
         ]);
 
         if ($validator->fails()) {
@@ -489,7 +499,10 @@ class AuthController extends Controller
         }
 
         $user->update($request->only([
-            'name', 'phone', 'address', 'date_of_birth', 'gender', 'profile_picture'
+            'name', 'phone', 'address', 'date_of_birth', 'gender', 'profile_picture',
+            'email_notifications_enabled', 'email_notification_types',
+            'sms_notifications_enabled', 'sms_notification_types',
+            'whatsapp_notifications_enabled', 'whatsapp_notification_types', 'whatsapp_number'
         ]));
 
         return response()->json([

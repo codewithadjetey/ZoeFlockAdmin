@@ -25,6 +25,15 @@ export default function SettingsPage() {
     address: "",
     dateOfBirth: "",
     gender: "",
+    // Notification settings
+    emailNotificationsEnabled: true,
+    emailNotificationTypes: [] as string[],
+    smsNotificationsEnabled: false,
+    smsNotificationTypes: [] as string[],
+    whatsappNotificationsEnabled: false,
+    whatsappNotificationTypes: [] as string[],
+    whatsappNumber: "",
+    // Other settings
     emailNotifications: true,
     smsNotifications: false,
     weeklyReports: true,
@@ -54,6 +63,13 @@ export default function SettingsPage() {
           address: userData.address || "",
           dateOfBirth: userData.date_of_birth || "",
           gender: userData.gender || "",
+          emailNotificationsEnabled: userData.email_notifications_enabled ?? true,
+          emailNotificationTypes: userData.email_notification_types || [],
+          smsNotificationsEnabled: userData.sms_notifications_enabled ?? false,
+          smsNotificationTypes: userData.sms_notification_types || [],
+          whatsappNotificationsEnabled: userData.whatsapp_notifications_enabled ?? false,
+          whatsappNotificationTypes: userData.whatsapp_notification_types || [],
+          whatsappNumber: userData.whatsapp_number || "",
         }));
       }
     } catch (error) {
@@ -77,6 +93,13 @@ export default function SettingsPage() {
         address: settings.address,
         date_of_birth: settings.dateOfBirth || null,
         gender: (settings.gender as 'male' | 'female' | 'other') || null,
+        email_notifications_enabled: settings.emailNotificationsEnabled,
+        email_notification_types: settings.emailNotificationTypes,
+        sms_notifications_enabled: settings.smsNotificationsEnabled,
+        sms_notification_types: settings.smsNotificationTypes,
+        whatsapp_notifications_enabled: settings.whatsappNotificationsEnabled,
+        whatsapp_notification_types: settings.whatsappNotificationTypes,
+        whatsapp_number: settings.whatsappNumber,
       };
 
       const response = await AuthService.updateProfile(profileData);
@@ -168,30 +191,148 @@ export default function SettingsPage() {
     </div>
   );
 
-  const renderNotificationSettings = () => (
+    const renderNotificationSettings = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Email Notifications</h3>
-          <p className="text-sm text-gray-600">Receive notifications via email</p>
+      {/* Email Notifications */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Email Notifications</h3>
+            <p className="text-sm text-gray-600">Receive notifications via email</p>
+          </div>
+          <ToggleSwitch
+            checked={settings.emailNotificationsEnabled}
+            onChange={(checked) => handleSettingChange("emailNotificationsEnabled", checked)}
+          />
         </div>
-        <ToggleSwitch
-          checked={settings.emailNotifications}
-          onChange={(checked) => handleSettingChange("emailNotifications", checked)}
-        />
+        
+        {settings.emailNotificationsEnabled && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700">Notification Types:</p>
+            {[
+              { value: 'events', label: 'Events & Announcements' },
+              { value: 'attendance', label: 'Attendance Reports' },
+              { value: 'reports', label: 'Weekly Reports' },
+              { value: 'announcements', label: 'Important Announcements' },
+              { value: 'reminders', label: 'Reminders' },
+            ].map((type) => (
+              <label key={type.value} className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={settings.emailNotificationTypes.includes(type.value)}
+                  onChange={(e) => {
+                    const newTypes = e.target.checked
+                      ? [...settings.emailNotificationTypes, type.value]
+                      : settings.emailNotificationTypes.filter(t => t !== type.value);
+                    handleSettingChange("emailNotificationTypes", newTypes);
+                  }}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                <span className="text-sm text-gray-700">{type.label}</span>
+              </label>
+            ))}
+          </div>
+        )}
       </div>
-      
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">SMS Notifications</h3>
-          <p className="text-sm text-gray-600">Receive notifications via SMS</p>
+
+      {/* SMS Notifications */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">SMS Notifications</h3>
+            <p className="text-sm text-gray-600">Receive notifications via SMS</p>
+          </div>
+          <ToggleSwitch
+            checked={settings.smsNotificationsEnabled}
+            onChange={(checked) => handleSettingChange("smsNotificationsEnabled", checked)}
+          />
         </div>
-        <ToggleSwitch
-          checked={settings.smsNotifications}
-          onChange={(checked) => handleSettingChange("smsNotifications", checked)}
-        />
+        
+        {settings.smsNotificationsEnabled && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-gray-700">Notification Types:</p>
+            {[
+              { value: 'events', label: 'Events & Announcements' },
+              { value: 'attendance', label: 'Attendance Reports' },
+              { value: 'reports', label: 'Weekly Reports' },
+              { value: 'announcements', label: 'Important Announcements' },
+              { value: 'reminders', label: 'Reminders' },
+            ].map((type) => (
+              <label key={type.value} className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={settings.smsNotificationTypes.includes(type.value)}
+                  onChange={(e) => {
+                    const newTypes = e.target.checked
+                      ? [...settings.smsNotificationTypes, type.value]
+                      : settings.smsNotificationTypes.filter(t => t !== type.value);
+                    handleSettingChange("smsNotificationTypes", newTypes);
+                  }}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                <span className="text-sm text-gray-700">{type.label}</span>
+              </label>
+            ))}
+          </div>
+        )}
       </div>
-  
+
+      {/* WhatsApp Notifications */}
+      <div className="bg-gray-50 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">WhatsApp Notifications</h3>
+            <p className="text-sm text-gray-600">Receive notifications via WhatsApp</p>
+          </div>
+          <ToggleSwitch
+            checked={settings.whatsappNotificationsEnabled}
+            onChange={(checked) => handleSettingChange("whatsappNotificationsEnabled", checked)}
+          />
+        </div>
+        
+        {settings.whatsappNotificationsEnabled && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                WhatsApp Number
+              </label>
+              <input
+                type="tel"
+                value={settings.whatsappNumber}
+                onChange={(e) => handleSettingChange("whatsappNumber", e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Enter WhatsApp number (e.g., +1234567890)"
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-gray-700">Notification Types:</p>
+              {[
+                { value: 'events', label: 'Events & Announcements' },
+                { value: 'attendance', label: 'Attendance Reports' },
+                { value: 'reports', label: 'Weekly Reports' },
+                { value: 'announcements', label: 'Important Announcements' },
+                { value: 'reminders', label: 'Reminders' },
+              ].map((type) => (
+                <label key={type.value} className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    checked={settings.whatsappNotificationTypes.includes(type.value)}
+                    onChange={(e) => {
+                      const newTypes = e.target.checked
+                        ? [...settings.whatsappNotificationTypes, type.value]
+                        : settings.whatsappNotificationTypes.filter(t => t !== type.value);
+                      handleSettingChange("whatsappNotificationTypes", newTypes);
+                    }}
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-sm text-gray-700">{type.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 

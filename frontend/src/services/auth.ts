@@ -19,6 +19,14 @@ export interface User {
   is_admin?: boolean;
   is_pastor?: boolean;
   is_member?: boolean;
+  // Notification settings
+  email_notifications_enabled?: boolean;
+  email_notification_types?: string[];
+  sms_notifications_enabled?: boolean;
+  sms_notification_types?: string[];
+  whatsapp_notifications_enabled?: boolean;
+  whatsapp_notification_types?: string[];
+  whatsapp_number?: string;
 }
 
 export interface ProfileUpdateRequest {
@@ -28,6 +36,14 @@ export interface ProfileUpdateRequest {
   date_of_birth?: string | null;
   gender?: 'male' | 'female' | 'other' | null;
   profile_picture?: string;
+  // Notification settings
+  email_notifications_enabled?: boolean;
+  email_notification_types?: string[];
+  sms_notifications_enabled?: boolean;
+  sms_notification_types?: string[];
+  whatsapp_notifications_enabled?: boolean;
+  whatsapp_notification_types?: string[];
+  whatsapp_number?: string;
 }
 
 export interface ProfileResponse {
