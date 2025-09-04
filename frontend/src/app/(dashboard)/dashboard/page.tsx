@@ -9,8 +9,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { FamiliesService } from "@/services/families";
 import { GroupsService } from "@/services/groups";
 import { MembersService } from "@/services/members";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [stats, setStats] = useState([
     {
       title: "Total Members",
@@ -231,7 +233,9 @@ export default function DashboardPage() {
           <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-4xl font-bold mb-3 font-['Poppins'] bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
-                Welcome back, <span className="text-yellow-300">Admin</span>! 👋
+                Welcome back, <span className="text-yellow-300">
+                  {user?.name}
+                </span>! 👋
               </h2>
               <p className="text-blue-100 dark:text-blue-200 text-lg">
                 Here's what's happening with your church community today.
