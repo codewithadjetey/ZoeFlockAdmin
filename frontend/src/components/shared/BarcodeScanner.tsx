@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Card, TextInput, Textarea, SelectInput, FormField } from '@/components/ui';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 import { AttendanceService } from '@/services/attendance';
 import { EventsService } from '@/services/events';
 import type { Event } from '@/interfaces';
@@ -36,7 +36,6 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onAttendanceMarked }) =
   const [notes, setNotes] = useState<string>('');
   const [manualInput, setManualInput] = useState<string>('');
   
-  const { showToast } = useToast();
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   // Safe setter for scannedBarcode to ensure it's always a string
@@ -89,7 +88,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onAttendanceMarked }) =
     console.log('Processed barcode:', barcode);
     
     if (!barcode || !selectedEvent) {
-      showToast('Please enter a barcode and select an event', 'error');
+      toast.error('Please enter a barcode and select an event');
       return;
     }
 
@@ -103,7 +102,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onAttendanceMarked }) =
 
       if (response.success) {
         setScanResult(response.data);
-        showToast(`Attendance marked successfully for ${response.data.member.name}`, 'success');
+        toast.success(`Attendance marked successfully for ${response.data.member.name}`);
         
         // Reset form
         setScannedBarcodeSafe('');
@@ -123,7 +122,7 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onAttendanceMarked }) =
       }
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to mark attendance';
-      showToast(message, 'error');
+      toast.error(message);
     } finally {
       setLoading(false);
     }

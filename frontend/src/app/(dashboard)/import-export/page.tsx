@@ -17,7 +17,7 @@ import {
   Info,
   SeparatorHorizontal
 } from 'lucide-react';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 import { api } from '@/utils/api';
 import { Alert, AlertDescription, Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/index';
 
@@ -34,7 +34,6 @@ interface ImportOption {
 export default function ImportExportPage() {
   const [importOptions, setImportOptions] = useState<ImportOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const { showToast } = useToast();
 
   useEffect(() => {
     fetchImportOptions();
@@ -86,7 +85,7 @@ export default function ImportExportPage() {
       setImportOptions(importOptionsWithIcons);
     } catch (error) {
       console.error('Failed to fetch import options:', error);
-      showToast('Failed to load import options', 'error');
+      toast.error('Failed to load import options');
     } finally {
       setLoading(false);
     }
@@ -108,10 +107,10 @@ export default function ImportExportPage() {
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      showToast(`Sample file downloaded: ${filename}`, 'success');
+      toast.success(`Sample file downloaded: ${filename}`);
     } catch (error) {
       console.error('Failed to download sample:', error);
-      showToast('Failed to download sample file', 'error');
+      toast.error('Failed to download sample file');
     }
   };
 

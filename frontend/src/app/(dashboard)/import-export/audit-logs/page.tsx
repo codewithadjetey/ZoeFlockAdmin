@@ -14,7 +14,7 @@ import {
   Search,
   Filter
 } from 'lucide-react';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 import { api } from '@/utils/api';
 
 interface AuditLog {
@@ -39,7 +39,6 @@ interface AuditLog {
 
 export default function AuditLogsPage() {
   const router = useRouter();
-  const { showToast } = useToast();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -67,7 +66,7 @@ export default function AuditLogsPage() {
       setLogs(response.data.data.data || []);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
-      showToast('Failed to load audit logs', 'error');
+      toast.error('Failed to load audit logs');
     } finally {
       setLoading(false);
     }

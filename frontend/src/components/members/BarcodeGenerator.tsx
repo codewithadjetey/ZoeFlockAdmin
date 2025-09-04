@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Card, TextInput, FormField } from '@/components/ui';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 import { AttendanceService } from '@/services/attendance';
 import type { Member } from '@/interfaces';
 
@@ -15,7 +15,6 @@ const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({ member, onBarcodeGe
   const [barcode, setBarcode] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const { showToast } = useToast();
 
   useEffect(() => {
     if (member.barcode) {
@@ -29,14 +28,14 @@ const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({ member, onBarcodeGe
       const response = await AttendanceService.getMemberBarcode(member.id);
       if (response.success) {
         setBarcode(response.data.barcode);
-        showToast('Barcode retrieved successfully', 'success');
+        toast.success('Barcode retrieved successfully');
         if (onBarcodeGenerated) {
           onBarcodeGenerated(response.data.barcode);
         }
       }
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to retrieve barcode';
-      showToast(message, 'error');
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -48,14 +47,14 @@ const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({ member, onBarcodeGe
       const response = await AttendanceService.generateMemberBarcode(member.id);
       if (response.success) {
         setBarcode(response.data.barcode);
-        showToast('New barcode generated successfully', 'success');
+        toast.success('New barcode generated successfully');
         if (onBarcodeGenerated) {
           onBarcodeGenerated(response.data.barcode);
         }
       }
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to generate barcode';
-      showToast(message, 'error');
+      toast.error(message);
     } finally {
       setGenerating(false);
     }
@@ -64,7 +63,7 @@ const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({ member, onBarcodeGe
   const copyBarcode = () => {
     if (barcode) {
       navigator.clipboard.writeText(barcode);
-      showToast('Barcode copied to clipboard', 'success');
+      toast.success('Barcode copied to clipboard');
     }
   };
 
@@ -82,7 +81,7 @@ const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({ member, onBarcodeGe
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    showToast('Barcode downloaded successfully', 'success');
+    toast.success('Barcode downloaded successfully');
   };
 
   return (
