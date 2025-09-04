@@ -22,8 +22,8 @@ const allMenuItems = [
   { label: "Groups Import", icon: "fas fa-layer-group", href: "/import-export/groups", type: "import" },
   { label: "Event Categories Import", icon: "fas fa-tags", href: "/import-export/event_categories", type: "import" },
   { label: "Partnership Categories Import", icon: "fas fa-list-alt", href: "/import-export/partnership_categories", type: "import" },
-  { label: "Income Categories Import", icon: "fas fa-folder-plus", href: "/import-export/income-categories", type: "import" },
-  { label: "Expense Categories Import", icon: "fas fa-folder-open", href: "/import-export/expense-categories", type: "import" },
+  { label: "Income Categories Import", icon: "fas fa-folder-plus", href: "/import-export/income_categories", type: "import" },
+  { label: "Expense Categories Import", icon: "fas fa-folder-open", href: "/import-export/expense_categories", type: "import" },
   { label: "Audit Logs", icon: "fas fa-history", href: "/import-export/audit-logs", type: "import" },
   
   // Financials menu items
