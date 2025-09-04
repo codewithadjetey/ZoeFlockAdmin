@@ -12,6 +12,19 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-users');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-users')->only(['store']);
+        $this->middleware('permission:edit-users')->only(['update']);
+        $this->middleware('permission:delete-users')->only(['destroy']);
+        $this->middleware('permission:toggle-user-status')->only(['toggleStatus']);
+        $this->middleware('permission:change-user-password')->only(['changePassword']);
+    }
+
     /**
      * @OA\Get(
      *     path="/users",
