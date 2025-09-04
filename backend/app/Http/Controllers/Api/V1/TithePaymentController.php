@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Tithe;
 use App\Models\TithePayment;
-use Illuminate\Http\Request;
+use App\Models\Member;
+use App\Models\Family;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Exception;
 
 /**
  * @OA\Tag(
@@ -19,6 +22,17 @@ use Illuminate\Support\Facades\DB;
  */
 class TithePaymentController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-tithe-payments');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-tithe-payments')->only(['store']);
+        $this->middleware('permission:edit-tithe-payments')->only(['update']);
+        $this->middleware('permission:delete-tithe-payments')->only(['destroy']);
+    }
+
     /**
      * Add a partial payment to a tithe
      * 

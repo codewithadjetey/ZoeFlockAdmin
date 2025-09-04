@@ -11,13 +11,14 @@ export function getToken(): string | null {
 export function setToken(token: string): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(TOKEN_KEY, token);
-  api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  // The interceptor will automatically add the token to requests
+  // No need to manually set headers here
 }
 
 export function removeToken(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(TOKEN_KEY);
-  delete api.defaults.headers.common['Authorization'];
+  // The interceptor will automatically handle missing tokens
 }
 
 export function isTokenValid(token: string): boolean {
@@ -149,7 +150,8 @@ export async function logout(): Promise<void> {
 export function initializeAuth(): void {
   const token = getToken();
   if (token && isTokenValid(token)) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    // Token is valid, interceptor will handle it automatically
+  
   } else {
     removeToken();
   }

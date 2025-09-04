@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\FileUpload;
 use App\Services\FileUploadService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Exception;
 
 /**
  * @OA\Tag(
@@ -18,11 +21,22 @@ use Illuminate\Support\Facades\Validator;
 
 class FileUploadController extends Controller
 {
-    protected FileUploadService $fileUploadService;
+    protected $fileUploadService;
 
     public function __construct(FileUploadService $fileUploadService)
     {
         $this->fileUploadService = $fileUploadService;
+        
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-files');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-files')->only(['upload', 'uploadMultiple']);
+        $this->middleware('permission:edit-files')->only(['update']);
+        $this->middleware('permission:delete-files')->only(['delete']);
+        $this->middleware('permission:upload-files')->only(['upload']);
+        $this->middleware('permission:upload-multiple-files')->only(['uploadMultiple']);
+        $this->middleware('permission:get-files-by-model')->only(['getByModel']);
     }
 
     /**

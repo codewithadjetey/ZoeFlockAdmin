@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Family;
 use App\Models\Member;
 use App\Services\FileUploadService;
+use App\Services\FamilyService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -674,9 +675,8 @@ class FamilyController extends Controller
      *     )
      * )
      */
-    public function getStatistics(): JsonResponse
+    public function getStatistics(FamilyService $familyService): JsonResponse
     {
-        $familyService = app(FamilyService::class);
         $statistics = $familyService->getFamilyStatistics();
 
         return response()->json([

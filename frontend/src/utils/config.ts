@@ -99,8 +99,7 @@ export const config: AppConfig = {
 };
 
 // Debug logs to verify environment variable loading
-console.log('process.env.NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
-console.log('config.api.baseUrl:', config.api.baseUrl);
+
 
 /**
  * Helper function to get API URL with version

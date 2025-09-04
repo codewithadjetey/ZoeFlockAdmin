@@ -23,6 +23,16 @@ class ImportController extends Controller
     public function __construct(ImportService $importService)
     {
         $this->importService = $importService;
+        
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-imports');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-imports')->only(['processImport']);
+        $this->middleware('permission:delete-imports')->only(['destroy']);
+        $this->middleware('permission:download-import-sample')->only(['downloadSample']);
+        $this->middleware('permission:process-import')->only(['processImport']);
+        $this->middleware('permission:get-audit-logs')->only(['getAuditLogs']);
     }
 
     /**

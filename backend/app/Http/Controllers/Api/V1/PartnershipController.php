@@ -9,6 +9,10 @@ use App\Models\PartnershipCategory;
 use App\Models\Member;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use App\Services\FileUploadService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
+use Exception;
 
 /**
  * @OA\Tag(
@@ -18,6 +22,22 @@ use Illuminate\Support\Facades\DB;
  */
 class PartnershipController extends Controller
 {
+    protected $fileUploadService;
+
+    public function __construct(FileUploadService $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+        
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-partnerships');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-partnerships')->only(['store']);
+        $this->middleware('permission:edit-partnerships')->only(['update']);
+        $this->middleware('permission:delete-partnerships')->only(['destroy']);
+        $this->middleware('permission:generate-partnership-schedule')->only(['generateSchedule']);
+    }
+
     /**
      * Display a listing of the resource.
      * 
