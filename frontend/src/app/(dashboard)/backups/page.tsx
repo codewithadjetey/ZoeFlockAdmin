@@ -6,7 +6,7 @@ import { FormField } from '@/components/ui';
 import { SelectInput } from '@/components/ui';
 import { TextArea } from '@/components/ui';
 import { Modal } from '@/components/ui';
-import { useToast } from '@/contexts/ToastContext';
+import { toast } from 'react-toastify';
 import { backupService, Backup, BackupStats, CreateBackupRequest } from '@/services/backups';
 import { Download, Upload, Trash2, RefreshCw, Database, HardDrive, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
@@ -28,8 +28,6 @@ export default function BackupsPage() {
     notes: '',
   });
   const [creating, setCreating] = useState(false);
-
-  const { showToast } = useToast();
 
   useEffect(() => {
     fetchBackups();
@@ -59,7 +57,7 @@ export default function BackupsPage() {
         setTotalPages(response.pagination.last_page);
       }
     } catch (error) {
-      showToast('Error fetching backups', 'error');
+      toast.error('Error fetching backups');
     } finally {
       setLoading(false);
     }
@@ -82,16 +80,16 @@ export default function BackupsPage() {
       const response = await backupService.createBackup(createForm);
       
       if (response.success) {
-        showToast('Backup request created successfully', 'success');
+        toast.success('Backup request created successfully');
         setCreateModalOpen(false);
         setCreateForm({ type: 'database', notes: '' });
         fetchBackups();
         fetchStats();
       } else {
-        showToast(response.message || 'Failed to create backup', 'error');
+        toast.error(response.message || 'Failed to create backup');
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to create backup', 'error');
+      toast.error(error.response?.data?.message || 'Failed to create backup');
     } finally {
       setCreating(false);
     }
@@ -103,14 +101,14 @@ export default function BackupsPage() {
       const response = await backupService.processBackups();
       
       if (response.success) {
-        showToast(`Processed ${response.data.processed} backups (${response.data.success} success, ${response.data.failed} failed)`, 'success');
+        toast.success(`Processed ${response.data.processed} backups (${response.data.success} success, ${response.data.failed} failed)`);
         fetchBackups();
         fetchStats();
       } else {
-        showToast(response.message || 'Failed to process backups', 'error');
+        toast.error(response.message || 'Failed to process backups');
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to process backups', 'error');
+      toast.error(error.response?.data?.message || 'Failed to process backups');
     } finally {
       setProcessing(false);
     }
@@ -129,12 +127,12 @@ export default function BackupsPage() {
         link.click();
         document.body.removeChild(link);
         
-        showToast('Download started', 'success');
+        toast.success('Download started');
       } else {
-        showToast('Failed to download backup', 'error');
+        toast.error('Failed to download backup');
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to download backup', 'error');
+      toast.error(error.response?.data?.message || 'Failed to download backup');
     }
   };
 
@@ -147,12 +145,12 @@ export default function BackupsPage() {
       const response = await backupService.restoreBackup(backup.id);
       
       if (response.success) {
-        showToast('Backup restored successfully', 'success');
+        toast.success('Backup restored successfully');
       } else {
-        showToast(response.message || 'Failed to restore backup', 'error');
+        toast.error(response.message || 'Failed to restore backup');
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to restore backup', 'error');
+      toast.error(error.response?.data?.message || 'Failed to restore backup');
     }
   };
 
@@ -165,14 +163,14 @@ export default function BackupsPage() {
       const response = await backupService.deleteBackup(backup.id);
       
       if (response.success) {
-        showToast('Backup deleted successfully', 'success');
+        toast.success('Backup deleted successfully');
         fetchBackups();
         fetchStats();
       } else {
-        showToast(response.message || 'Failed to delete backup', 'error');
+        toast.error(response.message || 'Failed to delete backup');
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Failed to delete backup', 'error');
+      toast.error(error.response?.data?.message || 'Failed to delete backup');
     }
   };
 
@@ -335,7 +333,7 @@ export default function BackupsPage() {
             </div>
             <div className="mt-6 md:mt-0 flex space-x-4">
               <Button 
-                onClick={() => showToast('Test success message!', 'success')}
+                onClick={() => toast.success('Test success message!')}
                 className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 Test Toast

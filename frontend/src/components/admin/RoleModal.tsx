@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/shared";
 import { Button, SimpleInput, Checkbox, FormField } from "@/components/ui";
-import { useToast } from "@/hooks/useToast";
+import { toast } from 'react-toastify';
 import { api } from "@/utils/api";
 
 interface Role {
@@ -47,7 +47,6 @@ const RoleModal: React.FC<RoleModalProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { showToast } = useToast();
 
   const isEditing = !!role;
 
@@ -147,16 +146,13 @@ const RoleModal: React.FC<RoleModalProps> = ({
 
       if (response.data.success) {
         onSuccess(response.data.data);
-        showToast(`Role ${isEditing ? 'updated' : 'created'} successfully`, "success");
+        toast.success(`Role ${isEditing ? 'updated' : 'created'} successfully`);
       }
     } catch (error: any) {
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
       } else {
-        showToast(
-          error.response?.data?.message || "Error saving role",
-          "error"
-        );
+        toast.error(error.response?.data?.message || "Error saving role");
       }
     } finally {
       setLoading(false);

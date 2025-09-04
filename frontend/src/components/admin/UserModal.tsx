@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Modal } from "@/components/shared";
 import { FormField, SimpleInput, SimpleSelect, Checkbox, Button } from "@/components/ui";
 import { formatDateForInput } from "@/utils/helpers";
-import { useToast } from "@/hooks/useToast";
+import { toast } from 'react-toastify';
 import { api } from "@/utils/api";
 import { User, Role } from "@/interfaces";
 
@@ -36,7 +36,6 @@ const UserModal: React.FC<UserModalProps> = ({
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { showToast } = useToast();
 
   const isEditing = !!user;
 
@@ -161,16 +160,15 @@ const UserModal: React.FC<UserModalProps> = ({
 
       if (response.data.success) {
         onSuccess(response.data.data);
-        showToast(`User ${isEditing ? 'updated' : 'created'} successfully`, "success");
+        toast.success(`User ${isEditing ? 'updated' : 'created'} successfully`);
       }
     } catch (error: any) {
       console.error('Error saving user:', error);
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
       } else {
-        showToast(
-          error.response?.data?.message || "Error saving user",
-          "error"
+        toast.error(
+          error.response?.data?.message || "Error saving user"
         );
       }
     } finally {

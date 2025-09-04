@@ -13,6 +13,7 @@ import ViewToggle from "@/components/ui/ViewToggle";
 import Modal from "@/components/shared/Modal";
 import { ExpensesService } from "@/services/expenses";
 import { ExpenseCategory } from "@/interfaces/expenses";
+import { toast } from 'react-toastify';
 
 export default function ExpensesCategoriesPage() {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -36,7 +37,10 @@ export default function ExpensesCategoriesPage() {
         setTotalItems(res.meta.total);
         setTotalPages(res.meta.last_page);
       })
-      .catch(() => setError("Failed to load categories."))
+      .catch(() => {
+        setError("Failed to load categories.");
+        toast.error('Failed to load expense categories');
+      })
       .finally(() => setLoading(false));
   }, [currentPage, perPage]);
 
@@ -72,13 +76,17 @@ export default function ExpensesCategoriesPage() {
       if (editingCategory) {
         const updated = await ExpensesService.updateCategory(editingCategory.id, form);
         setCategories((prev) => prev.map((cat) => (cat.id === updated.id ? updated : cat)));
+        toast.success('Expense category updated successfully');
       } else {
         const created = await ExpensesService.createCategory(form);
         setCategories((prev) => [...prev, created]);
+        toast.success('Expense category created successfully');
       }
       handleCloseModal();
-    } catch (e) {
+    } catch (e: any) {
+      console.log(e);
       setError("Failed to save category.");
+      toast.error('Failed to save expense category');
     } finally {
       setLoading(false);
     }
@@ -91,8 +99,10 @@ export default function ExpensesCategoriesPage() {
     try {
       await ExpensesService.deleteCategory(id);
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
+      toast.success('Expense category deleted successfully');
     } catch (e) {
       setError("Failed to delete category.");
+      toast.error('Failed to delete expense category');
     } finally {
       setLoading(false);
     }

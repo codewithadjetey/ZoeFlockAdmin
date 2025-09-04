@@ -5,14 +5,13 @@ import { Button, DataTable, PageHeader } from '@/components/ui';
 import { TitheModal } from '@/components/tithes/TitheModal';
 import { TithePaymentModal } from '@/components/tithes/TithePaymentModal';
 import { TitheFilters } from '@/components/tithes/TitheFilters';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 import { titheService } from '@/services/tithes';
 import { Tithe, TitheFilters as TitheFiltersType, TitheStatistics, TITHE_FREQUENCIES, TITHE_STATUSES } from '@/interfaces';
 import { formatCurrency, formatDate } from '@/utils/helpers';
 
 
 export default function TithesPage() {
-  const { showToast } = useToast();
   const [tithes, setTithes] = useState<Tithe[]>([]);
   const [statistics, setStatistics] = useState<TitheStatistics | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,7 +40,7 @@ export default function TithesPage() {
       setTotalItems(response.data.total || 0);
     } catch (error: any) {
       console.error('Error loading tithes:', error);
-      showToast(error.response?.data?.message || 'Error loading tithes', 'error');
+      toast.error(error.response?.data?.message || 'Error loading tithes');
     } finally {
       setLoading(false);
     }
@@ -89,12 +88,12 @@ export default function TithesPage() {
         notes: 'Marked as fully paid'
       });
       
-      showToast('Tithe marked as fully paid successfully', 'success');
+      toast.success('Tithe marked as fully paid successfully');
       loadTithes();
       loadStatistics();
     } catch (error: any) {
       console.error('Error marking tithe as paid:', error);
-      showToast(error.response?.data?.message || 'Error marking tithe as paid', 'error');
+      toast.error(error.response?.data?.message || 'Error marking tithe as paid');
     }
   };
 
@@ -108,12 +107,12 @@ export default function TithesPage() {
 
     try {
       await titheService.deleteTithe(tithe.id);
-      showToast('Tithe deleted successfully', 'success');
+      toast.success('Tithe deleted successfully');
       loadTithes();
       loadStatistics();
     } catch (error: any) {
       console.error('Error deleting tithe:', error);
-      showToast(error.response?.data?.message || 'Error deleting tithe', 'error');
+      toast.error(error.response?.data?.message || 'Error deleting tithe');
     }
   };
 

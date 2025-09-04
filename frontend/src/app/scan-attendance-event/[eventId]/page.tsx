@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Button, Card, TextInput, Textarea } from '@/components/ui';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 import { useAuth } from '@/contexts/AuthContext';
 import { AttendanceService } from '@/services/attendance';
 import { EventsService } from '@/services/events';
@@ -27,7 +27,6 @@ interface MemberInfo {
 }
 
 const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
-  const { showToast } = useToast();
   const { user, isAuthenticated, isLoading } = useAuth();
   const [event, setEvent] = useState<Event | null>(null);
   const [memberInfo, setMemberInfo] = useState<MemberInfo | null>(null);
@@ -103,7 +102,7 @@ const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
 
   const handleScanMemberId = async (memberId: string) => {
     if (!event) {
-      showToast('Event not loaded', 'error');
+      toast.error('Event not loaded');
       return;
     }
 
@@ -129,7 +128,7 @@ const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
           gender: 'Unknown' // We don't have this in the response
         });
 
-        showToast(`Attendance marked successfully for ${response.data.member.name}`, 'success');
+        toast.success(`Attendance marked successfully for ${response.data.member.name}`);
         
         // Reset scanner input for next scan
         setScannerInput('');
@@ -144,10 +143,10 @@ const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
     } catch (error: any) {
       console.error('Error marking attendance:', error);
       if (error.response?.status === 401) {
-        showToast('Authentication required. Please log in again.', 'error');
+        toast.error('Authentication required. Please log in again.');
         setError('Authentication required. Please log in again.');
       } else {
-        showToast(error.response?.data?.message || 'Error marking attendance', 'error');
+        toast.error(error.response?.data?.message || 'Error marking attendance');
       }
     } finally {
       setLoading(false);

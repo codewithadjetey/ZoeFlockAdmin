@@ -74,7 +74,11 @@ class PartnershipCategoryController extends Controller
         }
         $perPage = $request->input('per_page', 10);
         $categories = $query->paginate($perPage);
-        return response()->json(['success' => true, 'data' => $categories]);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Categories retrieved successfully',
+            'data' => $categories
+        ]);
     }
 
     /**
@@ -129,7 +133,11 @@ class PartnershipCategoryController extends Controller
         if (!$category) {
             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
         }
-        return response()->json(['success' => true, 'data' => $category]);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Category retrieved successfully',
+            'data' => $category
+        ]);
     }
 
     /**
@@ -187,7 +195,11 @@ class PartnershipCategoryController extends Controller
             'description' => 'nullable|string',
         ]);
         $category = PartnershipCategory::create($validated);
-        return response()->json(['success' => true, 'data' => $category], 201);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Category created successfully',
+            'data' => $category
+        ], 201);
     }
 
     /**
@@ -263,7 +275,11 @@ class PartnershipCategoryController extends Controller
             'description' => 'nullable|string',
         ]);
         $category->update($validated);
-        return response()->json(['success' => true, 'data' => $category]);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Category updated successfully',
+            'data' => $category
+        ]);
     }
 
     /**
@@ -313,6 +329,10 @@ class PartnershipCategoryController extends Controller
             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
         }
         $category->delete();
-        return response()->json(['success' => true, 'message' => 'Category deleted successfully']);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Category deleted successfully',
+            'data' => $category
+        ]);
     }
 }

@@ -15,6 +15,7 @@ import { EntitiesService, EntityOption } from "@/services/entities";
 import { ExpensesService } from "@/services/expenses";
 import { Expense, PaginatedResponse } from "@/interfaces/expenses";
 import SelectInput from "@/components/ui/SelectInput";
+import { toast } from 'react-toastify';
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -89,7 +90,10 @@ export default function ExpensesPage() {
         setTotalItems(res.meta.total);
         setTotalPages(res.meta.last_page);
       })
-      .catch(() => setError("Failed to load expenses."))
+      .catch(() => {
+        setError("Failed to load expenses.");
+        toast.error('Failed to load expenses');
+      })
       .finally(() => setLoading(false));
   }, [currentPage, perPage, filters]);
 
@@ -148,13 +152,16 @@ export default function ExpensesPage() {
       if (editingExpense) {
         const updated = await ExpensesService.updateExpense(editingExpense.id, form);
         setExpenses((prev) => prev.map((exp) => (exp.id === updated.id ? updated : exp)));
+        toast.success('Expense updated successfully');
       } else {
         const created = await ExpensesService.createExpense(form);
         setExpenses((prev) => [created, ...prev]);
+        toast.success('Expense created successfully');
       }
       handleCloseModal();
-    } catch (e) {
+    } catch (e: any) {
       setError("Failed to save expense.");
+      toast.error('Failed to save expense');
     } finally {
       setLoading(false);
     }
@@ -167,8 +174,10 @@ export default function ExpensesPage() {
     try {
       await ExpensesService.deleteExpense(id);
       setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+      toast.success('Expense deleted successfully');
     } catch (e) {
       setError("Failed to delete expense.");
+      toast.error('Failed to delete expense');
     } finally {
       setLoading(false);
     }

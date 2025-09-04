@@ -19,6 +19,7 @@ import { EntitiesService } from "@/services/entities";
 import GroupModal from "@/components/groups/GroupModal";
 import { GroupMembersModal } from "@/components/groups/GroupMembersModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from 'react-toastify';
 
 export default function GroupsPage() {
   const { user } = useAuth();
@@ -70,6 +71,7 @@ export default function GroupsPage() {
       }
     } catch (error) {
       console.error('Error loading groups:', error);
+      toast.error('Failed to load groups');
     } finally {
       setIsLoading(false);
     }
@@ -97,8 +99,10 @@ export default function GroupsPage() {
   const handleGroupSuccess = (group: Group) => {
     if (editingGroup) {
       setGroups(prev => prev.map(g => g.id === group.id ? group : g));
+      toast.success('Group updated successfully');
     } else {
       setGroups(prev => [group, ...prev]);
+      toast.success('Group created successfully');
     }
     setIsModalOpen(false);
     setEditingGroup(undefined);
@@ -109,8 +113,10 @@ export default function GroupsPage() {
       try {
         await GroupsService.deleteGroup(groupId);
         setGroups(prev => prev.filter(g => g.id !== groupId));
+        toast.success('Group deleted successfully');
       } catch (error) {
         console.error('Error deleting group:', error);
+        toast.error('Failed to delete group');
       }
     }
   };
@@ -119,8 +125,10 @@ export default function GroupsPage() {
     try {
       await GroupsService.updateGroup(group.id!, { status: 'archived' });
       await loadGroups(); // Reload to get updated status
+      toast.success('Group archived successfully');
     } catch (error) {
       console.error('Error archiving group:', error);
+      toast.error('Failed to archive group');
     }
   };
 
@@ -128,8 +136,10 @@ export default function GroupsPage() {
     try {
       await GroupsService.updateGroup(group.id!, { status: 'active' });
       await loadGroups(); // Reload to get updated status
+      toast.success('Group activated successfully');
     } catch (error) {
       console.error('Error activating group:', error);
+      toast.error('Failed to activate group');
     }
   };
 

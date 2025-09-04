@@ -32,6 +32,7 @@ import {
 import QRCode from 'react-qr-code';
 import { useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { toast } from 'react-toastify';
 
 interface EventCategoryModalProps {
   isOpen: boolean;
@@ -198,13 +199,16 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
       
       if (response.success) {
         onSuccess(response.data);
+        toast.success(category ? 'Event category updated successfully' : 'Event category created successfully');
       }
       onClose();
     } catch (error: any) {
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
+        toast.error('Please fix the validation errors');
       } else {
         setErrors({ general: error.message || 'An error occurred' });
+        toast.error('Failed to save event category');
       }
     } finally {
       setIsLoading(false);
@@ -583,6 +587,7 @@ export default function EventCategoriesPage() {
       }
     } catch (error) {
       console.error('Error loading categories:', error);
+      toast.error('Failed to load event categories');
     } finally {
       setIsLoading(false);
     }
@@ -601,8 +606,10 @@ export default function EventCategoriesPage() {
   const handleCategorySuccess = (category: EventCategory) => {
     if (editingCategory) {
       setCategories(prev => prev.map(c => c.id === category.id ? category : c));
+      toast.success('Event category updated successfully');
     } else {
       setCategories(prev => [category, ...prev]);
+      toast.success('Event category created successfully');
     }
     setIsModalOpen(false);
     setEditingCategory(undefined);
@@ -613,8 +620,10 @@ export default function EventCategoriesPage() {
       try {
         await EventCategoriesService.deleteEventCategory(categoryId);
         setCategories(prev => prev.filter(c => c.id !== categoryId));
+        toast.success('Event category deleted successfully');
       } catch (error) {
         console.error('Error deleting category:', error);
+        toast.error('Failed to delete event category');
       }
     }
   };
@@ -626,9 +635,11 @@ export default function EventCategoriesPage() {
         setCategories(prev => prev.map(c => 
           c.id === category.id ? response.data : c
         ));
+        toast.success(`Event category ${category.is_active ? 'deactivated' : 'activated'} successfully`);
       }
     } catch (error) {
       console.error('Error toggling status:', error);
+      toast.error('Failed to toggle event category status');
     }
   };
 
@@ -652,9 +663,11 @@ export default function EventCategoriesPage() {
 
         if (response.success) {
           alert(`Successfully generated recurring events!`);
+          toast.success(`Successfully generated ${count} recurring events!`);
         }
       } catch (error: any) {
         alert(`Error generating recurring events: ${error.message}`);
+        toast.error(`Error generating recurring events: ${error.message}`);
       }
     } else {
       // Handle one-time events
@@ -681,11 +694,13 @@ export default function EventCategoriesPage() {
 
         if (response.success) {
           alert('Successfully generated one-time event!');
+          toast.success('Successfully generated one-time event!');
           // Refresh the categories to show the new event
           loadCategories();
         }
       } catch (error: any) {
         alert(`Error generating one-time event: ${error.message}`);
+        toast.error(`Error generating one-time event: ${error.message}`);
       }
     }
   };

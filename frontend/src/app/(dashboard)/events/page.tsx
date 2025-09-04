@@ -18,6 +18,7 @@ import { Event, EventFilters } from "@/interfaces/events";
 import { EventsService } from "@/services/events";
 import { useAuth } from "@/contexts/AuthContext";
 import EventModal from "@/components/events/EventModal";
+import { toast } from 'react-toastify';
 
 export default function EventsPage() {
   const { user } = useAuth();
@@ -73,6 +74,7 @@ export default function EventsPage() {
       }
     } catch (error) {
       console.error('Error loading events:', error);
+      toast.error('Failed to load events');
     } finally {
       setIsLoading(false);
     }
@@ -86,6 +88,7 @@ export default function EventsPage() {
   const handleEventSuccess = (event: Event) => {
     if (editingEvent) {
       setEvents(prev => prev.map(e => e.id === event.id ? event : e));
+      toast.success('Event updated successfully');
     }
     setIsModalOpen(false);
     setEditingEvent(undefined);
@@ -96,8 +99,10 @@ export default function EventsPage() {
       try {
         await EventsService.deleteEvent(eventId);
         setEvents(prev => prev.filter(e => e.id !== eventId));
+        toast.success('Event deleted successfully');
       } catch (error) {
         console.error('Error deleting event:', error);
+        toast.error('Failed to delete event');
       }
     }
   };
@@ -111,8 +116,10 @@ export default function EventsPage() {
         
         await EventsService.cancelEvent(event.id, reason, cancelFutureInstances);
         await loadEvents(); // Reload to get updated status
+        toast.success('Event cancelled successfully');
       } catch (error) {
         console.error('Error cancelling event:', error);
+        toast.error('Failed to cancel event');
       }
     }
   };
@@ -121,8 +128,10 @@ export default function EventsPage() {
     try {
       await EventsService.publishEvent(event.id);
       await loadEvents(); // Reload to get updated status
+      toast.success('Event published successfully');
     } catch (error) {
       console.error('Error publishing event:', error);
+      toast.error('Failed to publish event');
     }
   };
 

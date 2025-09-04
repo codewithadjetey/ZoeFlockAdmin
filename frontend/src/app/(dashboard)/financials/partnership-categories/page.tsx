@@ -20,13 +20,17 @@ export default function PartnershipCategoriesPage() {
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
   const [errors, setErrors] = useState<any>({});
+  const [saving, setSaving] = useState(false);
 
   const loadCategories = async () => {
     setLoading(true);
     try {
       const data = await PartnershipCategoriesService.list({ search, page, per_page: perPage });
-      setCategories(data.data || data);
-      setTotal(data.total || 0);
+      setCategories(data.data);
+      setTotal(data.total);
+    } catch (error: any) {
+      console.error('Error loading categories:', error);
+      toast.error(error.response?.data?.message || 'Failed to load partnership categories');
     } finally {
       setLoading(false);
     }
@@ -53,31 +57,47 @@ export default function PartnershipCategoriesPage() {
 
   const handleDelete = async (category: PartnershipCategory) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
-      await PartnershipCategoriesService.delete(category.id);
-      loadCategories();
+      try {
+        await PartnershipCategoriesService.delete(category.id);
+        toast.success('Partnership category deleted successfully');
+        loadCategories();
+      } catch (error: any) {
+        console.error('Error deleting category:', error);
+        toast.error(error.response?.data?.message || 'Failed to delete partnership category');
+      }
     }
   };
 
   const handleSave = async (data: PartnershipCategory) => {
-   try {
-    if (modalMode === 'create') {
-      await PartnershipCategoriesService.create(data);
-    } else if (selectedCategory) {
-      await PartnershipCategoriesService.update(selectedCategory.id, data);
+    setSaving(true);
+    setErrors({});
+    
+    try {
+      if (modalMode === 'create') {
+        const response = await PartnershipCategoriesService.create(data);
+        toast.success(response.message || 'Partnership category created successfully');
+      } else if (selectedCategory) {
+        const response = await PartnershipCategoriesService.update(selectedCategory.id, data);
+        toast.success(response.message || 'Partnership category updated successfully');
+      }
+      
+      setIsModalOpen(false);
+      setSelectedCategory(null);
+      loadCategories();
+      
+    } catch (error: any) {
+      switch (error.response?.status) {
+        case 422:
+          setErrors(error.response.data.errors);
+          toast.error('Please fix the validation errors');
+          break;
+        case 409:
+          toast.error(error.response.data.message || 'A category with this name already exists');
+          break;
+      }
+    } finally {
+      setSaving(false);
     }
-    setIsModalOpen(false);
-    loadCategories();
- 
-   } catch (error: any) {
-    switch (error.response.status) {
-      case 422:
-        setErrors(error.response.data.errors);
-        break;
-      default:
-        toast.error(error.response.data.message || 'An error occurred');
-    }
-   }
-  
   };
 
   // Define columns for DataTable

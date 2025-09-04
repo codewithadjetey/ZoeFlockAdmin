@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button, Input, SelectInput } from '@/components/ui';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 import { titheService } from '@/services/tithes';
 import { TitheStatistics } from '@/interfaces';
 import { formatCurrency, formatDate } from '@/utils/helpers';
@@ -10,7 +10,6 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import TitheChart from '@/components/reports/TitheChart';
 
 export default function TitheReportsPage() {
-  const { showToast } = useToast();
   const [statistics, setStatistics] = useState<TitheStatistics | null>(null);
   const [monthlyTrends, setMonthlyTrends] = useState<any[]>([]);
   const [memberPerformance, setMemberPerformance] = useState<any[]>([]);
@@ -59,7 +58,7 @@ export default function TitheReportsPage() {
     } catch (error: any) {
       console.error('Error loading tithe data:', error);
       setError('Failed to load tithe data. Please try again.');
-      showToast(error.response?.data?.message || 'Error loading data', 'error');
+      toast.error(error.response?.data?.message || 'Error loading data');
     } finally {
       setLoading(false);
     }
@@ -114,10 +113,10 @@ export default function TitheReportsPage() {
         document.body.removeChild(link);
       }
 
-      showToast('Report exported successfully', 'success');
+      toast.success('Report exported successfully');
     } catch (error: any) {
       console.error('Error exporting report:', error);
-      showToast(error.response?.data?.message || 'Error exporting report', 'error');
+      toast.error(error.response?.data?.message || 'Error exporting report');
     } finally {
       setExportLoading(false);
     }
