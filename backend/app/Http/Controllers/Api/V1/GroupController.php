@@ -48,6 +48,21 @@ class GroupController extends Controller
     public function __construct(FileUploadService $fileUploadService)
     {
         $this->fileUploadService = $fileUploadService;
+        
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-groups');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-groups')->only(['store']);
+        $this->middleware('permission:edit-groups')->only(['update']);
+        $this->middleware('permission:delete-groups')->only(['destroy']);
+        $this->middleware('permission:view-group-statistics')->only(['getGroupStats']);
+        $this->middleware('permission:view-group-overall-stats')->only(['getOverallStats']);
+        $this->middleware('permission:view-groups-needing-attention')->only(['getGroupsNeedingAttention']);
+        $this->middleware('permission:search-groups')->only(['searchGroups']);
+        $this->middleware('permission:bulk-update-group-status')->only(['bulkUpdateStatus']);
+        $this->middleware('permission:manage-group-members')->only(['getMembers', 'addMember', 'removeMember']);
+        $this->middleware('permission:update-group-member-role')->only(['updateMemberRole']);
     }
 
     /**
