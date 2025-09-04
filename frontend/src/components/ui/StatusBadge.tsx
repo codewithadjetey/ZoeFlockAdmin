@@ -1,13 +1,18 @@
 import React from "react";
 
 interface StatusBadgeProps {
-  status: string;
+  status?: string;
   variant?: 'success' | 'warning' | 'danger' | 'secondary' | 'default';
   className?: string;
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, variant = 'default', className = "" }) => {
-  const getStatusColor = (status: string, variant: string) => {
+  const getStatusColor = (status: string | undefined, variant: string) => {
+    // Handle undefined status
+    if (!status) {
+      return "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 dark:from-gray-700 dark:to-gray-600 dark:text-gray-300";
+    }
+
     // If variant is specified, use it
     if (variant !== 'default') {
       switch (variant) {
@@ -55,7 +60,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, variant = 'default', 
 
   return (
     <span className={`px-3 py-1 rounded-full text-xs font-medium shadow-sm transition-all duration-200 ${getStatusColor(status, variant)} ${className}`}>
-      {status}
+      {status || 'Unknown'}
     </span>
   );
 };

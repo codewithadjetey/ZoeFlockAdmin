@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, Input, SelectInput, DataTable, Alert } from '@/components/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Badge, Input, SelectInput, DataTable, Alert, AlertDescription } from '@/components/ui';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -76,7 +76,11 @@ export default function AuditLogsPage() {
     router.push('/import-export');
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: string | undefined) => {
+    if (!status) {
+      return <FileText className="h-4 w-4 text-gray-500" />;
+    }
+
     switch (status) {
       case 'success':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -89,7 +93,15 @@ export default function AuditLogsPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | undefined) => {
+    if (!status) {
+      return (
+        <Badge className="bg-gray-100 text-gray-800">
+          Unknown
+        </Badge>
+      );
+    }
+
     const variants = {
       success: 'bg-green-100 text-green-800',
       warning: 'bg-yellow-100 text-yellow-800',
@@ -172,35 +184,35 @@ export default function AuditLogsPage() {
               </div>
               <div>
                 <label className="text-sm font-medium">Model Type</label>
-                <Select value={filters.model_type} onValueChange={(value) => setFilters(prev => ({ ...prev, model_type: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All types</SelectItem>
-                    <SelectItem value="App\\Models\\Member">Members</SelectItem>
-                    <SelectItem value="App\\Models\\Family">Families</SelectItem>
-                    <SelectItem value="App\\Models\\Group">Groups</SelectItem>
-                    <SelectItem value="App\\Models\\EventCategory">Event Categories</SelectItem>
-                    <SelectItem value="App\\Models\\PartnershipCategory">Partnership Categories</SelectItem>
-                    <SelectItem value="App\\Models\\IncomeCategory">Income Categories</SelectItem>
-                    <SelectItem value="App\\Models\\ExpenseCategory">Expense Categories</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SelectInput
+                  value={filters.model_type}
+                  onChange={(value) => setFilters(prev => ({ ...prev, model_type: value }))}
+                  options={[
+                    { value: '', label: 'All types' },
+                    { value: 'App\\Models\\Member', label: 'Members' },
+                    { value: 'App\\Models\\Family', label: 'Families' },
+                    { value: 'App\\Models\\Group', label: 'Groups' },
+                    { value: 'App\\Models\\EventCategory', label: 'Event Categories' },
+                    { value: 'App\\Models\\PartnershipCategory', label: 'Partnership Categories' },
+                    { value: 'App\\Models\\IncomeCategory', label: 'Income Categories' },
+                    { value: 'App\\Models\\ExpenseCategory', label: 'Expense Categories' }
+                  ]}
+                  className="w-full"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Status</label>
-                <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All statuses</SelectItem>
-                    <SelectItem value="success">Success</SelectItem>
-                    <SelectItem value="warning">Warning</SelectItem>
-                    <SelectItem value="error">Error</SelectItem>
-                  </SelectContent>
-                </Select>
+                <SelectInput
+                  value={filters.status}
+                  onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                  options={[
+                    { value: '', label: 'All statuses' },
+                    { value: 'success', label: 'Success' },
+                    { value: 'warning', label: 'Warning' },
+                    { value: 'error', label: 'Error' }
+                  ]}
+                  className="w-full"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Search</label>
@@ -225,64 +237,82 @@ export default function AuditLogsPage() {
                 </AlertDescription>
               </Alert>
             ) : (
-              <div className="border rounded-lg">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Model</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Details</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {logs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell className="text-sm">
-                          {formatDate(log.created_at)}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {log.user ? (
-                            <div>
-                              <div className="font-medium">{log.user.name}</div>
-                              <div className="text-xs text-gray-500">{log.user.email}</div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-500">System</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          <Badge variant="outline">{log.action}</Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {getModelTypeLabel(log.model_type)}
-                        </TableCell>
-                        <TableCell className="text-sm max-w-xs truncate">
-                          {log.description}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getStatusIcon(log.status)}
-                            {getStatusBadge(log.status)}
+              <DataTable
+                data={logs}
+                columns={[
+                  { 
+                    key: 'created_at', 
+                    label: 'Date',
+                    render: (value: string) => <span className="text-sm">{formatDate(value)}</span>
+                  },
+                  { 
+                    key: 'user', 
+                    label: 'User',
+                    render: (value: any) => (
+                      <div className="text-sm">
+                        {value ? (
+                          <div>
+                            <div className="font-medium">{value.name}</div>
+                            <div className="text-xs text-gray-500">{value.email}</div>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {log.details && (
-                            <div className="text-xs text-gray-500">
-                              {log.details.row_number && `Row: ${log.details.row_number}`}
-                              {log.details.phone && `Phone: ${log.details.phone}`}
-                              {log.details.email && `Email: ${log.details.email}`}
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                        ) : (
+                          <span className="text-gray-500">System</span>
+                        )}
+                      </div>
+                    )
+                  },
+                  { 
+                    key: 'action', 
+                    label: 'Action',
+                    render: (value: string) => (
+                      <Badge variant="outline" className="text-sm">{value}</Badge>
+                    )
+                  },
+                  { 
+                    key: 'model_type', 
+                    label: 'Model',
+                    render: (value: string) => <span className="text-sm">{getModelTypeLabel(value)}</span>
+                  },
+                  { 
+                    key: 'description', 
+                    label: 'Description',
+                    render: (value: string) => <span className="text-sm max-w-xs truncate">{value}</span>
+                  },
+                  { 
+                    key: 'status', 
+                    label: 'Status',
+                    render: (value: string) => (
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(value)}
+                        {getStatusBadge(value)}
+                      </div>
+                    )
+                  },
+                  { 
+                    key: 'details', 
+                    label: 'Details',
+                    render: (value: any) => (
+                      <div className="text-sm">
+                        {value && (
+                          <div className="text-xs text-gray-500">
+                            {value.row_number && `Row: ${value.row_number}`}
+                            {value.phone && `Phone: ${value.phone}`}
+                            {value.email && `Email: ${value.email}`}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }
+                ]}
+                pagination={{
+                  currentPage: 1,
+                  totalPages: 1,
+                  totalItems: logs.length,
+                  perPage: logs.length,
+                  onPageChange: () => {},
+                  onPerPageChange: () => {}
+                }}
+              />
             )}
           </div>
         </CardContent>
