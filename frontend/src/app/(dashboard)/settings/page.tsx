@@ -12,6 +12,7 @@ import ColorSwitcher from "@/components/ui/ColorSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
 import { AuthService, type User } from "@/services/auth";
 import { toast } from 'react-toastify';
+import PasswordChangeModal from "@/components/auth/PasswordChangeModal";
 
 export default function SettingsPage() {
   const { currentTheme } = useTheme();
@@ -19,6 +20,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [settings, setSettings] = useState({
     name: "",
     phone: "",
@@ -338,17 +340,21 @@ export default function SettingsPage() {
 
   const renderSecuritySettings = () => (
     <div className="space-y-6">
-      
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Password</h3>
           <p className="text-sm text-gray-600">Update your account password</p>
         </div>
-        <button className="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
+        <button 
+          onClick={() => setShowPasswordModal(true)}
+          className="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200"
+        >
           Change Password
         </button>
       </div>
       
+      {/* Two-Factor Authentication - Commented out for now */}
+      {/*
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
@@ -357,6 +363,28 @@ export default function SettingsPage() {
         <button className="bg-secondary-500 hover:bg-secondary-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200">
           Enable 2FA
         </button>
+      </div>
+      */}
+      
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            <i className="fas fa-info-circle text-yellow-400"></i>
+          </div>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-yellow-800">
+              Security Recommendations
+            </h3>
+            <div className="mt-2 text-sm text-yellow-700">
+              <ul className="list-disc list-inside space-y-1">
+                <li>Use a strong, unique password</li>
+                <li>Never share your password with anyone</li>
+                <li>Log out when using shared devices</li>
+                <li>Two-factor authentication coming soon</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -446,6 +474,12 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+      
+      {/* Password Change Modal */}
+      <PasswordChangeModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </>
   );
 } 

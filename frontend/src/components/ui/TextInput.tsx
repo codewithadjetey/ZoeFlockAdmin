@@ -46,6 +46,9 @@ const TextInput: React.FC<TextInputProps> = ({
         disabled ? 'opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-700' : ''
       } ${className}`}
     />
+    {error && (
+      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>
+    )}
   </div>
 );
 
