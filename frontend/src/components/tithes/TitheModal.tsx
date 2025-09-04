@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, TextInput, Textarea, SimpleSelect } from '@/components/ui';
 import Modal from '@/components/shared/Modal';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 import { titheService } from '@/services/tithes';
 import { Tithe, CreateTitheRequest, UpdateTitheRequest } from '@/interfaces';
 import { MembersService, Member } from '@/services/members';
@@ -23,7 +23,6 @@ export const TitheModal: React.FC<TitheModalProps> = ({
   tithe,
   mode,
 }) => {
-  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [formData, setFormData] = useState<CreateTitheRequest | UpdateTitheRequest>({
@@ -63,7 +62,7 @@ export const TitheModal: React.FC<TitheModalProps> = ({
       setMembers(response.members.data || []);
     } catch (error: any) {
       console.error('Error loading members:', error);
-      showToast('Error loading members', 'error');
+      toast.error('Error loading members');
     }
   };
 
@@ -98,13 +97,13 @@ export const TitheModal: React.FC<TitheModalProps> = ({
     if (mode === 'create') {
       const createData = formData as CreateTitheRequest;
       if (!createData.member_id || createData.amount <= 0) {
-        showToast('Please fill in all required fields', 'error');
+        toast.error('Please fill in all required fields');
         return;
       }
     } else {
       const updateData = formData as UpdateTitheRequest;
       if (updateData.amount !== undefined && updateData.amount <= 0) {
-        showToast('Amount must be greater than 0', 'error');
+        toast.error('Amount must be greater than 0');
         return;
       }
     }
@@ -113,18 +112,18 @@ export const TitheModal: React.FC<TitheModalProps> = ({
     try {
       if (mode === 'create') {
         await titheService.createTithe(formData as CreateTitheRequest);
-        showToast('Tithe created successfully', 'success');
+        toast.success('Tithe created successfully');
       } else {
         if (tithe) {
           await titheService.updateTithe(tithe.id, formData as UpdateTitheRequest);
-          showToast('Tithe updated successfully', 'success');
+          toast.success('Tithe updated successfully');
         }
       }
       onSuccess();
       onClose();
     } catch (error: any) {
       console.error(`Error ${mode === 'create' ? 'creating' : 'updating'} tithe:`, error);
-      showToast(error.response?.data?.message || `Error ${mode === 'create' ? 'creating' : 'updating'} tithe`, 'error');
+      toast.error(error.response?.data?.message || `Error ${mode === 'create' ? 'creating' : 'updating'} tithe`);
     } finally {
       setLoading(false);
     }

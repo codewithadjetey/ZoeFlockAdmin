@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button, TextInput, Textarea } from '@/components/ui';
 import Modal from '@/components/shared/Modal';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 import { titheService } from '@/services/tithes';
 import { Tithe, MarkTithePaidRequest } from '@/interfaces';
 
@@ -20,7 +20,6 @@ export const MarkTithePaidModal: React.FC<MarkTithePaidModalProps> = ({
   onSuccess,
   tithe,
 }) => {
-  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<MarkTithePaidRequest>({
     paid_amount: undefined,
@@ -51,12 +50,12 @@ export const MarkTithePaidModal: React.FC<MarkTithePaidModalProps> = ({
     setLoading(true);
     try {
       await titheService.markTitheAsPaid(tithe.id, formData);
-      showToast('Tithe marked as paid successfully', 'success');
+      toast.success('Tithe marked as paid successfully');
       onSuccess();
       onClose();
     } catch (error: any) {
       console.error('Error marking tithe as paid:', error);
-      showToast(error.response?.data?.message || 'Error marking tithe as paid', 'error');
+      toast.error(error.response?.data?.message || 'Error marking tithe as paid');
     } finally {
       setLoading(false);
     }

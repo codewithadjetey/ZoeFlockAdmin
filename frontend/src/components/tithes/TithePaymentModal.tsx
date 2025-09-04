@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Modal, TextInput, SelectInput, Textarea, SimpleInput } from '@/components/ui';
 import { Tithe, AddTithePaymentRequest, PAYMENT_METHODS } from '@/interfaces';
 import { titheService } from '@/services/tithes';
-import { useToast } from '@/hooks/useToast';
+import { toast } from 'react-toastify';
 
 interface TithePaymentModalProps {
   isOpen: boolean;
@@ -17,7 +17,6 @@ export const TithePaymentModal: React.FC<TithePaymentModalProps> = ({
   onSuccess,
   tithe,
 }) => {
-  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<AddTithePaymentRequest>({
     amount: 0,
@@ -33,25 +32,25 @@ export const TithePaymentModal: React.FC<TithePaymentModalProps> = ({
     if (!tithe) return;
 
     if (formData.amount <= 0) {
-      showToast('Payment amount must be greater than 0', 'error');
+      toast.error('Payment amount must be greater than 0');
       return;
     }
 
     if (formData.amount > tithe.remaining_amount) {
-      showToast(`Payment amount cannot exceed remaining amount of $${tithe.remaining_amount}`, 'error');
+      toast.error(`Payment amount cannot exceed remaining amount of $${tithe.remaining_amount}`);
       return;
     }
 
     try {
       setLoading(true);
       await titheService.addPayment(tithe.id, formData);
-      showToast('Payment added successfully', 'success');
+      toast.success('Payment added successfully');
       onSuccess();
       onClose();
       resetForm();
     } catch (error: any) {
       console.error('Error adding payment:', error);
-      showToast(error.response?.data?.message || 'Error adding payment', 'error');
+      toast.error(error.response?.data?.message || 'Error adding payment');
     } finally {
       setLoading(false);
     }
