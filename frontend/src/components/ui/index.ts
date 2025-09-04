@@ -45,10 +45,6 @@ export { default as LoadingSpinner } from '../shared/LoadingSpinner';
 // Color Input Component
 export { default as ColorInput } from './ColorInput';
 
-// Toast Components
-export { default as Toast } from './Toast';
-export { default as ToastContainer } from './ToastContainer';
-
 // Progress Component
 export { default as Progress } from './Progress';
 
