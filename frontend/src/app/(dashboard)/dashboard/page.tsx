@@ -120,7 +120,16 @@ export default function DashboardPage() {
 
 
 
+//get randon icon background color
+const getRandomIconBgColor = () => {
+  const colors = ["bg-blue-500", "bg-green-500", "bg-red-500", "bg-yellow-500", "bg-purple-500"];
+  return colors[Math.floor(Math.random() * colors.length)];
+};
 
+
+const randomId = () => {
+  return Math.random().toString(36).substring(2, 15);
+};
 
 
 
@@ -143,12 +152,12 @@ export default function DashboardPage() {
       gradient: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
       href: "/families",
     },
-    {
-      title: "Send Message",
-      icon: "fas fa-envelope",
-      gradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-      href: "/communication",
-    },
+    // {
+    //   title: "Send Message",
+    //   icon: "fas fa-envelope",
+    //   gradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+    //   href: "/communication",
+    // },
   ];
 
   return (
@@ -389,7 +398,7 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-4">
             {recentActivities.length > 0 ? recentActivities.map((activity) => (
-              <div key={activity.id} className="activity-item flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02]">
+              <div key={randomId()} className="activity-item flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02]">
                 <div className="flex items-center">
                   <div className={`w-12 h-12 ${activity.bgColor} rounded-2xl flex items-center justify-center mr-4 shadow-lg`}>
                     <i className={`${activity.icon} ${activity.color}`}></i>
@@ -425,7 +434,7 @@ export default function DashboardPage() {
             {upcomingEvents.length > 0 ? upcomingEvents.map((event) => (
               <div key={event.id} className="event-item flex items-center justify-between p-4 rounded-2xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:transform hover:scale-[1.02]">
                 <div className="flex items-center">
-                  <div className={`w-12 h-12 ${event.color} rounded-2xl flex items-center justify-center mr-4 shadow-lg`} style={{ minWidth: '48px', minHeight: '48px' }}>
+                  <div className={`w-12 h-12 ${getRandomIconBgColor()} rounded-2xl flex items-center justify-center mr-4 shadow-lg`} style={{ minWidth: '48px', minHeight: '48px' }}>
                     <i className="fas fa-calendar text-white text-lg"></i>
                   </div>
                   <div>

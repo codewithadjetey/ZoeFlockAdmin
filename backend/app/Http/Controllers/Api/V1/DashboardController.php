@@ -9,6 +9,7 @@ use App\Models\Member;
 use App\Models\Family;
 use App\Models\Group;
 use App\Models\Event;
+use App\Models\EventCategory;
 use App\Models\Attendance;
 use App\Models\Tithe;
 use App\Models\FirstTimer;
@@ -61,6 +62,13 @@ class DashboardController extends Controller
             ->whereNull('cancelled_at')
             ->count();
 
+        // Get active event categories count
+        $activeEventCategories = EventCategory::where('is_active', true)->count();
+
+        // Get total tithes this month
+        $thisMonth = now()->startOfMonth();
+        $totalTithesThisMonth = Tithe::where('created_at', '>=', $thisMonth)->sum('amount');
+
         return [
             'total_members' => $totalMembers,
             'total_families' => $totalFamilies,
@@ -70,6 +78,8 @@ class DashboardController extends Controller
             'total_family_members' => Member::whereHas('families', function($query) {
                 $query->where('active', true);
             })->where('deleted', false)->count(),
+            'active_event_categories' => $activeEventCategories,
+            'total_tithes_this_month' => $totalTithesThisMonth,
         ];
     }
 
@@ -148,8 +158,9 @@ class DashboardController extends Controller
             ];
         }
 
-        // Recent events
-        $recentEvents = Event::where('deleted', false)
+        // Recent events with category info
+        $recentEvents = Event::with('category')
+            ->where('deleted', false)
             ->whereNull('cancelled_at')
             ->orderBy('created_at', 'desc')
             ->limit(2)
@@ -168,17 +179,19 @@ class DashboardController extends Controller
             ];
         }
 
-        // Recent tithes
-        $recentTithes = Tithe::orderBy('created_at', 'desc')
+        // Recent tithes with member info
+        $recentTithes = Tithe::with('member')
+            ->orderBy('created_at', 'desc')
             ->limit(2)
             ->get();
             
         foreach ($recentTithes as $tithe) {
+            $memberName = $tithe->member ? $tithe->member->first_name . ' ' . $tithe->member->last_name : 'Member';
             $activities[] = [
                 'id' => $tithe->id,
                 'type' => 'donation',
                 'title' => '$' . number_format($tithe->amount, 2) . ' tithe',
-                'description' => 'received from ' . ($tithe->member->first_name . ' ' . $tithe->member->last_name ?? 'Member'),
+                'description' => 'received from ' . $memberName,
                 'time' => $tithe->created_at->diffForHumans(),
                 'icon' => 'fas fa-donate',
                 'color' => 'text-yellow-600',
@@ -217,14 +230,21 @@ class DashboardController extends Controller
      */
     private function getUpcomingEvents(): array
     {
-        $events = Event::where('start_date', '>=', now())
+        $events = Event::with('category')
+            ->where('start_date', '>=', now())
             ->where('deleted', false)
             ->whereNull('cancelled_at')
             ->orderBy('start_date', 'asc')
             ->limit(4)
             ->get();
 
-        $eventCategories = [
+        // Get all active event categories with their colors
+        $eventCategories = EventCategory::where('is_active', true)
+            ->pluck('color', 'name')
+            ->toArray();
+
+        // Default color mapping for categories not in database
+        $defaultColors = [
             'Worship' => 'bg-gradient-to-r from-blue-500 to-blue-600',
             'Education' => 'bg-gradient-to-r from-green-500 to-green-600',
             'Prayer' => 'bg-gradient-to-r from-purple-500 to-purple-600',
@@ -238,18 +258,20 @@ class DashboardController extends Controller
             'default' => 'bg-gradient-to-r from-gray-500 to-gray-600',
         ];
 
-        return $events->map(function($event) use ($eventCategories) {
-            $category = $event->category ? $event->category->name : 'default';
-            $color = $eventCategories[$category] ?? $eventCategories['default'];
+        return $events->map(function($event) use ($eventCategories, $defaultColors) {
+            $categoryName = $event->category ? $event->category->name : 'default';
+            
+            // Use database color if available, otherwise fall back to default
+            $color = $eventCategories[$categoryName] ?? $defaultColors[$categoryName] ?? $defaultColors['default'];
             
             return [
                 'id' => $event->id,
                 'title' => $event->title,
                 'date' => $event->start_date->format('F j, Y'),
                 'time' => $event->start_date->format('g:i A'),
-                'location' => $event->location ?? 'Main Sanctuary',
+                'location' => $event->location ?? $event->category?->default_location ?? 'Main Sanctuary',
                 'attendees' => $event->expected_attendees ?? 0,
-                'category' => $category,
+                'category' => $categoryName,
                 'color' => $color,
             ];
         })->toArray();
@@ -278,6 +300,8 @@ class DashboardController extends Controller
             'total_tithes_this_month' => Tithe::where('created_at', '>=', $thisMonth)
                 ->sum('amount'),
             'attendance_rate' => $this->calculateAttendanceRate(),
+            'total_event_categories' => EventCategory::where('is_active', true)->count(),
+            'total_first_timers_this_month' => FirstTimer::where('created_at', '>=', $thisMonth)->count(),
         ];
     }
 
