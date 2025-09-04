@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "@/contexts/ThemeContext";
 import ColorSwitcher from "@/components/ui/ColorSwitcher";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TopbarProps {
   onSidebarToggle?: () => void;
@@ -12,6 +13,7 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
   const { currentTheme } = useTheme();
 
   // Close dropdowns when clicking outside
@@ -148,8 +150,8 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
               className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-md"
             />
             <div className="text-left">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">Admin User</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Administrator</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">{user?.name}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
             </div>
             <i className="fas fa-chevron-down text-gray-400 dark:text-gray-500 text-xs transition-transform duration-300"></i>
           </button>
@@ -158,12 +160,16 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
           {profileOpen && (
             <div className="absolute right-0 mt-3 w-48 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
               <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white">Admin User</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">admin@church.com</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {user?.name}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {user?.email}
+                </p>
               </div>
               <div className="p-2">
                 <Link
-                  href="/dashboard/profile"
+                  href="/settings"
                   className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 hover:transform hover:scale-[1.02]"
                 >
                   <i className="fas fa-user mr-3 text-gray-400 dark:text-gray-500"></i>
