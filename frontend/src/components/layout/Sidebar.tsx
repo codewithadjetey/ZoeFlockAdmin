@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useBackupStats } from "@/hooks/useBackupStats";
 
-// Consolidated menu items array
+// Consolidated menu items array with nested sub menus
 const allMenuItems = [
   // Main navigation items
   { label: "Dashboard", icon: "fas fa-home", href: "/dashboard", type: "main" },
@@ -13,58 +13,105 @@ const allMenuItems = [
   { label: "Families", icon: "fas fa-house-user", href: "/families", type: "main" },
   { label: "Groups", icon: "fas fa-layer-group", href: "/groups", type: "main" },
   { label: "First Timers", icon: "fas fa-user-plus", href: "/first-timers", type: "main" },
-  // { label: "Communication", icon: "fas fa-envelope", href: "/communication", type: "main" },
   
-  // Import/Export menu items
-  { label: "Import/Export", icon: "fas fa-upload", href: "/import-export", type: "import" },
-  { label: "Members Import", icon: "fas fa-users", href: "/import-export/members", type: "import" },
-  { label: "Families Import", icon: "fas fa-house-user", href: "/import-export/families", type: "import" },
-  { label: "Groups Import", icon: "fas fa-layer-group", href: "/import-export/groups", type: "import" },
-  { label: "Event Categories Import", icon: "fas fa-tags", href: "/import-export/event_categories", type: "import" },
-  { label: "Partnership Categories Import", icon: "fas fa-list-alt", href: "/import-export/partnership_categories", type: "import" },
-  { label: "Income Categories Import", icon: "fas fa-folder-plus", href: "/import-export/income_categories", type: "import" },
-  { label: "Expense Categories Import", icon: "fas fa-folder-open", href: "/import-export/expense_categories", type: "import" },
-  { label: "Audit Logs", icon: "fas fa-history", href: "/import-export/audit-logs", type: "import" },
+  // Import/Export parent with sub menus
+  { 
+    label: "Import/Export", 
+    icon: "fas fa-upload", 
+    href: "/import-export", 
+    type: "parent",
+    subMenus: [
+      { label: "Members Import", icon: "fas fa-users", href: "/import-export/members" },
+      { label: "Families Import", icon: "fas fa-house-user", href: "/import-export/families" },
+      { label: "Groups Import", icon: "fas fa-layer-group", href: "/import-export/groups" },
+      { label: "Event Categories Import", icon: "fas fa-tags", href: "/import-export/event_categories" },
+      { label: "Partnership Categories Import", icon: "fas fa-list-alt", href: "/import-export/partnership_categories" },
+      { label: "Income Categories Import", icon: "fas fa-folder-plus", href: "/import-export/income_categories" },
+      { label: "Expense Categories Import", icon: "fas fa-folder-open", href: "/import-export/expense_categories" },
+      { label: "Audit Logs", icon: "fas fa-history", href: "/import-export/audit-logs" }
+    ]
+  },
   
-  // Financials menu items
-  { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships", type: "financials" },
-  { label: "Partnership Category", icon: "fas fa-list-alt", href: "/financials/partnership-categories", type: "financials" },
-  { label: "Tithes", icon: "fas fa-church", href: "/financials/tithes", type: "financials" },
-  { label: "Income", icon: "fas fa-coins", href: "/financials/income", type: "financials" },
-  { label: "Income Category", icon: "fas fa-folder-plus", href: "/financials/income-categories", type: "financials" },
-  { label: "Expenses", icon: "fas fa-money-bill-wave", href: "/financials/expenses", type: "financials" },
-  { label: "Expenses Category", icon: "fas fa-folder-open", href: "/financials/expenses-categories", type: "financials" },
+  // Financials parent with sub menus
+  { 
+    label: "Financials", 
+    icon: "fas fa-wallet", 
+    href: "/financials", 
+    type: "parent",
+    subMenus: [
+      { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships" },
+      { label: "Partnership Category", icon: "fas fa-list-alt", href: "/financials/partnership-categories" },
+      { label: "Tithes", icon: "fas fa-church", href: "/financials/tithes" },
+      { label: "Income", icon: "fas fa-coins", href: "/financials/income" },
+      { label: "Income Category", icon: "fas fa-folder-plus", href: "/financials/income-categories" },
+      { label: "Expenses", icon: "fas fa-money-bill-wave", href: "/financials/expenses" },
+      { label: "Expenses Category", icon: "fas fa-folder-open", href: "/financials/expenses-categories" }
+    ]
+  },
   
-  // Events menu items
-  { label: "Events", icon: "fas fa-calendar", href: "/events", type: "events" },
-  { label: "Event Categories", icon: "fas fa-tags", href: "/event-categories", type: "events" },
+  // Events parent with sub menus
+  { 
+    label: "Events", 
+    icon: "fas fa-calendar-alt", 
+    href: "/events", 
+    type: "parent",
+    subMenus: [
+      { label: "Events", icon: "fas fa-calendar", href: "/events" },
+      { label: "Event Categories", icon: "fas fa-tags", href: "/event-categories" }
+    ]
+  },
   
-  // Attendance menu items
-  { label: "Manage Attendance", icon: "fas fa-clipboard-check", href: "/attendance", type: "attendance" },
-  { label: "Individual Statistics", icon: "fas fa-chart-line", href: "/attendance/statistics/individual", type: "attendance" },
-  { label: "General Statistics", icon: "fas fa-chart-bar", href: "/attendance/statistics/general", type: "attendance" },
+  // Attendance parent with sub menus
+  { 
+    label: "Attendance", 
+    icon: "fas fa-clipboard-check", 
+    href: "/attendance", 
+    type: "parent",
+    subMenus: [
+      { label: "Manage Attendance", icon: "fas fa-clipboard-check", href: "/attendance" },
+      { label: "Individual Statistics", icon: "fas fa-chart-line", href: "/attendance/statistics/individual" },
+      { label: "General Statistics", icon: "fas fa-chart-bar", href: "/attendance/statistics/general" }
+    ]
+  },
   
-  // Settings menu items
+  // Admin parent with sub menus
+  { 
+    label: "Admin", 
+    icon: "fas fa-user-shield", 
+    href: "/admin", 
+    type: "parent",
+    subMenus: [
+      { label: "Users", icon: "fas fa-user-cog", href: "/admin/users" },
+      { label: "Roles & Permissions", icon: "fas fa-shield-alt", href: "/admin/roles" },
+      { label: "Backup & Restore", icon: "fas fa-database", href: "/backups" }
+    ]
+  },
   
-  // System menu items
-  
-  // Admin menu items
-  { label: "Users", icon: "fas fa-user-cog", href: "/admin/users", type: "admin" },
-  { label: "Roles & Permissions", icon: "fas fa-shield-alt", href: "/admin/roles", type: "admin" },
-  { label: "Backup & Restore", icon: "fas fa-database", href: "/backups", type: "admin" },
-  
-  // Reports menu items
-  { label: "Reports", icon: "fas fa-chart-bar", href: "/reports", type: "reports" },
-  { label: "Tithe Reports", icon: "fas fa-church", href: "/financials/tithes/reports", type: "reports" },
-  { label: "Income Reports", icon: "fas fa-chart-line", href: "/reports/income", type: "reports" },
-  { label: "Expenses Report", icon: "fas fa-file-invoice-dollar", href: "/reports/expenses", type: "reports" },
-  { label: "Income vs Expenses Report", icon: "fas fa-balance-scale", href: "/reports/income-vs-expenses", type: "reports" },
-  { label: "Export Report", icon: "fas fa-file-excel", href: "/reports/export", type: "reports" },
+  // Reports parent with sub menus
+  { 
+    label: "Reports", 
+    icon: "fas fa-chart-bar", 
+    href: "/reports", 
+    type: "parent",
+    subMenus: [
+      { label: "Reports", icon: "fas fa-chart-bar", href: "/reports" },
+      { label: "Tithe Reports", icon: "fas fa-church", href: "/financials/tithes/reports" },
+      { label: "Income Reports", icon: "fas fa-chart-line", href: "/reports/income" },
+      { label: "Expenses Report", icon: "fas fa-file-invoice-dollar", href: "/reports/expenses" },
+      { label: "Income vs Expenses Report", icon: "fas fa-balance-scale", href: "/reports/income-vs-expenses" },
+      { label: "Export Report", icon: "fas fa-file-excel", href: "/reports/export" }
+    ]
+  }
 ];
 
 // Helper function to get menu items by type
 const getMenuItemsByType = (type: string) => {
   return allMenuItems.filter(item => item.type === type);
+};
+
+// Helper function to get parent menu items with sub menus
+const getParentMenuItems = () => {
+  return allMenuItems.filter(item => item.type === "parent");
 };
 
 interface SidebarProps {
@@ -179,6 +226,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
 
                   {/* Modern Navigation */}
         <nav className="flex-1 px-6 py-8 space-y-3 overflow-y-auto">
+          {/* Main menu items */}
           {getMenuItemsByType("main").map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -199,277 +247,65 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             );
           })}
 
-          {/* Import/Export Menu Section */}
-          <div className="pt-4 border-t border-white/10">
-            <button
-              onClick={() => toggleSubmenu('import')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                pathname.startsWith('/import-export')
-                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
-              }`}
-            >
-              <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-yellow-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <i className="fas fa-upload mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
-                <span className="relative z-10">Import/Export</span>
+          {/* Parent menu items with sub menus */}
+          {getParentMenuItems().map((parentItem) => {
+            const isActive = pathname === parentItem.href || pathname.startsWith(parentItem.href);
+            const isOpen = openSubmenu === parentItem.label.toLowerCase();
+            
+            return (
+              <div key={parentItem.label} className="pt-4 border-t border-white/10">
+                <button
+                  onClick={() => toggleSubmenu(parentItem.label.toLowerCase())}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
+                    isActive
+                      ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
+                      : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <i className={`${parentItem.icon} mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                    <span className="relative z-10">{parentItem.label}</span>
+                  </div>
+                  <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${isOpen ? 'rotate-180' : ''}`}></i>
+                </button>
+
+                {/* Sub menus */}
+                {isOpen && parentItem.subMenus && (
+                  <div className="ml-4 mt-2 space-y-2">
+                    {parentItem.subMenus.map((subItem) => {
+                      const isSubActive = pathname === subItem.href;
+                      const isBackup = subItem.href === '/backups';
+                      
+                      return (
+                        <Link
+                          key={subItem.label}
+                          href={subItem.href}
+                          className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
+                            isSubActive
+                              ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
+                              : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
+                          }`}
+                          onClick={handleNavClick}
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                          <i className={`${subItem.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
+                          <span className="relative z-10 text-sm">{subItem.label}</span>
+                          {isBackup && (hasPendingBackups || hasFailedBackups) && (
+                            <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse flex items-center justify-center">
+                              <span className="text-xs text-white font-bold">
+                                {hasFailedBackups ? '!' : hasPendingBackups ? 'P' : ''}
+                              </span>
+                            </div>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'import' ? 'rotate-180' : ''}`}></i>
-            </button>
-
-            {/* Import/Export Submenu */}
-            {openSubmenu === 'import' && (
-              <div className="ml-4 mt-2 space-y-2">
-                {getMenuItemsByType("import").map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
-                        isActive
-                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
-                      }`}
-                      onClick={handleNavClick}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-orange-500/15 to-yellow-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
-                      <span className="relative z-10 text-sm">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Financials Menu Section */}
-          <div className="pt-4 border-t border-white/10">
-            <button
-              onClick={() => toggleSubmenu('financials')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                pathname.startsWith('/financials')
-                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
-              }`}
-            >
-              <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <i className="fas fa-wallet mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
-                <span className="relative z-10">Financials</span>
-              </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'financials' ? 'rotate-180' : ''}`}></i>
-            </button>
-            {/* Financials Submenu */}
-            {openSubmenu === 'financials' && (
-              <div className="ml-4 mt-2 space-y-2">
-                {getMenuItemsByType("financials").map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
-                        isActive
-                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
-                      }`}
-                      onClick={handleNavClick}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-green-500/15 to-blue-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
-                      <span className="relative z-10 text-sm">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-
-
-          {/* Events Menu Section */}
-          <div className="pt-4 border-t border-white/10">
-            <button
-              onClick={() => toggleSubmenu('events')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                pathname.startsWith('/events') || pathname.startsWith('/event-categories')
-                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
-              }`}
-            >
-              <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <i className="fas fa-calendar-alt mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
-                <span className="relative z-10">Events</span>
-              </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'events' ? 'rotate-180' : ''}`}></i>
-            </button>
-
-            {/* Events Submenu */}
-            {openSubmenu === 'events' && (
-              <div className="ml-4 mt-2 space-y-2">
-                {getMenuItemsByType("events").map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
-                        isActive
-                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
-                      }`}
-                      onClick={handleNavClick}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
-                      <span className="relative z-10 text-sm">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Attendance Menu Section */}
-          <div className="pt-4 border-t border-white/10">
-            <button
-              onClick={() => toggleSubmenu('attendance')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                pathname.startsWith('/attendance')
-                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
-              }`}
-            >
-              <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <i className="fas fa-clipboard-check mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
-                <span className="relative z-10">Attendance</span>
-              </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'attendance' ? 'rotate-180' : ''}`}></i>
-            </button>
-
-            {/* Attendance Submenu */}
-            {openSubmenu === 'attendance' && (
-              <div className="ml-4 mt-2 space-y-2">
-                {getMenuItemsByType("attendance").map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
-                        isActive
-                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
-                      }`}
-                      onClick={handleNavClick}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
-                      <span className="relative z-10 text-sm">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-
-
-          {/* Admin Menu Section */}
-          <div className="pt-4 border-t border-white/10">
-            <button
-              onClick={() => toggleSubmenu('admin')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                pathname.startsWith('/admin')
-                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
-              }`}
-            >
-              <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <i className="fas fa-user-shield mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
-                <span className="relative z-10">Admin</span>
-              </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'admin' ? 'rotate-180' : ''}`}></i>
-            </button>
-
-            {/* Admin Submenu */}
-            {openSubmenu === 'admin' && (
-              <div className="ml-4 mt-2 space-y-2">
-                {getMenuItemsByType("admin").map((item) => {
-                  const isActive = pathname === item.href;
-                  const isBackup = item.href === '/backups';
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
-                        isActive
-                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
-                      }`}
-                      onClick={handleNavClick}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
-                      <span className="relative z-10 text-sm">{item.label}</span>
-                      {isBackup && (hasPendingBackups || hasFailedBackups) && (
-                        <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse flex items-center justify-center">
-                          <span className="text-xs text-white font-bold">
-                            {hasFailedBackups ? '!' : hasPendingBackups ? 'P' : ''}
-                          </span>
-                        </div>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Main Financial Reports Menu Section */}
-          <div className="pt-4 border-t border-white/10">
-            <button
-              onClick={() => toggleSubmenu('reports')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                pathname.startsWith('/reports')
-                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
-              }`}
-            >
-              <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <i className="fas fa-chart-bar mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
-                <span className="relative z-10">Reports</span>
-              </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'reports' ? 'rotate-180' : ''}`}></i>
-            </button>
-            {openSubmenu === 'reports' && (
-              <div className="ml-4 mt-2 space-y-2">
-                {getMenuItemsByType("reports").map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
-                        isActive
-                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
-                      }`}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-green-500/15 to-blue-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
-                      <span className="relative z-10 text-sm">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+            );
+          })}
         </nav>
 
         {/* Modern Logout Button */}
