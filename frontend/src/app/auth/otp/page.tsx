@@ -1,7 +1,16 @@
 "use client";
 import React, { useRef, useState } from "react";
 import { Church } from "lucide-react";
+import { api } from "@/utils/api";
+import { toast } from 'react-toastify';
+import { useRouter } from "next/navigation";
+import Button from '@/components/ui/Button';
 import Link from "next/link";
+
+interface OTPResponse {
+  success: boolean;
+  message: string;
+}
 
 const OTP_LENGTH = 6;
 
@@ -9,7 +18,7 @@ const OTPPage = () => {
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [message, setMessage] = useState("");
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>, idx: number) => {
     const value = e.target.value.replace(/\D/g, ""); // Only digits
@@ -48,16 +57,41 @@ const OTPPage = () => {
     e.preventDefault();
   };
 
-  const handleSubmit = (otpValue: string) => {
+  const handleSubmit = async (otpValue: string) => {
     setSubmitting(true);
-    setMessage("");
     
-    // Simulate API call
-    setTimeout(() => {
-      setMessage("OTP verified successfully! Redirecting to dashboard...");
+    try {
+      const response = await api.post<OTPResponse>('/auth/verify-otp', {
+        otp: otpValue,
+      });
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        router.push('/dashboard');
+      } else {
+        toast.error(response.data.message || "OTP verification failed");
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "OTP verification failed. Please try again.";
+      toast.error(errorMessage);
+    } finally {
       setSubmitting(false);
-      // TODO: Redirect to dashboard
-    }, 1000);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      const response = await api.post<OTPResponse>('/auth/resend-otp');
+      
+      if (response.data.success) {
+        toast.success(response.data.message);
+      } else {
+        toast.error(response.data.message || "Failed to resend OTP");
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || "Failed to resend OTP. Please try again.";
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -85,7 +119,8 @@ const OTPPage = () => {
                 inputMode="numeric"
                 pattern="[0-9]*"
                 maxLength={1}
-                className="w-12 h-12 text-center text-2xl border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-all duration-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                disabled={submitting}
+                className="w-12 h-12 text-center text-2xl border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 outline-none transition-all duration-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
                 value={digit}
                 onChange={e => handleChange(e, idx)}
                 onKeyDown={e => handleKeyDown(e, idx)}
@@ -95,26 +130,25 @@ const OTPPage = () => {
             ))}
           </div>
 
-          {message && (
-            <div className="text-sm text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/20 rounded-xl p-3 border border-green-200 dark:border-green-800 transition-all duration-200">
-              {message}
-            </div>
-          )}
-
-          <button
+          <Button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-blue-400 disabled:to-purple-400 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
             disabled={submitting || otp.some(d => d === "")}
+            loading={submitting}
+            className="w-full"
           >
-            {submitting ? "Verifying..." : "Verify OTP"}
-          </button>
+            Verify OTP
+          </Button>
         </form>
 
         {/* Navigation Links */}
         <div className="mt-6 text-center space-y-2">
           <div className="text-sm text-gray-600 dark:text-gray-400">
             Didn't receive the OTP?{" "}
-            <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200">
+            <button 
+              onClick={handleResendOTP}
+              disabled={submitting}
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Resend
             </button>
           </div>
