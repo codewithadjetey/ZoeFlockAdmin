@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\V1\IncomeCategoryController;
 use App\Http\Controllers\Api\V1\TitheController;
 use App\Http\Controllers\Api\V1\ImportController;
 use App\Http\Controllers\Api\V1\BackupController;
+use App\Http\Controllers\Api\V1\DashboardController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -338,6 +339,11 @@ Route::prefix($apiVersion)->group(function () {
         Route::get('/sample/{type}', [ImportController::class, 'downloadSample'])->name('api.v1.import.sample');
         Route::post('/{type}', [ImportController::class, 'processImport'])->name('api.v1.import.process');
         Route::get('/audit-logs', [ImportController::class, 'getAuditLogs']);
+    });
+
+    // Dashboard routes
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/data', [DashboardController::class, 'getDashboardData']);
     });
 
     // Backup management routes
