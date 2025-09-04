@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   PageHeader, 
   ContentCard,
@@ -10,10 +10,15 @@ import {
 } from "@/components/ui";
 import ColorSwitcher from "@/components/ui/ColorSwitcher";
 import { useTheme } from "@/contexts/ThemeContext";
+import { AuthService, type User } from "@/services/auth";
+import { toast } from 'react-toastify';
 
 export default function SettingsPage() {
   const { currentTheme } = useTheme();
   const [activeTab, setActiveTab] = useState("profile-update");
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [settings, setSettings] = useState({
     name: "",
     phone: "",
@@ -30,8 +35,65 @@ export default function SettingsPage() {
     dateFormat: "MM/DD/YYYY",
   });
 
+  // Load user profile on component mount
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await AuthService.getProfile();
+      if (response.success && response.data.user) {
+        const userData = response.data.user;
+        setUser(userData);
+        setSettings(prev => ({
+          ...prev,
+          name: userData.name || "",
+          phone: userData.phone || "",
+          address: userData.address || "",
+          dateOfBirth: userData.date_of_birth || "",
+          gender: userData.gender || "",
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      toast.error('Failed to load user profile');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSettingChange = (key: string, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      const profileData = {
+        name: settings.name,
+        phone: settings.phone,
+        address: settings.address,
+        date_of_birth: settings.dateOfBirth || null,
+        gender: (settings.gender as 'male' | 'female' | 'other') || null,
+      };
+
+      const response = await AuthService.updateProfile(profileData);
+      if (response.success) {
+        toast.success('Profile updated successfully');
+        // Reload user profile to get updated data
+        await loadUserProfile();
+      } else {
+        toast.error(response.message || 'Failed to update profile');
+      }
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to update profile';
+      toast.error(errorMessage);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const tabs = [
@@ -41,60 +103,68 @@ export default function SettingsPage() {
     { id: "appearance", label: "Appearance", icon: "fas fa-palette" },
   ];
 
-  const renderProfileUpdateSettings = () => (
+    const renderProfileUpdateSettings = () => (
     <div className="space-y-6">
-      <FormField label="Full Name">
-        <input
-          type="text"
-          value={settings.name}
-          onChange={(e) => handleSettingChange("name", e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          placeholder="Enter your full name"
-        />
-      </FormField>
-      
-      <FormField label="Phone Number">
-        <input
-          type="tel"
-          value={settings.phone}
-          onChange={(e) => handleSettingChange("phone", e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          placeholder="Enter your phone number"
-        />
-      </FormField>
-      
-      <FormField label="Address">
-        <textarea
-          value={settings.address}
-          onChange={(e) => handleSettingChange("address", e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          placeholder="Enter your address"
-          rows={3}
-        />
-      </FormField>
-      
-      <FormField label="Date of Birth">
-        <input
-          type="date"
-          value={settings.dateOfBirth}
-          onChange={(e) => handleSettingChange("dateOfBirth", e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        />
-      </FormField>
-      
-      <FormField label="Gender">
-        <SelectInput
-          value={settings.gender}
-          onChange={(value: string) => handleSettingChange("gender", value)}
-          options={[
-            { value: "", label: "Select gender" },
-            { value: "male", label: "Male" },
-            { value: "female", label: "Female" },
-            { value: "other", label: "Other" },
-          ]}
-        />
-      </FormField>
-
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+          <span className="ml-2 text-gray-600">Loading profile...</span>
+        </div>
+      ) : (
+        <>
+          <FormField label="Full Name">
+            <input
+              type="text"
+              value={settings.name}
+              onChange={(e) => handleSettingChange("name", e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Enter your full name"
+            />
+          </FormField>
+          
+          <FormField label="Phone Number">
+            <input
+              type="tel"
+              value={settings.phone}
+              onChange={(e) => handleSettingChange("phone", e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Enter your phone number"
+            />
+          </FormField>
+          
+          <FormField label="Address">
+            <textarea
+              value={settings.address}
+              onChange={(e) => handleSettingChange("address", e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="Enter your address"
+              rows={3}
+            />
+          </FormField>
+          
+          <FormField label="Date of Birth">
+            <input
+              type="date"
+              value={settings.dateOfBirth}
+              onChange={(e) => handleSettingChange("dateOfBirth", e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </FormField>
+          
+          <FormField label="Gender">
+            <SelectInput
+              value={settings.gender}
+              onChange={(value: string) => handleSettingChange("gender", value)}
+              options={[
+                { value: "", label: "Select gender" },
+                { value: "male", label: "Male" },
+                { value: "female", label: "Female" },
+                { value: "other", label: "Other" },
+              ]}
+            />
+          </FormField>
+        </>
+      )}
     </div>
   );
 
@@ -223,8 +293,12 @@ export default function SettingsPage() {
                 <button className="px-6 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors duration-200">
                   Cancel
                 </button>
-                <button className="px-6 py-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-lg transition-all duration-200">
-                  Save Changes
+                <button 
+                  onClick={handleSaveProfile}
+                  disabled={saving}
+                  className="px-6 py-2 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-all duration-200"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </div>
