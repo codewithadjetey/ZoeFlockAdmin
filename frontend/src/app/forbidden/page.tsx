@@ -9,19 +9,29 @@ import { AlertTriangle, Home, ArrowLeft, Shield, Mail, Key } from 'lucide-react'
 export default function ForbiddenPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [missingPermission, setMissingPermission] = useState<string | null>(null);
+  const [requiredPermissions, setRequiredPermissions] = useState<string[]>([]);
   const [requestedUrl, setRequestedUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorType, setErrorType] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get missing permission and requested URL from query parameters
-    const permission = searchParams.get('permission');
+    // Get error details from query parameters
+    const permissions = searchParams.get('permissions');
     const url = searchParams.get('url');
+    const error = searchParams.get('error');
+    const type = searchParams.get('errorType');
     
-    if (permission) {
-      setMissingPermission(permission);
+    if (permissions) {
+      setRequiredPermissions(permissions.split(','));
     }
     if (url) {
       setRequestedUrl(url);
+    }
+    if (error) {
+      setErrorMessage(error);
+    }
+    if (type) {
+      setErrorType(type);
     }
   }, [searchParams]);
 
@@ -37,7 +47,9 @@ export default function ForbiddenPage() {
     const subject = encodeURIComponent('Permission Request - Zoe Flock Admin');
     const body = encodeURIComponent(
       `Hello,\n\nI am requesting access to the following feature:\n\n` +
-      `Missing Permission: ${missingPermission || 'Unknown'}\n` +
+      `Error Message: ${errorMessage || 'Unknown'}\n` +
+      `Error Type: ${errorType || 'Unknown'}\n` +
+      `Required Permissions: ${requiredPermissions.join(', ') || 'Unknown'}\n` +
       `Requested URL: ${requestedUrl || 'Unknown'}\n\n` +
       `Please review my request and grant the necessary permissions.\n\n` +
       `Thank you,\n[Your Name]`
@@ -89,40 +101,21 @@ export default function ForbiddenPage() {
             </CardDescription>
           </CardHeader>
           
-          <CardContent className="space-y-6">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-start">
-                <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" />
-                <div className="text-sm text-red-700">
-                  <p className="font-medium mb-1">Insufficient Permissions</p>
-                  {missingPermission && (
-                    <div className="mt-2 p-2 bg-white rounded border">
-                      <div className="flex items-center mb-1">
-                        <Key className="w-4 h-4 mr-2 text-gray-600" />
-                        <span className="font-medium text-gray-800">Missing Permission:</span>
-                      </div>
-                      <p className="text-gray-700 font-mono text-xs bg-gray-50 p-1 rounded">
-                        {missingPermission}
-                      </p>
-                      <p className="text-gray-600 text-xs mt-1">
-                        {getPermissionDescription(missingPermission)}
+                      <CardContent className="space-y-6">
+              {errorMessage && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start">
+                    <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div className="text-sm text-red-700">
+                      <p className="font-medium mb-2">Error Message</p>
+                      <p className="text-red-800 bg-red-100 p-2 rounded font-medium">
+                        {errorMessage}
                       </p>
                     </div>
-                  )}
-                  {requestedUrl && (
-                    <div className="mt-2 p-2 bg-white rounded border">
-                      <span className="font-medium text-gray-800">Requested URL:</span>
-                      <p className="text-gray-600 text-xs font-mono bg-gray-50 p-1 rounded mt-1">
-                        {requestedUrl}
-                      </p>
-                    </div>
-                  )}
-                  <p className="mt-2">
-                    Please contact your administrator if you believe this is an error.
-                  </p>
+                  </div>
                 </div>
-              </div>
-            </div>
+              )}
+           
 
             <div className="space-y-3">
               <Button 

@@ -52,26 +52,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        console.log('[AuthContext] Loading user from storage...');
+    
         // Check if we have stored user data and token
         const storedUser = retrieveAndDecrypt(AUTH_STORAGE_KEY) as User | null;
         const storedToken = localStorage.getItem('auth_token');
         
-        console.log('[AuthContext] Checking stored auth data:', { 
-          hasStoredUser: !!storedUser, 
-          hasStoredToken: !!storedToken 
-        });
+
 
         if (storedUser && storedToken) {
           // Token will be automatically added by the interceptor
           
           // Verify token with backend
           try {
-            console.log('[AuthContext] Verifying token with backend...');
+
             const response = await api.get('/auth/profile');
             const responseData = response.data as { success: boolean; message?: string; data?: { user: User } };
             if (responseData.success && responseData.data?.user) {
-              console.log('[AuthContext] Token verified, user authenticated');
+
               setState(prev => ({ 
                 ...prev, 
                 user: responseData.data!.user, 
@@ -79,11 +76,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 isLoading: false
               }));
             } else {
-              console.log('[AuthContext] Token invalid, clearing data');
+
               throw new Error('Token invalid');
             }
           } catch (error) {
-            console.log('[AuthContext] Token verification failed:', error);
+
             // Only clear data if it's a real authentication error, not a network error
             if (error instanceof Error && error.message.includes('Token invalid')) {
               removeEncryptedData(AUTH_STORAGE_KEY);
@@ -98,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             }));
           }
         } else {
-          console.log('[AuthContext] No stored user or token, not authenticated');
+
           setState(prev => ({ 
             ...prev, 
             user: null, 
@@ -125,7 +122,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (email: string, password: string) => {
     try {
-      console.log('[AuthContext] Attempting login...');
+
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
       const response = await api.post<AuthResponse>('/auth/login', {
@@ -134,7 +131,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       const responseData = response.data;
-      console.log('[AuthContext] Login response:', responseData);
+
 
       if (!responseData.success) {
         throw new Error(responseData.message || 'Login failed');
@@ -147,7 +144,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Encrypt and store user data
       encryptAndStore(AUTH_STORAGE_KEY, userData);
-      console.log('[AuthContext] Login successful, user stored');
+
       setState(prev => ({ 
         ...prev, 
         user: userData, 
@@ -168,14 +165,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      console.log('[AuthContext] Logging out...');
+
       // Call logout endpoint to revoke token
       await api.post('/auth/logout');
     } catch (error) {
       console.error('[AuthContext] Logout error:', error);
     } finally {
       // Clear local state regardless of API call success
-      console.log('[AuthContext] Clearing local auth data');
+
       setState(prev => ({ 
         ...prev, 
         user: null, 
@@ -190,13 +187,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const register = async (userData: RegisterData) => {
     try {
-      console.log('[AuthContext] Attempting registration...');
+
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
       const response = await api.post<AuthResponse>('/auth/register', userData);
 
       const responseData = response.data;
-      console.log('[AuthContext] Registration response:', responseData);
+
 
       if (!responseData.success) {
         throw new Error(responseData.message || 'Registration failed');
@@ -209,7 +206,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Encrypt and store user data
       encryptAndStore(AUTH_STORAGE_KEY, newUser);
-      console.log('[AuthContext] Registration successful, user stored');
+
       setState(prev => ({ 
         ...prev, 
         user: newUser, 
@@ -230,7 +227,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const updateProfile = async (data: Partial<User>) => {
     try {
-      console.log('[AuthContext] Updating profile...');
+
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
       const response = await api.put<ProfileResponse>('/auth/profile', data);
@@ -245,7 +242,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Encrypt and store updated user data
       encryptAndStore(AUTH_STORAGE_KEY, updatedUser);
-      console.log('[AuthContext] Profile updated successfully');
+
       setState(prev => ({ 
         ...prev, 
         user: updatedUser,

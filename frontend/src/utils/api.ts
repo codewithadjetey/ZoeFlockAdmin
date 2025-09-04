@@ -32,17 +32,11 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Log request for debugging
-    console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, {
-      data: config.data,
-      params: config.params,
-      headers: config.headers || {}
-    });
+
     
     return config;
   },
   (error) => {
-    console.error('[API Request Error]', error);
     return Promise.reject(error);
   }
 );
@@ -55,7 +49,6 @@ api.interceptors.response.use(
   (error) => {
     // Handle authentication errors
     if (error.response?.status === 401) {
-      console.log('[API] Unauthorized - clearing auth data');
       // Clear auth data
       if (typeof window !== 'undefined') {
         localStorage.removeItem('auth_token');
@@ -69,9 +62,19 @@ api.interceptors.response.use(
     
     // Handle permission errors
     if (error.response?.status === 403) {
-      console.log('[API] Forbidden - insufficient permissions');
-      // Show toast notification
-      toast.error('You do not have permission to access this resource');
+      // Extract error message from response
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message || 'You do not have permission to access this resource';
+      const requiredPermissions = errorData?.required_permissions || [];
+      
+      // Create a more descriptive toast message
+      let toastMessage = errorMessage;
+      if (requiredPermissions.length > 0) {
+        toastMessage += ` Required: ${requiredPermissions.join(', ')}`;
+      }
+      
+      // Show toast notification with actual error message
+      toast.error(toastMessage);
       
       // Use custom error handler if available, otherwise fallback to window.location
       if (errorHandler) {
@@ -86,7 +89,6 @@ api.interceptors.response.use(
     
     // Handle server errors
     if (error.response?.status >= 500) {
-      console.error('[API] Server error:', error.response?.data);
       toast.error('Server error occurred. Please try again later.');
     }
     
@@ -110,9 +112,7 @@ export async function httpFile<T = any>(
   // Get the auth token from localStorage
   const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
   
-  // Debug logging
-  console.log('httpFile called with:', { url, token: !!token, baseURL: API_BASE_URL });
-  console.log('Full URL will be:', `${API_BASE_URL}/${url}`);
+
   
   return api.post<T>(url, data, {
     ...config,

@@ -9,13 +9,20 @@ export function useErrorHandler() {
     // Set up the error handler for 403 errors
     setErrorHandler((error) => {
       if (error.response?.status === 403) {
-        // Get the missing permission from the error response
-        const missingPermission = error.response?.data?.message || 'unknown';
+        // Extract error details from the response
+        const errorData = error.response?.data;
+        const errorMessage = errorData?.message || 'Insufficient permissions';
+        const errorType = errorData?.error || 'permission_denied';
+        const requiredPermissions = errorData?.required_permissions || [];
         const requestedUrl = error.config?.url || window.location.pathname;
         
         // Use Next.js router for better navigation with query parameters
         const params = new URLSearchParams();
-        if (missingPermission) params.append('permission', missingPermission);
+        if (errorMessage) params.append('error', errorMessage);
+        if (errorType) params.append('errorType', errorType);
+        if (requiredPermissions.length > 0) {
+          params.append('permissions', requiredPermissions.join(','));
+        }
         if (requestedUrl) params.append('url', requestedUrl);
         
         const queryString = params.toString();

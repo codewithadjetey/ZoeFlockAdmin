@@ -180,7 +180,7 @@ Route::prefix($apiVersion)->group(function () {
 
         // Events management routes
         Route::prefix('events')->group(function () {
-            Route::get('/', [EventController::class, 'index'])->middleware('permission:view-eventsss');
+            Route::get('/', [EventController::class, 'index'])->middleware('permission:view-events');
             Route::post('/', [EventController::class, 'store'])->middleware('permission:create-events');
             Route::get('/{event}', [EventController::class, 'show'])->middleware('permission:view-events');
             Route::put('/{event}', [EventController::class, 'update'])->middleware('permission:edit-events');

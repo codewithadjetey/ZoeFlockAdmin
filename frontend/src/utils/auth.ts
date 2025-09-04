@@ -151,7 +151,7 @@ export function initializeAuth(): void {
   const token = getToken();
   if (token && isTokenValid(token)) {
     // Token is valid, interceptor will handle it automatically
-    console.log('[Auth] Token initialized');
+  
   } else {
     removeToken();
   }
