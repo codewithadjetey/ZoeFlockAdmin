@@ -25,4 +25,18 @@ export const ExpensesService = {
   async deleteExpense(id: number): Promise<void> {
     await api.delete(`/expenses/${id}`);
   },
+
+  async createCategory(data: Partial<ExpenseCategory>): Promise<ExpenseCategory> {
+    const res = await api.post('/expense-categories', data);
+    return res.data;
+  },
+
+  async updateCategory(id: number, data: Partial<ExpenseCategory>): Promise<ExpenseCategory> {
+    const res = await api.put(`/expense-categories/${id}`, data);
+    return res.data;
+  },
+
+  async deleteCategory(id: number): Promise<void> {
+    await api.delete(`/expense-categories/${id}`);
+  },
 };
