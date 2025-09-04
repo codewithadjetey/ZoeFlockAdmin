@@ -13,6 +13,7 @@ import ViewToggle from "@/components/ui/ViewToggle";
 import Modal from "@/components/shared/Modal";
 import { IncomeCategory, PaginatedResponse } from "@/interfaces/income";
 import { IncomeService } from "@/services/income";
+import { toast } from 'react-toastify';
 
 export default function IncomeCategoriesPage() {
   const [categories, setCategories] = useState<IncomeCategory[]>([]);
@@ -35,7 +36,10 @@ export default function IncomeCategoriesPage() {
         setTotalItems(res.meta.total);
         setTotalPages(res.meta.last_page);
       })
-      .catch(() => setError("Failed to load categories."))
+      .catch(() => {
+        setError("Failed to load categories.");
+        toast.error('Failed to load income categories');
+      })
       .finally(() => setLoading(false));
   }, [currentPage, perPage]);
 
@@ -71,13 +75,16 @@ export default function IncomeCategoriesPage() {
       if (editingCategory) {
         const updated = await IncomeService.updateCategory(editingCategory.id, form);
         setCategories((prev) => prev.map((cat) => (cat.id === updated.id ? updated : cat)));
+        toast.success('Income category updated successfully');
       } else {
         const created = await IncomeService.createCategory(form);
         setCategories((prev) => [...prev, created]);
+        toast.success('Income category created successfully');
       }
       handleCloseModal();
-    } catch (e) {
+    } catch (e: any) {
       setError("Failed to save category.");
+      toast.error('Failed to save income category');
     } finally {
       setLoading(false);
     }
@@ -90,8 +97,10 @@ export default function IncomeCategoriesPage() {
     try {
       await IncomeService.deleteCategory(id);
       setCategories((prev) => prev.filter((cat) => cat.id !== id));
+      toast.success('Income category deleted successfully');
     } catch (e) {
       setError("Failed to delete category.");
+      toast.error('Failed to delete income category');
     } finally {
       setLoading(false);
     }
