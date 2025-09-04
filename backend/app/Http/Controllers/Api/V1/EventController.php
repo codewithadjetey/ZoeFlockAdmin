@@ -23,6 +23,19 @@ class EventController extends Controller
     public function __construct(FileUploadService $fileUploadService)
     {
         $this->fileUploadService = $fileUploadService;
+        
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-events');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-events')->only(['store']);
+        $this->middleware('permission:edit-events')->only(['update']);
+        $this->middleware('permission:delete-events')->only(['destroy']);
+        $this->middleware('permission:cancel-events')->only(['cancel']);
+        $this->middleware('permission:publish-events')->only(['publish']);
+        $this->middleware('permission:manage-event-families')->only(['getEventFamilies', 'addFamiliesToEvent', 'updateEventFamily', 'removeFamilyFromEvent']);
+        $this->middleware('permission:manage-event-groups')->only(['getEventGroups', 'addGroupsToEvent', 'updateEventGroup', 'removeGroupFromEvent']);
+        $this->middleware('permission:view-member-events')->only(['getMemberEvents']);
     }
 
     /**
