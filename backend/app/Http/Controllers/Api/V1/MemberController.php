@@ -27,6 +27,18 @@ class MemberController extends Controller
     {
         $this->fileUploadService = $fileUploadService;
         $this->memberService = $memberService;
+        
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-members');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-members')->only(['store']);
+        $this->middleware('permission:edit-members')->only(['update']);
+        $this->middleware('permission:delete-members')->only(['destroy']);
+        $this->middleware('permission:view-member-statistics')->only(['statistics']);
+        $this->middleware('permission:create-user-account')->only(['createUserAccount']);
+        $this->middleware('permission:manage-member-groups')->only(['getGroups', 'addToGroups', 'removeFromGroups']);
+        $this->middleware('permission:update-member-group-role')->only(['updateGroupRole']);
     }
 
     /**
