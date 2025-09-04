@@ -27,6 +27,9 @@ export default function PartnershipCategoriesPage() {
       const data = await PartnershipCategoriesService.list({ search, page, per_page: perPage });
       setCategories(data.data || data);
       setTotal(data.total || 0);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      toast.error('Failed to load partnership categories');
     } finally {
       setLoading(false);
     }
@@ -53,8 +56,14 @@ export default function PartnershipCategoriesPage() {
 
   const handleDelete = async (category: PartnershipCategory) => {
     if (window.confirm('Are you sure you want to delete this category?')) {
-      await PartnershipCategoriesService.delete(category.id);
-      loadCategories();
+      try {
+        await PartnershipCategoriesService.delete(category.id);
+        toast.success('Partnership category deleted successfully');
+        loadCategories();
+      } catch (error: any) {
+        console.error('Error deleting category:', error);
+        toast.error(error.response?.data?.message || 'Failed to delete partnership category');
+      }
     }
   };
 
@@ -62,8 +71,10 @@ export default function PartnershipCategoriesPage() {
    try {
     if (modalMode === 'create') {
       await PartnershipCategoriesService.create(data);
+      toast.success('Partnership category created successfully');
     } else if (selectedCategory) {
       await PartnershipCategoriesService.update(selectedCategory.id, data);
+      toast.success('Partnership category updated successfully');
     }
     setIsModalOpen(false);
     loadCategories();
