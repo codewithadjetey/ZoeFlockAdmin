@@ -15,6 +15,7 @@ import SelectInput from "@/components/ui/SelectInput";
 import { Income, IncomeCategory } from "@/interfaces/income";
 import { IncomeService } from "@/services/income";
 import { EntitiesService, EntityOption } from "@/services/entities";
+import { toast } from 'react-toastify';
 
 export default function IncomePage() {
   const [incomes, setIncomes] = useState<Income[]>([]);
@@ -57,7 +58,10 @@ export default function IncomePage() {
         setTotalItems(res.meta.total);
         setTotalPages(res.meta.last_page);
       })
-      .catch(() => setError("Failed to load incomes."))
+      .catch(() => {
+        setError("Failed to load incomes.");
+        toast.error('Failed to load incomes');
+      })
       .finally(() => setLoading(false));
   }, [currentPage, perPage, filters]);
 
@@ -117,17 +121,23 @@ export default function IncomePage() {
       if (editingIncome) {
         const updated = await IncomeService.updateIncome(editingIncome.id, form);
         setIncomes((prev) => prev.map((inc) => (inc.id === updated.id ? updated : inc)));
+        toast.success('Income updated successfully');
       } else {
         const created = await IncomeService.createIncome(form);
         setIncomes((prev) => [created, ...prev]);
+        toast.success('Income created successfully');
       }
       handleCloseModal();
     } catch (e: any) {
-      if (e.response && e.response.data && e.response.data.errors) {
+     switch (e.response?.status) {
+      case 422:
         setErrors(e.response.data.errors);
-      } else {
+        toast.error('Please fix the validation errors');
+        break;
+      default:
         setError("Failed to save income.");
-      }
+        toast.error('Failed to save income');
+     }
     } finally {
       setLoading(false);
     }
@@ -140,8 +150,10 @@ export default function IncomePage() {
     try {
       await IncomeService.deleteIncome(id);
       setIncomes((prev) => prev.filter((inc) => inc.id !== id));
+      toast.success('Income deleted successfully');
     } catch (e) {
       setError("Failed to delete income.");
+      toast.error('Failed to delete income');
     } finally {
       setLoading(false);
     }
