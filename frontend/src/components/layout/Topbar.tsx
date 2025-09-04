@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useTheme } from "@/contexts/ThemeContext";
 import ColorSwitcher from "@/components/ui/ColorSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 interface TopbarProps {
   onSidebarToggle?: () => void;
@@ -12,9 +14,11 @@ interface TopbarProps {
 const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { currentTheme } = useTheme();
+  const router = useRouter();
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -32,6 +36,25 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleLogout = async () => {
+    // Confirm logout
+    if (!window.confirm('Are you sure you want to logout?')) {
+      return;
+    }
+    
+    try {
+      setIsLoggingOut(true);
+      await logout();
+      toast.success('Logged out successfully');
+      router.push('/auth/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to logout. Please try again.');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const notifications = [
     {
@@ -184,15 +207,12 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
                 </Link>
                 <hr className="my-2 border-gray-200 dark:border-gray-700" />
                 <button
-                  onClick={() => {
-                    localStorage.removeItem("isAuthenticated");
-                    localStorage.removeItem("userRole");
-                    // window.location.href = "/auth/login";
-                  }}
-                  className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 hover:transform hover:scale-[1.02]"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200 hover:transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <i className="fas fa-sign-out-alt mr-3"></i>
-                  Logout
+                  <i className={`fas ${isLoggingOut ? 'fa-spinner fa-spin' : 'fa-sign-out-alt'} mr-3`}></i>
+                  {isLoggingOut ? 'Logging out...' : 'Logout'}
                 </button>
               </div>
             </div>
