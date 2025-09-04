@@ -13,8 +13,13 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 export default function SettingsPage() {
   const { currentTheme } = useTheme();
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("profile-update");
   const [settings, setSettings] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    dateOfBirth: "",
+    gender: "",
     emailNotifications: true,
     smsNotifications: false,
     weeklyReports: true,
@@ -30,50 +35,66 @@ export default function SettingsPage() {
   };
 
   const tabs = [
-    { id: "general", label: "General", icon: "fas fa-cog" },
+    { id: "profile-update", label: "Profile Update", icon: "fas fa-user-edit" },
     { id: "notifications", label: "Notifications", icon: "fas fa-bell" },
     { id: "security", label: "Security", icon: "fas fa-shield-alt" },
     { id: "appearance", label: "Appearance", icon: "fas fa-palette" },
   ];
 
-  const renderGeneralSettings = () => (
+  const renderProfileUpdateSettings = () => (
     <div className="space-y-6">
-      <FormField label="Language">
-        <SelectInput
-          value={settings.language}
-          onChange={(value: string) => handleSettingChange("language", value)}
-          options={[
-            { value: "English", label: "English" },
-            { value: "Spanish", label: "Spanish" },
-            { value: "French", label: "French" },
-          ]}
+      <FormField label="Full Name">
+        <input
+          type="text"
+          value={settings.name}
+          onChange={(e) => handleSettingChange("name", e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          placeholder="Enter your full name"
         />
       </FormField>
       
-      <FormField label="Timezone">
-        <SelectInput
-          value={settings.timezone}
-          onChange={(value: string) => handleSettingChange("timezone", value)}
-          options={[
-            { value: "UTC-5", label: "Eastern Time (UTC-5)" },
-            { value: "UTC-6", label: "Central Time (UTC-6)" },
-            { value: "UTC-7", label: "Mountain Time (UTC-7)" },
-            { value: "UTC-8", label: "Pacific Time (UTC-8)" },
-          ]}
+      <FormField label="Phone Number">
+        <input
+          type="tel"
+          value={settings.phone}
+          onChange={(e) => handleSettingChange("phone", e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          placeholder="Enter your phone number"
         />
       </FormField>
       
-      <FormField label="Date Format">
+      <FormField label="Address">
+        <textarea
+          value={settings.address}
+          onChange={(e) => handleSettingChange("address", e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          placeholder="Enter your address"
+          rows={3}
+        />
+      </FormField>
+      
+      <FormField label="Date of Birth">
+        <input
+          type="date"
+          value={settings.dateOfBirth}
+          onChange={(e) => handleSettingChange("dateOfBirth", e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        />
+      </FormField>
+      
+      <FormField label="Gender">
         <SelectInput
-          value={settings.dateFormat}
-          onChange={(value: string) => handleSettingChange("dateFormat", value)}
+          value={settings.gender}
+          onChange={(value: string) => handleSettingChange("gender", value)}
           options={[
-            { value: "MM/DD/YYYY", label: "MM/DD/YYYY" },
-            { value: "DD/MM/YYYY", label: "DD/MM/YYYY" },
-            { value: "YYYY-MM-DD", label: "YYYY-MM-DD" },
+            { value: "", label: "Select gender" },
+            { value: "male", label: "Male" },
+            { value: "female", label: "Female" },
+            { value: "other", label: "Other" },
           ]}
         />
       </FormField>
+
     </div>
   );
 
@@ -100,32 +121,12 @@ export default function SettingsPage() {
           onChange={(checked) => handleSettingChange("smsNotifications", checked)}
         />
       </div>
-      
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Weekly Reports</h3>
-          <p className="text-sm text-gray-600">Receive weekly summary reports</p>
-        </div>
-        <ToggleSwitch
-          checked={settings.weeklyReports}
-          onChange={(checked) => handleSettingChange("weeklyReports", checked)}
-        />
-      </div>
+  
     </div>
   );
 
   const renderSecuritySettings = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Auto Backup</h3>
-          <p className="text-sm text-gray-600">Automatically backup data weekly</p>
-        </div>
-        <ToggleSwitch
-          checked={settings.autoBackup}
-          onChange={(checked) => handleSettingChange("autoBackup", checked)}
-        />
-      </div>
       
       <div className="flex items-center justify-between">
         <div>
@@ -161,21 +162,13 @@ export default function SettingsPage() {
           onChange={(checked) => handleSettingChange("darkMode", checked)}
         />
       </div>
-      
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Theme Colors</h3>
-          <p className="text-sm text-gray-600 mb-4">Choose your preferred color theme</p>
-        </div>
-        <ColorSwitcher />
-      </div>
     </div>
   );
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "general":
-        return renderGeneralSettings();
+      case "profile-update":
+        return renderProfileUpdateSettings();
       case "notifications":
         return renderNotificationSettings();
       case "security":
@@ -183,7 +176,7 @@ export default function SettingsPage() {
       case "appearance":
         return renderAppearanceSettings();
       default:
-        return renderGeneralSettings();
+        return renderProfileUpdateSettings();
     }
   };
 
