@@ -17,6 +17,20 @@ use Illuminate\Support\Facades\DB;
  */
 class RoleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-roles');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-roles')->only(['store']);
+        $this->middleware('permission:edit-roles')->only(['update']);
+        $this->middleware('permission:delete-roles')->only(['destroy']);
+        $this->middleware('permission:view-role-statistics')->only(['statistics']);
+        $this->middleware('permission:view-role-permissions')->only(['permissions']);
+        $this->middleware('permission:duplicate-role')->only(['duplicate']);
+    }
+
     /**
      * Display a listing of roles
      * 

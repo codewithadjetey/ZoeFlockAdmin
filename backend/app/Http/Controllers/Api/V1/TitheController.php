@@ -6,14 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Tithe;
 use App\Models\Member;
 use App\Models\Family;
-use Illuminate\Http\Request;
+use App\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
-use App\Models\TithePayment;
+use Illuminate\Support\Facades\Validator;
+use Exception;
 
 /**
  * @OA\Tag(
@@ -23,6 +22,28 @@ use App\Models\TithePayment;
  */
 class TitheController extends Controller
 {
+    protected $fileUploadService;
+
+    public function __construct(FileUploadService $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+        
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-tithes');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-tithes')->only(['store']);
+        $this->middleware('permission:edit-tithes')->only(['update']);
+        $this->middleware('permission:delete-tithes')->only(['destroy']);
+        $this->middleware('permission:view-tithe-statistics')->only(['statistics']);
+        $this->middleware('permission:view-monthly-trends')->only(['monthlyTrends']);
+        $this->middleware('permission:view-member-performance')->only(['memberPerformance']);
+        $this->middleware('permission:view-frequency-analysis')->only(['frequencyAnalysis']);
+        $this->middleware('permission:view-recent-activity')->only(['recentActivity']);
+        $this->middleware('permission:export-tithe-report')->only(['exportReport']);
+        $this->middleware('permission:mark-tithe-paid')->only(['markAsPaid']);
+    }
+
     /**
      * Display a listing of tithes based on user role
      * 
