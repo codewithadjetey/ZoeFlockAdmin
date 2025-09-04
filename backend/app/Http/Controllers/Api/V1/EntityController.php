@@ -23,6 +23,12 @@ use Illuminate\Support\Facades\Auth;
  */
 class EntityController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-entities');
+    }
+
     /**
      * @OA\Get(
      *     path="/api/v1/entities",
