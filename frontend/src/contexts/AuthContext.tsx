@@ -63,8 +63,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
 
         if (storedUser && storedToken) {
-          // Set token in API headers
-          api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+          // Token will be automatically added by the interceptor
           
           // Verify token with backend
           try {
@@ -89,7 +88,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             if (error instanceof Error && error.message.includes('Token invalid')) {
               removeEncryptedData(AUTH_STORAGE_KEY);
               localStorage.removeItem('auth_token');
-              delete api.defaults.headers.common['Authorization'];
+              // Interceptor will handle missing tokens automatically
             }
             setState(prev => ({ 
               ...prev, 
@@ -143,9 +142,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const { user: userData, token } = responseData.data;
       
-      // Store token in localStorage and set in API headers
+      // Store token in localStorage (interceptor will handle headers)
       localStorage.setItem('auth_token', token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       // Encrypt and store user data
       encryptAndStore(AUTH_STORAGE_KEY, userData);
@@ -186,7 +184,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }));
       removeEncryptedData(AUTH_STORAGE_KEY);
       localStorage.removeItem('auth_token');
-      delete api.defaults.headers.common['Authorization'];
+      // Interceptor will handle missing tokens automatically
     }
   };
 
@@ -206,9 +204,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const { user: newUser, token } = responseData.data;
       
-      // Store token in localStorage and set in API headers
+      // Store token in localStorage (interceptor will handle headers)
       localStorage.setItem('auth_token', token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       // Encrypt and store user data
       encryptAndStore(AUTH_STORAGE_KEY, newUser);
