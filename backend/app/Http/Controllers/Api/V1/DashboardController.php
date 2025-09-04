@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\EventCategory;
 use App\Models\Member;
 use App\Models\Event;
 use App\Models\Attendance;
@@ -69,10 +70,7 @@ class DashboardController extends Controller
                 $data['total_tithe_paid'] = Tithe::sum('paid_amount');
             }
 
-            return response()->json([
-                'success' => true,
-                'data' => $data,
-                'message' => 'Dashboard data retrieved successfully'
+            
             $data = [
                 'statistics' => $this->getStatistics(),
                 'attendance_data' => $this->getAttendanceData(),
@@ -93,12 +91,7 @@ class DashboardController extends Controller
             ], 500);
         }
     }
-                'message' => 'Failed to retrieve dashboard data',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
+              
     /**
      * Get main statistics
      */
