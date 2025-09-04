@@ -156,6 +156,13 @@ Route::prefix($apiVersion)->group(function () {
         Route::prefix('families')->group(function () {
             Route::get('/', [FamilyController::class, 'index'])->middleware('permission:view-families');
             Route::post('/', [FamilyController::class, 'store'])->middleware('permission:create-families');
+            
+            // Get current user's family
+            Route::get('/my-family', [FamilyController::class, 'getMyFamily'])->middleware('permission:get-my-family');
+            
+            // Get family statistics
+            Route::get('/statistics', [FamilyController::class, 'getStatistics'])->middleware('permission:get-family-statistics');
+            
             Route::get('/{id}', [FamilyController::class, 'show'])->middleware('permission:view-families');
             Route::put('/{id}', [FamilyController::class, 'update'])->middleware('permission:edit-families');
             Route::delete('/{id}', [FamilyController::class, 'destroy'])->middleware('permission:delete-families');
@@ -167,12 +174,6 @@ Route::prefix($apiVersion)->group(function () {
             
             // Get family events
             Route::get('/{id}/events', [FamilyController::class, 'getFamilyEvents'])->middleware('permission:get-family-events');
-            
-            // Get current user's family
-            Route::get('/my-family', [FamilyController::class, 'getMyFamily'])->middleware('permission:get-my-family');
-            
-            // Get family statistics
-            Route::get('/statistics', [FamilyController::class, 'getStatistics'])->middleware('permission:get-family-statistics');
         });
 
         // Entities endpoint for form data
