@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { Button, DataTable, SearchInput, Alert } from "@/components/ui";
 import RoleModal from "@/components/admin/RoleModal";
-import { useToast } from "@/hooks/useToast";
+import { toast } from 'react-toastify';
 import { api } from "@/utils/api";
 
 interface Role {
@@ -37,7 +37,6 @@ const RolesPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [perPage] = useState(15);
-  const { showToast } = useToast();
 
   useEffect(() => {
     fetchRoles();
@@ -59,7 +58,7 @@ const RolesPage = () => {
         setTotalPages(response.data.data.last_page);
       }
     } catch (error) {
-      showToast("Error fetching roles", "error");
+      toast.error("Error fetching roles");
     } finally {
       setLoading(false);
     }
@@ -72,7 +71,7 @@ const RolesPage = () => {
         setPermissions(response.data.data);
       }
     } catch (error) {
-      showToast("Error fetching permissions", "error");
+      toast.error("Error fetching permissions");
     }
   };
 
@@ -92,11 +91,11 @@ const RolesPage = () => {
     try {
       const response = await api.delete(`/roles/${roleId}`);
       if (response.data.success) {
-        showToast("Role deleted successfully", "success");
+        toast.success("Role deleted successfully");
         fetchRoles();
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || "Error deleting role", "error");
+      toast.error(error.response?.data?.message || "Error deleting role");
     }
   };
 
@@ -104,11 +103,11 @@ const RolesPage = () => {
     try {
       const response = await api.post(`/roles/${roleId}/duplicate`);
       if (response.data.success) {
-        showToast("Role duplicated successfully", "success");
+        toast.success("Role duplicated successfully");
         fetchRoles();
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || "Error duplicating role", "error");
+      toast.error(error.response?.data?.message || "Error duplicating role");
     }
   };
 

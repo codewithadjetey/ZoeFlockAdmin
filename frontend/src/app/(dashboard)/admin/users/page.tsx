@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Button, DataTable, SearchInput, Alert } from "@/components/ui";
 import UserModal from "@/components/admin/UserModal";
 import { api } from "@/utils/api";
-import { useToast } from "@/hooks/useToast";
+import { toast } from 'react-toastify';
 import { formatDateForInput } from "@/utils/helpers";
 import { User, Role } from "@/interfaces";
 
@@ -19,7 +19,6 @@ const UsersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [perPage] = useState(15);
-  const { showToast } = useToast();
 
   useEffect(() => {
     fetchUsers();
@@ -42,7 +41,7 @@ const UsersPage = () => {
         setTotalPages(response.data.data.last_page);
       }
     } catch (error) {
-      showToast("Error fetching users", "error");
+      toast.error("Error fetching users");
     } finally {
       setLoading(false);
     }
@@ -55,7 +54,7 @@ const UsersPage = () => {
         setRoles(response.data.data.data);
       }
     } catch (error) {
-      showToast("Error fetching roles", "error");
+      toast.error("Error fetching roles");
     }
   };
 
@@ -75,11 +74,11 @@ const UsersPage = () => {
     try {
       const response = await api.delete(`/users/${userId}`);
       if (response.data.success) {
-        showToast("User deleted successfully", "success");
+        toast.success("User deleted successfully");
         fetchUsers();
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || "Error deleting user", "error");
+      toast.error(error.response?.data?.message || "Error deleting user");
     }
   };
 
@@ -87,11 +86,11 @@ const UsersPage = () => {
     try {
       const response = await api.put(`/users/${userId}/toggle-status`);
       if (response.data.success) {
-        showToast("User status updated successfully", "success");
+        toast.success("User status updated successfully");
         fetchUsers();
       }
     } catch (error: any) {
-      showToast(error.response?.data?.message || "Error updating user status", "error");
+      toast.error(error.response?.data?.message || "Error updating user status");
     }
   };
 
