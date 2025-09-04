@@ -45,10 +45,6 @@ const allMenuItems = [
   { label: "General Statistics", icon: "fas fa-chart-bar", href: "/attendance/statistics/general", type: "attendance" },
   
   // Settings menu items
-  { label: "General", icon: "fas fa-cog", href: "/settings", type: "settings" },
-  { label: "Appearance", icon: "fas fa-palette", href: "/settings/appearance", type: "settings" },
-  { label: "Notifications", icon: "fas fa-bell", href: "/settings/notifications", type: "settings" },
-  { label: "Security", icon: "fas fa-shield-alt", href: "/settings/security", type: "settings" },
   
   // System menu items
   
@@ -358,50 +354,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             {openSubmenu === 'attendance' && (
               <div className="ml-4 mt-2 space-y-2">
                 {getMenuItemsByType("attendance").map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-300 group relative overflow-hidden ${
-                        isActive
-                          ? "text-white bg-gradient-to-r from-white/15 to-white/5 backdrop-blur-sm border border-white/15"
-                          : "text-blue-100 hover:bg-gradient-to-r hover:from-white/20 hover:to-white/10 hover:backdrop-blur-sm hover:text-white hover:shadow-md"
-                      }`}
-                      onClick={handleNavClick}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <i className={`${item.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
-                      <span className="relative z-10 text-sm">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Settings Menu Section */}
-          <div className="pt-4 border-t border-white/10">
-            <button
-              onClick={() => toggleSubmenu('settings')}
-              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-all duration-300 group relative overflow-hidden ${
-                pathname.startsWith('/settings')
-                  ? "text-white bg-gradient-to-r from-white/20 to-white/10 backdrop-blur-sm border border-white/20"
-                  : "text-blue-100 hover:bg-gradient-to-r hover:from-white/25 hover:to-white/15 hover:backdrop-blur-sm hover:text-white hover:shadow-lg"
-              }`}
-            >
-              <div className="flex items-center">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <i className="fas fa-cog mr-4 text-lg group-hover:scale-110 transition-transform duration-300 relative z-10"></i>
-                <span className="relative z-10">Settings</span>
-              </div>
-              <i className={`fas fa-chevron-down transition-transform duration-300 relative z-10 ${openSubmenu === 'settings' ? 'rotate-180' : ''}`}></i>
-            </button>
-
-            {/* Settings Submenu */}
-            {openSubmenu === 'settings' && (
-              <div className="ml-4 mt-2 space-y-2">
-                {getMenuItemsByType("settings").map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
