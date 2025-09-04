@@ -5,7 +5,12 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\Income;
 use App\Models\IncomeCategory;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Exception;
 
 /**
  * @OA\Tag(
@@ -15,6 +20,17 @@ use Illuminate\Http\Request;
  */
 class IncomeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-incomes');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-incomes')->only(['store']);
+        $this->middleware('permission:edit-incomes')->only(['update']);
+        $this->middleware('permission:delete-incomes')->only(['destroy']);
+    }
+
     /**
      * Display a listing of income records
      * 
