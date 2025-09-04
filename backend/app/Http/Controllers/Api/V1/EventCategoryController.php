@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\EventCategory;
 use App\Models\Event;
+use App\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Carbon\Carbon;
+use Exception;
 
 /**
  * @OA\Tag(
@@ -19,6 +21,26 @@ use Carbon\Carbon;
  */
 class EventCategoryController extends Controller
 {
+    protected $fileUploadService;
+
+    public function __construct(FileUploadService $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+        
+        $this->middleware('auth:sanctum');
+        $this->middleware('permission:view-event-categories');
+        
+        // Apply specific permissions to methods
+        $this->middleware('permission:create-event-categories')->only(['store']);
+        $this->middleware('permission:edit-event-categories')->only(['update']);
+        $this->middleware('permission:delete-event-categories')->only(['destroy']);
+        $this->middleware('permission:view-category-events')->only(['getCategoryEvents']);
+        $this->middleware('permission:generate-category-events')->only(['generateEvents']);
+        $this->middleware('permission:generate-one-time-event')->only(['generateOneTimeEvent']);
+        $this->middleware('permission:toggle-category-status')->only(['toggleStatus']);
+        $this->middleware('permission:view-category-statistics')->only(['getStatistics']);
+    }
+
     /**
      * Display a listing of event categories
      * 
