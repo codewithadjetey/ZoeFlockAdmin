@@ -32,6 +32,13 @@ class User extends Authenticatable
         'email_verified_at',
         'email_verification_token',
         'email_verification_expires_at',
+        'email_notifications_enabled',
+        'email_notification_types',
+        'sms_notifications_enabled',
+        'sms_notification_types',
+        'whatsapp_notifications_enabled',
+        'whatsapp_notification_types',
+        'whatsapp_number',
     ];
 
     /**
@@ -58,6 +65,12 @@ class User extends Authenticatable
             'password' => 'hashed',
             'date_of_birth' => 'date',
             'is_active' => 'boolean',
+            'email_notifications_enabled' => 'boolean',
+            'email_notification_types' => 'array',
+            'sms_notifications_enabled' => 'boolean',
+            'sms_notification_types' => 'array',
+            'whatsapp_notifications_enabled' => 'boolean',
+            'whatsapp_notification_types' => 'array',
         ];
     }
 

@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react";
 import { Church } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "@/utils/api";
+import { toast } from 'react-toastify';
+import TextInput from '@/components/ui/TextInput';
+import Button from '@/components/ui/Button';
 import Link from "next/link";
 
 interface VerificationResponse {
@@ -12,7 +15,6 @@ interface VerificationResponse {
 
 const VerifyEmailPage = () => {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -32,7 +34,6 @@ const VerifyEmailPage = () => {
 
   const handleEmailVerification = async (token: string, email: string) => {
     setIsVerifying(true);
-    setMessage("Verifying your email...");
 
     try {
       const response = await api.post<VerificationResponse>('/auth/verify-email', {
@@ -42,14 +43,15 @@ const VerifyEmailPage = () => {
 
       if (response.data.success) {
         setVerificationStatus('success');
-        setMessage("Email verified successfully! You can now log in to your account.");
+        toast.success(response.data.message);
       } else {
         setVerificationStatus('error');
-        setMessage(response.data.message || "Verification failed");
+        toast.error(response.data.message || "Verification failed");
       }
     } catch (error: any) {
       setVerificationStatus('error');
-      setMessage(error.response?.data?.message || "Verification failed. Please try again.");
+      const errorMessage = error.response?.data?.message || "Verification failed. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsVerifying(false);
     }
@@ -58,7 +60,6 @@ const VerifyEmailPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setMessage("");
 
     try {
       const response = await api.post<VerificationResponse>('/auth/send-verification-email', {
@@ -66,12 +67,13 @@ const VerifyEmailPage = () => {
       });
 
       if (response.data.success) {
-        setMessage("Verification email sent successfully! Please check your inbox.");
+        toast.success(response.data.message);
       } else {
-        setMessage(response.data.message || "Failed to send verification email");
+        toast.error(response.data.message || "Failed to send verification email");
       }
     } catch (error: any) {
-      setMessage(error.response?.data?.message || "Failed to send verification email. Please try again.");
+      const errorMessage = error.response?.data?.message || "Failed to send verification email. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -111,62 +113,53 @@ const VerifyEmailPage = () => {
         {verificationStatus === 'idle' && (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-                Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
+              <TextInput
+                label="Email Address"
                 type="email"
-                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                disabled={isSubmitting}
               />
             </div>
 
-            {message && (
-              <div className={`text-sm ${getStatusColor()} rounded-xl p-3 border transition-all duration-200`}>
-                {message}
-              </div>
-            )}
-
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-blue-400 disabled:to-purple-400 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+              loading={isSubmitting}
+              className="w-full"
             >
-              {isSubmitting ? "Sending..." : "Send Verification Link"}
-            </button>
+              Send Verification Link
+            </Button>
           </form>
         )}
 
         {verificationStatus === 'success' && (
           <div className="space-y-6">
             <div className={`text-sm ${getStatusColor()} rounded-xl p-3 border transition-all duration-200`}>
-              {message}
+              Email verified successfully! You can now log in to your account.
             </div>
-            <button
+            <Button
               onClick={() => router.push('/auth/login')}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105"
+              variant="success"
+              className="w-full"
             >
               Go to Login
-            </button>
+            </Button>
           </div>
         )}
 
         {verificationStatus === 'error' && (
           <div className="space-y-6">
             <div className={`text-sm ${getStatusColor()} rounded-xl p-3 border transition-all duration-200`}>
-              {message}
+              Email verification failed. Please try again.
             </div>
-            <button
+            <Button
               onClick={() => setVerificationStatus('idle')}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="w-full"
             >
               Try Again
-            </button>
+            </Button>
           </div>
         )}
 

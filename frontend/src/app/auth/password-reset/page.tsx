@@ -1,22 +1,51 @@
 "use client";
 import React, { useState } from "react";
 import { Church } from "lucide-react";
+import { api } from "@/utils/api";
+import { toast } from 'react-toastify';
+import TextInput from '@/components/ui/TextInput';
+import Button from '@/components/ui/Button';
 import Link from "next/link";
+
+interface PasswordResetResponse {
+  success: boolean;
+  message: string;
+}
 
 const PasswordResetPage = () => {
   const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setMessage("If this email exists, a reset link has been sent to your inbox.");
+    setErrors({});
+
+    try {
+      const response = await api.post<PasswordResetResponse>('/auth/forgot-password', {
+        email,
+      });
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+      } else {
+        toast.error(response.data.message || "Failed to send reset link");
+      }
+    } catch (error: any) {
+      switch (error.response.status) {
+        case 422:
+          setErrors(error.response.data.errors);
+          break;
+        case 400:
+          toast.error(error.response.data.message);
+          break;
+        default:
+          toast.error("Failed to send reset link. Please try again.");
+      }
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -36,34 +65,25 @@ const PasswordResetPage = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
-              Email Address
-            </label>
-            <input
-              id="email"
-              name="email"
+            <TextInput
+              label="Email Address"
               type="email"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              disabled={isSubmitting}
+              error={errors.email}
             />
           </div>
 
-          {message && (
-            <div className="text-sm text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/20 rounded-xl p-3 border border-green-200 dark:border-green-800 transition-all duration-200">
-              {message}
-            </div>
-          )}
-
-          <button
+          <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-blue-400 disabled:to-purple-400 text-white font-medium py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+            loading={isSubmitting}
+            className="w-full"
           >
-            {isSubmitting ? "Sending..." : "Send Reset Link"}
-          </button>
+            Send Reset Link
+          </Button>
         </form>
 
         {/* Navigation Links */}
