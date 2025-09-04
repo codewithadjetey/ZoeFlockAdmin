@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { Modal } from '@/components/shared';
-import { Button, TextInput } from '@/components/ui';
+import { Button, TextInput, PasswordInput } from '@/components/ui';
 import { AuthService } from '@/services/auth';
 import { toast } from 'react-toastify';
 
@@ -157,27 +157,24 @@ export default function PasswordChangeModal({ isOpen, onClose }: PasswordChangeM
     >
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
-          <TextInput
+          <PasswordInput
             label="Current Password"
-            type="password"
             value={formData.current_password}
             onChange={handleInputChange('current_password')}
             placeholder="Enter your current password"
             error={errors.current_password}
           />
           
-          <TextInput
+          <PasswordInput
             label="New Password"
-            type="password"
             value={formData.new_password}
             onChange={handleInputChange('new_password')}
             placeholder="Enter your new password"
             error={errors.new_password}
           />
           
-          <TextInput
+          <PasswordInput
             label="Confirm New Password"
-            type="password"
             value={formData.new_password_confirmation}
             onChange={handleInputChange('new_password_confirmation')}
             placeholder="Confirm your new password"
