@@ -103,9 +103,9 @@ class EntityController extends Controller
         $user = Auth::user();
         if ($user->hasRole('family-head')) {
             $member = Member::where('user_id', $user->id)->first();
-            // if ($member) {
-            //     $family = $member->family;
-            // }
+            if ($member) {
+                $family = $member->family;
+            }
         }
 
         foreach ($entities as $entity) {
@@ -130,7 +130,9 @@ class EntityController extends Controller
                 case 'members':
                     $query = Member::select('id', 'first_name', 'last_name');
                     if ($family) {
-                        $family->familyMembers()->where('is_active', true)->get();
+                        $query->whereHas('families', function ($q) use ($family) {
+                            $q->where('family_id', $family->id)->where('is_active', true);
+                        });
                     }
                     $data['members'] = $query->orderBy('first_name')->get();
                     break;

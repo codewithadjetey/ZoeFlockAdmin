@@ -10,6 +10,7 @@ use App\Models\EventCategory;
 use App\Models\PartnershipCategory;
 use App\Models\IncomeCategory;
 use App\Models\ExpenseCategory;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -261,6 +262,11 @@ class ImportService
                         // Update family head if this member is designated as head
                         if ($isFamilyHead) {
                             $family->update(['family_head_id' => $member->id]);
+
+                            $user = User::where('id', $member->user_id)->first();
+                            if ($user) {
+                                $user->assignRole('family-head');
+                            }
                         }
                     }
                 }

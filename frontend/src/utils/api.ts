@@ -54,8 +54,8 @@ api.interceptors.response.use(
         localStorage.removeItem('auth_token');
         localStorage.removeItem('zoe_flock_auth');
       }
-      // Redirect to login if in browser
-      if (typeof window !== 'undefined') {
+      // Only redirect to login if not already on login page
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/login')) {
         window.location.href = '/auth/login';
       }
     }

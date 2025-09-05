@@ -136,6 +136,7 @@ class TitheController extends Controller
     {
         try {
             $user = Auth::user();
+            $member = Member::where('user_id', $user->id)->first();
             $query = Tithe::with(['member', 'creator']);
 
             // Filter by member if specified
@@ -177,19 +178,20 @@ class TitheController extends Controller
             // Role-based access control
             if ($user->hasRole('admin')) {
                 // Admin can see all tithes
-            } elseif ($user->hasRole('family_head')) {
-                // Family head can only see tithes from their family members
-                $family = Family::where('family_head_id', $user->member->id)->first();
+            } elseif ($user->hasRole('family-head')) {
+               
+                // Family head can only see statistics from their family members
+                $family = Family::where('family_head_id', $member->id)->first();
+
                 if ($family) {
                     $memberIds = $family->members->pluck('id');
                     $query->whereIn('member_id', $memberIds);
                 } else {
-                    // If no family, only show their own tithes
-                    $query->where('member_id', $user->member->id);
+                    $query->where('member_id', $member->id);
                 }
             } else {
                 // Regular members can only see their own tithes
-                $query->where('member_id', $user->member->id);
+                $query->where('member_id', $member->id);
             }
 
             $tithes = $query->orderBy('created_at', 'desc')->paginate(15);
@@ -857,8 +859,14 @@ class TitheController extends Controller
             if ($user->hasRole('admin') || $user->hasRole('pastor')) {
                 // Admin and pastor can see all statistics
             } elseif ($user->hasRole('family-head')) {
+               
+             
+                //get member using id
+                $member = Member::where('user_id', $user->id)->first();
+
                 // Family head can only see statistics from their family members
-                $family = Family::where('family_head_id', $user->member->id)->first();
+                $family = Family::where('family_head_id', $member->id)->first();
+
                 if ($family) {
                     $memberIds = $family->members->pluck('id');
                     $query->whereIn('member_id', $memberIds);

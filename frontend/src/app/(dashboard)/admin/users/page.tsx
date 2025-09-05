@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 
 import { Button, DataTable, SearchInput, Alert } from "@/components/ui";
 import UserModal from "@/components/admin/UserModal";
+import PasswordUpdateModal from "@/components/admin/PasswordUpdateModal";
 import { api } from "@/utils/api";
 import { toast } from 'react-toastify';
 import { formatDateForInput } from "@/utils/helpers";
@@ -19,6 +20,8 @@ const UsersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [perPage] = useState(15);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedUserForPassword, setSelectedUserForPassword] = useState<User | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -69,17 +72,26 @@ const UsersPage = () => {
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
-
-    try {
-      const response = await api.delete(`/users/${userId}`);
-      if (response.data.success) {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        await api.delete(`/users/${userId}`);
         toast.success("User deleted successfully");
         fetchUsers();
+      } catch (error) {
+        toast.error("Error deleting user");
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Error deleting user");
     }
+  };
+
+  const handleUpdatePassword = (user: User) => {
+    setSelectedUserForPassword(user);
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordUpdateSuccess = () => {
+    setShowPasswordModal(false);
+    setSelectedUserForPassword(null);
+    fetchUsers();
   };
 
   const handleToggleStatus = async (userId: number) => {
@@ -168,6 +180,14 @@ const UsersPage = () => {
           >
             <i className="fas fa-edit mr-1"></i>
             Edit
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => handleUpdatePassword(row)}
+          >
+            <i className="fas fa-key mr-1"></i>
+            Password
           </Button>
           <Button
             size="sm"
@@ -280,6 +300,16 @@ const UsersPage = () => {
               setShowUserModal(false);
               fetchUsers();
             }}
+          />
+        )}
+
+        {/* Password Update Modal */}
+        {showPasswordModal && (
+          <PasswordUpdateModal
+            isOpen={showPasswordModal}
+            user={selectedUserForPassword}
+            onClose={() => setShowPasswordModal(false)}
+            onSuccess={handlePasswordUpdateSuccess}
           />
         )}
       </div>
