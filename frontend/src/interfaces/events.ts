@@ -76,6 +76,7 @@ export interface EventCategory {
   color: string;
   icon?: string;
   attendance_type: 'individual' | 'general' | 'none';
+  type: 'general' | 'group' | 'family';
   is_active: boolean;
   is_recurring: boolean;
   recurrence_pattern?: 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -98,6 +99,8 @@ export interface EventCategory {
   updated_at?: string;
   deleted?: boolean;
   events?: Event[];
+  groups?: EventGroup[];
+  families?: EventFamily[];
   creator?: User;
   updater?: User;
 }
