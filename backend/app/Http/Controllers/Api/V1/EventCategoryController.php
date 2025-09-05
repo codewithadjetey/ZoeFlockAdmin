@@ -877,7 +877,23 @@ class EventCategoryController extends Controller
                     $eventData['status'] = 'published';
                 }
                 
+                // Extract group_ids and family_ids before creating the event
+                $groupIds = $eventData['group_ids'] ?? [];
+                $familyIds = $eventData['family_ids'] ?? [];
+                
+                // Remove these from the event data as they're not fillable fields
+                unset($eventData['group_ids'], $eventData['family_ids']);
+                
                 $event = Event::create($eventData);
+                
+                // Sync the relationships
+                if (!empty($groupIds)) {
+                    $event->groups()->sync($groupIds);
+                }
+                if (!empty($familyIds)) {
+                    $event->families()->sync($familyIds);
+                }
+                
                 $generatedEvents[] = $event;
             }
 
@@ -1026,7 +1042,22 @@ class EventCategoryController extends Controller
                 $eventData['status'] = 'published';
             }
             
+            // Extract group_ids and family_ids before creating the event
+            $groupIds = $eventData['group_ids'] ?? [];
+            $familyIds = $eventData['family_ids'] ?? [];
+            
+            // Remove these from the event data as they're not fillable fields
+            unset($eventData['group_ids'], $eventData['family_ids']);
+            
             $event = Event::create($eventData);
+            
+            // Sync the relationships
+            if (!empty($groupIds)) {
+                $event->groups()->sync($groupIds);
+            }
+            if (!empty($familyIds)) {
+                $event->families()->sync($familyIds);
+            }
 
             DB::commit();
 
