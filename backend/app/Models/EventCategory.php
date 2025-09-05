@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
 
@@ -18,6 +19,7 @@ class EventCategory extends Model
         'color',
         'icon',
         'attendance_type',
+        'type',
         'is_active',
         'is_recurring',
         'recurrence_pattern',
@@ -69,6 +71,26 @@ class EventCategory extends Model
     public function events(): HasMany
     {
         return $this->hasMany(Event::class, 'category_id');
+    }
+
+    /**
+     * Get the groups associated with this event category
+     */
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'event_category_groups')
+            ->withPivot('is_required', 'notes')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the families associated with this event category
+     */
+    public function families(): BelongsToMany
+    {
+        return $this->belongsToMany(Family::class, 'event_category_families')
+            ->withPivot('is_required', 'notes')
+            ->withTimestamps();
     }
 
     /**
@@ -271,18 +293,29 @@ class EventCategory extends Model
         $startDateTime = Carbon::parse($this->start_date_time);
         $endDateTime = Carbon::parse($this->end_date_time);
         
-        return [
+        $eventData = [
             'title' => $this->name,
             'description' => $this->default_description,
             'start_date' => $startDateTime,
             'end_date' => $endDateTime,
             'location' => $this->default_location,
-            'type' => 'general',
+            'type' => $this->type ?? 'general',
             'category_id' => $this->id,
             'status' => 'draft',
             'is_recurring' => false,
             'created_by' => $this->created_by,
         ];
+
+        // Add group_ids and family_ids based on type
+        if ($this->type === 'group' && $this->groups()->exists()) {
+            $eventData['group_ids'] = $this->groups()->pluck('groups.id')->toArray();
+        }
+
+        if ($this->type === 'family' && $this->families()->exists()) {
+            $eventData['family_ids'] = $this->families()->pluck('families.id')->toArray();
+        }
+
+        return $eventData;
     }
 
     /**

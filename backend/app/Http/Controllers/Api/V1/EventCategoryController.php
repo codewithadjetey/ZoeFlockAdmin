@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EventCategory;
 use App\Models\Event;
 use App\Services\FileUploadService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -149,7 +150,7 @@ class EventCategoryController extends Controller
             $query->active();
         }
 
-        $categories = $query->with(['creator', 'updater'])
+        $categories = $query->with(['creator', 'updater', 'groups', 'families'])
             ->orderBy('name')
             ->paginate($request->get('per_page', 15));
 
@@ -246,6 +247,7 @@ class EventCategoryController extends Controller
             'color' => 'nullable|string|max:7',
             'icon' => 'nullable|string|max:50',
             'attendance_type' => 'required|in:individual,general,none',
+            'type' => 'required|in:general,group,family',
             'is_active' => 'boolean',
             'is_recurring' => 'boolean',
             'recurrence_pattern' => 'required_if:is_recurring,true|nullable|in:daily,weekly,monthly,yearly',
@@ -258,6 +260,10 @@ class EventCategoryController extends Controller
             'recurrence_end_date' => 'nullable|date|after:recurrence_start_date',
             'default_location' => 'nullable|string|max:255',
             'default_description' => 'nullable|string',
+            'group_ids' => 'required_if:type,group|nullable|array',
+            'group_ids.*' => 'integer|exists:groups,id',
+            'family_ids' => 'required_if:type,family|nullable|array',
+            'family_ids.*' => 'integer|exists:families,id',
         ]);
         if ($validator->fails()) {
             return response()->json([
@@ -271,7 +277,7 @@ class EventCategoryController extends Controller
             DB::beginTransaction();
 
             $categoryData = $request->only([
-                'name', 'description', 'color', 'icon', 'attendance_type',
+                'name', 'description', 'color', 'icon', 'attendance_type', 'type',
                 'is_active', 'is_recurring', 'recurrence_pattern', 'recurrence_settings',
                 'default_start_time', 'start_date_time', 'end_date_time', 'recurrence_start_date', 
                 'recurrence_end_date', 'default_duration', 'default_location', 'default_description'
@@ -282,6 +288,15 @@ class EventCategoryController extends Controller
             $categoryData['is_recurring'] = $request->boolean('is_recurring', false);
 
             $category = EventCategory::create($categoryData);
+
+            // Sync groups and families based on type
+            if ($request->has('group_ids') && $request->type === 'group') {
+                $category->groups()->sync($request->group_ids);
+            }
+
+            if ($request->has('family_ids') && $request->type === 'family') {
+                $category->families()->sync($request->family_ids);
+            }
 
             DB::commit();
 
@@ -357,7 +372,7 @@ class EventCategoryController extends Controller
      */
     public function show(EventCategory $category): JsonResponse
     {
-        $category->load(['creator', 'updater']);
+        $category->load(['creator', 'updater', 'groups', 'families']);
 
         return response()->json([
             'success' => true,
@@ -467,6 +482,7 @@ class EventCategoryController extends Controller
             'color' => 'nullable|string|max:7',
             'icon' => 'nullable|string|max:50',
             'attendance_type' => 'required|in:individual,general,none',
+            'type' => 'required|in:general,group,family',
             'is_active' => 'boolean',
             'is_recurring' => 'boolean',
             'recurrence_pattern' => 'required_if:is_recurring,true|nullable|in:daily,weekly,monthly,yearly',
@@ -479,6 +495,10 @@ class EventCategoryController extends Controller
             'recurrence_end_date' => 'nullable|date|after:recurrence_start_date',
             'default_location' => 'nullable|string|max:255',
             'default_description' => 'nullable|string',
+            'group_ids' => 'required_if:type,group|nullable|array',
+            'group_ids.*' => 'integer|exists:groups,id',
+            'family_ids' => 'required_if:type,family|nullable|array',
+            'family_ids.*' => 'integer|exists:families,id',
         ]);
 
         if ($validator->fails()) {
@@ -493,7 +513,7 @@ class EventCategoryController extends Controller
             DB::beginTransaction();
 
             $categoryData = $request->only([
-                'name', 'description', 'color', 'icon', 'attendance_type',
+                'name', 'description', 'color', 'icon', 'attendance_type', 'type',
                 'is_active', 'is_recurring', 'recurrence_pattern', 'recurrence_settings',
                 'default_start_time', 'start_date_time', 'end_date_time', 'recurrence_start_date', 
                 'recurrence_end_date', 'default_duration', 'default_location', 'default_description'
@@ -502,6 +522,19 @@ class EventCategoryController extends Controller
             $categoryData['updated_by'] = auth()->id();
 
             $category->update($categoryData);
+
+            // Sync groups and families based on type
+            if ($request->has('group_ids') && $request->type === 'group') {
+                $category->groups()->sync($request->group_ids);
+            } else {
+                $category->groups()->detach();
+            }
+
+            if ($request->has('family_ids') && $request->type === 'family') {
+                $category->families()->sync($request->family_ids);
+            } else {
+                $category->families()->detach();
+            }
 
             DB::commit();
 

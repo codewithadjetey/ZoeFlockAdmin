@@ -224,12 +224,21 @@ class RecurringEventService
                 'start_date' => $eventStartDate,
                 'end_date' => $eventEndDate,
                 'location' => $eventCategory->default_location,
-                'type' => 'general',
+                'type' => $eventCategory->type ?? 'general',
                 'category_id' => $eventCategory->id,
                 'status' => 'draft',
                 'is_recurring' => false, // Individual events are not recurring
                 'created_by' => $eventCategory->created_by,
             ];
+
+            // Add group_ids and family_ids based on type
+            if ($eventCategory->type === 'group' && $eventCategory->groups()->exists()) {
+                $eventData['group_ids'] = $eventCategory->groups()->pluck('groups.id')->toArray();
+            }
+
+            if ($eventCategory->type === 'family' && $eventCategory->families()->exists()) {
+                $eventData['family_ids'] = $eventCategory->families()->pluck('families.id')->toArray();
+            }
 
             $events->push($eventData);
 

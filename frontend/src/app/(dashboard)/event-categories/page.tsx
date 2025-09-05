@@ -21,6 +21,7 @@ import {
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import { EventCategory } from "@/interfaces/events";
 import { EventCategoriesService, EventCategoryFilters } from "@/services/eventCategories";
+import { EntitiesService } from "@/services/entities";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   formatTimeForInput, 
@@ -49,12 +50,16 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [groups, setGroups] = useState<Array<{ id: number; name: string }>>([]);
+  const [families, setFamilies] = useState<Array<{ id: number; name: string }>>([]);
+  const [isLoadingEntities, setIsLoadingEntities] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     color: '#3B82F6',
     icon: '',
     attendance_type: 'individual' as 'individual' | 'general' | 'none',
+    type: 'general' as 'general' | 'group' | 'family',
     is_active: true,
     is_recurring: false,
     recurrence_pattern: 'weekly' as 'daily' | 'weekly' | 'monthly' | 'yearly',
@@ -66,9 +71,31 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
     recurrence_end_date: '',
     default_duration: 60,
     default_location: '',
-    default_description: ''
+    default_description: '',
+    group_ids: [] as number[],
+    family_ids: [] as number[]
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Fetch entities when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchEntities();
+    }
+  }, [isOpen]);
+
+  const fetchEntities = async () => {
+    setIsLoadingEntities(true);
+    try {
+      const result = await EntitiesService.getGroupsAndFamilies();
+      setGroups(result.groups);
+      setFamilies(result.families);
+    } catch (error) {
+      console.error('Error fetching entities:', error);
+    } finally {
+      setIsLoadingEntities(false);
+    }
+  };
 
   useEffect(() => {
     if (category) {
@@ -78,6 +105,7 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
         color: category.color,
         icon: category.icon || '',
         attendance_type: category.attendance_type,
+        type: category.type || 'general',
         is_active: category.is_active,
         is_recurring: category.is_recurring,
         recurrence_pattern: category.recurrence_pattern || 'weekly',
@@ -89,7 +117,9 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
         recurrence_end_date: formatDateForInput(category.recurrence_end_date),
         default_duration: category.default_duration || 60,
         default_location: category.default_location || '',
-        default_description: category.default_description || ''
+        default_description: category.default_description || '',
+        group_ids: category.groups?.map(g => g.id) || [],
+        family_ids: category.families?.map(f => f.id) || []
       });
     } else {
       setFormData({
@@ -98,6 +128,7 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
         color: '#3B82F6',
         icon: '',
         attendance_type: 'individual',
+        type: 'general',
         is_active: true,
         is_recurring: false,
         recurrence_pattern: 'weekly',
@@ -109,7 +140,9 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
         recurrence_end_date: '',
         default_duration: 60,
         default_location: '',
-        default_description: ''
+        default_description: '',
+        group_ids: [],
+        family_ids: []
       });
     }
     setErrors({});
@@ -141,6 +174,14 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
           recurrence_end_date: ''
         }));
       }
+    } else if (field === 'type') {
+      // Clear group_ids and family_ids when type changes
+      setFormData(prev => ({
+        ...prev,
+        [field]: value,
+        group_ids: [],
+        family_ids: []
+      }));
     } else {
       // Normal field update
       setFormData(prev => ({ ...prev, [field]: value }));
@@ -380,6 +421,81 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
             />
           </FormField>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField label="Event Type" error={errors.type}>
+            <SelectInput
+              value={formData.type}
+              onChange={(value) => handleInputChange('type', value)}
+              options={[
+                { value: 'general', label: 'General' },
+                { value: 'group', label: 'Group' },
+                { value: 'family', label: 'Family' }
+              ]}
+            />
+          </FormField>
+        </div>
+
+        {/* Group and Family Associations */}
+        {(formData.type === 'group' || formData.type === 'family') && (
+          <div className="border-t pt-6">
+            {formData.type === 'group' && (
+              <FormField label="Associated Groups" error={errors.group_ids}>
+                {isLoadingEntities ? (
+                  <div className="text-gray-500 text-sm">Loading groups...</div>
+                ) : groups.length > 0 ? (
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {groups.map(group => (
+                      <label key={group.id} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.group_ids?.includes(group.id)}
+                          onChange={(e) => {
+                            const newGroupIds = e.target.checked
+                              ? [...(formData.group_ids || []), group.id]
+                              : (formData.group_ids || []).filter(id => id !== group.id);
+                            handleInputChange('group_ids', newGroupIds);
+                          }}
+                        />
+                        {group.name}
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-sm">No groups available</div>
+                )}
+              </FormField>
+            )}
+
+            {formData.type === 'family' && (
+              <FormField label="Associated Families" error={errors.family_ids}>
+                {isLoadingEntities ? (
+                  <div className="text-gray-500 text-sm">Loading families...</div>
+                ) : families.length > 0 ? (
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {families.map(family => (
+                      <label key={family.id} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.family_ids?.includes(family.id)}
+                          onChange={(e) => {
+                            const newFamilyIds = e.target.checked
+                              ? [...(formData.family_ids || []), family.id]
+                              : (formData.family_ids || []).filter(id => id !== family.id);
+                            handleInputChange('family_ids', newFamilyIds);
+                          }}
+                        />
+                        {family.name}
+                      </label>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-sm">No families available</div>
+                )}
+              </FormField>
+            )}
+          </div>
+        )}
 
         <div className="space-y-4">
           <FormField label="Category Settings">
@@ -800,6 +916,20 @@ export default function EventCategoriesPage() {
       )
     },
     {
+      key: 'type',
+      label: 'Event Type',
+      sortable: true,
+      render: (value: any, category: EventCategory) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+          category.type === 'general' ? 'bg-blue-100 text-blue-800' :
+          category.type === 'group' ? 'bg-green-100 text-green-800' :
+          'bg-purple-100 text-purple-800'
+        }`}>
+          {category.type?.charAt(0).toUpperCase() + category.type?.slice(1) || 'General'}
+        </span>
+      )
+    },
+    {
       key: 'is_recurring',
       label: 'Type',
       sortable: true,
@@ -997,6 +1127,12 @@ export default function EventCategoriesPage() {
           <i className="fas fa-users text-gray-400 mr-2"></i>
           <span className="text-gray-600">
             {category.attendance_type.charAt(0).toUpperCase() + category.attendance_type.slice(1)} Attendance
+          </span>
+        </div>
+        <div className="flex items-center text-sm">
+          <i className="fas fa-tag text-gray-400 mr-2"></i>
+          <span className="text-gray-600">
+            {category.type?.charAt(0).toUpperCase() + category.type?.slice(1) || 'General'} Event
           </span>
         </div>
         <div className="flex items-center text-sm">
