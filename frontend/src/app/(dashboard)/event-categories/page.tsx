@@ -88,8 +88,8 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
     setIsLoadingEntities(true);
     try {
       const result = await EntitiesService.getGroupsAndFamilies();
-      setGroups(result.groups);
-      setFamilies(result.families);
+      setGroups(result.groups.map(g => ({ ...g, id: Number(g.id) })));
+      setFamilies(result.families.map(f => ({ ...f, id: Number(f.id) })));
     } catch (error) {
       console.error('Error fetching entities:', error);
     } finally {
@@ -118,8 +118,8 @@ const EventCategoryModal: React.FC<EventCategoryModalProps> = ({
         default_duration: category.default_duration || 60,
         default_location: category.default_location || '',
         default_description: category.default_description || '',
-        group_ids: category.groups?.map(g => g.id) || [],
-        family_ids: category.families?.map(f => f.id) || []
+        group_ids: category.groups?.map(g => Number(g.id)) || [],
+        family_ids: category.families?.map(f => Number(f.id)) || []
       });
     } else {
       setFormData({
