@@ -857,8 +857,14 @@ class TitheController extends Controller
             if ($user->hasRole('admin') || $user->hasRole('pastor')) {
                 // Admin and pastor can see all statistics
             } elseif ($user->hasRole('family-head')) {
+               
+             
+                //get member using id
+                $member = Member::where('user_id', $user->id)->first();
+
                 // Family head can only see statistics from their family members
-                $family = Family::where('family_head_id', $user->member->id)->first();
+                $family = Family::where('family_head_id', $member->id)->first();
+
                 if ($family) {
                     $memberIds = $family->members->pluck('id');
                     $query->whereIn('member_id', $memberIds);
