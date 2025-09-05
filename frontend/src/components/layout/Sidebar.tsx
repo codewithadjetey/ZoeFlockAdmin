@@ -4,15 +4,46 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useBackupStats } from "@/hooks/useBackupStats";
+import { useAuth } from "@/contexts/AuthContext";
 
-// Consolidated menu items array with nested sub menus
+// Consolidated menu items array with nested sub menus and permissions
 const allMenuItems = [
   // Main navigation items
-  { label: "Dashboard", icon: "fas fa-home", href: "/dashboard", type: "main" },
-  { label: "Members", icon: "fas fa-users", href: "/members", type: "main" },
-  { label: "Families", icon: "fas fa-house-user", href: "/families", type: "main" },
-  { label: "Groups", icon: "fas fa-layer-group", href: "/groups", type: "main" },
-  { label: "First Timers", icon: "fas fa-user-plus", href: "/first-timers", type: "main" },
+  { 
+    label: "Dashboard", 
+    icon: "fas fa-home", 
+    href: "/dashboard", 
+    type: "main",
+    requiredPermissions: ["view-dashboard"]
+  },
+  { 
+    label: "Members", 
+    icon: "fas fa-users", 
+    href: "/members", 
+    type: "main",
+    requiredPermissions: ["view-members"]
+  },
+  { 
+    label: "Families", 
+    icon: "fas fa-house-user", 
+    href: "/families", 
+    type: "main",
+    requiredPermissions: ["view-families"]
+  },
+  { 
+    label: "Groups", 
+    icon: "fas fa-layer-group", 
+    href: "/groups", 
+    type: "main",
+    requiredPermissions: ["view-groups"]
+  },
+  { 
+    label: "First Timers", 
+    icon: "fas fa-user-plus", 
+    href: "/first-timers", 
+    type: "main",
+    requiredPermissions: ["view-first-timers"]
+  },
   
   // Import/Export parent with sub menus
   { 
@@ -20,15 +51,56 @@ const allMenuItems = [
     icon: "fas fa-upload", 
     href: "/import-export", 
     type: "parent",
+    requiredPermissions: ["view-imports"],
     subMenus: [
-      { label: "Members Import", icon: "fas fa-users", href: "/import-export/members" },
-      { label: "Families Import", icon: "fas fa-house-user", href: "/import-export/families" },
-      { label: "Groups Import", icon: "fas fa-layer-group", href: "/import-export/groups" },
-      { label: "Event Categories Import", icon: "fas fa-tags", href: "/import-export/event_categories" },
-      { label: "Partnership Categories Import", icon: "fas fa-list-alt", href: "/import-export/partnership_categories" },
-      { label: "Income Categories Import", icon: "fas fa-folder-plus", href: "/import-export/income_categories" },
-      { label: "Expense Categories Import", icon: "fas fa-folder-open", href: "/import-export/expense_categories" },
-      { label: "Audit Logs", icon: "fas fa-history", href: "/import-export/audit-logs" }
+      { 
+        label: "Members Import", 
+        icon: "fas fa-users", 
+        href: "/import-export/members",
+        requiredPermissions: ["view-imports", "create-imports"]
+      },
+      { 
+        label: "Families Import", 
+        icon: "fas fa-house-user", 
+        href: "/import-export/families",
+        requiredPermissions: ["view-imports", "create-imports"]
+      },
+      { 
+        label: "Groups Import", 
+        icon: "fas fa-layer-group", 
+        href: "/import-export/groups",
+        requiredPermissions: ["view-imports", "create-imports"]
+      },
+      { 
+        label: "Event Categories Import", 
+        icon: "fas fa-tags", 
+        href: "/import-export/event_categories",
+        requiredPermissions: ["view-imports", "create-imports"]
+      },
+      { 
+        label: "Partnership Categories Import", 
+        icon: "fas fa-list-alt", 
+        href: "/import-export/partnership_categories",
+        requiredPermissions: ["view-imports", "create-imports"]
+      },
+      { 
+        label: "Income Categories Import", 
+        icon: "fas fa-folder-plus", 
+        href: "/import-export/income_categories",
+        requiredPermissions: ["view-imports", "create-imports"]
+      },
+      { 
+        label: "Expense Categories Import", 
+        icon: "fas fa-folder-open", 
+        href: "/import-export/expense_categories",
+        requiredPermissions: ["view-imports", "create-imports"]
+      },
+      { 
+        label: "Audit Logs", 
+        icon: "fas fa-history", 
+        href: "/import-export/audit-logs",
+        requiredPermissions: ["get-audit-logs"]
+      }
     ]
   },
   
@@ -38,14 +110,50 @@ const allMenuItems = [
     icon: "fas fa-wallet", 
     href: "/financials", 
     type: "parent",
+    requiredPermissions: ["view-incomes", "view-expenses", "view-partnerships", "view-tithes"],
     subMenus: [
-      { label: "Partnerships", icon: "fas fa-hand-holding-usd", href: "/financials/partnerships" },
-      { label: "Partnership Category", icon: "fas fa-list-alt", href: "/financials/partnership-categories" },
-      { label: "Tithes", icon: "fas fa-church", href: "/financials/tithes" },
-      { label: "Income", icon: "fas fa-coins", href: "/financials/income" },
-      { label: "Income Category", icon: "fas fa-folder-plus", href: "/financials/income-categories" },
-      { label: "Expenses", icon: "fas fa-money-bill-wave", href: "/financials/expenses" },
-      { label: "Expenses Category", icon: "fas fa-folder-open", href: "/financials/expenses-categories" }
+      { 
+        label: "Partnerships", 
+        icon: "fas fa-hand-holding-usd", 
+        href: "/financials/partnerships",
+        requiredPermissions: ["view-partnerships"]
+      },
+      { 
+        label: "Partnership Category", 
+        icon: "fas fa-list-alt", 
+        href: "/financials/partnership-categories",
+        requiredPermissions: ["view-partnership-categories"]
+      },
+      { 
+        label: "Tithes", 
+        icon: "fas fa-church", 
+        href: "/financials/tithes",
+        requiredPermissions: ["view-tithes"]
+      },
+      { 
+        label: "Income", 
+        icon: "fas fa-coins", 
+        href: "/financials/income",
+        requiredPermissions: ["view-incomes"]
+      },
+      { 
+        label: "Income Category", 
+        icon: "fas fa-folder-plus", 
+        href: "/financials/income-categories",
+        requiredPermissions: ["view-income-categories"]
+      },
+      { 
+        label: "Expenses", 
+        icon: "fas fa-money-bill-wave", 
+        href: "/financials/expenses",
+        requiredPermissions: ["view-expenses"]
+      },
+      { 
+        label: "Expenses Category", 
+        icon: "fas fa-folder-open", 
+        href: "/financials/expenses-categories",
+        requiredPermissions: ["view-expense-categories"]
+      }
     ]
   },
   
@@ -55,9 +163,20 @@ const allMenuItems = [
     icon: "fas fa-calendar-alt", 
     href: "/events", 
     type: "parent",
+    requiredPermissions: ["view-events", "view-event-categories"],
     subMenus: [
-      { label: "Events", icon: "fas fa-calendar", href: "/events" },
-      { label: "Event Categories", icon: "fas fa-tags", href: "/event-categories" }
+      { 
+        label: "Events", 
+        icon: "fas fa-calendar", 
+        href: "/events",
+        requiredPermissions: ["view-events"]
+      },
+      { 
+        label: "Event Categories", 
+        icon: "fas fa-tags", 
+        href: "/event-categories",
+        requiredPermissions: ["view-event-categories"]
+      }
     ]
   },
   
@@ -67,10 +186,26 @@ const allMenuItems = [
     icon: "fas fa-clipboard-check", 
     href: "/attendance", 
     type: "parent",
+    requiredPermissions: ["view-attendance", "view-general-attendance"],
     subMenus: [
-      { label: "Manage Attendance", icon: "fas fa-clipboard-check", href: "/attendance" },
-      { label: "Individual Statistics", icon: "fas fa-chart-line", href: "/attendance/statistics/individual" },
-      { label: "General Statistics", icon: "fas fa-chart-bar", href: "/attendance/statistics/general" }
+      { 
+        label: "Manage Attendance", 
+        icon: "fas fa-clipboard-check", 
+        href: "/attendance",
+        requiredPermissions: ["view-attendance"]
+      },
+      { 
+        label: "Individual Statistics", 
+        icon: "fas fa-chart-line", 
+        href: "/attendance/statistics/individual",
+        requiredPermissions: ["get-individual-statistics"]
+      },
+      { 
+        label: "General Statistics", 
+        icon: "fas fa-chart-bar", 
+        href: "/attendance/statistics/general",
+        requiredPermissions: ["get-general-attendance-statistics"]
+      }
     ]
   },
   
@@ -80,10 +215,26 @@ const allMenuItems = [
     icon: "fas fa-user-shield", 
     href: "/admin", 
     type: "parent",
+    requiredPermissions: ["view-users", "view-roles", "view-backups"],
     subMenus: [
-      { label: "Users", icon: "fas fa-user-cog", href: "/admin/users" },
-      { label: "Roles & Permissions", icon: "fas fa-shield-alt", href: "/admin/roles" },
-      { label: "Backup & Restore", icon: "fas fa-database", href: "/backups" }
+      { 
+        label: "Users", 
+        icon: "fas fa-user-cog", 
+        href: "/admin/users",
+        requiredPermissions: ["view-users"]
+      },
+      { 
+        label: "Roles & Permissions", 
+        icon: "fas fa-shield-alt", 
+        href: "/admin/roles",
+        requiredPermissions: ["view-roles"]
+      },
+      { 
+        label: "Backup & Restore", 
+        icon: "fas fa-database", 
+        href: "/backups",
+        requiredPermissions: ["view-backups"]
+      }
     ]
   },
   
@@ -93,13 +244,44 @@ const allMenuItems = [
     icon: "fas fa-chart-bar", 
     href: "/reports", 
     type: "parent",
+    requiredPermissions: ["view-reports"],
     subMenus: [
-      { label: "Reports", icon: "fas fa-chart-bar", href: "/reports" },
-      { label: "Tithe Reports", icon: "fas fa-church", href: "/financials/tithes/reports" },
-      { label: "Income Reports", icon: "fas fa-chart-line", href: "/reports/income" },
-      { label: "Expenses Report", icon: "fas fa-file-invoice-dollar", href: "/reports/expenses" },
-      { label: "Income vs Expenses Report", icon: "fas fa-balance-scale", href: "/reports/income-vs-expenses" },
-      { label: "Export Report", icon: "fas fa-file-excel", href: "/reports/export" }
+      { 
+        label: "Reports", 
+        icon: "fas fa-chart-bar", 
+        href: "/reports",
+        requiredPermissions: ["view-reports"]
+      },
+      { 
+        label: "Tithe Reports", 
+        icon: "fas fa-church", 
+        href: "/financials/tithes/reports",
+        requiredPermissions: ["view-tithe-statistics"]
+      },
+      { 
+        label: "Income Reports", 
+        icon: "fas fa-chart-line", 
+        href: "/reports/income",
+        requiredPermissions: ["get-income-report"]
+      },
+      { 
+        label: "Expenses Report", 
+        icon: "fas fa-file-invoice-dollar", 
+        href: "/reports/expenses",
+        requiredPermissions: ["get-expense-report"]
+      },
+      { 
+        label: "Income vs Expenses Report", 
+        icon: "fas fa-balance-scale", 
+        href: "/reports/income-vs-expenses",
+        requiredPermissions: ["get-comparison-report"]
+      },
+      { 
+        label: "Export Report", 
+        icon: "fas fa-file-excel", 
+        href: "/reports/export",
+        requiredPermissions: ["export-reports"]
+      }
     ]
   }
 ];
@@ -114,6 +296,23 @@ const getParentMenuItems = () => {
   return allMenuItems.filter(item => item.type === "parent");
 };
 
+// Helper function to check if user has access to menu item
+const hasMenuAccess = (menuItem: any, hasAnyPermission: (permissions: string[]) => boolean) => {
+  if (!menuItem.requiredPermissions || menuItem.requiredPermissions.length === 0) {
+    return true;
+  }
+  return hasAnyPermission(menuItem.requiredPermissions);
+};
+
+// Helper function to check if user has access to any sub menu of a parent
+const hasAnySubMenuAccess = (parentItem: any, hasAnyPermission: (permissions: string[]) => boolean) => {
+  if (!parentItem.subMenus || parentItem.subMenus.length === 0) {
+    return hasMenuAccess(parentItem, hasAnyPermission);
+  }
+  
+  return parentItem.subMenus.some((subItem: any) => hasMenuAccess(subItem, hasAnyPermission));
+};
+
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
@@ -124,7 +323,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { currentTheme, colorMode } = useTheme();
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
-  const { hasPendingBackups, hasFailedBackups } = useBackupStats();
+  const { user, hasAnyPermission } = useAuth();
 
   // Close sidebar when clicking outside
   useEffect(() => {
@@ -227,7 +426,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                   {/* Modern Navigation */}
         <nav className="flex-1 px-6 py-8 space-y-3 overflow-y-auto">
           {/* Main menu items */}
-          {getMenuItemsByType("main").map((item) => {
+          {getMenuItemsByType("main")
+            .filter(item => hasMenuAccess(item, hasAnyPermission))
+            .map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
@@ -248,7 +449,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
           })}
 
           {/* Parent menu items with sub menus */}
-          {getParentMenuItems().map((parentItem) => {
+          {getParentMenuItems()
+            .filter(parentItem => hasAnySubMenuAccess(parentItem, hasAnyPermission))
+            .map((parentItem) => {
             const isActive = pathname === parentItem.href || pathname.startsWith(parentItem.href);
             const isOpen = openSubmenu === parentItem.label.toLowerCase();
             
@@ -273,7 +476,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                 {/* Sub menus */}
                 {isOpen && parentItem.subMenus && (
                   <div className="ml-4 mt-2 space-y-2">
-                    {parentItem.subMenus.map((subItem) => {
+                    {parentItem.subMenus
+                      .filter(subItem => hasMenuAccess(subItem, hasAnyPermission))
+                      .map((subItem) => {
                       const isSubActive = pathname === subItem.href;
                       const isBackup = subItem.href === '/backups';
                       
@@ -291,13 +496,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 to-purple-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                           <i className={`${subItem.icon} mr-3 text-sm group-hover:scale-110 transition-transform duration-300 relative z-10`}></i>
                           <span className="relative z-10 text-sm">{subItem.label}</span>
-                          {isBackup && (hasPendingBackups || hasFailedBackups) && (
-                            <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse flex items-center justify-center">
-                              <span className="text-xs text-white font-bold">
-                                {hasFailedBackups ? '!' : hasPendingBackups ? 'P' : ''}
-                              </span>
-                            </div>
-                          )}
+                          
                         </Link>
                       );
                     })}

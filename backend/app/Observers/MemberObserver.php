@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\Family;
 use App\Models\Member;
 use App\Models\User;
 use App\Mail\WelcomeMemberMail;

@@ -68,7 +68,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             const response = await api.get('/auth/profile');
             const responseData = response.data as { success: boolean; message?: string; data?: { user: User } };
             if (responseData.success && responseData.data?.user) {
-
               setState(prev => ({ 
                 ...prev, 
                 user: responseData.data!.user, 
@@ -268,6 +267,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateProfile,
     hasRole: (role: string) => state.user?.roles?.some(r => r.name === role) ?? false,
     isFamilyHead: () => state.user?.roles?.some(r => r.name === 'family-head') ?? false,
+    hasPermission: (permission: string) => {
+      const hasPermission = state.user?.permissions?.some(p => p.name === permission) ?? false;
+      return hasPermission;
+    },
+    hasAnyPermission: (permissions: string[]) => {
+      const hasAnyPermission = state.user?.permissions?.some(p => permissions.includes(p.name)) ?? false;
+      return hasAnyPermission;
+    },
+    hasAllPermissions: (permissions: string[]) => {
+      const hasAllPermissions = permissions.every(permission => 
+        state.user?.permissions?.some(p => p.name === permission) ?? false
+      );
+      return hasAllPermissions;
+    },
   };
 
   return (

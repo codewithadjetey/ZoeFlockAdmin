@@ -67,4 +67,7 @@ export interface AuthContextType extends AuthState {
   updateProfile: (data: Partial<User>) => Promise<void>;
   hasRole: (role: string) => boolean;
   isFamilyHead: () => boolean;
+  hasPermission: (permission: string) => boolean;
+  hasAnyPermission: (permissions: string[]) => boolean;
+  hasAllPermissions: (permissions: string[]) => boolean;
 } 

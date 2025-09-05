@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str; // Added for password generation
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PasswordUpdateMail;
 
 class UserController extends Controller
 {
@@ -549,6 +552,123 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error changing password: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/users/{user}/admin-password",
+     *     summary="Admin update user password",
+     *     tags={"Users"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="path",
+     *         required=true,
+     *         description="User ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"action"},
+     *             @OA\Property(property="action", type="string", enum={"generate", "custom"}, example="generate", description="Action type: generate password or use custom password"),
+     *             @OA\Property(property="password", type="string", example="newpassword123", description="Custom password (required if action is 'custom')"),
+     *             @OA\Property(property="send_email", type="boolean", example=true, description="Whether to send password to user email")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Password updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Password updated successfully"),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="password", type="string", example="generated_password_123")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation failed"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User not found"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error updating password"
+     *     )
+     * )
+     */
+    public function adminUpdatePassword(Request $request, User $user)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'action' => 'required|in:generate,custom',
+                'password' => 'required_if:action,custom|string|min:8',
+                'send_email' => 'boolean',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $password = null;
+            $message = '';
+
+            if ($request->action === 'generate') {
+                // Generate a random password
+                $password = Str::random(12);
+                $message = 'Password generated and updated successfully';
+            } else {
+                // Use custom password
+                $password = $request->password;
+                $message = 'Password updated successfully';
+            }
+
+            // Update user password
+            $user->update([
+                'password' => Hash::make($password)
+            ]);
+
+            // Send email if requested
+            if ($request->send_email && $user->email) {
+                try {
+                    Mail::to($user->email)->send(new PasswordUpdateMail($user, $password));
+                    $message .= ' and sent to user email';
+                    \Log::info('Password update email sent successfully', [
+                        'user_id' => $user->id,
+                        'user_email' => $user->email,
+                        'admin_id' => auth()->id()
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::error('Failed to send password update email', [
+                        'user_id' => $user->id,
+                        'user_email' => $user->email,
+                        'error' => $e->getMessage()
+                    ]);
+                    $message .= ' but email sending failed';
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => [
+                    'password' => $password
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating password: ' . $e->getMessage()
             ], 500);
         }
     }

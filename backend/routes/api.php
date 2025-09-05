@@ -259,6 +259,7 @@ Route::prefix($apiVersion)->group(function () {
             Route::put('/{user}', [UserController::class, 'update'])->middleware('permission:edit-users');
             Route::delete('/{user}', [UserController::class, 'destroy'])->middleware('permission:delete-users');
             Route::put('/{user}/password', [UserController::class, 'changePassword'])->middleware('permission:change-user-password');
+            Route::put('/{user}/admin-password', [UserController::class, 'adminUpdatePassword'])->middleware('permission:change-user-password');
             Route::put('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->middleware('permission:toggle-user-status');
         });
 

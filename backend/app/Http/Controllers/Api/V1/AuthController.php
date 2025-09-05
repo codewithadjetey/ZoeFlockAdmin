@@ -414,10 +414,54 @@ class AuthController extends Controller
     {
         $user = $request->user()->load('roles');
 
+        // Prepare user data with permissions (same format as login)
+        $userData = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'address' => $user->address,
+            'date_of_birth' => $user->date_of_birth,
+            'gender' => $user->gender,
+            'profile_picture' => $user->profile_picture,
+            'is_active' => $user->is_active,
+            'email_verified_at' => $user->email_verified_at,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+            'roles' => $user->roles->map(function ($role) {
+                return [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'display_name' => $role->display_name,
+                    'description' => $role->description,
+                    'permissions' => $role->permissions->map(function ($permission) {
+                        return [
+                            'id' => $permission->id,
+                            'name' => $permission->name,
+                            'display_name' => $permission->display_name,
+                            'description' => $permission->description
+                        ];
+                    })
+                ];
+            }),
+            'permissions' => $user->getAllPermissions()->map(function ($permission) {
+                return [
+                    'id' => $permission->id,
+                    'name' => $permission->name,
+                    'display_name' => $permission->display_name,
+                    'description' => $permission->description
+                ];
+            }),
+            'role_display_name' => $user->role_display_name,
+            'is_admin' => $user->isAdmin(),
+            'is_pastor' => $user->isPastor(),
+            'is_member' => $user->isMember(),
+        ];
+
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => $user
+                'user' => $userData
             ]
         ]);
     }
