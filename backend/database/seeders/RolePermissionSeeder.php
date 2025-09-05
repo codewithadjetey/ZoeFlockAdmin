@@ -395,6 +395,9 @@ class RolePermissionSeeder extends Seeder
                     
                     // Dashboard Management
                     'view-dashboard', 'get-dashboard-data',
+
+                    // view-entities
+                    'view-entities',
                     
                     // Authentication Management
                     'logout', 'view-profile', 'edit-profile', 'change-password', 'resend-verification-email',
