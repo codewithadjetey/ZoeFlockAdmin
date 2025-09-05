@@ -363,7 +363,7 @@ class RolePermissionSeeder extends Seeder
                 'description' => 'Family head with ability to manage family members and take attendance',
                 'permissions' => [
                     // Member Management - Limited to family
-                    'view-members', 'create-members', 'edit-members',
+                    'view-member-statistics', 'view-members', 'create-members', 'edit-members',
                     
                     // Group Management - View only
                     'view-groups',
