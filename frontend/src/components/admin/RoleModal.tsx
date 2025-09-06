@@ -24,6 +24,12 @@ interface Permission {
   description?: string;
 }
 
+interface RoleResponse {
+  success: boolean;
+  message: string;
+  data: Role;
+}
+
 interface RoleModalProps {
   isOpen: boolean;
   role: Role | null;
@@ -144,8 +150,9 @@ const RoleModal: React.FC<RoleModalProps> = ({
         response = await api.post("/roles", formData);
       }
 
-      if (response.data.success) {
-        onSuccess(response.data.data);
+      const responseData = response.data as RoleResponse;
+      if (responseData.success) {
+        onSuccess(responseData.data);
         toast.success(`Role ${isEditing ? 'updated' : 'created'} successfully`);
       }
     } catch (error: any) {

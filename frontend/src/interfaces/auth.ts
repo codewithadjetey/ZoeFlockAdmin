@@ -25,6 +25,13 @@ export interface User {
   date_of_birth?: string;
   gender?: 'male' | 'female' | 'other';
   profile_picture?: string | null;
+  whatsapp_number?: string;
+  email_notifications_enabled?: boolean;
+  email_notification_types?: string[];
+  sms_notifications_enabled?: boolean;
+  sms_notification_types?: string[];
+  whatsapp_notifications_enabled?: boolean;
+  whatsapp_notification_types?: string[];
   is_active: boolean;
   email_verified_at?: string;
   created_at: string;

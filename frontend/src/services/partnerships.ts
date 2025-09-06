@@ -11,6 +11,7 @@ export interface Partnership {
   start_date?: string;
   end_date?: string;
   notes?: string;
+  status?: 'active' | 'completed' | 'cancelled' | 'pending';
   member?: any;
   category?: any;
 }

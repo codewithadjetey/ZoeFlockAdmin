@@ -18,6 +18,7 @@ export class GroupsService {
     const params = new URLSearchParams();
     if (filters.search) params.append('search', filters.search);
     if (filters.status) params.append('status', filters.status);
+    if (filters.type) params.append('type', filters.type);
     if (filters.member_count_min) params.append('member_count_min', filters.member_count_min.toString());
     if (filters.member_count_max) params.append('member_count_max', filters.member_count_max.toString());
     if (filters.page) params.append('page', filters.page.toString());

@@ -70,7 +70,7 @@ export default function EditFamilyPage() {
 
   if (loading) {
     return (
-      <>>
+      <>
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Loading family...</div>
         </div>
@@ -80,7 +80,7 @@ export default function EditFamilyPage() {
 
   if (!family) {
     return (
-      <>>
+      <>
         <div className="flex items-center justify-center h-64">
           <div className="text-lg text-red-600">Family not found</div>
         </div>
@@ -89,7 +89,7 @@ export default function EditFamilyPage() {
   }
 
   return (
-    <>>
+    <>
       <div className="space-y-6">
         <PageHeader
           title={`Edit ${family.name}`}

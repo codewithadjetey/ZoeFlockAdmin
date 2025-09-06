@@ -72,12 +72,12 @@ export default function EventCategoryDetailPage() {
 
       const response = await EventCategoriesService.getCategoryEvents(parseInt(id as string), filters);
       if (response.success) {
-        setEvents(response.data.events.data);
+        setEvents(response.data.data);
         setPagination({
-          current_page: response.data.events.current_page,
-          last_page: response.data.events.last_page,
-          per_page: response.data.events.per_page,
-          total: response.data.events.total
+          current_page: response.data.current_page,
+          last_page: response.data.last_page,
+          per_page: response.data.per_page,
+          total: response.data.total
         });
       }
     } catch (error) {
@@ -225,7 +225,7 @@ export default function EventCategoryDetailPage() {
 
   if (isLoading) {
     return (
-      <>>
+      <>
         <div className="flex justify-center items-center h-64">
           <LoadingSpinner size="lg" />
         </div>
@@ -235,7 +235,7 @@ export default function EventCategoryDetailPage() {
 
   if (!category) {
     return (
-      <>>
+      <>
         <div className="text-center py-12">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Category Not Found
@@ -252,12 +252,12 @@ export default function EventCategoryDetailPage() {
   }
 
   return (
-    <>>
+    <>
       <div className="space-y-6">
         <PageHeader
           title={category.name}
           description={category.description || 'Event category details'}
-          action={
+          actions={
             <div className="flex space-x-3">
               <Button variant="secondary" onClick={handleBackToCategories}>
                 <i className="fas fa-arrow-left mr-2"></i>
@@ -302,7 +302,7 @@ export default function EventCategoryDetailPage() {
                     </div>
                   )}
                   <div className="text-sm text-gray-600">
-                    Created: {new Date(category.created_at).toLocaleDateString()}
+                    Created: {category.created_at ? new Date(category.created_at).toLocaleDateString() : 'Unknown'}
                   </div>
                 </div>
               </div>

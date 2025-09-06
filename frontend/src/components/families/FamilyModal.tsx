@@ -118,7 +118,7 @@ export default function FamilyModal({ isOpen, onClose, onSave, family, mode }: F
           </label>
           <TextInput
             type="text"
-            value={formData.name}
+            value={formData.name || ''}
             onChange={(e) => handleInputChange('name', e.target.value)}
             placeholder="Enter family name"
             required
@@ -131,7 +131,7 @@ export default function FamilyModal({ isOpen, onClose, onSave, family, mode }: F
           </label>
           <TextInput
             type="text"
-            value={formData.slogan}
+            value={formData.slogan || ''}
             onChange={(e) => handleInputChange('slogan', e.target.value)}
             placeholder="Enter family slogan"
           />
@@ -142,7 +142,7 @@ export default function FamilyModal({ isOpen, onClose, onSave, family, mode }: F
             Description
           </label>
           <Textarea
-            value={formData.description}
+            value={formData.description || ''}
             onChange={(e) => handleInputChange('description', e.target.value)}
             placeholder="Enter family description"
             rows={3}

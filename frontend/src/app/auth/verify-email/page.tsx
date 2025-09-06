@@ -141,7 +141,7 @@ const VerifyEmailPage = () => {
             </div>
             <Button
               onClick={() => router.push('/auth/login')}
-              variant="success"
+              variant="primary"
               className="w-full"
             >
               Go to Login

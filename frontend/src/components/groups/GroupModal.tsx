@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '@/components/shared/Modal';
 import { TextInput, Textarea, SelectInput, Button } from '@/components/ui';
-import { GroupsService, Group, FileUpload } from '@/services/groups';
+import { GroupsService, FileUpload } from '@/services/groups';
+import { Group } from '@/interfaces/groups';
 import FileUploader from '../shared/FileUploader';
 import { getImageUrl } from '@/utils/helpers';
 
@@ -22,7 +23,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
   onSave,
   mode
 }) => {
-  const [formData, setFormData] = useState<Group & { upload_token?: string }>({
+  const [formData, setFormData] = useState<Partial<Group> & { upload_token?: string }>({
     name: '',
     description: '',
     max_members: 10,
@@ -98,7 +99,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
     e.preventDefault();
     
     // Send form data with upload_token if an image was uploaded
-    onSave(formData);
+    onSave(formData as Group & { upload_token?: string });
     onClose();
   };
 
@@ -161,7 +162,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <div>
             <TextInput
               label="Group Name"
-              value={formData.name}
+              value={formData.name || ''}
               onChange={handleInputChange('name')}
               placeholder="Enter group name"
               error={errors.name}
@@ -171,7 +172,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <div>
             <SelectInput
               label="Status"
-              value={formData.status}
+              value={formData.status || ''}
               onChange={handleSelectChange('status')}
               options={statusOptions}
               placeholder="Select status"
@@ -182,7 +183,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
         <div>
           <Textarea
             label="Description"
-            value={formData.description}
+            value={formData.description || ''}
             onChange={handleInputChange('description')}
             placeholder="Describe the group's purpose and activities"
             error={errors.description}
@@ -195,7 +196,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <TextInput
             label="Maximum Members"
             type="number"
-            value={formData.max_members.toString()}
+            value={formData.max_members?.toString() || '10'}
             onChange={handleInputChange('max_members')}
             placeholder="Enter max members"
             error={errors.max_members}
@@ -207,7 +208,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <div>
             <SelectInput
               label="Meeting Day"
-              value={formData.meeting_day}
+              value={formData.meeting_day || ''}
               onChange={handleSelectChange('meeting_day')}
               options={dayOptions}
               placeholder="Select day"
@@ -218,7 +219,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
           <div>
             <SelectInput
               label="Meeting Time"
-              value={formData.meeting_time}
+              value={formData.meeting_time || ''}
               onChange={handleSelectChange('meeting_time')}
               options={timeOptions}
               placeholder="Select time"
@@ -230,7 +231,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
         <div>
           <TextInput
             label="Location"
-            value={formData.location}
+            value={formData.location || ''}
             onChange={handleInputChange('location')}
             placeholder="Enter meeting location"
             error={errors.location}

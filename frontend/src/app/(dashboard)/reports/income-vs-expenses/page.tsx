@@ -7,6 +7,14 @@ import { ComparisonChart } from '@/components/reports';
 import { ReportsService, ReportFilters } from '@/services/reports';
 import { EntitiesService, EntityOption } from '@/services/entities';
 
+interface CategoryComparison {
+  category: string;
+  income: number;
+  expenses: number;
+  net: number;
+  percentage: number;
+}
+
 export default function IncomeVsExpensesReportsPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('bar');
@@ -123,10 +131,34 @@ export default function IncomeVsExpensesReportsPage() {
 
   const tableColumns = [
     { key: 'month', label: 'Month' },
-    { key: 'income', label: 'Income' },
-    { key: 'expenses', label: 'Expenses' },
-    { key: 'profit', label: 'Net Profit' },
-    { key: 'profitMargin', label: 'Profit Margin' }
+    { 
+      key: 'income', 
+      label: 'Income',
+      render: (value: any, item: any) => <span className="font-semibold text-green-600">{formatCurrency(item.income)}</span>
+    },
+    { 
+      key: 'expenses', 
+      label: 'Expenses',
+      render: (value: any, item: any) => <span className="font-semibold text-red-600">{formatCurrency(item.expenses)}</span>
+    },
+    { 
+      key: 'profit', 
+      label: 'Net Profit',
+      render: (value: any, item: any) => (
+        <span className={`font-semibold ${item.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {formatCurrency(item.profit)}
+        </span>
+      )
+    },
+    { 
+      key: 'profitMargin', 
+      label: 'Profit Margin',
+      render: (value: any, item: any) => (
+        <span className={`font-semibold ${item.profitMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {formatPercentage(item.profitMargin)}
+        </span>
+      )
+    }
   ];
 
   const categoryTableColumns = [
@@ -142,7 +174,7 @@ export default function IncomeVsExpensesReportsPage() {
 
   if (!reportData) {
     return (
-      <>>
+      <>
         <PageHeader
           title="Income vs Expenses Reports"
           description="Comprehensive financial comparison and analysis"
@@ -158,7 +190,7 @@ export default function IncomeVsExpensesReportsPage() {
   }
 
   return (
-    <>>
+    <>
       <PageHeader
         title="Income vs Expenses Reports"
         description="Comprehensive financial comparison and analysis"
@@ -364,37 +396,6 @@ export default function IncomeVsExpensesReportsPage() {
           <DataTable
             data={reportData.monthlyComparison}
             columns={tableColumns}
-            renderCell={(item, column) => {
-              switch (column.key) {
-                case 'income':
-                  return <span className="font-semibold text-green-600">{formatCurrency(item.income)}</span>;
-                case 'expenses':
-                  return <span className="font-semibold text-red-600">{formatCurrency(item.expenses)}</span>;
-                case 'profit':
-                  return (
-                    <span className={`font-semibold ${item.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatCurrency(item.profit)}
-                    </span>
-                  );
-                case 'profitMargin':
-                  return (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      item.profitMargin >= 30 
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                        : item.profitMargin >= 20
-                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                    }`}>
-                      {formatPercentage(item.profitMargin)}
-                    </span>
-                  );
-                default:
-                  return item[column.key as keyof typeof item];
-              }
-            }}
-            searchable={false}
-            sortable={true}
-            pagination={false}
           />
         </div>
       )}
@@ -405,7 +406,7 @@ export default function IncomeVsExpensesReportsPage() {
           Category Comparison
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reportData.categoryComparison.map((category, index) => (
+          {reportData.categoryComparison.map((category: CategoryComparison, index: number) => (
             <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-medium text-gray-900 dark:text-white">{category.category}</h4>

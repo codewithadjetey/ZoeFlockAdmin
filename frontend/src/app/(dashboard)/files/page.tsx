@@ -320,7 +320,7 @@ export default function FilesPage() {
   };
 
   return (
-    <>>
+    <>
       <PageHeader
         title="Files Management"
         description="Manage and organize all church files, documents, and resources"

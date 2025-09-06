@@ -4,10 +4,11 @@ import React, { useState, useEffect } from "react";
 import { Button, DataTable, SearchInput, Alert } from "@/components/ui";
 import UserModal from "@/components/admin/UserModal";
 import PasswordUpdateModal from "@/components/admin/PasswordUpdateModal";
-import { api } from "@/utils/api";
 import { toast } from 'react-toastify';
 import { formatDateForInput } from "@/utils/helpers";
 import { User, Role } from "@/interfaces";
+import { UsersService } from '@/services/users';
+import { RolesService } from '@/services/roles';
 
 const UsersPage = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -31,17 +32,16 @@ const UsersPage = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        per_page: perPage.toString(),
+      const response = await UsersService.getUsers({
+        page: currentPage,
+        per_page: perPage,
         ...(searchTerm && { search: searchTerm }),
         ...(selectedRole && { role: selectedRole }),
       });
-
-      const response = await api.get(`/users?${params}`);
-      if (response.data.success) {
-        setUsers(response.data.data.data);
-        setTotalPages(response.data.data.last_page);
+      
+      if (response.success) {
+        setUsers(response.data.data);
+        setTotalPages(response.data.last_page);
       }
     } catch (error) {
       toast.error("Error fetching users");
@@ -52,9 +52,9 @@ const UsersPage = () => {
 
   const fetchRoles = async () => {
     try {
-      const response = await api.get("/roles");
-      if (response.data.success) {
-        setRoles(response.data.data.data);
+      const response = await RolesService.getRoles();
+      if (response.success) {
+        setRoles(response.data.data);
       }
     } catch (error) {
       toast.error("Error fetching roles");
@@ -74,7 +74,7 @@ const UsersPage = () => {
   const handleDeleteUser = async (userId: number) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        await api.delete(`/users/${userId}`);
+        await UsersService.deleteUser(userId);
         toast.success("User deleted successfully");
         fetchUsers();
       } catch (error) {
@@ -96,8 +96,8 @@ const UsersPage = () => {
 
   const handleToggleStatus = async (userId: number) => {
     try {
-      const response = await api.put(`/users/${userId}/toggle-status`);
-      if (response.data.success) {
+      const response = await UsersService.toggleUserStatus(userId);
+      if (response.success) {
         toast.success("User status updated successfully");
         fetchUsers();
       }

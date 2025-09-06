@@ -18,6 +18,7 @@ interface SelectInputProps {
   disabled?: boolean;
   children?: React.ReactNode;
   searchable?: boolean;
+  required?: boolean;
   clearable?: boolean;
   maxHeight?: string;
   noOptionsMessage?: string;
@@ -40,7 +41,8 @@ const SelectInput: React.FC<SelectInputProps> = ({
   maxHeight = "200px",
   noOptionsMessage = "No options found",
   loading = false,
-  onSearch
+  onSearch,
+  required = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -170,7 +172,10 @@ const SelectInput: React.FC<SelectInputProps> = ({
     return (
       <div className="relative">
         {label && (
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">{label}</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
         )}
         <select
           value={value}
@@ -205,6 +210,7 @@ const SelectInput: React.FC<SelectInputProps> = ({
       {label && (
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
           {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       

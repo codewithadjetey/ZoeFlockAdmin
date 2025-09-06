@@ -15,7 +15,7 @@ export default function FinancialReportsPage() {
       PartnershipsService.list({ per_page: 1000 }),
       PartnershipCategoriesService.list(),
     ]).then(([p, c]) => {
-      setPartnerships(p.data || p);
+      setPartnerships(p.data.data || []);
       setCategories(c.data || c);
     }).finally(() => setLoading(false));
   }, []);
@@ -28,7 +28,7 @@ export default function FinancialReportsPage() {
   }));
 
   return (
-    <>>
+    <>
       <div className="flex flex-col gap-6">
         <h1 className="text-2xl font-bold">Financial Reports</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

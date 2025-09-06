@@ -4,28 +4,9 @@ import { DashboardLayout } from "@/components/layout";
 import { Button, DataTable, SearchInput, Alert } from "@/components/ui";
 import RoleModal from "@/components/admin/RoleModal";
 import { toast } from 'react-toastify';
-import { api } from "@/utils/api";
+import { RolesService } from '@/services/roles';
+import { Role, Permission } from '@/interfaces/roles';
 
-interface Role {
-  id: number;
-  name: string;
-  display_name: string;
-  description?: string;
-  created_at: string;
-  permissions: Array<{
-    id: number;
-    name: string;
-    display_name: string;
-  }>;
-  users_count: number;
-}
-
-interface Permission {
-  id: number;
-  name: string;
-  display_name: string;
-  description?: string;
-}
 
 const RolesPage = () => {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -46,16 +27,15 @@ const RolesPage = () => {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        per_page: perPage.toString(),
+      const response = await RolesService.getRoles({
+        page: currentPage,
+        per_page: perPage,
         ...(searchTerm && { search: searchTerm }),
       });
-
-      const response = await api.get(`/roles?${params}`);
-      if (response.data.success) {
-        setRoles(response.data.data.data);
-        setTotalPages(response.data.data.last_page);
+      
+      if (response.success) {
+        setRoles(response.data.data);
+        setTotalPages(response.data.last_page);
       }
     } catch (error) {
       toast.error("Error fetching roles");
@@ -66,9 +46,9 @@ const RolesPage = () => {
 
   const fetchPermissions = async () => {
     try {
-      const response = await api.get("/roles/permissions");
-      if (response.data.success) {
-        setPermissions(response.data.data);
+      const response = await RolesService.getPermissions();
+      if (response.success) {
+        setPermissions(response.data);
       }
     } catch (error) {
       toast.error("Error fetching permissions");
@@ -89,8 +69,8 @@ const RolesPage = () => {
     if (!confirm("Are you sure you want to delete this role?")) return;
 
     try {
-      const response = await api.delete(`/roles/${roleId}`);
-      if (response.data.success) {
+      const response = await RolesService.deleteRole(roleId);
+      if (response.success) {
         toast.success("Role deleted successfully");
         fetchRoles();
       }
@@ -101,8 +81,8 @@ const RolesPage = () => {
 
   const handleDuplicateRole = async (roleId: number) => {
     try {
-      const response = await api.post(`/roles/${roleId}/duplicate`);
-      if (response.data.success) {
+      const response = await RolesService.duplicateRole(roleId);
+      if (response.success) {
         toast.success("Role duplicated successfully");
         fetchRoles();
       }

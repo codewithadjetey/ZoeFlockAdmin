@@ -96,7 +96,7 @@ export const ReportsService = {
     };
     
     const res = await api.get('/reports/income', { params });
-    return res.data;
+    return res.data as any;
   },
 
   // Get expense report data
@@ -109,7 +109,7 @@ export const ReportsService = {
     };
     
     const res = await api.get('/reports/expenses', { params });
-    return res.data;
+    return res.data as any;
   },
 
   // Get income vs expenses comparison report
@@ -121,13 +121,13 @@ export const ReportsService = {
     };
     
     const res = await api.get('/reports/comparison', { params });
-    return res.data;
+    return res.data as any;
   },
 
   // Generate and export report
   async exportReport(options: ExportReportOptions): Promise<{ downloadUrl: string; filename: string }> {
     const res = await api.post('/reports/export', options);
-    return res.data;
+    return res.data as any;
   },
 
   // Get export history
@@ -142,7 +142,7 @@ export const ReportsService = {
     downloadUrl?: string;
   }>> {
     const res = await api.get('/reports/export/history');
-    return res.data;
+    return res.data as any;
   },
 
   // Download exported report
@@ -150,7 +150,7 @@ export const ReportsService = {
     const res = await api.get(`/reports/export/${exportId}/download`, {
       responseType: 'blob'
     });
-    return res.data;
+    return res.data as any;
   },
 
   // Delete exported report
@@ -172,7 +172,7 @@ export const ReportsService = {
     }>;
   }> {
     const res = await api.get('/reports/dashboard-summary');
-    return res.data;
+    return res.data as any;
   },
 
   // Get financial insights
@@ -184,7 +184,7 @@ export const ReportsService = {
     riskFactors: string[];
   }> {
     const res = await api.get('/reports/insights');
-    return res.data;
+    return res.data as any;
   },
 
   // Get recent activity
@@ -196,6 +196,6 @@ export const ReportsService = {
     color: string;
   }>> {
     const res = await api.get('/reports/recent-activity');
-    return res.data;
+    return res.data as any;
   }
 }; 

@@ -95,7 +95,7 @@ export default function PartnershipsPage() {
     {
       key: 'start_date',
       label: 'Start Date',
-      render: (v, row) => formatDate(row.start_date),
+      render: (v, row) => row.start_date ? formatDate(row.start_date) : '-',
     },
     {
       key: 'end_date',

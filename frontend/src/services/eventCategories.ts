@@ -46,6 +46,14 @@ export interface EventCategoryMessageResponse {
   message: string;
 }
 
+export interface GenerateEventsResponse {
+  success: boolean;
+  data: {
+    generated_count: number;
+    category: EventCategory;
+  };
+}
+
 export interface GenerateEventsRequest {
   from_date?: string;
   count?: number;
@@ -66,7 +74,7 @@ export class EventCategoriesService {
     });
 
     const response = await api.get(`/event-categories?${params.toString()}`);
-    return response.data;
+    return response.data as any;
   }
 
   /**
@@ -74,7 +82,7 @@ export class EventCategoriesService {
    */
   static async getEventCategory(id: number): Promise<EventCategoryResponse> {
     const response = await api.get(`/event-categories/${id}`);
-    return response.data;
+    return response.data as any;
   }
 
   /**
@@ -82,7 +90,7 @@ export class EventCategoriesService {
    */
   static async createEventCategory(categoryData: Partial<EventCategory>): Promise<EventCategoryResponse> {
     const response = await api.post('/event-categories', categoryData);
-    return response.data;
+    return response.data as any;
   }
 
   /**
@@ -90,7 +98,7 @@ export class EventCategoriesService {
    */
   static async updateEventCategory(id: number, categoryData: Partial<EventCategory>): Promise<EventCategoryResponse> {
     const response = await api.put(`/event-categories/${id}`, categoryData);
-    return response.data;
+    return response.data as any;
   }
 
   /**
@@ -98,7 +106,7 @@ export class EventCategoriesService {
    */
   static async deleteEventCategory(id: number): Promise<EventCategoryMessageResponse> {
     const response = await api.delete(`/event-categories/${id}`);
-    return response.data;
+    return response.data as any;
   }
 
   /**
@@ -114,15 +122,15 @@ export class EventCategoriesService {
     });
 
     const response = await api.get(`/event-categories/${categoryId}/events?${params.toString()}`);
-    return response.data;
+    return response.data as any;
   }
 
   /**
    * Generate events for a category based on recurrence settings
    */
-  static async generateEvents(categoryId: number, data: GenerateEventsRequest = {}): Promise<EventCategoryResponse> {
+  static async generateEvents(categoryId: number, data: GenerateEventsRequest = {}): Promise<GenerateEventsResponse> {
     const response = await api.post(`/event-categories/${categoryId}/generate-events`, data);
-    return response.data;
+    return response.data as any;
   }
 
   /**
@@ -130,7 +138,7 @@ export class EventCategoriesService {
    */
   static async generateOneTimeEvent(categoryId: number, data: { auto_publish?: boolean } = {}): Promise<EventCategoryResponse> {
     const response = await api.post(`/event-categories/${categoryId}/generate-one-time-event`, data);
-    return response.data;
+    return response.data as any;
   }
 
   /**
@@ -138,7 +146,7 @@ export class EventCategoriesService {
    */
   static async toggleStatus(categoryId: number): Promise<EventCategoryResponse> {
     const response = await api.post(`/event-categories/${categoryId}/toggle-status`);
-    return response.data;
+    return response.data as any;
   }
 
   /**
@@ -146,7 +154,7 @@ export class EventCategoriesService {
    */
   static async getCategoryStatistics(categoryId: number): Promise<{ success: boolean; data: any }> {
     const response = await api.get(`/event-categories/${categoryId}/statistics`);
-    return response.data;
+    return response.data as any;
   }
 
   /**

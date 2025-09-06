@@ -72,8 +72,9 @@ const FirstTimerModal: React.FC<FirstTimerModalProps> = ({ isOpen, onClose, onSa
   }, [isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
     if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
       setForm(f => ({ ...f, [name]: checked }));
     } else {
       setForm(f => ({ ...f, [name]: value }));

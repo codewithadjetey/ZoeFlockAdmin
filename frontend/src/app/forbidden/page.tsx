@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Button from '@/components/ui/Button';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { AlertTriangle, Home, ArrowLeft, Shield, Mail, Key } from 'lucide-react';
 
-export default function ForbiddenPage() {
+function ForbiddenContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [requiredPermissions, setRequiredPermissions] = useState<string[]>([]);
@@ -153,5 +153,28 @@ export default function ForbiddenPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ForbiddenPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <Card className="shadow-lg border-0">
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                <Shield className="w-8 h-8 text-red-600" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
+                Loading...
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      </div>
+    }>
+      <ForbiddenContent />
+    </Suspense>
   );
 } 

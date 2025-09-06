@@ -13,6 +13,28 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { api } from '@/utils/api';
+
+interface ImportResponse {
+  result: {
+    type: string;
+    success: boolean;
+    total_rows: number;
+    processed_rows: number;
+    error_count: number;
+    success_count: number;
+    skipped_count: number;
+    errors: Array<{
+      row: number;
+      message: string;
+      details: any;
+    }>;
+    imported_data: Array<{
+      id: number;
+      name: string;
+      row: number;
+    }>;
+  };
+}
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Alert, AlertDescription, Badge, Progress, Separator } from '@/components/ui/index';
 
 interface ImportFormProps {
@@ -102,18 +124,19 @@ export default function ImportForm({ type, title, description, icon, color, onBa
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-        onUploadProgress: (progressEvent) => {
+        onUploadProgress: (progressEvent: any) => {
           if (progressEvent.total) {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             setProgress(percentCompleted);
           }
         },
-      });
+      } as any);
 
       clearInterval(progressInterval);
       setProgress(100);
 
-      const importResult = response.data.result;
+      const responseData = response.data as ImportResponse;
+      const importResult = responseData.result;
       setResult(importResult);
 
       if (importResult.error_count > 0) {
@@ -160,7 +183,7 @@ export default function ImportForm({ type, title, description, icon, color, onBa
         responseType: 'blob'
       });
       
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([response.data as BlobPart]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `sample_${type}.csv`);

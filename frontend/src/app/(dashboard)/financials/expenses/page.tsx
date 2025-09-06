@@ -71,7 +71,7 @@ export default function ExpensesPage() {
     },
   ];
 
-  const handleFiltersChange = (newFilters: Record<string, any>) => {
+  const handleFiltersChange = (newFilters: { category_id: string; is_paid: string; search: string }) => {
     setFilters(newFilters);
     setCurrentPage(1);
   };
@@ -360,7 +360,7 @@ export default function ExpensesPage() {
               <FormField label="Amount" required>
                 <TextInput
                   type="number"
-                  value={form.amount}
+                  value={form.amount.toString()}
                   onChange={(e) => handleFormChange("amount", Number(e.target.value))}
                   required
                 />

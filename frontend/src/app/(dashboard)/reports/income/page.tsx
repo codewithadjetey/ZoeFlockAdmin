@@ -162,7 +162,7 @@ export default function IncomeReportsPage() {
   // Loading state
   if (isLoading && !reportData) {
     return (
-      <>>
+      <>
         <PageHeader
           title="Income Reports"
           description="Comprehensive income analysis and reporting"
@@ -180,7 +180,7 @@ export default function IncomeReportsPage() {
   // Error state
   if (error && !reportData) {
     return (
-      <>>
+      <>
         <PageHeader
           title="Income Reports"
           description="Comprehensive income analysis and reporting"
@@ -202,7 +202,7 @@ export default function IncomeReportsPage() {
   // No data state
   if (!reportData) {
     return (
-      <>>
+      <>
         <PageHeader
           title="Income Reports"
           description="Comprehensive income analysis and reporting"
@@ -218,7 +218,7 @@ export default function IncomeReportsPage() {
   }
 
   return (
-    <>>
+    <>
       <PageHeader
         title="Income Reports"
         description="Comprehensive income analysis and reporting"

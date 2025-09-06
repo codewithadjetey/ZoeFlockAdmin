@@ -212,7 +212,7 @@ export default function DonationsPage() {
   };
 
   return (
-    <>>
+    <>
       <PageHeader
         title="Donations"
         description="Track and manage church donations"

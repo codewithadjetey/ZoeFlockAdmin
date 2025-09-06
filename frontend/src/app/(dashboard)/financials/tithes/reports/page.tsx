@@ -143,7 +143,7 @@ export default function TitheReportsPage() {
 
   if (loading) {
     return (
-      <>>
+      <>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -156,7 +156,7 @@ export default function TitheReportsPage() {
 
   if (error) {
     return (
-      <>>
+      <>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <i className="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
@@ -172,7 +172,7 @@ export default function TitheReportsPage() {
   }
 
   return (
-    <>>
+    <>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">

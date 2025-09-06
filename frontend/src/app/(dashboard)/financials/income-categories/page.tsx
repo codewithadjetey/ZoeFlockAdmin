@@ -152,7 +152,7 @@ export default function IncomeCategoriesPage() {
   );
 
   return (
-    <>>
+    <>
       <div className="space-y-6">
         <PageHeader
           title="Income Categories"

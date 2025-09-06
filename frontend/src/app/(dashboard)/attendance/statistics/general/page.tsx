@@ -76,15 +76,14 @@ export default function GeneralAttendanceStatisticsPage() {
     setLoading(true);
     try {
       const response = await AttendanceService.getGeneralAttendanceStatistics({
-        startDate: startDate ? startDate.toISOString().split('T')[0] : undefined,
-        endDate: endDate ? endDate.toISOString().split('T')[0] : undefined,
-        granularity,
-        familyId: familyFilter !== 'all' ? parseInt(familyFilter) : undefined
+        start_date: startDate ? startDate.toISOString().split('T')[0] : undefined,
+        end_date: endDate ? endDate.toISOString().split('T')[0] : undefined,
+        per_page: 100
       });
 
       if (response.success) {
         // Transform the API data to match our interface
-        const transformedData = response.data.general_attendance.map((item: any) => ({
+        const transformedData = response.data.analytics.map((item: any) => ({
           eventId: item.event?.id || item.id,
           eventTitle: item.event?.title || 'Unknown Event',
           eventDate: item.event?.start_date || item.period || 'Unknown Date',
@@ -346,7 +345,7 @@ export default function GeneralAttendanceStatisticsPage() {
   const summaryStats = getSummaryStats();
 
   return (
-    <>>
+    <>
       <div className="space-y-6">
         <PageHeader
           title="General Attendance Statistics"

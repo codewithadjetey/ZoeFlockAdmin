@@ -127,9 +127,39 @@ export default function ExportReportPage() {
     { key: 'type', label: 'Type' },
     { key: 'format', label: 'Format' },
     { key: 'date', label: 'Date' },
-    { key: 'status', label: 'Status' },
+    { 
+      key: 'status', 
+      label: 'Status',
+      render: (value: any, item: any) => getStatusBadge(item.status)
+    },
     { key: 'size', label: 'Size' },
-    { key: 'actions', label: 'Actions' }
+    { 
+      key: 'actions', 
+      label: 'Actions',
+      render: (value: any, item: any) => (
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => downloadExport(item)}
+            disabled={item.status !== 'completed'}
+            className="text-xs"
+          >
+            <i className="fas fa-download mr-1"></i>
+            Download
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => deleteExport(item.id)}
+            className="text-xs text-red-600 hover:text-red-700"
+          >
+            <i className="fas fa-trash mr-1"></i>
+            Delete
+          </Button>
+        </div>
+      )
+    }
   ];
 
   const getStatusBadge = (status: string) => {
@@ -146,7 +176,7 @@ export default function ExportReportPage() {
   };
 
   return (
-    <>>
+    <>
       <PageHeader
         title="Export Report"
         description="Generate and export financial data in various formats"
@@ -296,41 +326,6 @@ export default function ExportReportPage() {
           <DataTable
             data={exportHistory}
             columns={tableColumns}
-            renderCell={(item: any, column: any) => {
-              switch (column.key) {
-                case 'status':
-                  return getStatusBadge(item.status);
-                case 'actions':
-                  return (
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => downloadExport(item)}
-                        disabled={item.status !== 'completed'}
-                        className="text-xs"
-                      >
-                        <i className="fas fa-download mr-1"></i>
-                        Download
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => deleteExport(item.id)}
-                        className="text-xs text-red-600 hover:text-red-700"
-                      >
-                        <i className="fas fa-trash mr-1"></i>
-                        Delete
-                      </Button>
-                    </div>
-                  );
-                default:
-                  return item[column.key as keyof typeof item];
-              }
-            }}
-            searchable={true}
-            sortable={true}
-            pagination={false}
           />
         </div>
 
