@@ -15,27 +15,8 @@ import {
   Filter
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { api } from '@/utils/api';
-
-interface AuditLog {
-  id: number;
-  user_id: number;
-  action: string;
-  model_type: string;
-  model_id: number;
-  description: string;
-  details: any;
-  ip_address: string;
-  user_agent: string;
-  status: 'success' | 'error' | 'warning';
-  error_message: string | null;
-  created_at: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-  } | null;
-}
+import { AuditLogsService } from '@/services/auditLogs';
+import { AuditLog } from '@/interfaces/auditLogs';
 
 export default function AuditLogsPage() {
   const router = useRouter();
@@ -62,8 +43,8 @@ export default function AuditLogsPage() {
         if (value) params.append(key, value);
       });
 
-      const response = await api.get(`/import/audit-logs?${params.toString()}`);
-      setLogs(response.data.data.data || []);
+      const response = await AuditLogsService.getAuditLogs(filters);
+      setLogs(response.data.data || []);
     } catch (error) {
       console.error('Failed to fetch audit logs:', error);
       toast.error('Failed to load audit logs');

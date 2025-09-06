@@ -284,7 +284,7 @@ export default function ExpensesReportsPage() {
 
   if (!reportData) {
     return (
-      <>>
+      <>
         <PageHeader
           title="Expenses Reports"
           description="Comprehensive expense analysis and reporting"
@@ -300,7 +300,7 @@ export default function ExpensesReportsPage() {
   }
 
   return (
-    <>>
+    <>
       <PageHeader
         title="Expenses Reports"
         description="Comprehensive expense analysis and reporting"

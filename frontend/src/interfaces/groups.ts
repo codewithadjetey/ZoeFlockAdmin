@@ -28,6 +28,7 @@ export interface Group {
   available_spots?: number;
   is_full?: boolean;
   members?: GroupMember[];
+  leader?: User;
   creator?: User;
   updater?: User;
 }
@@ -46,6 +47,7 @@ export interface CreateGroup {
 export interface GroupFilters {
   search?: string;
   status?: string;
+  type?: string;
   member_count_min?: number;
   member_count_max?: number;
   page?: number;

@@ -2,7 +2,13 @@ import { api } from '@/utils/api';
 import { Expense, ExpenseCategory, PaginatedResponse } from '@/interfaces/expenses';
 
 export const ExpensesService = {
-  async getExpenses(params?: { page?: number; per_page?: number }): Promise<PaginatedResponse<Expense>> {
+  async getExpenses(params?: { 
+    page?: number; 
+    per_page?: number; 
+    category_id?: string; 
+    is_paid?: string; 
+    search?: string; 
+  }): Promise<PaginatedResponse<Expense>> {
     const res = await api.get('/expenses', { params });
     return res.data;
   },

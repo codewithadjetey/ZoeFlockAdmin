@@ -257,7 +257,7 @@ export default function EventCategoryDetailPage() {
         <PageHeader
           title={category.name}
           description={category.description || 'Event category details'}
-          action={
+          actions={
             <div className="flex space-x-3">
               <Button variant="secondary" onClick={handleBackToCategories}>
                 <i className="fas fa-arrow-left mr-2"></i>
@@ -302,7 +302,7 @@ export default function EventCategoryDetailPage() {
                     </div>
                   )}
                   <div className="text-sm text-gray-600">
-                    Created: {new Date(category.created_at).toLocaleDateString()}
+                    Created: {category.created_at ? new Date(category.created_at).toLocaleDateString() : 'Unknown'}
                   </div>
                 </div>
               </div>

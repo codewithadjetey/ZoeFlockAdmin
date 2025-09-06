@@ -1,8 +1,8 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { PageHeader, ViewToggle, DataGrid, DataTable, Button, StatCard, SearchInput, SelectInput } from "@/components/ui";
-import FirstTimerModal, { FirstTimer } from "@/components/first-timers/FirstTimerModal";
-import { FirstTimersService } from '@/services/firstTimers';
+import FirstTimerModal from "@/components/first-timers/FirstTimerModal";
+import { FirstTimersService, FirstTimer } from '@/services/firstTimers';
 import { toast } from "react-toastify";
 
 export default function FirstTimersAdminPage() {
@@ -202,7 +202,7 @@ export default function FirstTimersAdminPage() {
           responsive={true}
         />
       ) : (
-        <DataGrid data={firstTimers} renderCard={renderFirstTimerCard} columns={4} loading={loading} />
+        <DataGrid data={firstTimers} renderCard={renderFirstTimerCard} columns={4} />
       )}
       <FirstTimerModal
         isOpen={isModalOpen}

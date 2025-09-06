@@ -159,7 +159,7 @@ export default function IncomePage() {
     }
   };
 
-  const handleFiltersChange = (newFilters: Record<string, any>) => {
+  const handleFiltersChange = (newFilters: { category_id: string; is_received: string; search: string }) => {
     setFilters(newFilters);
     setCurrentPage(1);
   };
@@ -252,7 +252,7 @@ export default function IncomePage() {
   );
 
   return (
-    <>>
+    <>
       <div className="space-y-6">
         <PageHeader
           title="Income Management"
@@ -330,7 +330,7 @@ export default function IncomePage() {
               <FormField label="Amount" required error={errors.amount}>
                 <TextInput
                   type="number"
-                  value={form.amount}
+                  value={form.amount.toString()}
                   onChange={(e) => handleFormChange("amount", Number(e.target.value))}
                   required
                   error={errors.amount}

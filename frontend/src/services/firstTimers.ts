@@ -13,6 +13,7 @@ export interface FirstTimer {
   invited_by_member_id?: number;
   would_like_to_stay: boolean;
   self_registered?: boolean;
+  status?: 'first_timer' | 'visitor' | 'converted' | 'member';
   created_at?: string;
   updated_at?: string;
 }
@@ -20,7 +21,13 @@ export interface FirstTimer {
 export interface FirstTimersResponse {
   success: boolean;
   message: string;
-  first_timers: FirstTimer[];
+  data: {
+    data: FirstTimer[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
 }
 
 export interface FirstTimerResponse {

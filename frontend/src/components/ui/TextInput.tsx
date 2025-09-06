@@ -12,6 +12,7 @@ interface TextInputProps {
   disabled?: boolean;
   min?: string | number;
   max?: string | number;
+  required?: boolean;
 }
 
 const TextInput: React.FC<TextInputProps> = ({
@@ -26,6 +27,7 @@ const TextInput: React.FC<TextInputProps> = ({
   disabled = false,
   min,
   max,
+  required = false,
 }) => (
   <div>
     {label && (
@@ -40,6 +42,7 @@ const TextInput: React.FC<TextInputProps> = ({
       disabled={disabled}
       min={min}
       max={max}
+      required={required}
       className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-400 dark:focus:border-primary-400 outline-none transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm hover:shadow-md focus:shadow-lg ${
         error ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400' : ''
       } ${

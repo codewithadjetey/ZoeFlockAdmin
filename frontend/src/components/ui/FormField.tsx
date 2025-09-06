@@ -5,9 +5,10 @@ interface FormFieldProps {
   children: React.ReactNode;
   className?: string;
   error?: string | Record<string, string>;
+  required?: boolean;
 }
 
-const FormField: React.FC<FormFieldProps> = ({ label, children, className = "", error }) => {
+const FormField: React.FC<FormFieldProps> = ({ label, children, className = "", error, required = false }) => {
   const getErrorMessage = (error: string | Record<string, string> | undefined): string => {
     if (typeof error === 'string') {
       return error;
@@ -22,7 +23,10 @@ const FormField: React.FC<FormFieldProps> = ({ label, children, className = "", 
 
   return (
     <div className={className}>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 transition-colors duration-200">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
       {children}
       {error && (
         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{getErrorMessage(error)}</p>
