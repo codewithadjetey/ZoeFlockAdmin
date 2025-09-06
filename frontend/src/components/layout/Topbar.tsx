@@ -192,14 +192,14 @@ const Topbar: React.FC<TopbarProps> = ({ onSidebarToggle }) => {
               </div>
               <div className="p-2">
                 <Link
-                  href="/settings"
+                  href="/profile"
                   className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 hover:transform hover:scale-[1.02]"
                 >
                   <i className="fas fa-user mr-3 text-gray-400 dark:text-gray-500"></i>
                   Profile
                 </Link>
                 <Link
-                  href="/settings"
+                  href="/profile"
                   className="flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 hover:transform hover:scale-[1.02]"
                 >
                   <i className="fas fa-cog mr-3 text-gray-400 dark:text-gray-500"></i>

@@ -2,11 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-toastify";
+import UserPasswordUpdateModal from "@/components/profile/UserPasswordUpdateModal";
 
 export default function UserProfilePage() {
   const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -109,16 +111,22 @@ export default function UserProfilePage() {
     setIsEditing(false);
   };
 
+  const handlePasswordUpdateSuccess = () => {
+    toast.success("Password updated successfully!");
+  };
+
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white font-['Poppins']">My Profile</h1>
         <p className="text-gray-600 dark:text-gray-400 mt-2">Manage your personal information and preferences</p>
       </div>
 
-      {/* Profile Card */}
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
+      {/* Profile Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Profile Information Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-6 shadow-lg">
@@ -391,7 +399,78 @@ export default function UserProfilePage() {
             </button>
           </div>
         )}
+        </div>
+
+        {/* Security Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-orange-600 rounded-full flex items-center justify-center mr-6 shadow-lg">
+                <i className="fas fa-shield-alt text-white text-3xl"></i>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Security</h2>
+                <p className="text-gray-600 dark:text-gray-400">Manage your account security</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Security Settings */}
+          <div className="space-y-6">
+            {/* Password Update Section */}
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <i className="fas fa-key text-blue-600 mr-3"></i>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Password</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Update your account password</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">Change Password</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Update your password for better security</p>
+                  </div>
+                  <button
+                    onClick={() => setIsPasswordModalOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 flex items-center shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <i className="fas fa-edit mr-2"></i>
+                    Update
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Tips */}
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6">
+              <div className="flex items-start">
+                <i className="fas fa-lightbulb text-green-600 mr-3 mt-1"></i>
+                <div>
+                  <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">Security Tips</h4>
+                  <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                    <li>• Use a strong, unique password</li>
+                    <li>• Enable two-factor authentication if available</li>
+                    <li>• Never share your password with others</li>
+                    <li>• Log out from shared devices</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Password Update Modal */}
+      <UserPasswordUpdateModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        onSuccess={handlePasswordUpdateSuccess}
+      />
     </div>
   );
 } 
