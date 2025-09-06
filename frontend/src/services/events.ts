@@ -23,7 +23,7 @@ export class EventsService {
     });
 
     const response = await api.get(`/events?${params.toString()}`);
-    return response.data;
+    return response.data as EventListResponse;
   }
 
   /**
@@ -41,7 +41,7 @@ export class EventsService {
    */
   static async getEvent(id: number): Promise<EventResponse> {
     const response = await api.get(`/events/${id}`);
-    return response.data;
+    return response.data as EventResponse;
   }
 
   /**
@@ -49,7 +49,7 @@ export class EventsService {
    */
   static async createEvent(eventData: CreateEventRequest): Promise<EventResponse> {
     const response = await api.post('/events', eventData);
-    return response.data;
+    return response.data as EventResponse;
   }
 
   /**
@@ -57,7 +57,7 @@ export class EventsService {
    */
   static async updateEvent(id: number, eventData: UpdateEventRequest): Promise<EventResponse> {
     const response = await api.put(`/events/${id}`, eventData);
-    return response.data;
+    return response.data as EventResponse;
   }
 
   /**
@@ -65,7 +65,7 @@ export class EventsService {
    */
   static async deleteEvent(id: number): Promise<EventMessageResponse> {
     const response = await api.delete(`/events/${id}`);
-    return response.data;
+    return response.data as EventMessageResponse;
   }
 
   /**
@@ -76,7 +76,7 @@ export class EventsService {
       reason,
       cancel_future_instances: cancelFutureInstances
     });
-    return response.data;
+    return response.data as EventResponse;
   }
 
   /**
@@ -84,7 +84,7 @@ export class EventsService {
    */
   static async publishEvent(id: number): Promise<EventResponse> {
     const response = await api.post(`/events/${id}/publish`);
-    return response.data;
+    return response.data as EventResponse;
   }
 
   /**
@@ -100,7 +100,7 @@ export class EventsService {
     });
 
     const response = await api.get(`/events/member/${memberId}?${params.toString()}`);
-    return response.data;
+    return response.data as EventListResponse;
   }
 
   /**
@@ -178,7 +178,7 @@ export class EventsService {
    */
   static async getEventFamilies(eventId: number): Promise<{ success: boolean; data: any[] }> {
     const response = await api.get(`/events/${eventId}/families`);
-    return response.data;
+    return response.data as { success: boolean; data: any[] };
   }
 
   /**
@@ -190,7 +190,7 @@ export class EventsService {
       is_required: isRequired,
       notes
     });
-    return response.data;
+    return response.data as { success: boolean; message: string; data: any[] };
   }
 
   /**
@@ -201,7 +201,7 @@ export class EventsService {
       is_required: isRequired,
       notes
     });
-    return response.data;
+    return response.data as { success: boolean; message: string; data: any };
   }
 
   /**
@@ -209,6 +209,6 @@ export class EventsService {
    */
   static async removeFamilyFromEvent(eventId: number, familyId: number): Promise<{ success: boolean; message: string }> {
     const response = await api.delete(`/events/${eventId}/families/${familyId}`);
-    return response.data;
+    return response.data as { success: boolean; message: string };
   }
-} 
+}

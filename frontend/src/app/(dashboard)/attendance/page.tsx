@@ -904,7 +904,7 @@ export default function AttendancePage() {
 
   if (loading) {
     return (
-      <>>
+      <>
         <div className="flex items-center justify-center min-h-screen">
           <LoadingSpinner size="lg" />
         </div>
@@ -913,7 +913,7 @@ export default function AttendancePage() {
   }
 
   return (
-    <>>
+    <>
       <div className="space-y-6">
         <PageHeader
           title="Attendance Management"
