@@ -3,7 +3,6 @@ import { Inter, Poppins } from "next/font/google";
 import "./styles/globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ChurchSettingsProvider } from "@/contexts/ChurchSettingsContext";
 import { ErrorHandlerWrapper } from "@/components/ErrorHandlerWrapper";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -40,25 +39,23 @@ export default function RootLayout({
         style={{ fontFamily: 'Inter, sans-serif' }}
       >
         <ThemeProvider>
-          <ChurchSettingsProvider>
-            <AuthProvider>
-              <ErrorHandlerWrapper>
-                {children}
-                <ToastContainer
-                  position="top-right"
-                  autoClose={5000}
-                  hideProgressBar={false}
-                  newestOnTop={false}
-                  closeOnClick
-                  rtl={false}
-                  pauseOnFocusLoss
-                  draggable
-                  pauseOnHover
-                  theme="light"
-                />
-              </ErrorHandlerWrapper>
-            </AuthProvider>
-          </ChurchSettingsProvider>
+          <AuthProvider>
+            <ErrorHandlerWrapper>
+              {children}
+              <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+              />
+            </ErrorHandlerWrapper>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

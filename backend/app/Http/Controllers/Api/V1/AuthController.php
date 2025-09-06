@@ -91,6 +91,15 @@ class AuthController extends Controller
      */
     public function register(Request $request): JsonResponse
     {
+        // Check if self-registration is disabled
+        if (!config('church.allow_self_registration', true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Self-registration is currently disabled. Please contact the church administration for assistance.',
+                'error_code' => 'REGISTRATION_DISABLED'
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -122,20 +131,30 @@ class AuthController extends Controller
         // Assign default role (member)
         $user->assignRole('member');
 
-        // Send verification email
-        try {
-            $emailVerificationController = new \App\Http\Controllers\Api\V1\EmailVerificationController();
-            $emailVerificationController->sendVerificationEmail($request);
-        } catch (\Exception $e) {
-            // Log the error but don't fail registration
-            \Log::error('Failed to send verification email: ' . $e->getMessage());
+        // Send verification email if required
+        if (config('church.require_email_verification', true)) {
+            try {
+                $emailVerificationController = new \App\Http\Controllers\Api\V1\EmailVerificationController();
+                $emailVerificationController->sendVerificationEmail($request);
+            } catch (\Exception $e) {
+                // Log the error but don't fail registration
+                \Log::error('Failed to send verification email: ' . $e->getMessage());
+            }
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $message = 'User registered successfully.';
+        if (config('church.require_email_verification', true)) {
+            $message .= ' Please check your email to verify your account.';
+        }
+        if (config('church.require_admin_approval', false)) {
+            $message .= ' Your account is pending admin approval.';
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'User registered successfully. Please check your email to verify your account.',
+            'message' => $message,
             'data' => [
                 'user' => $user->load('roles'),
                 'token' => $token,

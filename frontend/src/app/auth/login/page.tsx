@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Church } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useChurchSettings } from '@/contexts/ChurchSettingsContext';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import TextInput from '@/components/ui/TextInput';
@@ -14,6 +15,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const { isRegistrationAllowed, settings, isLoading: settingsLoading } = useChurchSettings();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +55,7 @@ const LoginPage = () => {
             Welcome Back
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Sign in to your Zoe Flock Admin account
+            Sign in to your {settings?.church.name || 'Zoe Flock Admin'} account
           </p>
         </div>
 
@@ -98,12 +100,14 @@ const LoginPage = () => {
                 Forgot your password?
               </Link>
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Don't have an account?{" "}
-              <Link href="/auth/register" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200">
-                Sign up
-              </Link>
-            </div>
+            {!settingsLoading && isRegistrationAllowed && (
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Don't have an account?{" "}
+                <Link href="/auth/register" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium hover:underline transition-colors duration-200">
+                  Sign up
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

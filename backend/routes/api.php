@@ -67,6 +67,9 @@ Route::prefix($apiVersion)->group(function () {
     Route::get('/info', [DocumentationController::class, 'info']);
     Route::get('/health', [DocumentationController::class, 'health']);
 
+    // Settings routes (public)
+    Route::get("/settings", [\App\Http\Controllers\Api\V1\SettingsController::class, "getSettings"]);
+
     // Protected routes (authentication required)
     Route::middleware('auth:sanctum')->group(function () {
         // Auth routes
