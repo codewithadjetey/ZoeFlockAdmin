@@ -9,9 +9,9 @@ import { EventsService } from '@/services/events';
 import type { Event } from '@/interfaces';
 
 interface ScanAttendancePageProps {
-  params: {
+  params: Promise<{
     eventId: string;
-  };
+  }>;
 }
 
 interface MemberInfo {
@@ -36,8 +36,16 @@ const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [eventId, setEventId] = useState<string | null>(null);
   
   const scannerInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Resolve params Promise
+    params.then((resolvedParams) => {
+      setEventId(resolvedParams.eventId);
+    });
+  }, [params]);
 
   useEffect(() => {
     // Check authentication first
@@ -46,10 +54,10 @@ const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
       return;
     }
 
-    if (isAuthenticated) {
+    if (isAuthenticated && eventId) {
       loadEvent();
     }
-  }, [params.eventId, isAuthenticated, isLoading]);
+  }, [eventId, isAuthenticated, isLoading]);
 
   useEffect(() => {
     if (scanning && scannerInputRef.current) {
@@ -58,9 +66,11 @@ const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
   }, [scanning]);
 
   const loadEvent = async () => {
+    if (!eventId) return;
+    
     try {
       setError(null);
-      const response = await EventsService.getEvent(parseInt(params.eventId));
+      const response = await EventsService.getEvent(parseInt(eventId));
       if (response.success && response.data) {
         setEvent(response.data);
       } else {

@@ -71,4 +71,15 @@ export { default as DropdownMenuTrigger } from './SelectInput';
 export { default as DropdownMenuContent } from './SelectInput';
 export { default as DropdownMenuItem } from './SelectInput';
 
+// Dialog components
+export { 
+  Dialog, 
+  DialogTrigger, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from './Dialog';
+
  
