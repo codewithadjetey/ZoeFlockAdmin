@@ -46,7 +46,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ children }) => {
             return React.cloneElement(child, { 
               onClick: () => setIsOpen(!isOpen),
               isOpen 
-            });
+            } as any);
           } else if (child.type === DropdownMenuContent && isOpen) {
             return child;
           }
@@ -64,7 +64,7 @@ const DropdownMenuTrigger: React.FC<DropdownMenuTriggerProps & { onClick?: () =>
   isOpen 
 }) => {
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, { onClick });
+    return React.cloneElement(children, { onClick } as any);
   }
   
   return (

@@ -92,7 +92,7 @@ export class RolesService {
   static async removePermissions(roleId: number, permissionIds: number[]): Promise<RoleResponse> {
     const response = await api.delete(`/roles/${roleId}/permissions`, {
       data: { permission_ids: permissionIds }
-    });
+    } as any);
     return response.data as RoleResponse;
   }
 
@@ -120,7 +120,7 @@ export class RolesService {
   static async removeUsers(roleId: number, userIds: number[]): Promise<{ success: boolean; message: string }> {
     const response = await api.delete(`/roles/${roleId}/users`, {
       data: { user_ids: userIds }
-    });
+    } as any);
     return response.data as { success: boolean; message: string };
   }
 }

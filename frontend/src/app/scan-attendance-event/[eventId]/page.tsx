@@ -119,7 +119,7 @@ const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
     setLoading(true);
     try {
       const response = await AttendanceService.scanMemberId({
-        member_identification_id: memberId,
+        barcode: memberId,
         event_id: event.id,
         notes: notes.trim()
       });
@@ -128,8 +128,8 @@ const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
         // Update member info with the scanned member
         setMemberInfo({
           id: response.data.member.id,
-          first_name: response.data.member.name.split(' ')[0] || '',
-          last_name: response.data.member.name.split(' ').slice(1).join(' ') || '',
+          first_name: response.data.member.first_name || '',
+          last_name: response.data.member.last_name || '',
           email: response.data.member.email,
           member_identification_id: memberId,
           profile_image_path: undefined, // We don't have this in the response
@@ -138,7 +138,7 @@ const ScanAttendancePage: React.FC<ScanAttendancePageProps> = ({ params }) => {
           gender: 'Unknown' // We don't have this in the response
         });
 
-        toast.success(`Attendance marked successfully for ${response.data.member.name}`);
+        toast.success(`Attendance marked successfully for ${response.data.member.first_name} ${response.data.member.last_name}`);
         
         // Reset scanner input for next scan
         setScannerInput('');

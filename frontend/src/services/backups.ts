@@ -87,42 +87,42 @@ class BackupService {
     type?: string;
   }): Promise<BackupListResponse> {
     const response = await api.get(this.baseUrl, { params });
-    return response.data;
+    return response.data as BackupListResponse;
   }
 
   async getBackup(id: number): Promise<BackupResponse> {
     const response = await api.get(`${this.baseUrl}/${id}`);
-    return response.data;
+    return response.data as BackupResponse;
   }
 
   async createBackup(data: CreateBackupRequest): Promise<BackupResponse> {
     const response = await api.post(this.baseUrl, data);
-    return response.data;
+    return response.data as any;
   }
 
   async downloadBackup(id: number): Promise<DownloadBackupResponse> {
     const response = await api.get(`${this.baseUrl}/${id}/download`);
-    return response.data;
+    return response.data as any;
   }
 
   async restoreBackup(id: number): Promise<BackupResponse> {
     const response = await api.post(`${this.baseUrl}/${id}/restore`);
-    return response.data;
+    return response.data as any;
   }
 
   async deleteBackup(id: number): Promise<BackupResponse> {
     const response = await api.delete(`${this.baseUrl}/${id}`);
-    return response.data;
+    return response.data as any;
   }
 
   async getStats(): Promise<BackupStatsResponse> {
     const response = await api.get(`${this.baseUrl}/stats`);
-    return response.data;
+    return response.data as any;
   }
 
   async processBackups(): Promise<ProcessBackupResponse> {
     const response = await api.post(`${this.baseUrl}/process`);
-    return response.data;
+    return response.data as any;
   }
 }
 

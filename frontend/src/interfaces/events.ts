@@ -1,3 +1,5 @@
+import { User } from './auth';
+
 export interface Event {
   id: number;
   title: string;
@@ -51,12 +53,6 @@ export interface EventFamily {
   };
 }
 
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  display_name?: string;
-}
 
 export interface FileUpload {
   id: number;

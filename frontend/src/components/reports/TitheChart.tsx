@@ -104,7 +104,7 @@ const TitheChart: React.FC<TitheChartProps> = ({
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
               outerRadius={80}
               fill="#8884d8"
               dataKey="value"
@@ -123,11 +123,24 @@ const TitheChart: React.FC<TitheChartProps> = ({
     }
   };
 
+  const chartElement = renderChart();
+  
+  if (!chartElement) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
+        <div className="flex items-center justify-center" style={{ height }}>
+          <p className="text-gray-500">No chart data available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={height}>
-        {renderChart()}
+        {chartElement}
       </ResponsiveContainer>
     </div>
   );

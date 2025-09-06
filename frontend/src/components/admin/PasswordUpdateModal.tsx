@@ -5,6 +5,14 @@ import { api } from "@/utils/api";
 import { toast } from "react-toastify";
 import { User } from "@/interfaces";
 
+interface PasswordUpdateResponse {
+  success: boolean;
+  message: string;
+  data: {
+    password: string;
+  };
+}
+
 interface PasswordUpdateModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -46,12 +54,13 @@ const PasswordUpdateModal: React.FC<PasswordUpdateModalProps> = ({
       }
 
       const response = await api.put(`/users/${user.id}/admin-password`, payload);
+      const responseData = response.data as PasswordUpdateResponse;
 
-      if (response.data.success) {
-        const newPassword = response.data.data.password;
+      if (responseData.success) {
+        const newPassword = responseData.data.password;
         setGeneratedPassword(newPassword);
         
-        toast.success(response.data.message);
+        toast.success(responseData.message);
         
         if (action === "generate") {
           // Show the generated password

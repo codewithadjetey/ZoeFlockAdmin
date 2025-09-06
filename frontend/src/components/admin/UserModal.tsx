@@ -7,6 +7,12 @@ import { toast } from 'react-toastify';
 import { api } from "@/utils/api";
 import { User, Role } from "@/interfaces";
 
+interface UserResponse {
+  success: boolean;
+  message: string;
+  data: User;
+}
+
 interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -158,8 +164,9 @@ const UserModal: React.FC<UserModalProps> = ({
         response = await api.post("/users", submitData);
       }
 
-      if (response.data.success) {
-        onSuccess(response.data.data);
+      const responseData = response.data as UserResponse;
+      if (responseData.success) {
+        onSuccess(responseData.data);
         toast.success(`User ${isEditing ? 'updated' : 'created'} successfully`);
       }
     } catch (error: any) {

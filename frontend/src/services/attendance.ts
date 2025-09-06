@@ -5,63 +5,149 @@ import type {
   AttendanceStats, 
   AttendanceAnalytics, 
   AttendanceSummary,
-  BulkAttendanceUpdate 
+  BulkAttendanceUpdate,
+  AttendanceFilters,
+  MemberIdentification,
+  BarcodeScanData,
+  AttendanceResponse,
+  AttendanceListResponse,
+  AttendanceStatsResponse,
+  EligibleMembersResponse,
+  GeneralAttendanceResponse,
+  AttendanceAnalyticsResponse,
+  AttendanceSummaryResponse,
+  MemberIdentificationResponse,
+  BarcodeScanResponse,
+  UpdateAttendanceStatusRequest,
+  BulkAttendanceUpdateRequest,
+  GeneralAttendanceRequest,
+  AttendanceAnalyticsRequest
 } from '@/interfaces/attendance';
 
-export interface AttendanceResponse {
-  success: boolean;
-  message: string;
-  data: Attendance[];
-}
-
-export interface AttendanceStatsResponse {
-  success: boolean;
-  message: string;
-  data: {
-    event: any;
-    attendances: Attendance[];
-    statistics: AttendanceStats;
-  };
-}
-
-export interface EligibleMembersResponse {
-  success: boolean;
-  message: string;
-  data: {
-    event: any;
-    eligible_members: any[];
-    total_count: number;
-  };
-}
-
-export interface GeneralAttendanceResponse {
-  success: boolean;
-  message: string;
-  data: {
-    event: any;
-    general_attendance: GeneralAttendance | GeneralAttendance[];
-  };
-}
-
-export interface AttendanceAnalyticsResponse {
-  success: boolean;
-  message: string;
-  data: {
-    analytics: AttendanceAnalytics[];
-    date_range: {
-      start_date: string;
-      end_date: string;
-    };
-  };
-}
-
-export interface AttendanceSummaryResponse {
-  success: boolean;
-  message: string;
-  data: AttendanceSummary;
-}
-
 export class AttendanceService {
+  /**
+   * Validate attendance status
+   */
+  static isValidStatus(status: string): status is 'present' | 'absent' | 'first_timer' {
+    return ['present', 'absent', 'first_timer'].includes(status);
+  }
+
+  /**
+   * Calculate attendance statistics from attendance records
+   */
+  static calculateAttendanceStats(attendances: Attendance[]): {
+    present: number;
+    absent: number;
+    first_timer: number;
+    total: number;
+  } {
+    const stats = {
+      present: 0,
+      absent: 0,
+      first_timer: 0,
+      total: attendances.length
+    };
+
+    attendances.forEach(attendance => {
+      switch (attendance.status) {
+        case 'present':
+          stats.present++;
+          break;
+        case 'absent':
+          stats.absent++;
+          break;
+        case 'first_timer':
+          stats.first_timer++;
+          break;
+      }
+    });
+
+    return stats;
+  }
+
+  /**
+   * Get status badge color for UI
+   */
+  static getStatusBadgeColor(status: 'present' | 'absent' | 'first_timer'): string {
+    switch (status) {
+      case 'present':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'absent':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'first_timer':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+    }
+  }
+
+  /**
+   * Get status icon for UI
+   */
+  static getStatusIcon(status: 'present' | 'absent' | 'first_timer'): string {
+    switch (status) {
+      case 'present':
+        return 'fas fa-check-circle';
+      case 'absent':
+        return 'fas fa-times-circle';
+      case 'first_timer':
+        return 'fas fa-star';
+      default:
+        return 'fas fa-question-circle';
+    }
+  }
+
+  /**
+   * Get status display name for UI
+   */
+  static getStatusDisplayName(status: 'present' | 'absent' | 'first_timer'): string {
+    switch (status) {
+      case 'present':
+        return 'Present';
+      case 'absent':
+        return 'Absent';
+      case 'first_timer':
+        return 'First Timer';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  /**
+   * Format attendance time for display
+   */
+  static formatAttendanceTime(timeString: string): string {
+    try {
+      const date = new Date(timeString);
+      return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
+  }
+
+  /**
+   * Get all attendance records with optional filters
+   */
+  static async getAttendances(filters: AttendanceFilters = {}): Promise<AttendanceListResponse> {
+    const params = new URLSearchParams();
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+
+    const response = await http({ method: 'get', url: `/attendances?${params.toString()}` });
+    return response.data as AttendanceListResponse;
+  }
+
   /**
    * Get attendance records for a specific event
    */
@@ -79,58 +165,58 @@ export class AttendanceService {
   }
 
   /**
-   * Ensure all attendance records exist for an event
+   * Ensure attendance records exist for an event
    */
   static async ensureAttendanceRecords(eventId: number): Promise<{ success: boolean; message: string; data: any }> {
     const response = await http({ method: 'post', url: `/events/${eventId}/attendance/ensure-records` });
-    return response.data;
+    return response.data as { success: boolean; message: string; data: any };
   }
 
   /**
-   * Update individual attendance status
+   * Update attendance status for a specific member
    */
   static async updateAttendanceStatus(
     eventId: number, 
     memberId: number, 
-    data: { status: string; notes?: string }
-  ): Promise<{ success: boolean; message: string; data: Attendance }> {
+    data: UpdateAttendanceStatusRequest
+  ): Promise<AttendanceResponse> {
     const response = await http({ 
       method: 'put', 
-      url: `/events/${eventId}/attendance/${memberId}/status`,
+      url: `/events/${eventId}/attendance/${memberId}/status`, 
       data 
     });
-    return response.data;
+    return response.data as AttendanceResponse;
   }
 
   /**
    * Mark check-in for a member
    */
-  static async markCheckIn(eventId: number, memberId: number): Promise<{ success: boolean; message: string; data: Attendance }> {
+  static async markCheckIn(eventId: number, memberId: number): Promise<AttendanceResponse> {
     const response = await http({ method: 'post', url: `/events/${eventId}/attendance/${memberId}/check-in` });
-    return response.data;
+    return response.data as AttendanceResponse;
   }
 
   /**
    * Mark check-out for a member
    */
-  static async markCheckOut(eventId: number, memberId: number): Promise<{ success: boolean; message: string; data: Attendance }> {
+  static async markCheckOut(eventId: number, memberId: number): Promise<AttendanceResponse> {
     const response = await http({ method: 'post', url: `/events/${eventId}/attendance/${memberId}/check-out` });
-    return response.data;
+    return response.data as AttendanceResponse;
   }
 
   /**
-   * Bulk update attendance statuses
+   * Bulk update attendance for multiple members
    */
   static async bulkUpdateAttendance(
     eventId: number, 
-    attendances: BulkAttendanceUpdate[]
-  ): Promise<{ success: boolean; message: string; data: any }> {
+    data: BulkAttendanceUpdateRequest
+  ): Promise<{ success: boolean; message: string; data: Attendance[] }> {
     const response = await http({ 
       method: 'post', 
-      url: `/events/${eventId}/attendance/bulk-update`,
-      data: { attendances } 
+      url: `/events/${eventId}/attendance/bulk-update`, 
+      data 
     });
-    return response.data;
+    return response.data as { success: boolean; message: string; data: Attendance[] };
   }
 
   /**
@@ -146,31 +232,31 @@ export class AttendanceService {
    */
   static async updateGeneralAttendance(
     eventId: number, 
-    data: { total_attendance: number; first_timers_count?: number; notes?: string }
-  ): Promise<{ success: boolean; message: string; data: GeneralAttendance }> {
+    data: GeneralAttendanceRequest
+  ): Promise<GeneralAttendanceResponse> {
     const response = await http({ 
       method: 'post', 
-      url: `/general-attendance/event/${eventId}`,
+      url: `/general-attendance/event/${eventId}`, 
       data 
     });
-    return response.data;
+    return response.data as GeneralAttendanceResponse;
   }
 
   /**
-   * Get attendance analytics
+   * Get attendance analytics for a date range
    */
   static async getAttendanceAnalytics(
-    startDate?: string, 
-    endDate?: string
+    filters: AttendanceAnalyticsRequest
   ): Promise<AttendanceAnalyticsResponse> {
     const params = new URLSearchParams();
-    if (startDate) params.append('start_date', startDate);
-    if (endDate) params.append('end_date', endDate);
-
-    const response = await http({ 
-      method: 'get', 
-      url: `/general-attendance/analytics?${params.toString()}` 
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
     });
+
+    const response = await http({ method: 'get', url: `/general-attendance/analytics?${params.toString()}` });
     return response.data as AttendanceAnalyticsResponse;
   }
 
@@ -178,252 +264,181 @@ export class AttendanceService {
    * Get attendance summary for dashboard
    */
   static async getAttendanceSummary(): Promise<AttendanceSummaryResponse> {
-    const response = await http({ method: 'get', url: '/general-attendance/summary' });
+    const response = await http({ method: 'get', url: `/general-attendance/summary` });
     return response.data as AttendanceSummaryResponse;
   }
 
   /**
-   * Get general attendance statistics with filtering options
+   * Get general attendance statistics
    */
   static async getGeneralAttendanceStatistics(params: {
-    startDate?: string;
-    endDate?: string;
-    granularity?: 'none' | 'monthly' | 'yearly';
-    familyId?: number;
-  }): Promise<{
-    success: boolean;
-    data: {
-      general_attendance: any[];
-      summary_stats: {
-        total_members: number;
-        total_first_timers: number;
-        average_members: number;
-        average_first_timers: number;
-      };
-      filters: any;
-    };
-  }> {
+    start_date?: string;
+    end_date?: string;
+    event_type?: 'group' | 'family' | 'general';
+    per_page?: number;
+  } = {}): Promise<AttendanceAnalyticsResponse> {
     const queryParams = new URLSearchParams();
-    if (params.startDate) queryParams.append('start_date', params.startDate);
-    if (params.endDate) queryParams.append('end_date', params.endDate);
-    if (params.granularity) queryParams.append('granularity', params.granularity);
-    if (params.familyId) queryParams.append('family_id', params.familyId.toString());
-
-    const response = await http({ 
-      method: 'get', 
-      url: `/general-attendance/statistics?${queryParams.toString()}` 
-    });
-    return response.data;
-  }
-
-  /**
-   * Get individual attendance statistics with filtering options
-   */
-  static async getIndividualAttendanceStatistics(params: {
-    startDate?: string;
-    endDate?: string;
-    granularity?: 'none' | 'monthly' | 'yearly';
-    memberId?: number;
-    eventId?: number;
-    categoryId?: number;
-    familyId?: number;
-  }): Promise<any> {
-    const queryParams = new URLSearchParams();
-    if (params.startDate) queryParams.append('start_date', params.startDate);
-    if (params.endDate) queryParams.append('end_date', params.endDate);
-    if (params.granularity) queryParams.append('granularity', params.granularity);
-    if (params.memberId) queryParams.append('member_id', params.memberId.toString());
-    if (params.eventId) queryParams.append('event_id', params.eventId.toString());
-    if (params.categoryId) queryParams.append('category_id', params.categoryId.toString());
-    if (params.familyId) queryParams.append('family_id', params.familyId.toString());
-    const response = await http({
-      method: 'get',
-      url: `/attendance/statistics/individual?${queryParams.toString()}`
-    });
-    return response.data;
-  }
-
-  /**
-   * Get families for filter dropdown (for individual stats)
-   */
-  static async getFamilies(): Promise<{
-    success: boolean;
-    data: Array<{ id: number; name: string }>;
-  }> {
-    const response = await http({ method: 'get', url: '/general-attendance/families' });
-    return response.data;
-  }
-
-  /**
-   * Get available attendance statuses
-   */
-  static getAttendanceStatuses(): string[] {
-    return ['present', 'absent'];
-  }
-
-  /**
-   * Get status badge color
-   */
-  static getStatusBadgeColor(status: string): string {
-    switch (status) {
-      case 'present':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'absent':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-    }
-  }
-
-  /**
-   * Validate attendance status
-   */
-  static isValidStatus(status: string): boolean {
-    return this.getAttendanceStatuses().includes(status);
-  }
-
-  /**
-   * Get status display name
-   */
-  static getStatusDisplayName(status: string): string {
-    switch (status) {
-      case 'present':
-        return 'Present';
-      case 'absent':
-        return 'Absent';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  /**
-   * Calculate attendance statistics from attendance records
-   */
-  static calculateAttendanceStats(attendances: Attendance[]): {
-    present: number;
-    absent: number;
-    total: number;
-  } {
-    const stats = {
-      present: 0,
-      absent: 0,
-      total: 0
-    };
-
-    attendances.forEach(attendance => {
-      switch (attendance.status) {
-        case 'present':
-          stats.present++;
-          break;
-        case 'absent':
-          stats.absent++;
-          break;
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value.toString());
       }
     });
 
-    stats.total = stats.present;
-    return stats;
+    const response = await http({ method: 'get', url: `/general-attendance/statistics?${queryParams.toString()}` });
+    return response.data as AttendanceAnalyticsResponse;
   }
 
   /**
-   * Format attendance time for display
+   * Get individual attendance statistics
    */
-  static formatAttendanceTime(time: string | null | undefined): string {
-    if (!time) return '-';
-    try {
-      return new Date(time).toLocaleTimeString([], { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-    } catch {
-      return '-';
-    }
+  static async getIndividualAttendanceStatistics(params: {
+    member_id?: number;
+    start_date?: string;
+    end_date?: string;
+    status?: 'present' | 'absent' | 'first_timer';
+    per_page?: number;
+  } = {}): Promise<AttendanceListResponse> {
+    const queryParams = new URLSearchParams();
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value.toString());
+      }
+    });
+
+    const response = await http({ method: 'get', url: `/attendances/statistics?${queryParams.toString()}` });
+    return response.data as AttendanceListResponse;
   }
 
   /**
-   * Get attendance status icon
+   * Get families for attendance
    */
-  static getStatusIcon(status: string): string {
-    switch (status) {
-      case 'present':
-        return 'fas fa-check-circle';
-      case 'absent':
-        return 'fas fa-times-circle';
-      case 'first_timer':
-        return 'fas fa-star';
-      default:
-        return 'fas fa-question-circle';
-    }
-  }
-
-  /**
-   * Scan member ID to mark attendance
-   */
-  static async scanMemberId(data: {
-    member_identification_id: string;
-    event_id: number;
-    notes?: string;
-  }): Promise<{
+  static async getFamilies(): Promise<{
     success: boolean;
-    message: string;
-    data: {
-      member: {
-        id: number;
-        name: string;
-        email: string;
-      };
-      event: {
-        id: number;
-        name: string;
-        date: string;
-      };
-      attendance: any;
-      action: 'created' | 'updated';
-    };
+    data: Array<{
+      id: number;
+      name: string;
+      member_count: number;
+      active_members: number;
+    }>;
   }> {
+    const response = await http({ method: 'get', url: '/families' });
+    return response.data as {
+      success: boolean;
+      data: Array<{
+        id: number;
+        name: string;
+        member_count: number;
+        active_members: number;
+      }>;
+    };
+  }
+
+  /**
+   * Scan member ID for attendance
+   */
+  static async scanMemberId(data: BarcodeScanData): Promise<BarcodeScanResponse> {
     const response = await http({ 
       method: 'post', 
-      url: '/attendance/scan-member-id',
+      url: '/attendance/scan-member-id', 
       data 
     });
-    return response.data;
+    return response.data as BarcodeScanResponse;
   }
 
   /**
    * Get member identification ID
    */
-  static async getMemberIdentificationId(memberId: number): Promise<{
-    success: boolean;
-    message: string;
-    data: {
-      member_id: number;
-      member_identification_id: string;
-      member_name: string;
-    };
-  }> {
-    const response = await http({ 
-      method: 'get', 
-      url: `/members/${memberId}/identification-id`
-    });
-    return response.data;
+  static async getMemberIdentificationId(memberId: number): Promise<MemberIdentificationResponse> {
+    const response = await http({ method: 'get', url: `/members/${memberId}/identification-id` });
+    return response.data as MemberIdentificationResponse;
   }
 
   /**
-   * Generate new member identification ID
+   * Generate member identification ID
    */
-  static async generateMemberIdentificationId(memberId: number): Promise<{
-    success: boolean;
-    message: string;
-    data: {
-      member_id: number;
-      member_identification_id: string;
-      member_name: string;
-    };
-  }> {
-    const response = await http({ 
-      method: 'post', 
-      url: `/members/${memberId}/generate-identification-id`
-    });
-    return response.data;
+  static async generateMemberIdentificationId(memberId: number): Promise<MemberIdentificationResponse> {
+    const response = await http({ method: 'post', url: `/members/${memberId}/generate-identification-id` });
+    return response.data as MemberIdentificationResponse;
   }
-} 
+
+  /**
+   * Get attendance records for a specific member
+   */
+  static async getMemberAttendance(memberId: number, filters: AttendanceFilters = {}): Promise<AttendanceListResponse> {
+    const params = new URLSearchParams();
+    params.append('member_id', memberId.toString());
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+
+    const response = await http({ method: 'get', url: `/attendances?${params.toString()}` });
+    return response.data as AttendanceListResponse;
+  }
+
+  /**
+   * Get attendance records for a specific date range
+   */
+  static async getAttendanceByDateRange(
+    startDate: string, 
+    endDate: string, 
+    filters: AttendanceFilters = {}
+  ): Promise<AttendanceListResponse> {
+    const params = new URLSearchParams();
+    params.append('date_from', startDate);
+    params.append('date_to', endDate);
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+
+    const response = await http({ method: 'get', url: `/attendances?${params.toString()}` });
+    return response.data as AttendanceListResponse;
+  }
+
+  /**
+   * Get attendance records by status
+   */
+  static async getAttendanceByStatus(
+    status: 'present' | 'absent' | 'first_timer', 
+    filters: AttendanceFilters = {}
+  ): Promise<AttendanceListResponse> {
+    const params = new URLSearchParams();
+    params.append('status', status);
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+
+    const response = await http({ method: 'get', url: `/attendances?${params.toString()}` });
+    return response.data as AttendanceListResponse;
+  }
+
+  /**
+   * Export attendance data
+   */
+  static async exportAttendance(
+    filters: AttendanceFilters = {},
+    format: 'csv' | 'excel' | 'pdf' = 'excel'
+  ): Promise<{ success: boolean; download_url: string; filename: string }> {
+    const params = new URLSearchParams();
+    params.append('format', format);
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value.toString());
+      }
+    });
+
+    const response = await http({ method: 'get', url: `/attendances/export?${params.toString()}` });
+    return response.data as { success: boolean; download_url: string; filename: string };
+  }
+}

@@ -7,6 +7,14 @@ import { ComparisonChart } from '@/components/reports';
 import { ReportsService, ReportFilters } from '@/services/reports';
 import { EntitiesService, EntityOption } from '@/services/entities';
 
+interface CategoryComparison {
+  category: string;
+  income: number;
+  expenses: number;
+  net: number;
+  percentage: number;
+}
+
 export default function IncomeVsExpensesReportsPage() {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
   const [chartType, setChartType] = useState<'line' | 'area' | 'bar' | 'stacked'>('bar');
@@ -398,7 +406,7 @@ export default function IncomeVsExpensesReportsPage() {
           Category Comparison
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reportData.categoryComparison.map((category, index) => (
+          {reportData.categoryComparison.map((category: CategoryComparison, index: number) => (
             <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-medium text-gray-900 dark:text-white">{category.category}</h4>

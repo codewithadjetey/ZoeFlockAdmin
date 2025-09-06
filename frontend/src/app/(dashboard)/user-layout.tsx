@@ -2,7 +2,7 @@
 import React from 'react'
 import { ReactNode } from 'react';
 import { ProtectedRoute } from '@/components/auth/AuthGuard';
-import { UserDashboardLayout } from '@/components/layout/UserDashboardLayout';
+import UserDashboardLayout from '@/components/layout/UserDashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function UserLayout({ children }: { children: ReactNode }) {

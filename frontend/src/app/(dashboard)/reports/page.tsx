@@ -116,7 +116,7 @@ export default function ReportsPage() {
 
   if (isLoading) {
     return (
-      <>>
+      <>
         <PageHeader
           title="Financial Reports Dashboard"
           description="Comprehensive financial analysis and reporting tools"
@@ -133,7 +133,7 @@ export default function ReportsPage() {
 
   if (error) {
     return (
-      <>>
+      <>
         <PageHeader
           title="Financial Reports Dashboard"
           description="Comprehensive financial analysis and reporting tools"
@@ -164,7 +164,7 @@ export default function ReportsPage() {
   }
 
   return (
-    <>>
+    <>
       <PageHeader
         title="Financial Reports Dashboard"
         description="Comprehensive financial analysis and reporting tools"

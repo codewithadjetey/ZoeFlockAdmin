@@ -94,15 +94,28 @@ const BarcodeScanner: React.FC<BarcodeScannerProps> = ({ onAttendanceMarked }) =
 
     setLoading(true);
     try {
-      const response = await AttendanceService.scanBarcode({
+      const response = await AttendanceService.scanMemberId({
         barcode: barcode,
         event_id: parseInt(selectedEvent),
         notes: notes.trim()
       });
 
       if (response.success) {
-        setScanResult(response.data);
-        toast.success(`Attendance marked successfully for ${response.data.member.name}`);
+        setScanResult({
+          member: {
+            id: response.data.member.id,
+            name: `${response.data.member.first_name} ${response.data.member.last_name}`,
+            email: response.data.member.email
+          },
+          event: {
+            id: response.data.event.id,
+            name: response.data.event.title,
+            date: response.data.event.start_date || ''
+          },
+          attendance: response.data.attendance,
+          action: 'created' // Default action since we don't know if it was created or updated
+        });
+        toast.success(`Attendance marked successfully for ${response.data.member.first_name} ${response.data.member.last_name}`);
         
         // Reset form
         setScannedBarcodeSafe('');

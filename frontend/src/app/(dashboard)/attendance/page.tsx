@@ -19,7 +19,8 @@ import { LoadingSpinner } from '@/components/shared';
 import { AttendanceService } from '@/services/attendance';
 import { EventsService } from '@/services/events';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Event, Attendance, AttendanceStats, Member, BulkAttendanceUpdate } from '@/interfaces';
+import type { Event, Attendance, AttendanceStats, BulkAttendanceUpdate } from '@/interfaces';
+import type { Member } from '@/services/members';
 
 interface EventWithAttendance extends Event {
   attendance_stats?: {
@@ -515,7 +516,7 @@ export default function AttendancePage() {
         notes: bulkNotes
       }));
 
-      const result = await AttendanceService.bulkUpdateAttendance(selectedEvent.id, bulkUpdates);
+      const result = await AttendanceService.bulkUpdateAttendance(selectedEvent.id, { attendances: bulkUpdates });
 
       if (result.success) {
         // Update local state

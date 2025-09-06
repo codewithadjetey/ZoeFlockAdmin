@@ -1,6 +1,5 @@
 import { api } from '@/utils/api';
 import {
-  User,
   CreateUserRequest,
   UpdateUserRequest,
   UserFilters,
@@ -9,6 +8,7 @@ import {
   UserMessageResponse,
   PasswordUpdateRequest
 } from '@/interfaces/users';
+import { User } from '@/interfaces/auth';
 
 export class UsersService {
   /**
@@ -83,7 +83,7 @@ export class UsersService {
   static async removeRoles(userId: number, roleIds: number[]): Promise<UserResponse> {
     const response = await api.delete(`/users/${userId}/roles`, {
       data: { role_ids: roleIds }
-    });
+    } as any);
     return response.data as UserResponse;
   }
 

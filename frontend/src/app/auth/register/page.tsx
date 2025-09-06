@@ -35,14 +35,14 @@ const RegisterPage = () => {
     }
 
     try {
-      const response = await register({
+      await register({
         name,
         email,
         password,
         password_confirmation: confirmPassword,
       });
       
-      toast.success(response.message);
+      toast.success('Registration successful! Please check your email to verify your account.');
       router.push('/dashboard');
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Registration failed';

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Card, TextInput, FormField } from '@/components/ui';
 import { toast } from 'react-toastify';
 import { AttendanceService } from '@/services/attendance';
-import type { Member } from '@/interfaces';
+import type { Member } from '@/services/members';
 
 interface BarcodeGeneratorProps {
   member: Member;
@@ -17,24 +17,26 @@ const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({ member, onBarcodeGe
   const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    if (member.barcode) {
-      setBarcode(member.barcode);
+    // Check if member has barcode property (it might not exist in the interface)
+    if ((member as any).barcode) {
+      setBarcode((member as any).barcode);
     }
-  }, [member.barcode]);
+  }, [(member as any).barcode]);
 
   const getMemberBarcode = async () => {
     setLoading(true);
     try {
-      const response = await AttendanceService.getMemberBarcode(member.id);
+      // Use the member identification ID as barcode for now
+      const response = await AttendanceService.getMemberIdentificationId(member.id);
       if (response.success) {
-        setBarcode(response.data.barcode);
-        toast.success('Barcode retrieved successfully');
+        setBarcode(response.data.member_identification_id);
+        toast.success('Member ID retrieved successfully');
         if (onBarcodeGenerated) {
-          onBarcodeGenerated(response.data.barcode);
+          onBarcodeGenerated(response.data.member_identification_id);
         }
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to retrieve barcode';
+      const message = error.response?.data?.message || 'Failed to retrieve member ID';
       toast.error(message);
     } finally {
       setLoading(false);
@@ -44,16 +46,17 @@ const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({ member, onBarcodeGe
   const generateNewBarcode = async () => {
     setGenerating(true);
     try {
-      const response = await AttendanceService.generateMemberBarcode(member.id);
+      // Generate a new member identification ID
+      const response = await AttendanceService.generateMemberIdentificationId(member.id);
       if (response.success) {
-        setBarcode(response.data.barcode);
-        toast.success('New barcode generated successfully');
+        setBarcode(response.data.member_identification_id);
+        toast.success('New member ID generated successfully');
         if (onBarcodeGenerated) {
-          onBarcodeGenerated(response.data.barcode);
+          onBarcodeGenerated(response.data.member_identification_id);
         }
       }
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to generate barcode';
+      const message = error.response?.data?.message || 'Failed to generate member ID';
       toast.error(message);
     } finally {
       setGenerating(false);

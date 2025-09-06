@@ -261,10 +261,20 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({
     }
   };
 
+  const chartElement = renderChart();
+  
+  if (!chartElement) {
+    return (
+      <div className="w-full flex items-center justify-center" style={{ height }}>
+        <p className="text-gray-500">No chart data available</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
-        {renderChart()}
+        {chartElement}
       </ResponsiveContainer>
     </div>
   );

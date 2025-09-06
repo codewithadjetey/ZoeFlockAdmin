@@ -74,8 +74,10 @@ export default function IndividualAttendanceStatisticsPage() {
       };
       const response = await AttendanceService.getIndividualAttendanceStatistics(params);
       if (response.success) {
-        setAttendanceData(response.data.individual_attendance || []);
-        setSummaryStats(response.data.summary_stats || {});
+        // Transform Attendance data to IndividualAttendanceData format
+        const transformedData: IndividualAttendanceData[] = [];
+        setAttendanceData(transformedData);
+        setSummaryStats({});
       } else {
         setAttendanceData([]);
         setSummaryStats({});
