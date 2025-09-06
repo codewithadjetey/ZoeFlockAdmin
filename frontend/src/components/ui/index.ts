@@ -25,6 +25,7 @@ export { default as TabNavigation } from './TabNavigation';
 // Badge Components
 export { default as StatusBadge } from './StatusBadge';
 export { default as CategoryBadge } from './CategoryBadge';
+export { default as Badge } from './Badge';
 
 // Avatar Component
 export { default as Avatar } from './Avatar';
@@ -53,23 +54,14 @@ export { default as Separator } from './Separator';
 
 // Additional missing components
 export { default as Textarea } from './Textarea';
-export { default as Label } from './FormField';
-export { default as Input } from './TextInput';
-export { default as Badge } from './StatusBadge';
+export { default as Label } from './Label';
+export { default as Input } from './Input';
 
-// Table components (using DataTable as base)
-export { default as Table } from './DataTable';
-export { default as TableHeader } from './DataTable';
-export { default as TableRow } from './DataTable';
-export { default as TableHead } from './DataTable';
-export { default as TableBody } from './DataTable';
-export { default as TableCell } from './DataTable';
+// Table components
+export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './Table';
 
-// Dropdown components (using SelectInput as base)
-export { default as DropdownMenu } from './SelectInput';
-export { default as DropdownMenuTrigger } from './SelectInput';
-export { default as DropdownMenuContent } from './SelectInput';
-export { default as DropdownMenuItem } from './SelectInput';
+// Dropdown components
+export { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './DropdownMenu';
 
 // Dialog components
 export { 

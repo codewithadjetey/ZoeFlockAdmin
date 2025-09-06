@@ -46,6 +46,14 @@ export interface EventCategoryMessageResponse {
   message: string;
 }
 
+export interface GenerateEventsResponse {
+  success: boolean;
+  data: {
+    generated_count: number;
+    category: EventCategory;
+  };
+}
+
 export interface GenerateEventsRequest {
   from_date?: string;
   count?: number;
@@ -120,7 +128,7 @@ export class EventCategoriesService {
   /**
    * Generate events for a category based on recurrence settings
    */
-  static async generateEvents(categoryId: number, data: GenerateEventsRequest = {}): Promise<EventCategoryResponse> {
+  static async generateEvents(categoryId: number, data: GenerateEventsRequest = {}): Promise<GenerateEventsResponse> {
     const response = await api.post(`/event-categories/${categoryId}/generate-events`, data);
     return response.data;
   }
