@@ -610,7 +610,7 @@ class MemberController extends Controller
         try {
             // Check if user is a Family Head and restrict to their family members
             $user = Auth::user();
-            $query = Member::query();
+            $query = Member::where('deleted', 0);
             
             if ($user && $user->hasRole('family-head')) {
                 // Get the member record for the authenticated user
