@@ -100,6 +100,7 @@ export default function GeneralAttendanceStatisticsPage() {
       }
     } catch (error) {
       console.error('Failed to load attendance data:', error);
+      setAttendanceData([]);
     } finally {
       setLoading(false);
     }
@@ -126,7 +127,7 @@ export default function GeneralAttendanceStatisticsPage() {
 
   // Use backend data directly
   const getChartOption = () => {
-    if (attendanceData.length === 0) {
+    if (!attendanceData || attendanceData.length === 0) {
       return {
         title: {
           text: 'No data available',
@@ -318,7 +319,7 @@ export default function GeneralAttendanceStatisticsPage() {
 
   // Update summary stats to use backend data directly
   const getSummaryStats = () => {
-    if (attendanceData.length === 0) {
+    if (!attendanceData || attendanceData.length === 0) {
       return {
         totalMembers: 0,
         totalFirstTimers: 0,
