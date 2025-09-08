@@ -9,6 +9,8 @@ import { DateRangePicker } from '@/components/ui';
 import ReactECharts from 'echarts-for-react';
 import { AttendanceService } from '@/services/attendance';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { EventsService } from '@/services/events';
+import { EntitiesService } from '@/services/entities';
 
 type ChartType = 'line' | 'bar' | 'pie';
 type Granularity = 'none' | 'monthly' | 'yearly';
@@ -62,12 +64,11 @@ export default function GeneralAttendanceStatisticsPage() {
   // Load families for filter dropdown
   const loadFamilies = useCallback(async () => {
     try {
-      const response = await AttendanceService.getFamilies();
-      if (response.success) {
-        setFamilies(response.data);
-      }
+      const families = await EntitiesService.getFamilies();
+      setFamilies(families || []);
     } catch (error) {
       console.error('Failed to load families:', error);
+      setFamilies([]);
     }
   }, []);
 
@@ -417,7 +418,7 @@ export default function GeneralAttendanceStatisticsPage() {
                   onChange={(value) => setFamilyFilter(value)}
                   options={[
                     { value: 'all', label: 'All Families' },
-                    ...families.map(family => ({
+                    ...(families || []).map(family => ({
                       value: family.id.toString(),
                       label: family.name
                     }))

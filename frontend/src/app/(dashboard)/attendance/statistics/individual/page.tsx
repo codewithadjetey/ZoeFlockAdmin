@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader, Button, SelectInput, Card, DateRangePicker } from "@/components/ui";
 import ReactECharts from "echarts-for-react";
 import { AttendanceService } from '@/services/attendance';
+import { EntitiesService } from "@/services/entities";
 
 type ChartType = "line" | "bar" | "pie";
 type Granularity = 'none' | 'monthly' | 'yearly';
@@ -55,12 +56,21 @@ export default function IndividualAttendanceStatisticsPage() {
     setStartDate(start);
   };
 
+  const loadFamilies = useCallback(async () => {
+    try {
+      const families = await EntitiesService.getFamilies();
+      setFamilies(families || []);
+    } catch (error) {
+      console.error('Failed to load families:', error);
+      setFamilies([]);
+    }
+  }, []);
+
   // Fetch families for filter dropdown
   useEffect(() => {
-    AttendanceService.getFamilies().then(res => {
-      if (res.success) setFamilies(res.data);
-    });
-  }, []);
+    setDefaultDateRange();
+    loadFamilies();
+  }, [loadFamilies]);
 
   // Fetch attendance statistics from backend
   const loadAttendanceData = useCallback(async () => {
@@ -348,7 +358,7 @@ export default function IndividualAttendanceStatisticsPage() {
                   onChange={(value) => setFamilyFilter(value)}
                   options={[
                     { value: 'all', label: 'All Families' },
-                    ...families.map(family => ({
+                    ...(families || []).map(family => ({
                       value: family.id.toString(),
                       label: family.name
                     }))
