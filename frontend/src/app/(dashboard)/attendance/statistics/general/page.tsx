@@ -76,28 +76,41 @@ export default function GeneralAttendanceStatisticsPage() {
   const loadAttendanceData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await AttendanceService.getGeneralAttendanceStatistics({
+      const params: any = {
         start_date: startDate ? startDate.toISOString().split('T')[0] : undefined,
         end_date: endDate ? endDate.toISOString().split('T')[0] : undefined,
-        per_page: 100
-      });
+        granularity,
+        family_id: familyFilter !== 'all' ? parseInt(familyFilter) : undefined
+      };
 
-      if (response.success) {
-        // Transform the API data to match our interface
-        const transformedData = response.data.analytics.map((item: any) => ({
-          eventId: item.event?.id || item.id,
-          eventTitle: item.event?.title || 'Unknown Event',
-          eventDate: item.event?.start_date || item.period || 'Unknown Date',
-          familyId: item.family?.id || 0,
-          familyName: item.family?.name || 'Unknown Family',
+      const response = await AttendanceService.getGeneralAttendanceStatistics(params);
+
+      if (response.success && response.data) {
+        // The backend already provides the data in the correct format
+        const generalAttendanceData = response.data.general_attendance || [];
+        const summaryStatsData = response.data.summary_stats || {};
+        
+        // Transform to match our interface (backend data is already in the right format)
+        const transformedData = generalAttendanceData.map((item: any) => ({
+          eventId: 0, // Not applicable for aggregated data
+          eventTitle: item.xLabel || 'Unknown Period',
+          eventDate: item.xLabel || 'Unknown Date',
+          familyId: 0, // Not applicable for aggregated data
+          familyName: 'All Families', // Not applicable for aggregated data
           totalAttendance: item.total_attendance || 0,
           firstTimersCount: item.first_timers_count || 0,
-          notes: item.notes || '',
-          xLabel: item.xLabel // Assuming item.period is the xLabel for backend data
+          notes: '',
+          xLabel: item.xLabel,
+          total_attendance: item.total_attendance,
+          first_timers_count: item.first_timers_count
         }));
 
         setAttendanceData(transformedData);
-        console.log('Loaded attendance data:', transformedData);
+        updateSummaryStats(summaryStatsData);
+        console.log('Loaded general attendance data:', transformedData);
+        console.log('Summary stats:', summaryStatsData);
+      } else {
+        setAttendanceData([]);
       }
     } catch (error) {
       console.error('Failed to load attendance data:', error);
@@ -318,33 +331,28 @@ export default function GeneralAttendanceStatisticsPage() {
     return {};
   };
 
-  // Update summary stats to use backend data directly
-  const getSummaryStats = () => {
-    if (!attendanceData || attendanceData.length === 0) {
-      return {
-        totalMembers: 0,
-        totalFirstTimers: 0,
-        averageMembers: 0,
-        averageFirstTimers: 0
-      };
-    }
-    const totalMembers = attendanceData.reduce((sum, item) => sum + (item.totalAttendance ?? item.total_attendance), 0);
-    const totalFirstTimers = attendanceData.reduce((sum, item) => sum + (item.firstTimersCount ?? item.first_timers_count), 0);
-    const uniqueLabels = new Set(attendanceData.map(item => item.xLabel)).size;
-    return {
-      totalMembers,
-      totalFirstTimers,
-      averageMembers: uniqueLabels > 0 ? Math.round(totalMembers / uniqueLabels) : 0,
-      averageFirstTimers: uniqueLabels > 0 ? Math.round(totalFirstTimers / uniqueLabels) : 0
-    };
+  // State for summary stats from backend
+  const [summaryStats, setSummaryStats] = useState({
+    totalMembers: 0,
+    totalFirstTimers: 0,
+    averageMembers: 0,
+    averageFirstTimers: 0
+  });
+
+  // Update summary stats from backend data
+  const updateSummaryStats = (backendStats: any) => {
+    setSummaryStats({
+      totalMembers: backendStats.total_members || 0,
+      totalFirstTimers: backendStats.total_first_timers || 0,
+      averageMembers: backendStats.average_members || 0,
+      averageFirstTimers: backendStats.average_first_timers || 0
+    });
   };
 
   const handleDateRangeChange = (start: Date, end: Date) => {
     setStartDate(start);
     setEndDate(end);
   };
-
-  const summaryStats = getSummaryStats();
 
   return (
     <>

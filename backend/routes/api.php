@@ -49,9 +49,7 @@ Route::prefix($apiVersion)->group(function () {
     // Public routes (no authentication required)
     require __DIR__.'/frontend.php';
     
-    // Individual attendance statistics (should be inside the group if versioned)
-    Route::get('attendance/statistics/individual', [\App\Http\Controllers\Api\V1\AttendanceController::class, 'getIndividualStatistics']);
-
+  
     Route::prefix('auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/login', [AuthController::class, 'login']);
@@ -249,12 +247,15 @@ Route::prefix($apiVersion)->group(function () {
             Route::get('/analytics', [GeneralAttendanceController::class, 'getAttendanceAnalytics'])->middleware('permission:get-attendance-analytics');
             Route::get('/summary', [GeneralAttendanceController::class, 'getGeneralAttendanceSummary'])->middleware('permission:get-general-attendance-summary');
             Route::get('/statistics', [GeneralAttendanceController::class, 'getStatistics'])->middleware('permission:get-general-attendance-statistics');
-            Route::get('/test', [GeneralAttendanceController::class, 'testStatistics'])->middleware('permission:get-general-attendance-statistics');
-            Route::get('/families', [GeneralAttendanceController::class, 'getFamilies'])->middleware('permission:get-general-attendance-families');
         });
 
-        // Alternative route for attendances/statistics (alias for general-attendance/statistics)
-        Route::get('/attendances/statistics', [GeneralAttendanceController::class, 'getStatistics'])->middleware('permission:get-general-attendance-statistics');
+          // Individual attendance statistics (should be inside the group if versioned)
+        Route::get('attendance/statistics/individual', [AttendanceController::class, 'getIndividualStatistics']);
+
+
+        
+
+        
 
         // User Management routes
         Route::prefix('users')->group(function () {

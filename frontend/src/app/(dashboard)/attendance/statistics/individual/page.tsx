@@ -83,24 +83,13 @@ export default function IndividualAttendanceStatisticsPage() {
         familyId: familyFilter !== 'all' ? parseInt(familyFilter) : undefined
       };
       const response = await AttendanceService.getIndividualAttendanceStatistics(params);
-      if (response.success && response.data?.data) {
-        // Transform Attendance data to IndividualAttendanceData format
-        const transformedData: IndividualAttendanceData[] = response.data.data.map((item: any) => ({
-          xLabel: item.event?.title || `Event ${item.event_id}`,
-          present: item.status === 'present' ? 1 : 0,
-          absent: item.status === 'absent' ? 1 : 0,
-          first_timers: item.status === 'first_timer' ? 1 : 0,
-          total: 1,
-          event_id: item.event_id,
-          event: item.event
-        }));
-        setAttendanceData(transformedData);
-        setSummaryStats({
-          total_present: transformedData.reduce((sum, item) => sum + item.present, 0),
-          total_absent: transformedData.reduce((sum, item) => sum + item.absent, 0),
-          total_first_timers: transformedData.reduce((sum, item) => sum + item.first_timers, 0),
-          total_records: transformedData.length
-        });
+      if (response.success && response.data) {
+        // The backend already provides the data in the correct format
+        const individualAttendanceData = response.data.individual_attendance || [];
+        const summaryStatsData = response.data.summary_stats || {};
+        
+        setAttendanceData(individualAttendanceData);
+        setSummaryStats(summaryStatsData);
       } else {
         setAttendanceData([]);
         setSummaryStats({});

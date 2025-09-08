@@ -274,9 +274,33 @@ export class AttendanceService {
   static async getGeneralAttendanceStatistics(params: {
     start_date?: string;
     end_date?: string;
+    granularity?: 'none' | 'monthly' | 'yearly';
+    family_id?: number;
     event_type?: 'group' | 'family' | 'general';
     per_page?: number;
-  } = {}): Promise<AttendanceAnalyticsResponse> {
+  } = {}): Promise<{
+    success: boolean;
+    data: {
+      general_attendance: Array<{
+        xLabel: string;
+        total_attendance: number;
+        first_timers_count: number;
+        event_count: number;
+      }>;
+      summary_stats: {
+        total_members: number;
+        total_first_timers: number;
+        average_members: number;
+        average_first_timers: number;
+      };
+      filters: {
+        start_date: string | null;
+        end_date: string | null;
+        granularity: string;
+        family_id: number | null;
+      };
+    };
+  }> {
     const queryParams = new URLSearchParams();
     
     Object.entries(params).forEach(([key, value]) => {
@@ -286,7 +310,7 @@ export class AttendanceService {
     });
 
     const response = await http({ method: 'get', url: `/general-attendance/statistics?${queryParams.toString()}` });
-    return response.data as AttendanceAnalyticsResponse;
+    return response.data;
   }
 
   /**
@@ -296,19 +320,62 @@ export class AttendanceService {
     member_id?: number;
     start_date?: string;
     end_date?: string;
-    status?: 'present' | 'absent' | 'first_timer';
-    per_page?: number;
-  } = {}): Promise<AttendanceListResponse> {
+    granularity?: 'none' | 'monthly' | 'yearly';
+    event_id?: number;
+    category_id?: number;
+    family_id?: number;
+    familyId?: number; // Support both naming conventions
+  } = {}): Promise<{
+    success: boolean;
+    data: {
+      individual_attendance: Array<{
+        xLabel: string;
+        event_id: number;
+        present: number;
+        absent: number;
+        first_timers: number;
+        total: number;
+        event: {
+          id: number;
+          title: string;
+          start_date: string;
+          category_id: number;
+        };
+      }>;
+      summary_stats: {
+        total_present: number;
+        total_absent: number;
+        total_first_timers: number;
+        total_records: number;
+      };
+      filters: {
+        start_date: string | null;
+        end_date: string | null;
+        granularity: string;
+        member_id: number | null;
+        event_id: number | null;
+        category_id: number | null;
+        family_id: number | null;
+      };
+    };
+  }> {
     const queryParams = new URLSearchParams();
     
-    Object.entries(params).forEach(([key, value]) => {
+    // Handle both familyId and family_id parameters
+    const processedParams = { ...params };
+    if (processedParams.familyId && !processedParams.family_id) {
+      processedParams.family_id = processedParams.familyId;
+      delete processedParams.familyId;
+    }
+    
+    Object.entries(processedParams).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         queryParams.append(key, value.toString());
       }
     });
 
-    const response = await http({ method: 'get', url: `/attendances/statistics?${queryParams.toString()}` });
-    return response.data as AttendanceListResponse;
+    const response = await http({ method: 'get', url: `/attendance/statistics/individual?${queryParams.toString()}` });
+    return response.data;
   }
 
   /**
