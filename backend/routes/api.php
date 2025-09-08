@@ -253,6 +253,9 @@ Route::prefix($apiVersion)->group(function () {
             Route::get('/families', [GeneralAttendanceController::class, 'getFamilies'])->middleware('permission:get-general-attendance-families');
         });
 
+        // Alternative route for attendances/statistics (alias for general-attendance/statistics)
+        Route::get('/attendances/statistics', [GeneralAttendanceController::class, 'getStatistics'])->middleware('permission:get-general-attendance-statistics');
+
         // User Management routes
         Route::prefix('users')->group(function () {
             Route::get('/', [UserController::class, 'index'])->middleware('permission:view-users');
