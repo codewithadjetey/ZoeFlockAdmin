@@ -29,8 +29,20 @@ class AuthService {
   Member? get currentUser => _currentUser;
 
   Future<void> initialize() async {
-    _prefs = await SharedPreferences.getInstance();
-    await _loadStoredCredentials();
+    try {
+      print('AuthService: Starting initialization...');
+      _prefs = await SharedPreferences.getInstance();
+      print('AuthService: SharedPreferences initialized');
+      
+      _apiService.initialize(); // Initialize the API service
+      print('AuthService: ApiService initialized');
+      
+      await _loadStoredCredentials();
+      print('AuthService: Stored credentials loaded');
+    } catch (e) {
+      print('AuthService: Error during initialization: $e');
+      rethrow;
+    }
   }
 
   Future<void> _loadStoredCredentials() async {

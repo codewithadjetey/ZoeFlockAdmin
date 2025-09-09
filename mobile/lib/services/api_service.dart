@@ -18,44 +18,52 @@ class ApiService {
   String? _refreshToken;
 
   void initialize() {
-    _dio = Dio(BaseOptions(
-      baseUrl: ApiConstants.baseUrl,
-      connectTimeout: ApiConstants.timeout,
-      receiveTimeout: ApiConstants.timeout,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    ));
+    try {
+      print('ApiService: Initializing Dio...');
+      _dio = Dio(BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        connectTimeout: ApiConstants.timeout,
+        receiveTimeout: ApiConstants.timeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ));
+      print('ApiService: Dio initialized successfully');
 
-    // Add interceptors
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) {
-        if (_accessToken != null) {
-          options.headers['Authorization'] = 'Bearer $_accessToken';
-        }
-        handler.next(options);
-      },
-      onError: (error, handler) async {
-        if (error.response?.statusCode == 401) {
-          // Try to refresh token
-          final refreshed = await _refreshAccessToken();
-          if (refreshed) {
-            // Retry the original request
-            final options = error.requestOptions;
+      // Add interceptors
+      _dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (options, handler) {
+          if (_accessToken != null) {
             options.headers['Authorization'] = 'Bearer $_accessToken';
-            try {
-              final response = await _dio.fetch(options);
-              handler.resolve(response);
-              return;
-            } catch (e) {
-              // Refresh failed, continue with error
+          }
+          handler.next(options);
+        },
+        onError: (error, handler) async {
+          if (error.response?.statusCode == 401) {
+            // Try to refresh token
+            final refreshed = await _refreshAccessToken();
+            if (refreshed) {
+              // Retry the original request
+              final options = error.requestOptions;
+              options.headers['Authorization'] = 'Bearer $_accessToken';
+              try {
+                final response = await _dio.fetch(options);
+                handler.resolve(response);
+                return;
+              } catch (e) {
+                // Refresh failed, continue with error
+              }
             }
           }
-        }
-        handler.next(error);
-      },
-    ));
+          handler.next(error);
+        },
+      ));
+      print('ApiService: Interceptors added successfully');
+    } catch (e) {
+      print('ApiService: Error during initialization: $e');
+      rethrow;
+    }
   }
 
   void setTokens(String accessToken, String refreshToken) {

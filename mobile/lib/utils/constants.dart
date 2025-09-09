@@ -83,7 +83,7 @@ class AppDimensions {
 }
 
 class ApiConstants {
-  static const String baseUrl = 'https://your-domain.com/api/v1';
+  static const String baseUrl = 'http://zoeflockadmin.org/api/v1';
   static const String loginEndpoint = '/auth/login';
   static const String refreshEndpoint = '/auth/refresh';
   static const String eventsEndpoint = '/events';

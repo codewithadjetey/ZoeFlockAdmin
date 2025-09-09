@@ -17,15 +17,15 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   Future<void> initialize() async {
-    _setLoading(true);
+    _isLoading = true;
     try {
       await _authService.initialize();
       _isAuthenticated = _authService.isAuthenticated;
       _currentUser = _authService.currentUser;
     } catch (e) {
-      _setError('Failed to initialize authentication: ${e.toString()}');
+      _errorMessage = 'Failed to initialize authentication: ${e.toString()}';
     } finally {
-      _setLoading(false);
+      _isLoading = false;
     }
   }
 

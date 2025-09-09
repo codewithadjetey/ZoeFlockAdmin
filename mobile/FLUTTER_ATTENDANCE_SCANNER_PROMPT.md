@@ -325,7 +325,7 @@ lib/
 1. **Set up Flutter development environment**
 2. **Clone the repository** and install dependencies
 3. **Configure API endpoints** in constants.dart
-4. **Set up backend authentication** tokens
+4. **Set up backend authentication** token
 5. **Test on physical devices** (camera functionality)
 6. **Implement offline database** schema
 7. **Add error handling** and user feedback
