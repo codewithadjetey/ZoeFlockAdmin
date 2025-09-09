@@ -8,8 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function Layout({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   
-  console.log('DashboardLayout Debug:', { isAuthenticated, isLoading });
-  
   return ( 
     <ProtectedRoute>
       <DashboardLayout>
