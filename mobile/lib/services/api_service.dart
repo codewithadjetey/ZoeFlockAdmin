@@ -66,7 +66,7 @@ class ApiService {
     }
   }
 
-  void setTokens(String accessToken, String refreshToken) {
+  void setTokens(String accessToken, String? refreshToken) {
     _accessToken = accessToken;
     _refreshToken = refreshToken;
   }
@@ -100,6 +100,7 @@ class ApiService {
   // Authentication endpoints
   Future<ApiResponse<LoginResponse>> login(String email, String password) async {
     try {
+      print('ApiService: Making login request to ${ApiConstants.loginEndpoint}');
       final response = await _dio.post(
         ApiConstants.loginEndpoint,
         data: {
@@ -108,8 +109,13 @@ class ApiService {
         },
       );
 
+      print('ApiService: Login response received - Status: ${response.statusCode}');
+      print('ApiService: Response data: ${response.data}');
+
       if (response.statusCode == 200) {
+        print('ApiService: Parsing login response...');
         final loginResponse = LoginResponse.fromJson(response.data);
+        print('ApiService: Login response parsed successfully');
         setTokens(loginResponse.accessToken, loginResponse.refreshToken);
         
         return ApiResponse.success(
@@ -124,6 +130,10 @@ class ApiService {
         );
       }
     } catch (e) {
+      print('ApiService: Login error caught: $e');
+      print('ApiService: Error type: ${e.runtimeType}');
+      print('ApiService: Stack trace: ${StackTrace.current}');
+      
       // Handle DioError specifically to extract backend error messages
       if (e is DioException) {
         final statusCode = e.response?.statusCode;

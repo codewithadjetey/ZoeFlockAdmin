@@ -69,14 +69,20 @@ class AuthService {
 
   Future<ApiResponse<Member>> login(String email, String password, {bool rememberMe = false}) async {
     try {
+      print('AuthService: Starting login for email: $email');
       final response = await _apiService.login(email, password);
       
       if (response.isSuccess && response.data != null) {
         final loginResponse = response.data!;
+        print('AuthService: Login response received successfully');
+        print('AuthService: User data: ${loginResponse.user}');
         
         // Store tokens securely
         await _secureStorage.write(key: StorageKeys.authToken, value: loginResponse.accessToken);
-        await _secureStorage.write(key: StorageKeys.refreshToken, value: loginResponse.refreshToken);
+        if (loginResponse.refreshToken != null) {
+          await _secureStorage.write(key: StorageKeys.refreshToken, value: loginResponse.refreshToken!);
+        }
+        print('AuthService: Tokens stored successfully');
         
         // Store user email if remember me is checked
         if (rememberMe) {
@@ -87,25 +93,30 @@ class AuthService {
         _isAuthenticated = true;
         
         // Create a basic user object from the login response
+        print('AuthService: Creating Member object from user data');
         _currentUser = Member(
           id: loginResponse.user['id'] ?? 0,
-          firstName: loginResponse.user['first_name'] ?? '',
-          lastName: loginResponse.user['last_name'] ?? '',
+          firstName: loginResponse.user['name']?.split(' ').first ?? loginResponse.user['first_name'] ?? '',
+          lastName: loginResponse.user['name']?.split(' ').skip(1).join(' ') ?? loginResponse.user['last_name'] ?? '',
           email: loginResponse.user['email'] ?? email,
           memberIdentificationId: loginResponse.user['member_identification_id'] ?? '',
-          status: loginResponse.user['status'] ?? 'active',
+          status: loginResponse.user['is_active'] == true ? 'active' : 'inactive',
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
+        print('AuthService: Member object created successfully');
         
         return ApiResponse.success(
           _currentUser!,
           message: 'Login successful',
         );
       } else {
+        print('AuthService: Login failed: ${response.errorMessage}');
         return ApiResponse.error(response.errorMessage);
       }
     } catch (e) {
+      print('AuthService: Login error: $e');
+      print('AuthService: Stack trace: ${StackTrace.current}');
       return ApiResponse.error('Login failed: ${e.toString()}');
     }
   }

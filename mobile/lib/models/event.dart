@@ -55,18 +55,18 @@ class Event {
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       id: json['id'] as int,
-      title: json['title'] as String,
+      title: json['title'] as String? ?? '',
       description: json['description'] as String?,
-      startDate: DateTime.parse(json['start_date'] as String),
+      startDate: DateTime.parse(json['start_date'] as String? ?? ''),
       endDate: json['end_date'] != null 
-          ? DateTime.parse(json['end_date'] as String)
+          ? DateTime.parse(json['end_date'] as String? ?? '')
           : null,
       location: json['location'] as String?,
       time: json['time'] as String?,
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'active',
       attendanceCount: json['attendance_count'] as int?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: DateTime.parse(json['created_at'] as String? ?? ''),
+      updatedAt: DateTime.parse(json['updated_at'] as String? ?? ''),
     );
   }
 
@@ -105,7 +105,7 @@ class Event {
   factory Event.fromDatabase(Map<String, dynamic> json) {
     return Event(
       id: json['id'] as int,
-      title: json['title'] as String,
+      title: json['title'] as String? ?? '',
       description: json['description'] as String?,
       startDate: DateTime.fromMillisecondsSinceEpoch(json['start_date'] as int),
       endDate: json['end_date'] != null
@@ -113,7 +113,7 @@ class Event {
           : null,
       location: json['location'] as String?,
       time: json['time'] as String?,
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'active',
       attendanceCount: json['attendance_count'] as int?,
       createdAt: DateTime.fromMillisecondsSinceEpoch(json['created_at'] as int),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(json['updated_at'] as int),

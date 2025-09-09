@@ -39,6 +39,44 @@ void main() {
       expect(response.errorMessage, isNotEmpty);
       expect(response.statusCode, isNotNull);
     });
+
+    test('LoginResponse should handle actual backend response structure', () {
+      // Test with the actual backend response structure
+      final jsonResponse = {
+        'success': true,
+        'message': 'Login successful',
+        'data': {
+          'user': {
+            'id': 1,
+            'name': 'Super Adminsszs',
+            'email': 'admin@zoeflock.com',
+            'phone': '+1234567890',
+            'address': '123 Admin Street, Admin City, AC 12345s',
+            'date_of_birth': '1990-01-01T00:00:00.000000Z',
+            'gender': 'other',
+            'profile_picture': null,
+            'is_active': true,
+            'email_verified_at': '2025-09-05T01:54:53.000000Z',
+            'created_at': '2025-09-05T01:54:53.000000Z',
+            'updated_at': '2025-09-06T11:27:39.000000Z',
+          },
+          'token': '10|iWo7suYcb18a0eI55T0kTLOEYOXGoRxwbpBlamKpda3bf1bd',
+          'token_type': 'Bearer',
+          'expires_in': 0,
+          'refresh_token': null
+        }
+      };
+
+      final loginResponse = LoginResponse.fromJson(jsonResponse['data']! as Map<String, dynamic>);
+      
+      // Verify the response is parsed correctly
+      expect(loginResponse.accessToken, equals('10|iWo7suYcb18a0eI55T0kTLOEYOXGoRxwbpBlamKpda3bf1bd'));
+      expect(loginResponse.refreshToken, isNull);
+      expect(loginResponse.tokenType, equals('Bearer'));
+      expect(loginResponse.expiresIn, equals(0));
+      expect(loginResponse.user['name'], equals('Super Adminsszs'));
+      expect(loginResponse.user['email'], equals('admin@zoeflock.com'));
+    });
   });
 
   testWidgets('App should load without crashing', (WidgetTester tester) async {

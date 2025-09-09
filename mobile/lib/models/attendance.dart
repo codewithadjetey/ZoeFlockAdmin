@@ -36,12 +36,12 @@ class Attendance {
       id: json['id'] as int,
       memberId: json['member_id'] as int,
       eventId: json['event_id'] as int,
-      status: json['status'] as String,
-      checkInTime: DateTime.parse(json['check_in_time'] as String),
+      status: json['status'] as String? ?? 'present',
+      checkInTime: DateTime.parse(json['check_in_time'] as String? ?? ''),
       notes: json['notes'] as String?,
       isFirstTimer: json['is_first_timer'] as bool? ?? false,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: DateTime.parse(json['created_at'] as String? ?? ''),
+      updatedAt: DateTime.parse(json['updated_at'] as String? ?? ''),
     );
   }
 
@@ -78,7 +78,7 @@ class Attendance {
       id: json['id'] as int,
       memberId: json['member_id'] as int,
       eventId: json['event_id'] as int,
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'present',
       checkInTime: DateTime.fromMillisecondsSinceEpoch(json['check_in_time'] as int),
       notes: json['notes'] as String?,
       isFirstTimer: (json['is_first_timer'] as int) == 1,

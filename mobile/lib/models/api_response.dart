@@ -93,14 +93,14 @@ class ApiResponse<T> {
 // Specific response types for common API responses
 class LoginResponse {
   final String accessToken;
-  final String refreshToken;
+  final String? refreshToken;
   final String tokenType;
   final int expiresIn;
   final Map<String, dynamic> user;
 
   const LoginResponse({
     required this.accessToken,
-    required this.refreshToken,
+    this.refreshToken,
     required this.tokenType,
     required this.expiresIn,
     required this.user,
@@ -108,8 +108,10 @@ class LoginResponse {
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
-      accessToken: json['access_token'] as String,
-      refreshToken: json['refresh_token'] as String,
+      // Handle both 'token' and 'access_token' fields
+      accessToken: (json['token'] ?? json['access_token']) as String? ?? '',
+      // Handle null refresh_token
+      refreshToken: json['refresh_token'] as String?,
       tokenType: json['token_type'] as String? ?? 'Bearer',
       expiresIn: json['expires_in'] as int? ?? 3600,
       user: json['user'] as Map<String, dynamic>? ?? {},

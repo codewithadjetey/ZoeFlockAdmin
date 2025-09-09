@@ -44,26 +44,43 @@ class Member {
   bool get isActive => status.toLowerCase() == 'active';
 
   factory Member.fromJson(Map<String, dynamic> json) {
+    // Handle both 'name' field (from login response) and separate 'first_name'/'last_name' fields
+    String firstName = '';
+    String lastName = '';
+    
+    if (json.containsKey('name') && json['name'] != null) {
+      final nameParts = (json['name'] as String).split(' ');
+      firstName = nameParts.isNotEmpty ? nameParts.first : '';
+      lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+    } else {
+      firstName = json['first_name'] as String? ?? '';
+      lastName = json['last_name'] as String? ?? '';
+    }
+    
     return Member(
       id: json['id'] as int,
-      firstName: json['first_name'] as String,
-      lastName: json['last_name'] as String,
-      email: json['email'] as String,
-      profileImagePath: json['profile_image_path'] as String?,
-      memberIdentificationId: json['member_identification_id'] as String,
+      firstName: firstName,
+      lastName: lastName,
+      email: json['email'] as String? ?? '',
+      profileImagePath: json['profile_picture'] as String? ?? json['profile_image_path'] as String?,
+      memberIdentificationId: json['member_identification_id'] as String? ?? '',
       group: json['group'] as String?,
       family: json['family'] as String?,
       gender: json['gender'] as String?,
       phone: json['phone'] as String?,
       dateOfBirth: json['date_of_birth'] != null 
-          ? DateTime.parse(json['date_of_birth'] as String)
+          ? DateTime.parse(json['date_of_birth'] as String? ?? '')
           : null,
-      status: json['status'] as String,
+      status: json['is_active'] == true ? 'active' : json['status'] as String? ?? 'inactive',
       lastAttendanceDate: json['last_attendance_date'] != null
-          ? DateTime.parse(json['last_attendance_date'] as String)
+          ? DateTime.parse(json['last_attendance_date'] as String? ?? '')
           : null,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'] as String? ?? '')
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String? ?? '')
+          : DateTime.now(),
     );
   }
 
@@ -110,11 +127,11 @@ class Member {
   factory Member.fromDatabase(Map<String, dynamic> json) {
     return Member(
       id: json['id'] as int,
-      firstName: json['first_name'] as String,
-      lastName: json['last_name'] as String,
-      email: json['email'] as String,
+      firstName: json['first_name'] as String? ?? '',
+      lastName: json['last_name'] as String? ?? '',
+      email: json['email'] as String? ?? '',
       profileImagePath: json['profile_image_path'] as String?,
-      memberIdentificationId: json['member_identification_id'] as String,
+      memberIdentificationId: json['member_identification_id'] as String? ?? '',
       group: json['group'] as String?,
       family: json['family'] as String?,
       gender: json['gender'] as String?,
@@ -122,7 +139,7 @@ class Member {
       dateOfBirth: json['date_of_birth'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['date_of_birth'] as int)
           : null,
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'inactive',
       lastAttendanceDate: json['last_attendance_date'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['last_attendance_date'] as int)
           : null,
