@@ -38,6 +38,13 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  void _clearErrorIfVisible() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.errorMessage != null && authProvider.errorMessage!.isNotEmpty) {
+      authProvider.clearError();
+    }
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -50,6 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
+    // Clear any previous errors
+    authProvider.clearError();
+    
     final success = await authProvider.login(
       _emailController.text.trim(),
       _passwordController.text,
@@ -61,11 +71,8 @@ class _LoginScreenState extends State<LoginScreen> {
         AppHelpers.showSuccessSnackBar(context, 'Login successful!');
         Navigator.of(context).pushReplacementNamed('/events');
       }
-    } else {
-      if (mounted) {
-        AppHelpers.showErrorSnackBar(context, authProvider.errorMessage ?? 'Login failed');
-      }
     }
+    // Error is now displayed in the UI through the Consumer widget above
   }
 
   @override
@@ -163,6 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
+                onChanged: (_) => _clearErrorIfVisible(),
                 decoration: InputDecoration(
                   labelText: 'Email',
                   hintText: AppStrings.emailHint,
@@ -185,6 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: _obscurePassword,
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _handleLogin(),
+                onChanged: (_) => _clearErrorIfVisible(),
                 decoration: InputDecoration(
                   labelText: 'Password',
                   hintText: AppStrings.passwordHint,
@@ -230,6 +239,43 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: AppDimensions.paddingLarge),
+              
+              // Error message display
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  if (authProvider.errorMessage != null && authProvider.errorMessage!.isNotEmpty) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: AppDimensions.paddingMedium),
+                      padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        border: Border.all(color: Colors.red.withOpacity(0.3)),
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppDimensions.paddingSmall),
+                          Expanded(
+                            child: Text(
+                              authProvider.errorMessage!,
+                              style: TextStyle(
+                                color: Colors.red[700],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
               
               // Login button
               Consumer<AuthProvider>(

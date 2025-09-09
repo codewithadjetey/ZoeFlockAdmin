@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:church_attendance_scanner/main.dart';
 import 'package:church_attendance_scanner/services/api_service.dart';
+import 'package:church_attendance_scanner/models/api_response.dart';
 
 void main() {
   group('API Service Initialization Tests', () {
@@ -24,6 +25,19 @@ void main() {
       
       // They should be the same instance
       expect(identical(apiService1, apiService2), isTrue);
+    });
+
+    test('ApiService should handle login errors properly', () async {
+      final apiService = ApiService();
+      apiService.initialize();
+      
+      // Test with invalid credentials
+      final response = await apiService.login('invalid@email.com', 'wrongpassword');
+      
+      // Should return an error response
+      expect(response.isSuccess, isFalse);
+      expect(response.errorMessage, isNotEmpty);
+      expect(response.statusCode, isNotNull);
     });
   });
 

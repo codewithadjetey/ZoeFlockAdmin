@@ -124,6 +124,54 @@ class ApiService {
         );
       }
     } catch (e) {
+      // Handle DioError specifically to extract backend error messages
+      if (e is DioException) {
+        final statusCode = e.response?.statusCode;
+        final responseData = e.response?.data;
+        
+        print('Login API Error - Status: $statusCode, Data: $responseData');
+        
+        // Extract error message from backend response
+        String errorMessage = 'Login failed';
+        
+        if (responseData is Map<String, dynamic>) {
+          // Try to get message from response
+          if (responseData.containsKey('message')) {
+            errorMessage = responseData['message'].toString();
+          } else if (responseData.containsKey('error')) {
+            errorMessage = responseData['error'].toString();
+          } else if (responseData.containsKey('errors')) {
+            final errors = responseData['errors'];
+            if (errors is Map<String, dynamic>) {
+              // Get first error message
+              final firstError = errors.values.first;
+              if (firstError is List && firstError.isNotEmpty) {
+                errorMessage = firstError.first.toString();
+              } else if (firstError is String) {
+                errorMessage = firstError;
+              }
+            }
+          }
+        }
+        
+        // Handle specific status codes
+        if (statusCode == 401) {
+          errorMessage = 'Invalid email or password';
+        } else if (statusCode == 422) {
+          errorMessage = 'Invalid input data';
+        } else if (statusCode == 429) {
+          errorMessage = 'Too many login attempts. Please try again later';
+        } else if (statusCode == 500) {
+          errorMessage = 'Server error. Please try again later';
+        }
+        
+        return ApiResponse.error(
+          errorMessage,
+          statusCode: statusCode,
+        );
+      }
+      
+      // Handle other types of errors
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
