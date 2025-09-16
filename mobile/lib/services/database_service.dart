@@ -432,4 +432,18 @@ class DatabaseService {
       _database = null;
     }
   }
+
+  // Additional methods needed by the app
+  Future<List<Attendance>> getOfflineAttendance() async {
+    // For now, return all attendance records
+    // In a real implementation, you might want to filter by sync status
+    return await getAllAttendance();
+  }
+
+  Future<void> markAttendanceSynced(int attendanceId) async {
+    // This would update a sync status field in the attendance table
+    // For now, we'll just log it
+    print('Marking attendance $attendanceId as synced');
+  }
 }
+

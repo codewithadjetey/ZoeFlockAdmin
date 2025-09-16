@@ -119,15 +119,13 @@ class ScannerService {
   Future<ApiResponse<Member>> _scanOnline(String barcode, int eventId, String? notes) async {
     try {
       final response = await _apiService.scanMemberId(
-        barcode: barcode,
-        eventId: eventId,
-        notes: notes,
+        barcode,
+        eventId,
       );
 
       if (response.isSuccess && response.data != null) {
-        // Extract member data from the scan response
-        final memberData = response.data!.member;
-        final member = Member.fromJson(memberData);
+        // The response.data is already a Member object
+        final member = response.data!;
         
         // Cache the member locally
         await _databaseService.insertMember(member);
@@ -198,9 +196,8 @@ class ScannerService {
     try {
       for (final attendanceData in List.from(_offlineQueue)) {
         final response = await _apiService.scanMemberId(
-          barcode: attendanceData['member_id'].toString(),
-          eventId: attendanceData['event_id'],
-          notes: attendanceData['notes'],
+          attendanceData['member_id'].toString(),
+          attendanceData['event_id'],
         );
         
         if (response.isSuccess) {
@@ -347,5 +344,16 @@ class ScannerService {
 
   Future<void> dispose() async {
     await _connectivitySubscription?.cancel();
+  }
+
+  // Additional method needed by AttendanceProvider
+  Future<ApiResponse<Member>> scanMemberForAttendance(
+    String memberIdentificationId, 
+    int eventId
+  ) async {
+    return await scanMemberId(
+      barcode: memberIdentificationId,
+      eventId: eventId,
+    );
   }
 }
