@@ -17,6 +17,10 @@ class AuthService {
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
+    webOptions: WebOptions(
+      dbName: "church_attendance_scanner",
+      publicKey: "church_attendance_scanner_public_key",
+    ),
   );
 
   final ApiService _apiService = ApiService();
@@ -47,10 +51,25 @@ class AuthService {
 
   Future<void> _loadStoredCredentials() async {
     try {
-      final accessToken = await _secureStorage.read(key: StorageKeys.authToken);
-      final refreshToken = await _secureStorage.read(key: StorageKeys.refreshToken);
+      String? accessToken;
+      String? refreshToken;
       
-      if (accessToken != null && refreshToken != null) {
+      // Try secure storage first
+      try {
+        accessToken = await _secureStorage.read(key: StorageKeys.authToken);
+        refreshToken = await _secureStorage.read(key: StorageKeys.refreshToken);
+        print('AuthService: Loaded from secure storage - Access token: $accessToken');
+        print('AuthService: Loaded from secure storage - Access token length: ${accessToken?.length ?? 0}');
+      } catch (e) {
+        print('AuthService: Error reading from secure storage: $e');
+        // Fallback to SharedPreferences
+        accessToken = _prefs?.getString(StorageKeys.authToken);
+        refreshToken = _prefs?.getString(StorageKeys.refreshToken);
+        print('AuthService: Loaded from SharedPreferences - Access token: $accessToken');
+        print('AuthService: Loaded from SharedPreferences - Access token length: ${accessToken?.length ?? 0}');
+      }
+      
+      if (accessToken != null && accessToken.isNotEmpty) {
         _apiService.setTokens(accessToken, refreshToken);
         _isAuthenticated = true;
         
@@ -58,11 +77,17 @@ class AuthService {
         final response = await _apiService.healthCheck();
         if (!response.isSuccess) {
           // Token is invalid, clear stored credentials
+          print('AuthService: Token validation failed, clearing credentials');
           await logout();
+        } else {
+          print('AuthService: Token validation successful');
         }
+      } else {
+        print('AuthService: No access token found in storage or token is empty');
       }
     } catch (e) {
       // Error loading credentials, clear them
+      print('AuthService: Error loading credentials: $e');
       await logout();
     }
   }
@@ -78,11 +103,35 @@ class AuthService {
         print('AuthService: User data: ${loginResponse.user}');
         
         // Store tokens securely
-        await _secureStorage.write(key: StorageKeys.authToken, value: loginResponse.accessToken);
-        if (loginResponse.refreshToken != null) {
-          await _secureStorage.write(key: StorageKeys.refreshToken, value: loginResponse.refreshToken!);
+        print('AuthService: Storing access token: ${loginResponse.accessToken}');
+        print('AuthService: Access token length: ${loginResponse.accessToken.length}');
+        
+        try {
+          await _secureStorage.write(key: StorageKeys.authToken, value: loginResponse.accessToken);
+          print('AuthService: Access token written to secure storage');
+          
+          // Test read back immediately
+          final testRead = await _secureStorage.read(key: StorageKeys.authToken);
+          print('AuthService: Test read back - Token: $testRead');
+          print('AuthService: Test read back - Length: ${testRead?.length ?? 0}');
+          
+          if (loginResponse.refreshToken != null) {
+            await _secureStorage.write(key: StorageKeys.refreshToken, value: loginResponse.refreshToken!);
+          }
+          print('AuthService: Tokens stored successfully');
+        } catch (e) {
+          print('AuthService: Error storing tokens: $e');
+          // Fallback to SharedPreferences for web
+          await _prefs?.setString(StorageKeys.authToken, loginResponse.accessToken);
+          if (loginResponse.refreshToken != null) {
+            await _prefs?.setString(StorageKeys.refreshToken, loginResponse.refreshToken!);
+          }
+          print('AuthService: Tokens stored in SharedPreferences as fallback');
         }
-        print('AuthService: Tokens stored successfully');
+        
+        // Also set tokens in ApiService for immediate use
+        _apiService.setTokens(loginResponse.accessToken, loginResponse.refreshToken);
+        print('AuthService: Tokens set in ApiService');
         
         // Store user email if remember me is checked
         if (rememberMe) {
