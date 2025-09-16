@@ -107,9 +107,12 @@ class LoginResponse {
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    
+    final tokenValue = json['token'] ?? json['access_token'];
+    
     return LoginResponse(
       // Handle both 'token' and 'access_token' fields
-      accessToken: (json['token'] ?? json['access_token']) as String? ?? '',
+      accessToken: tokenValue as String? ?? '',
       // Handle null refresh_token
       refreshToken: json['refresh_token'] as String?,
       tokenType: json['token_type'] as String? ?? 'Bearer',
