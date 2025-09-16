@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/member.dart';
@@ -12,23 +13,69 @@ class DatabaseService {
   DatabaseService._internal();
 
   Database? _database;
+  bool _isInitialized = false;
+
+  /// Initialize the database service
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+    
+    try {
+      print('DatabaseService: Initializing database...');
+      
+      // For mobile platforms, sqflite works out of the box
+      // For desktop platforms, we would need sqflite_common_ffi
+      // Since this is a mobile app, we'll use the standard sqflite
+      
+      // Test database initialization
+      await _initDatabase();
+      _isInitialized = true;
+      print('DatabaseService: Database initialized successfully');
+    } catch (e) {
+      print('DatabaseService: Error initializing database: $e');
+      // For now, we'll continue without database functionality
+      // In a production app, you might want to show an error to the user
+      _isInitialized = true; // Set to true to prevent infinite retry
+    }
+  }
 
   Future<Database> get database async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+    
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
 
   Future<Database> _initDatabase() async {
-    final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, DatabaseConstants.databaseName);
-
-    return await openDatabase(
-      path,
-      version: DatabaseConstants.databaseVersion,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
-    );
+    try {
+      print('DatabaseService: Getting databases path...');
+      final databasesPath = await getDatabasesPath();
+      final path = join(databasesPath, DatabaseConstants.databaseName);
+      
+      print('DatabaseService: Opening database at path: $path');
+      final database = await openDatabase(
+        path,
+        version: DatabaseConstants.databaseVersion,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+      );
+      
+      print('DatabaseService: Database opened successfully');
+      return database;
+    } catch (e) {
+      print('DatabaseService: Error opening database: $e');
+      print('DatabaseService: Error type: ${e.runtimeType}');
+      
+      // If we're on a platform that doesn't support sqflite, 
+      // we'll throw a more descriptive error
+      if (e.toString().contains('databaseFactory not initialized')) {
+        throw Exception('Database not supported on this platform. This app requires a mobile device.');
+      }
+      
+      rethrow;
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {

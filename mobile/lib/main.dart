@@ -9,6 +9,7 @@ import 'screens/login_screen.dart';
 import 'screens/event_selection_screen.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/settings_screen.dart';
+import 'services/database_service.dart';
 import 'utils/constants.dart';
 
 void main() {
@@ -116,10 +117,17 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   Future<void> _initializeApp() async {
     try {
+      print('App: Initializing database service...');
+      await DatabaseService().initialize();
+      print('App: Database service initialized');
+      
+      print('App: Initializing auth provider...');
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       await authProvider.initialize();
+      print('App: Auth provider initialized');
     } catch (e) {
-      print('Error initializing app: $e');
+      print('App: Error initializing app: $e');
+      print('App: Error type: ${e.runtimeType}');
     } finally {
       if (mounted) {
         setState(() {
