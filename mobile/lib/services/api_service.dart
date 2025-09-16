@@ -34,9 +34,14 @@ class ApiService {
       // Add interceptors
       _dio.interceptors.add(InterceptorsWrapper(
         onRequest: (options, handler) {
+          print('ApiService: Request interceptor - Access token: $_accessToken');
           if (_accessToken != null) {
             options.headers['Authorization'] = 'Bearer $_accessToken';
+            print('ApiService: Authorization header added: Bearer $_accessToken');
+          } else {
+            print('ApiService: No access token available, skipping Authorization header');
           }
+          print('ApiService: Request headers: ${options.headers}');
           handler.next(options);
         },
         onError: (error, handler) async {
@@ -67,13 +72,18 @@ class ApiService {
   }
 
   void setTokens(String accessToken, String? refreshToken) {
+    print('ApiService: Setting tokens - Access token: $accessToken');
+    print('ApiService: Setting tokens - Refresh token: $refreshToken');
     _accessToken = accessToken;
     _refreshToken = refreshToken;
+    print('ApiService: Tokens set successfully');
   }
 
   void clearTokens() {
+    print('ApiService: Clearing tokens');
     _accessToken = null;
     _refreshToken = null;
+    print('ApiService: Tokens cleared');
   }
 
   Future<bool> _refreshAccessToken() async {
@@ -114,7 +124,24 @@ class ApiService {
 
       if (response.statusCode == 200) {
         print('ApiService: Parsing login response...');
-        final loginResponse = LoginResponse.fromJson(response.data);
+        print('ApiService: Response data structure: ${response.data}');
+        print('ApiService: Response data type: ${response.data.runtimeType}');
+        print('ApiService: Response data keys: ${response.data is Map ? (response.data as Map).keys.toList() : 'Not a Map'}');
+        
+        // Extract the data field from the response which contains the actual login data
+        final responseData = response.data;
+        final loginData = responseData['data'] as Map<String, dynamic>?;
+        
+        print('ApiService: Extracted data for parsing: $responseData');
+        print('ApiService: Extracted data type: ${responseData.runtimeType}');
+        print('ApiService: Extracted data keys: ${responseData is Map ? (responseData as Map).keys.toList() : 'Not a Map'}');
+        print('ApiService: Login data: $loginData');
+        
+        if (loginData == null) {
+          throw Exception('Invalid login response: missing data field');
+        }
+        
+        final loginResponse = LoginResponse.fromJson(loginData);
         print('ApiService: Login response parsed successfully');
         setTokens(loginResponse.accessToken, loginResponse.refreshToken);
         
@@ -151,9 +178,9 @@ class ApiService {
           } else if (responseData.containsKey('error')) {
             errorMessage = responseData['error'].toString();
           } else if (responseData.containsKey('errors')) {
+            // Handle validation errors
             final errors = responseData['errors'];
-            if (errors is Map<String, dynamic>) {
-              // Get first error message
+            if (errors is Map) {
               final firstError = errors.values.first;
               if (firstError is List && firstError.isNotEmpty) {
                 errorMessage = firstError.first.toString();
@@ -164,25 +191,13 @@ class ApiService {
           }
         }
         
-        // Handle specific status codes
-        if (statusCode == 401) {
-          errorMessage = 'Invalid email or password';
-        } else if (statusCode == 422) {
-          errorMessage = 'Invalid input data';
-        } else if (statusCode == 429) {
-          errorMessage = 'Too many login attempts. Please try again later';
-        } else if (statusCode == 500) {
-          errorMessage = 'Server error. Please try again later';
-        }
-        
         return ApiResponse.error(
           errorMessage,
           statusCode: statusCode,
         );
+      } else {
+        return ApiResponse.error('An error occurred: ${e.toString()}');
       }
-      
-      // Handle other types of errors
-      return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
 
@@ -197,203 +212,165 @@ class ApiService {
     }
   }
 
-  // Events endpoints
+  // Event endpoints
   Future<ApiResponse<List<Event>>> getEvents() async {
     try {
       final response = await _dio.get(ApiConstants.eventsEndpoint);
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data;
-        final events = data.map((json) => Event.fromJson(json)).toList();
+        print('ApiService: Events response received - Status: ${response.statusCode}');
+        print('ApiService: Events response data: ${response.data}');
         
-        return ApiResponse.success(
-          events,
-          message: 'Events retrieved successfully',
-          statusCode: response.statusCode,
-        );
+        // Handle paginated response structure
+        final responseData = response.data;
+        final paginatedData = responseData['data'] as Map<String, dynamic>?;
+        
+        if (paginatedData == null) {
+          throw Exception('Invalid events response: missing data field');
+        }
+        
+        final eventsList = paginatedData['data'] as List?;
+        if (eventsList == null) {
+          throw Exception('Invalid events response: missing events array');
+        }
+        
+        final events = eventsList
+            .map((json) => Event.fromJson(json))
+            .toList();
+        
+        print('ApiService: Parsed ${events.length} events');
+        return ApiResponse.success(events);
       } else {
-        return ApiResponse.error(
-          'Failed to fetch events',
-          statusCode: response.statusCode,
-        );
+        return ApiResponse.error('Failed to fetch events');
       }
     } catch (e) {
+      print('ApiService: Events error: $e');
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
 
-  Future<ApiResponse<Event>> getEvent(int eventId) async {
+  Future<ApiResponse<Event>> getEvent(int id) async {
     try {
-      final response = await _dio.get('${ApiConstants.eventsEndpoint}/$eventId');
-
+      final response = await _dio.get('${ApiConstants.eventsEndpoint}/$id');
+      
       if (response.statusCode == 200) {
-        final event = Event.fromJson(response.data['data'] ?? response.data);
+        print('ApiService: Single event response received - Status: ${response.statusCode}');
+        print('ApiService: Single event response data: ${response.data}');
         
-        return ApiResponse.success(
-          event,
-          message: 'Event retrieved successfully',
-          statusCode: response.statusCode,
-        );
+        // Handle single event response structure
+        final responseData = response.data;
+        final eventData = responseData['data'] as Map<String, dynamic>?;
+        
+        if (eventData == null) {
+          throw Exception('Invalid event response: missing data field');
+        }
+        
+        final event = Event.fromJson(eventData);
+        return ApiResponse.success(event);
       } else {
-        return ApiResponse.error(
-          'Failed to fetch event',
-          statusCode: response.statusCode,
-        );
+        return ApiResponse.error('Failed to fetch event');
       }
     } catch (e) {
+      print('ApiService: Single event error: $e');
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
 
-  // Members endpoints
-  Future<ApiResponse<Member>> getMember(int memberId) async {
+  // Member endpoints
+  Future<ApiResponse<Member>> getMember(int id) async {
     try {
-      final response = await _dio.get('${ApiConstants.memberEndpoint}/$memberId');
-
+      final response = await _dio.get('${ApiConstants.memberEndpoint}/$id');
+      
       if (response.statusCode == 200) {
-        final member = Member.fromJson(response.data['data'] ?? response.data);
+        print('ApiService: Member response received - Status: ${response.statusCode}');
+        print('ApiService: Member response data: ${response.data}');
         
-        return ApiResponse.success(
-          member,
-          message: 'Member retrieved successfully',
-          statusCode: response.statusCode,
-        );
+        // Handle member response structure
+        final responseData = response.data;
+        final memberData = responseData['data'] as Map<String, dynamic>?;
+        
+        if (memberData == null) {
+          throw Exception('Invalid member response: missing data field');
+        }
+        
+        final member = Member.fromJson(memberData);
+        return ApiResponse.success(member);
       } else {
-        return ApiResponse.error(
-          'Failed to fetch member',
-          statusCode: response.statusCode,
-        );
+        return ApiResponse.error('Failed to fetch member');
       }
     } catch (e) {
-      return ApiResponse.error(AppHelpers.getErrorMessage(e));
-    }
-  }
-
-  Future<ApiResponse<Member>> getMemberByIdentificationId(String memberId) async {
-    try {
-      final response = await _dio.get(
-        '${ApiConstants.memberEndpoint}/by-identification/$memberId',
-      );
-
-      if (response.statusCode == 200) {
-        final member = Member.fromJson(response.data['data'] ?? response.data);
-        
-        return ApiResponse.success(
-          member,
-          message: 'Member retrieved successfully',
-          statusCode: response.statusCode,
-        );
-      } else {
-        return ApiResponse.error(
-          'Member not found',
-          statusCode: response.statusCode,
-        );
-      }
-    } catch (e) {
+      print('ApiService: Member error: $e');
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
 
   // Attendance endpoints
-  Future<ApiResponse<ScanMemberResponse>> scanMemberId({
-    required String barcode,
-    required int eventId,
+  Future<ApiResponse<Attendance>> markAttendance(int memberId, int eventId, {
+    String status = 'present',
     String? notes,
+    bool isFirstTimer = false,
   }) async {
+    try {
+      final response = await _dio.post(
+        '/attendance',
+        data: {
+          'member_id': memberId,
+          'event_id': eventId,
+          'status': status,
+          'notes': notes,
+          'is_first_timer': isFirstTimer,
+        },
+      );
+
+      if (response.statusCode == 201) {
+        final attendance = Attendance.fromJson(response.data['data']);
+        return ApiResponse.success(attendance, message: 'Attendance marked successfully');
+      } else {
+        return ApiResponse.error('Failed to mark attendance');
+      }
+    } catch (e) {
+      return ApiResponse.error(AppHelpers.getErrorMessage(e));
+    }
+  }
+
+  // Scan member ID endpoint
+  Future<ApiResponse<Member>> scanMemberId(String memberIdentificationId, int eventId) async {
     try {
       final response = await _dio.post(
         ApiConstants.scanMemberEndpoint,
         data: {
-          'barcode': barcode,
+          'member_identification_id': memberIdentificationId,
           'event_id': eventId,
-          'notes': notes,
         },
       );
 
       if (response.statusCode == 200) {
-        final scanResponse = ScanMemberResponse.fromJson(response.data['data'] ?? response.data);
+        print('ApiService: Scan member response received - Status: ${response.statusCode}');
+        print('ApiService: Scan member response data: ${response.data}');
         
-        return ApiResponse.success(
-          scanResponse,
-          message: 'Attendance marked successfully',
-          statusCode: response.statusCode,
-        );
+        // Handle scan member response structure
+        final responseData = response.data;
+        final memberData = responseData['data'] as Map<String, dynamic>?;
+        
+        if (memberData == null) {
+          throw Exception('Invalid scan member response: missing data field');
+        }
+        
+        final member = Member.fromJson(memberData);
+        return ApiResponse.success(member);
       } else {
-        return ApiResponse.error(
-          response.data['message'] ?? 'Failed to mark attendance',
-          statusCode: response.statusCode,
-        );
+        return ApiResponse.error('Failed to scan member ID');
       }
     } catch (e) {
+      print('ApiService: Scan member error: $e');
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
 
-  Future<ApiResponse<List<Attendance>>> getEventAttendance(int eventId) async {
-    try {
-      final response = await _dio.get(
-        '${ApiConstants.eventsEndpoint}/$eventId/attendance',
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? response.data;
-        final attendance = data.map((json) => Attendance.fromJson(json)).toList();
-        
-        return ApiResponse.success(
-          attendance,
-          message: 'Attendance retrieved successfully',
-          statusCode: response.statusCode,
-        );
-      } else {
-        return ApiResponse.error(
-          'Failed to fetch attendance',
-          statusCode: response.statusCode,
-        );
-      }
-    } catch (e) {
-      return ApiResponse.error(AppHelpers.getErrorMessage(e));
-    }
-  }
-
-  Future<ApiResponse<Attendance>> updateAttendance({
-    required int attendanceId,
-    String? status,
-    String? notes,
-    bool? isFirstTimer,
-  }) async {
-    try {
-      final response = await _dio.put(
-        '/attendance/$attendanceId',
-        data: {
-          if (status != null) 'status': status,
-          if (notes != null) 'notes': notes,
-          if (isFirstTimer != null) 'is_first_timer': isFirstTimer,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final attendance = Attendance.fromJson(response.data['data'] ?? response.data);
-        
-        return ApiResponse.success(
-          attendance,
-          message: 'Attendance updated successfully',
-          statusCode: response.statusCode,
-        );
-      } else {
-        return ApiResponse.error(
-          'Failed to update attendance',
-          statusCode: response.statusCode,
-        );
-      }
-    } catch (e) {
-      return ApiResponse.error(AppHelpers.getErrorMessage(e));
-    }
-  }
-
-  // Health check
   Future<ApiResponse<void>> healthCheck() async {
     try {
-      final response = await _dio.get('/health');
+      // Use a simple endpoint that should work with authentication
+      final response = await _dio.get('/events');
       
       if (response.statusCode == 200) {
         return ApiResponse.success(null, message: 'API is healthy');
