@@ -16,6 +16,8 @@ import { MembersService, type Member } from "@/services/members";
 import { formatDate } from "@/utils/helpers";
 import { toast } from "react-toastify";
 import { MemberModal } from "@/components/members/MemberModal";
+import MemberIdCard from "@/components/members/MemberIdCard";
+import BarcodeGenerator from "@/components/members/BarcodeGenerator";
 import type { Column, Filter, SortConfig } from "@/components/ui/DataTable";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -35,6 +37,14 @@ export default function MembersPage() {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [statistics, setStatistics] = useState<any>(null);
+  
+  // QR Code Modal State
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [qrModalMode, setQrModalMode] = useState<'generate' | 'print'>('generate');
+  
+  // Bulk Selection State
+  const [selectedMembers, setSelectedMembers] = useState<Member[]>([]);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
 
   const statusOptions = [
     { value: "All Status", label: "All Status" },
@@ -173,6 +183,41 @@ export default function MembersPage() {
     // TODO: Implement member group management modal
   };
 
+  const openQRCodeModal = (member: Member, mode: 'generate' | 'print') => {
+    setSelectedMember(member);
+    setQrModalMode(mode);
+    setIsQRModalOpen(true);
+  };
+
+  const closeQRCodeModal = () => {
+    setIsQRModalOpen(false);
+    setSelectedMember(null);
+  };
+
+  const handleMemberSelection = (member: Member, isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedMembers(prev => [...prev, member]);
+    } else {
+      setSelectedMembers(prev => prev.filter(m => m.id !== member.id));
+    }
+  };
+
+  const handleSelectAll = (isSelected: boolean) => {
+    if (isSelected) {
+      setSelectedMembers(members);
+    } else {
+      setSelectedMembers([]);
+    }
+  };
+
+  const openBulkQRModal = () => {
+    if (selectedMembers.length === 0) {
+      toast.error('Please select at least one member');
+      return;
+    }
+    setIsBulkModalOpen(true);
+  };
+
   const handleSort = (key: string) => {
     setSortConfig(prev => {
       if (prev?.key === key) {
@@ -201,6 +246,22 @@ export default function MembersPage() {
   };
 
   const tableColumns: Column<Member>[] = [
+    { 
+      key: "select", 
+      label: "Select", 
+      sortable: false,
+      render: (_: any, member: Member) => (
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            checked={selectedMembers.some(m => m.id === member.id)}
+            onChange={(e) => handleMemberSelection(member, e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <span className="ml-2 text-xs text-gray-500">Select</span>
+        </div>
+      )
+    },
     { 
       key: "member", 
       label: "Member", 
@@ -251,12 +312,30 @@ export default function MembersPage() {
           <button 
             className="text-blue-600 hover:text-blue-900 text-sm font-medium"
             onClick={() => openEdit(m)}
+            title="Edit Member"
           >
             Edit
           </button>
           <button 
+            className="text-purple-600 hover:text-purple-900 text-sm font-medium"
+            onClick={() => openQRCodeModal(m, 'generate')}
+            title="Generate QR Code"
+          >
+            <i className="fas fa-qrcode mr-1"></i>
+            QR Code
+          </button>
+          <button 
+            className="text-green-600 hover:text-green-900 text-sm font-medium"
+            onClick={() => openQRCodeModal(m, 'print')}
+            title="Print ID Card"
+          >
+            <i className="fas fa-print mr-1"></i>
+            Print
+          </button>
+          <button 
             className="text-red-600 hover:text-red-900 text-sm font-medium"
             onClick={() => handleDelete(m)}
+            title="Delete Member"
           >
             Delete
           </button>
@@ -326,6 +405,26 @@ export default function MembersPage() {
               <i className="fas fa-edit"></i>
             </button>
             <button 
+              className="text-purple-600 hover:text-purple-700 text-sm p-1 rounded hover:bg-purple-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                openQRCodeModal(member, 'generate');
+              }}
+              title="Generate QR Code"
+            >
+              <i className="fas fa-qrcode"></i>
+            </button>
+            <button 
+              className="text-green-600 hover:text-green-700 text-sm p-1 rounded hover:bg-green-50"
+              onClick={(e) => {
+                e.stopPropagation();
+                openQRCodeModal(member, 'print');
+              }}
+              title="Print ID Card"
+            >
+              <i className="fas fa-print"></i>
+            </button>
+            <button 
               className="text-red-600 hover:text-red-700 text-sm p-1 rounded hover:bg-red-50"
               onClick={(e) => {
                 e.stopPropagation();
@@ -352,6 +451,36 @@ export default function MembersPage() {
           onClick: openCreate
         }}
       />
+
+      {/* Bulk Actions Bar */}
+      {selectedMembers.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium text-blue-900">
+                {selectedMembers.length} member{selectedMembers.length !== 1 ? 's' : ''} selected
+              </span>
+              <button
+                onClick={() => setSelectedMembers([])}
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                Clear selection
+              </button>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                onClick={openBulkQRModal}
+                variant="outline"
+                size="sm"
+                className="flex items-center border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                <i className="fas fa-qrcode mr-2"></i>
+                Generate QR Codes
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {statistics && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -403,30 +532,57 @@ export default function MembersPage() {
       {viewMode === "grid" ? (
         <DataGrid data={members} renderCard={renderMemberCard} columns={4} />
       ) : (
-        <DataTable 
-          columns={tableColumns} 
-          data={members} 
-          filters={tableFilters}
-          pagination={{
-            currentPage: page,
-            totalPages: Math.ceil(total / perPage),
-            totalItems: total,
-            perPage: perPage,
-            onPageChange: handlePageChange,
-            onPerPageChange: handlePerPageChange
-          }}
-          sorting={{
-            sortConfig: sortConfig,
-            onSort: handleSort
-          }}
-          onFiltersChange={handleFiltersChange}
-          loading={loading}
-          emptyMessage="No members found"
-          perPageOptions={perPageOptions}
-          showPerPageSelector={true}
-          showPagination={true}
-          responsive={true}
-        />
+        <div>
+          {/* Select All Controls */}
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedMembers.length === members.length && members.length > 0}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Select All ({selectedMembers.length}/{members.length})
+                </span>
+              </label>
+              {selectedMembers.length > 0 && (
+                <button
+                  onClick={() => setSelectedMembers([])}
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  Clear selection
+                </button>
+              )}
+            </div>
+          </div>
+          
+          <DataTable 
+            columns={tableColumns} 
+            data={members} 
+            filters={tableFilters}
+            pagination={{
+              currentPage: page,
+              totalPages: Math.ceil(total / perPage),
+              totalItems: total,
+              perPage: perPage,
+              onPageChange: handlePageChange,
+              onPerPageChange: handlePerPageChange
+            }}
+            sorting={{
+              sortConfig: sortConfig,
+              onSort: handleSort
+            }}
+            onFiltersChange={handleFiltersChange}
+            loading={loading}
+            emptyMessage="No members found"
+            perPageOptions={perPageOptions}
+            showPerPageSelector={true}
+            showPagination={true}
+            responsive={true}
+          />
+        </div>
       )}
 
       <MemberModal
@@ -436,6 +592,140 @@ export default function MembersPage() {
         onSave={handleSave}
         mode={modalMode}
       />
+
+      {/* QR Code Modal */}
+      {selectedMember && (
+        <div className={`fixed inset-0 z-50 overflow-y-auto ${isQRModalOpen ? 'block' : 'hidden'}`}>
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={closeQRCodeModal}></div>
+            
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {qrModalMode === 'generate' ? 'Generate QR Code' : 'Print ID Card'} - {selectedMember.first_name} {selectedMember.last_name}
+                  </h3>
+                  <button
+                    onClick={closeQRCodeModal}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <i className="fas fa-times text-xl"></i>
+                  </button>
+                </div>
+                
+                <div className="mt-4">
+                  {qrModalMode === 'generate' ? (
+                    <BarcodeGenerator 
+                      member={selectedMember}
+                      onBarcodeGenerated={() => {
+                        toast.success('QR Code generated successfully!');
+                      }}
+                    />
+                  ) : (
+                    <MemberIdCard 
+                      member={selectedMember}
+                      showPrintButton={false}
+                    />
+                  )}
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={closeQRCodeModal}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk QR Code Modal */}
+      <div className={`fixed inset-0 z-50 overflow-y-auto ${isBulkModalOpen ? 'block' : 'hidden'}`}>
+        <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsBulkModalOpen(false)}></div>
+          
+          <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Generate QR Codes for {selectedMembers.length} Members
+                </h3>
+                <button
+                  onClick={() => setIsBulkModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <i className="fas fa-times text-xl"></i>
+                </button>
+              </div>
+              
+              <div className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                  {selectedMembers.map((member) => (
+                    <div key={member.id} className="border rounded-lg p-4">
+                      <div className="flex items-center mb-2">
+                        <Avatar 
+                          src={member.profile_image_path}
+                          fallback={`${member.first_name} ${member.last_name}`}
+                          size="sm"
+                          alt={`${member.first_name} ${member.last_name}`}
+                        />
+                        <div className="ml-2">
+                          <div className="text-sm font-medium text-gray-900">
+                            {member.first_name} {member.last_name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            ID: {member.member_identification_id}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            openQRCodeModal(member, 'generate');
+                            setIsBulkModalOpen(false);
+                          }}
+                          className="flex-1 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded hover:bg-purple-200"
+                        >
+                          <i className="fas fa-qrcode mr-1"></i>
+                          Generate
+                        </button>
+                        <button
+                          onClick={() => {
+                            openQRCodeModal(member, 'print');
+                            setIsBulkModalOpen(false);
+                          }}
+                          className="flex-1 text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200"
+                        >
+                          <i className="fas fa-print mr-1"></i>
+                          Print
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
+                onClick={() => {
+                  setIsBulkModalOpen(false);
+                  setSelectedMembers([]);
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 } 
