@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.church_attendance_scanner"
+    namespace = "com.codewithadjetey.zoeflock.usher"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.church_attendance_scanner"
+        applicationId = "com.codewithadjetey.zoeflock.usher"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

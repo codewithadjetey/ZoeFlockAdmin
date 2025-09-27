@@ -59,20 +59,29 @@ class SyncService {
       print('SyncService: Starting full data sync...');
 
       // Sync Groups
+      print('SyncService: Starting Groups sync...');
       await _syncGroups();
+      print('SyncService: Groups sync completed');
       
       // Sync Families
+      print('SyncService: Starting Families sync...');
       await _syncFamilies();
+      print('SyncService: Families sync completed');
       
       // Sync Members
+      print('SyncService: Starting Members sync...');
       await _syncMembers();
+      print('SyncService: Members sync completed');
       
       // Sync Events
+      print('SyncService: Starting Events sync...');
       await _syncEvents();
+      print('SyncService: Events sync completed');
 
       print('SyncService: Full data sync completed successfully');
     } catch (e) {
       print('SyncService: Error during sync: $e');
+      print('SyncService: Stack trace: ${StackTrace.current}');
       success = false;
     } finally {
       _isSyncing = false;
@@ -289,19 +298,27 @@ class SyncService {
         total: 0,
         synced: 0,
         status: 'Fetching members...',
+        currentPage: 1,
+        totalPages: 1,
       ));
 
       // First, get total count
+      print('SyncService: Getting members count...');
       final countResponse = await _apiService.dio.get('/members', queryParameters: {
         'per_page': 1,
         'page': 1,
       });
       
+      print('SyncService: Members count response status: ${countResponse.statusCode}');
+      
       if (countResponse.statusCode == 200) {
         final responseData = countResponse.data;
+        print('SyncService: Members count response data: $responseData');
         final paginatedData = responseData['data'] as Map<String, dynamic>?;
         final total = paginatedData?['total'] as int? ?? 0;
         final totalPages = (total / 100).ceil();
+        
+        print('SyncService: Members total: $total, totalPages: $totalPages');
         
         _progressController.add(SyncProgress(
           category: 'Members',
