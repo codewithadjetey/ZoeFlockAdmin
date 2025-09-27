@@ -6,6 +6,7 @@ import '../models/member.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/app_drawer.dart';
 
 class MemberProfileScreen extends StatefulWidget {
   final Member member;
@@ -140,6 +141,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      drawer: const AppDrawer(),
       appBar: CustomAppBar(
         title: AppStrings.memberProfileTitle,
         actions: [
@@ -178,10 +180,8 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
             CircleAvatar(
               radius: 50,
               backgroundColor: AppColors.primaryBlue,
-              backgroundImage: widget.member.profileImagePath != null
-                  ? NetworkImage(AppHelpers.getImageUrl(widget.member.profileImagePath!))
-                  : null,
-              child: widget.member.profileImagePath == null
+              backgroundImage: _getProfileImageProvider(),
+              child: _getProfileImageProvider() == null
                   ? Text(
                       widget.member.initials,
                       style: const TextStyle(
@@ -392,5 +392,12 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         ),
       ],
     );
+  }
+
+  ImageProvider? _getProfileImageProvider() {
+    final imageUrl = AppHelpers.getImageUrl(widget.member.profileImagePath);
+    final hasValidImage = imageUrl.isNotEmpty && Uri.tryParse(imageUrl)?.hasAbsolutePath == true;
+    
+    return hasValidImage ? NetworkImage(imageUrl) : null;
   }
 }

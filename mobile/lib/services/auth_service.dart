@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/api_response.dart';
 import '../models/member.dart';
 import 'api_service.dart';
+import 'user_config_service.dart';
+import 'database_helper.dart';
 import '../utils/constants.dart';
 
 class AuthService {
@@ -24,19 +26,30 @@ class AuthService {
   );
 
   final ApiService _apiService = ApiService();
+  final UserConfigService _userConfigService = UserConfigService();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
   SharedPreferences? _prefs;
-
-  bool _isAuthenticated = false;
-  Member? _currentUser;
 
   bool get isAuthenticated => _isAuthenticated;
   Member? get currentUser => _currentUser;
+  
+  // Internal authentication state
+  bool _isAuthenticated = false;
+  Member? _currentUser;
 
   Future<void> initialize() async {
     try {
       print('AuthService: Starting initialization...');
       _prefs = await SharedPreferences.getInstance();
       print('AuthService: SharedPreferences initialized');
+      
+      // Initialize database helper first to ensure config table is available
+      await _databaseHelper.initialize();
+      print('AuthService: DatabaseHelper initialized');
+      
+      // Initialize user config service
+      await _userConfigService.initialize();
+      print('AuthService: UserConfigService initialized');
       
       _apiService.initialize(); // Initialize the API service
       print('AuthService: ApiService initialized');
@@ -45,50 +58,60 @@ class AuthService {
       print('AuthService: Stored credentials loaded');
     } catch (e) {
       print('AuthService: Error during initialization: $e');
+      print('AuthService: Error stack trace: ${StackTrace.current}');
       rethrow;
     }
   }
 
   Future<void> _loadStoredCredentials() async {
     try {
-      String? accessToken;
-      String? refreshToken;
+      print('AuthService: Loading stored credentials from database...');
       
-      // Try secure storage first
-      try {
-        accessToken = await _secureStorage.read(key: StorageKeys.authToken);
-        refreshToken = await _secureStorage.read(key: StorageKeys.refreshToken);
-        print('AuthService: Loaded from secure storage - Access token: $accessToken');
-        print('AuthService: Loaded from secure storage - Access token length: ${accessToken?.length ?? 0}');
-      } catch (e) {
-        print('AuthService: Error reading from secure storage: $e');
-        // Fallback to SharedPreferences
-        accessToken = _prefs?.getString(StorageKeys.authToken);
-        refreshToken = _prefs?.getString(StorageKeys.refreshToken);
-        print('AuthService: Loaded from SharedPreferences - Access token: $accessToken');
-        print('AuthService: Loaded from SharedPreferences - Access token length: ${accessToken?.length ?? 0}');
-      }
+      // Check if user is authenticated in database
+      final isAuthenticated = await _databaseHelper.isUserAuthenticated();
+      print('AuthService: Database authentication check: $isAuthenticated');
       
-      if (accessToken != null && accessToken.isNotEmpty) {
-        _apiService.setTokens(accessToken, refreshToken);
-        _isAuthenticated = true;
-        
-        // Try to validate the token by making a test request
-        final response = await _apiService.healthCheck();
-        if (!response.isSuccess) {
-          // Token is invalid, clear stored credentials
-          print('AuthService: Token validation failed, clearing credentials');
-          await logout();
-        } else {
-          print('AuthService: Token validation successful');
+      if (isAuthenticated) {
+        // Get stored credentials
+        final credentials = await _databaseHelper.getAuthCredentials();
+        if (credentials != null) {
+          print('AuthService: Found stored credentials for user: ${credentials['user_name']}');
+          
+          // Set authentication state
+          _isAuthenticated = true;
+          _currentUser = Member(
+            id: credentials['user_id'] as int,
+            firstName: credentials['user_name']?.toString().split(' ').first ?? '',
+            lastName: credentials['user_name']?.toString().split(' ').skip(1).join(' ') ?? '',
+            email: credentials['user_email'] as String? ?? '',
+            memberIdentificationId: '',
+            status: 'active',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          );
+          
+          // Set API tokens
+          final authToken = credentials['auth_token'] as String?;
+          final refreshToken = credentials['refresh_token'] as String?;
+          
+          if (authToken != null && authToken.isNotEmpty) {
+            _apiService.setTokens(authToken, refreshToken);
+            print('AuthService: Tokens set from database');
+          }
+          
+          print('AuthService: Authentication restored from database - user: ${_currentUser?.fullName}');
+          return;
         }
-      } else {
-        print('AuthService: No access token found in storage or token is empty');
       }
+      
+      print('AuthService: No valid authentication credentials found in database');
+      _isAuthenticated = false;
+      _currentUser = null;
+      
     } catch (e) {
-      // Error loading credentials, clear them
-      print('AuthService: Error loading credentials: $e');
-      await logout();
+      print('AuthService: Error loading credentials from database: $e');
+      _isAuthenticated = false;
+      _currentUser = null;
     }
   }
 
@@ -102,48 +125,9 @@ class AuthService {
         print('AuthService: Login response received successfully');
         print('AuthService: User data: ${loginResponse.user}');
         
-        // Store tokens securely
-        print('AuthService: Storing access token: ${loginResponse.accessToken}');
-        print('AuthService: Access token length: ${loginResponse.accessToken.length}');
-        
-        try {
-          await _secureStorage.write(key: StorageKeys.authToken, value: loginResponse.accessToken);
-          print('AuthService: Access token written to secure storage');
-          
-          // Test read back immediately
-          final testRead = await _secureStorage.read(key: StorageKeys.authToken);
-          print('AuthService: Test read back - Token: $testRead');
-          print('AuthService: Test read back - Length: ${testRead?.length ?? 0}');
-          
-          if (loginResponse.refreshToken != null) {
-            await _secureStorage.write(key: StorageKeys.refreshToken, value: loginResponse.refreshToken!);
-          }
-          print('AuthService: Tokens stored successfully');
-        } catch (e) {
-          print('AuthService: Error storing tokens: $e');
-          // Fallback to SharedPreferences for web
-          await _prefs?.setString(StorageKeys.authToken, loginResponse.accessToken);
-          if (loginResponse.refreshToken != null) {
-            await _prefs?.setString(StorageKeys.refreshToken, loginResponse.refreshToken!);
-          }
-          print('AuthService: Tokens stored in SharedPreferences as fallback');
-        }
-        
-        // Also set tokens in ApiService for immediate use
-        _apiService.setTokens(loginResponse.accessToken, loginResponse.refreshToken);
-        print('AuthService: Tokens set in ApiService');
-        
-        // Store user email if remember me is checked
-        if (rememberMe) {
-          await _prefs?.setString(StorageKeys.userEmail, email);
-          await _prefs?.setBool(StorageKeys.rememberMe, true);
-        }
-        
-        _isAuthenticated = true;
-        
-        // Create a basic user object from the login response
+        // Create user object from login response
         print('AuthService: Creating Member object from user data');
-        _currentUser = Member(
+        final user = Member(
           id: loginResponse.user['id'] ?? 0,
           firstName: loginResponse.user['name']?.split(' ').first ?? loginResponse.user['first_name'] ?? '',
           lastName: loginResponse.user['name']?.split(' ').skip(1).join(' ') ?? loginResponse.user['last_name'] ?? '',
@@ -155,8 +139,42 @@ class AuthService {
         );
         print('AuthService: Member object created successfully');
         
+        // Store user information using UserConfigService (for compatibility)
+        await _userConfigService.storeUserInfo(
+          user: user,
+          token: loginResponse.accessToken,
+          refreshToken: loginResponse.refreshToken,
+        );
+        
+        // Store credentials in database config table
+        await _databaseHelper.storeAuthCredentials(
+          username: email,
+          password: password,
+          authToken: loginResponse.accessToken,
+          refreshToken: loginResponse.refreshToken,
+          userId: user.id,
+          userName: user.fullName,
+          userEmail: user.email,
+        );
+        
+        // Set authentication state
+        _isAuthenticated = true;
+        _currentUser = user;
+        
+        print('AuthService: User credentials stored in database');
+        
+        // Set tokens in ApiService for immediate use
+        _apiService.setTokens(loginResponse.accessToken, loginResponse.refreshToken);
+        print('AuthService: Tokens set in ApiService');
+        
+        // Store remember me preference
+        if (rememberMe) {
+          await _prefs?.setString(StorageKeys.userEmail, email);
+          await _prefs?.setBool(StorageKeys.rememberMe, true);
+        }
+        
         return ApiResponse.success(
-          _currentUser!,
+          user,
           message: 'Login successful',
         );
       } else {
@@ -172,28 +190,46 @@ class AuthService {
 
   Future<ApiResponse<void>> logout() async {
     try {
+      print('AuthService: Starting logout...');
+      
       // Call API logout if authenticated
-      if (_isAuthenticated) {
-        await _apiService.logout();
+      if (isAuthenticated) {
+        try {
+          await _apiService.logout();
+          print('AuthService: API logout successful');
+        } catch (e) {
+          // Ignore network errors during logout
+          print('AuthService: Network error during logout: $e');
+        }
       }
       
-      // Clear stored credentials
-      await _secureStorage.delete(key: StorageKeys.authToken);
-      await _secureStorage.delete(key: StorageKeys.refreshToken);
+      // Clear credentials from database
+      await _databaseHelper.clearAuthCredentials();
+      print('AuthService: Database credentials cleared');
       
-      // Clear user data
+      // Clear all user information using UserConfigService
+      await _userConfigService.clearUserInfo();
+      print('AuthService: UserConfigService cleared');
+      
+      // Clear API tokens
+      _apiService.clearTokens();
+      print('AuthService: API tokens cleared');
+      
+      // Clear authentication state
       _isAuthenticated = false;
       _currentUser = null;
-      _apiService.clearTokens();
+      print('AuthService: Authentication state cleared');
       
       return ApiResponse.success(null, message: 'Logout successful');
     } catch (e) {
+      print('AuthService: Error during logout: $e');
+      
       // Even if API logout fails, clear local data
-      await _secureStorage.delete(key: StorageKeys.authToken);
-      await _secureStorage.delete(key: StorageKeys.refreshToken);
+      await _databaseHelper.clearAuthCredentials();
+      await _userConfigService.clearUserInfo();
+      _apiService.clearTokens();
       _isAuthenticated = false;
       _currentUser = null;
-      _apiService.clearTokens();
       
       return ApiResponse.success(null, message: 'Logout successful');
     }
@@ -213,7 +249,7 @@ class AuthService {
   }
 
   Future<bool> isTokenValid() async {
-    if (!_isAuthenticated) return false;
+    if (!isAuthenticated) return false;
     
     try {
       final response = await _apiService.healthCheck();
@@ -224,14 +260,12 @@ class AuthService {
   }
 
   Future<void> refreshToken() async {
-    if (!_isAuthenticated) return;
+    if (!isAuthenticated) return;
     
     try {
-      final accessToken = await _secureStorage.read(key: StorageKeys.authToken);
-      final refreshToken = await _secureStorage.read(key: StorageKeys.refreshToken);
-      
-      if (accessToken != null && refreshToken != null) {
-        _apiService.setTokens(accessToken, refreshToken);
+      final token = _userConfigService.currentToken;
+      if (token != null) {
+        _apiService.setTokens(token, null);
         
         // Test the token
         final response = await _apiService.healthCheck();
@@ -247,11 +281,11 @@ class AuthService {
   }
 
   Future<void> updateUserProfile(Member user) async {
-    _currentUser = user;
+    await _userConfigService.updateUserProfile(user);
   }
 
   Future<Map<String, dynamic>> getAuthHeaders() async {
-    final accessToken = await _secureStorage.read(key: StorageKeys.authToken);
+    final accessToken = _userConfigService.currentToken;
     return {
       'Authorization': 'Bearer $accessToken',
       'Content-Type': 'application/json',
@@ -291,11 +325,12 @@ class AuthService {
   }
 
   Future<void> clearAllData() async {
-    await _secureStorage.deleteAll();
+    await _userConfigService.clearUserInfo();
     await _prefs?.clear();
+    _apiService.clearTokens();
+    await _databaseHelper.clearAuthCredentials();
     _isAuthenticated = false;
     _currentUser = null;
-    _apiService.clearTokens();
   }
 
   // Auto-logout functionality

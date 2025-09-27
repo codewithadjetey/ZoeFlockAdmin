@@ -18,12 +18,22 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> initialize() async {
     _isLoading = true;
+    notifyListeners(); // Notify that loading has started
+    
     try {
+      print('AuthProvider: Initializing auth service...');
       await _authService.initialize();
+      
       _isAuthenticated = _authService.isAuthenticated;
       _currentUser = _authService.currentUser;
+      
+      print('AuthProvider: Auth service initialized - isAuthenticated: $_isAuthenticated, user: ${_currentUser?.fullName}');
+      
+      notifyListeners(); // Notify that initialization is complete
     } catch (e) {
+      print('AuthProvider: Error during initialization: $e');
       _errorMessage = 'Failed to initialize authentication: ${e.toString()}';
+      notifyListeners(); // Notify of error
     } finally {
       _isLoading = false;
     }

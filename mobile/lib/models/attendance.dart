@@ -6,6 +6,7 @@ class Attendance {
   final DateTime checkInTime;
   final String? notes;
   final bool isFirstTimer;
+  final int? version;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -17,6 +18,7 @@ class Attendance {
     required this.checkInTime,
     this.notes,
     this.isFirstTimer = false,
+    this.version,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -40,6 +42,7 @@ class Attendance {
       checkInTime: DateTime.parse(json['check_in_time'] as String? ?? ''),
       notes: json['notes'] as String?,
       isFirstTimer: json['is_first_timer'] as bool? ?? false,
+      version: json['version'] as int?,
       createdAt: DateTime.parse(json['created_at'] as String? ?? ''),
       updatedAt: DateTime.parse(json['updated_at'] as String? ?? ''),
     );
@@ -54,6 +57,7 @@ class Attendance {
       'check_in_time': checkInTime.toIso8601String(),
       'notes': notes,
       'is_first_timer': isFirstTimer,
+      if (version != null) 'version': version,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -95,6 +99,7 @@ class Attendance {
     DateTime? checkInTime,
     String? notes,
     bool? isFirstTimer,
+    int? version,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -106,6 +111,7 @@ class Attendance {
       checkInTime: checkInTime ?? this.checkInTime,
       notes: notes ?? this.notes,
       isFirstTimer: isFirstTimer ?? this.isFirstTimer,
+      version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

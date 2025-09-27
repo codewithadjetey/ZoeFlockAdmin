@@ -322,6 +322,204 @@ class ApiService {
     }
   }
 
+  /// Get all members for sync (with pagination support)
+  Future<ApiResponse<Map<String, dynamic>>> getAllMembers({
+    int page = 1,
+    int perPage = 100,
+    String? search,
+    String? status,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'per_page': perPage,
+      };
+      
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+      
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+
+      print('ApiService: Getting members - page: $page, perPage: $perPage, queryParams: $queryParams');
+      print('ApiService: Member endpoint: ${ApiConstants.memberEndpoint}');
+
+      final response = await _dio.get(
+        ApiConstants.memberEndpoint,
+        queryParameters: queryParams,
+      );
+      
+      print('ApiService: Members response status: ${response.statusCode}');
+      print('ApiService: Members response data: ${response.data}');
+      
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        
+        // Check if response has success field (Laravel API format)
+        if (responseData is Map<String, dynamic>) {
+          if (responseData.containsKey('success') && responseData['success'] == true) {
+            // Check for members field first (backend specific format)
+            if (responseData.containsKey('members')) {
+              return ApiResponse.success(responseData['members']);
+            } else if (responseData.containsKey('data')) {
+              return ApiResponse.success(responseData['data']);
+            } else {
+              return ApiResponse.error('No data field found in response');
+            }
+          } else if (responseData.containsKey('data')) {
+            // Direct data response without success wrapper
+            return ApiResponse.success(responseData['data']);
+          } else if (responseData.containsKey('members')) {
+            // Direct members response without success wrapper
+            return ApiResponse.success(responseData['members']);
+          } else {
+            // Response might be the data directly
+            return ApiResponse.success(responseData);
+          }
+        } else {
+          return ApiResponse.error('Invalid response format');
+        }
+      } else {
+        return ApiResponse.error('Failed to get members: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('ApiService: Error getting members: $e');
+      print('ApiService: Error type: ${e.runtimeType}');
+      return ApiResponse.error('Failed to get members: ${e.toString()}');
+    }
+  }
+
+  /// Get a single member by ID
+  Future<ApiResponse<Member>> getMemberById(int memberId) async {
+    try {
+      print('ApiService: Getting member by ID: $memberId');
+      
+      final response = await _dio.get('/members/$memberId');
+
+      print('ApiService: Member response status: ${response.statusCode}');
+      print('ApiService: Member response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        
+        if (responseData is Map<String, dynamic>) {
+          if (responseData.containsKey('success') && responseData['success'] == true) {
+            final memberData = responseData['data'];
+            final member = Member.fromJson(memberData);
+            return ApiResponse.success(member);
+          } else if (responseData.containsKey('data')) {
+            final member = Member.fromJson(responseData['data']);
+            return ApiResponse.success(member);
+          } else {
+            return ApiResponse.error('No data field found in response');
+          }
+        } else {
+          return ApiResponse.error('Invalid response format');
+        }
+      } else {
+        return ApiResponse.error('Failed to get member: HTTP ${response.statusCode}');
+      }
+    } catch (e) {
+      print('ApiService: Error getting member: $e');
+      return ApiResponse.error('Failed to get member: ${e.toString()}');
+    }
+  }
+
+  /// Get all groups
+  Future<ApiResponse<List<Map<String, dynamic>>>> getAllGroups() async {
+    try {
+      print('🚀 ApiService: Getting all groups...');
+      final response = await _dio.get('/groups');
+      
+      print('✅ ApiService: Groups response status: ${response.statusCode}');
+      print('📊 ApiService: Groups response data: ${response.data}');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List<dynamic> groupsData = data['data'];
+          final groups = groupsData.cast<Map<String, dynamic>>();
+          print('🚀 ApiService: ✅ Successfully got ${groups.length} groups');
+          return ApiResponse.success(groups);
+        } else {
+          print('🚀 ApiService: ❌ Failed to get groups - API returned success: false');
+          return ApiResponse.error('Failed to get groups');
+        }
+      } else {
+        print('🚀 ApiService: ❌ Failed to get groups - Invalid response');
+        return ApiResponse.error('Failed to get groups');
+      }
+    } catch (e) {
+      print('🚀 ApiService: ❌ Failed to get groups');
+      print('Error getting groups: $e');
+      return ApiResponse.error('Failed to get groups');
+    }
+  }
+
+  /// Get all families
+  Future<ApiResponse<List<Map<String, dynamic>>>> getAllFamilies() async {
+    try {
+      print('🚀 ApiService: Getting all families...');
+      final response = await _dio.get('/families');
+      
+      print('✅ ApiService: Families response status: ${response.statusCode}');
+      print('📊 ApiService: Families response data: ${response.data}');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List<dynamic> familiesData = data['data'];
+          final families = familiesData.cast<Map<String, dynamic>>();
+          print('🚀 ApiService: ✅ Successfully got ${families.length} families');
+          return ApiResponse.success(families);
+        } else {
+          print('🚀 ApiService: ❌ Failed to get families - API returned success: false');
+          return ApiResponse.error('Failed to get families');
+        }
+      } else {
+        print('🚀 ApiService: ❌ Failed to get families - Invalid response');
+        return ApiResponse.error('Failed to get families');
+      }
+    } catch (e) {
+      print('🚀 ApiService: ❌ Failed to get families');
+      print('Error getting families: $e');
+      return ApiResponse.error('Failed to get families');
+    }
+  }
+
+  /// Get all first timers
+  Future<ApiResponse<List<Map<String, dynamic>>>> getAllFirstTimers() async {
+    try {
+      print('🚀 ApiService: Getting all first timers...');
+      final response = await _dio.get('/first-timers');
+      
+      print('✅ ApiService: First timers response status: ${response.statusCode}');
+      print('📊 ApiService: First timers response data: ${response.data}');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List<dynamic> firstTimersData = data['data'];
+          final firstTimers = firstTimersData.cast<Map<String, dynamic>>();
+          print('🚀 ApiService: ✅ Successfully got ${firstTimers.length} first timers');
+          return ApiResponse.success(firstTimers);
+        } else {
+          print('🚀 ApiService: ❌ Failed to get first timers - API returned success: false');
+          return ApiResponse.error('Failed to get first timers');
+        }
+      } else {
+        print('🚀 ApiService: ❌ Failed to get first timers - Invalid response');
+        return ApiResponse.error('Failed to get first timers');
+      }
+    } catch (e) {
+      print('🚀 ApiService: ❌ Failed to get first timers');
+      print('Error getting first timers: $e');
+      return ApiResponse.error('Failed to get first timers');
+    }
+  }
+
   // Attendance endpoints
   Future<ApiResponse<Attendance>> markAttendance(int memberId, int eventId, {
     String status = 'present',
@@ -329,24 +527,49 @@ class ApiService {
     bool isFirstTimer = false,
   }) async {
     try {
+      print('🚀 ApiService: Marking attendance for member $memberId at event $eventId');
+      print('🚀 ApiService: Status: $status, Notes: $notes, IsFirstTimer: $isFirstTimer');
+      
+      // Get member identification ID from the member ID
+      final memberResponse = await getMemberById(memberId);
+      if (!memberResponse.isSuccess || memberResponse.data == null) {
+        print('🚀 ApiService: ❌ Failed to get member details for ID: $memberId');
+        return ApiResponse.error('Failed to get member details');
+      }
+      
+      final memberIdentificationId = memberResponse.data!.memberIdentificationId;
+      print('🚀 ApiService: Member identification ID: $memberIdentificationId');
+      
+      final requestData = {
+        'member_identification_id': memberIdentificationId,
+        'event_id': eventId,
+        'notes': notes,
+      };
+      
+      print('🚀 ApiService: Request data: $requestData');
+      
       final response = await _dio.post(
-        '/attendance',
-        data: {
-          'member_id': memberId,
-          'event_id': eventId,
-          'status': status,
-          'notes': notes,
-          'is_first_timer': isFirstTimer,
-        },
+        '/attendance/scan-member-id',
+        data: requestData,
       );
 
-      if (response.statusCode == 201) {
-        final attendance = Attendance.fromJson(response.data['data']);
+      print('🚀 ApiService: Response status code: ${response.statusCode}');
+      print('🚀 ApiService: Response data: ${response.data}');
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        // The backend returns attendance data in response.data.data.attendance
+        final attendanceData = response.data['data']['attendance'];
+        final attendance = Attendance.fromJson(attendanceData);
+        print('🚀 ApiService: ✅ Attendance marked successfully with ID: ${attendance.id}');
         return ApiResponse.success(attendance, message: 'Attendance marked successfully');
       } else {
-        return ApiResponse.error('Failed to mark attendance');
+        print('🚀 ApiService: ❌ Failed to mark attendance - Status: ${response.statusCode}');
+        print('🚀 ApiService: ❌ Response message: ${response.data['message']}');
+        return ApiResponse.error(response.data['message'] ?? 'Failed to mark attendance');
       }
     } catch (e) {
+      print('🚀 ApiService: ❌ Error marking attendance: $e');
+      print('🚀 ApiService: Error type: ${e.runtimeType}');
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }

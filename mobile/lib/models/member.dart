@@ -44,44 +44,69 @@ class Member {
   bool get isActive => status.toLowerCase() == 'active';
 
   factory Member.fromJson(Map<String, dynamic> json) {
-    // Handle both 'name' field (from login response) and separate 'first_name'/'last_name' fields
-    String firstName = '';
-    String lastName = '';
-    
-    if (json.containsKey('name') && json['name'] != null) {
-      final nameParts = (json['name'] as String).split(' ');
-      firstName = nameParts.isNotEmpty ? nameParts.first : '';
-      lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
-    } else {
-      firstName = json['first_name'] as String? ?? '';
-      lastName = json['last_name'] as String? ?? '';
+    try {
+      print('Member.fromJson: Parsing member data: $json');
+      
+      // Helper function to safely convert to string
+      String? safeString(dynamic value) {
+        if (value == null) return null;
+        if (value is String) return value;
+        if (value is List) {
+          print('Member.fromJson: Warning - Expected string but got list: $value');
+          return value.isNotEmpty ? value.first.toString() : null;
+        }
+        return value.toString();
+      }
+      
+      // Handle both 'name' field (from login response) and separate 'first_name'/'last_name' fields
+      String firstName = '';
+      String lastName = '';
+      
+      if (json.containsKey('name') && json['name'] != null) {
+        final nameValue = safeString(json['name']);
+        if (nameValue != null) {
+          final nameParts = nameValue.split(' ');
+          firstName = nameParts.isNotEmpty ? nameParts.first : '';
+          lastName = nameParts.length > 1 ? nameParts.skip(1).join(' ') : '';
+        }
+      } else {
+        firstName = safeString(json['first_name']) ?? '';
+        lastName = safeString(json['last_name']) ?? '';
+      }
+      
+      final member = Member(
+        id: json['id'] as int,
+        firstName: firstName,
+        lastName: lastName,
+        email: safeString(json['email']) ?? '',
+        profileImagePath: safeString(json['profile_picture']) ?? safeString(json['profile_image_path']),
+        memberIdentificationId: safeString(json['member_identification_id']) ?? '',
+        group: safeString(json['group']),
+        family: safeString(json['family']),
+        gender: safeString(json['gender']),
+        phone: safeString(json['phone']),
+        dateOfBirth: json['date_of_birth'] != null 
+            ? DateTime.parse(safeString(json['date_of_birth']) ?? '')
+            : null,
+        status: json['is_active'] == true ? 'active' : safeString(json['status']) ?? 'inactive',
+        lastAttendanceDate: json['last_attendance_date'] != null
+            ? DateTime.parse(safeString(json['last_attendance_date']) ?? '')
+            : null,
+        createdAt: json['created_at'] != null 
+            ? DateTime.parse(safeString(json['created_at']) ?? '')
+            : DateTime.now(),
+        updatedAt: json['updated_at'] != null
+            ? DateTime.parse(safeString(json['updated_at']) ?? '')
+            : DateTime.now(),
+      );
+      
+      print('Member.fromJson: Successfully parsed member: ${member.fullName}');
+      return member;
+    } catch (e) {
+      print('Member.fromJson: Error parsing member: $e');
+      print('Member.fromJson: JSON data: $json');
+      rethrow;
     }
-    
-    return Member(
-      id: json['id'] as int,
-      firstName: firstName,
-      lastName: lastName,
-      email: json['email'] as String? ?? '',
-      profileImagePath: json['profile_picture'] as String? ?? json['profile_image_path'] as String?,
-      memberIdentificationId: json['member_identification_id'] as String? ?? '',
-      group: json['group'] as String?,
-      family: json['family'] as String?,
-      gender: json['gender'] as String?,
-      phone: json['phone'] as String?,
-      dateOfBirth: json['date_of_birth'] != null 
-          ? DateTime.parse(json['date_of_birth'] as String? ?? '')
-          : null,
-      status: json['is_active'] == true ? 'active' : json['status'] as String? ?? 'inactive',
-      lastAttendanceDate: json['last_attendance_date'] != null
-          ? DateTime.parse(json['last_attendance_date'] as String? ?? '')
-          : null,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'] as String? ?? '')
-          : DateTime.now(),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String? ?? '')
-          : DateTime.now(),
-    );
   }
 
   Map<String, dynamic> toJson() {
@@ -112,7 +137,7 @@ class Member {
       'email': email,
       'profile_image_path': profileImagePath ?? '',
       'member_identification_id': memberIdentificationId,
-      'group': group ?? '',
+      'group_name': group ?? '',
       'family': family ?? '',
       'gender': gender ?? '',
       'phone': phone ?? '',
@@ -132,7 +157,7 @@ class Member {
       email: json['email'] as String? ?? '',
       profileImagePath: json['profile_image_path'] as String?,
       memberIdentificationId: json['member_identification_id'] as String? ?? '',
-      group: json['group'] as String?,
+      group: json['group_name'] as String?,
       family: json['family'] as String?,
       gender: json['gender'] as String?,
       phone: json['phone'] as String?,

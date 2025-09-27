@@ -164,15 +164,16 @@ class MemberCard extends StatelessWidget {
   }
 
   Widget _buildAvatar(BuildContext context, {double size = 48}) {
+    final imageUrl = AppHelpers.getImageUrl(member.profileImagePath);
+    final hasValidImage = imageUrl.isNotEmpty && Uri.tryParse(imageUrl)?.hasAbsolutePath == true;
+    
     return CircleAvatar(
       radius: size / 2,
       backgroundColor: AppColors.primaryBlue,
-      backgroundImage: member.profileImagePath != null
-          ? CachedNetworkImageProvider(
-              AppHelpers.getImageUrl(member.profileImagePath!),
-            )
+      backgroundImage: hasValidImage
+          ? CachedNetworkImageProvider(imageUrl)
           : null,
-      child: member.profileImagePath == null
+      child: !hasValidImage
           ? Text(
               member.initials,
               style: TextStyle(
