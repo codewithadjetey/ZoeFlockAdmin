@@ -140,9 +140,11 @@ class OfflineAttendanceService {
   /// Sync offline attendance to server
   Future<SyncResult> syncOfflineAttendance() async {
     try {
-      print('OfflineAttendanceService: Starting offline attendance sync...');
+      print('OfflineAttendanceService: 🚀 Starting offline attendance sync...');
       
       final unsyncedRecords = await getUnsyncedOfflineAttendance();
+      print('OfflineAttendanceService: Found ${unsyncedRecords.length} unsynced records');
+      
       if (unsyncedRecords.isEmpty) {
         print('OfflineAttendanceService: No unsynced records to sync');
         return SyncResult(success: true, syncedCount: 0, errorCount: 0);
@@ -152,23 +154,32 @@ class OfflineAttendanceService {
       int errorCount = 0;
       final List<String> errors = [];
 
-      for (final attendance in unsyncedRecords) {
+      for (int i = 0; i < unsyncedRecords.length; i++) {
+        final attendance = unsyncedRecords[i];
+        print('OfflineAttendanceService: 📤 Syncing record ${i + 1}/${unsyncedRecords.length}: ${attendance.localId}');
+        
         try {
           final success = await _syncSingleAttendance(attendance);
           if (success) {
             syncedCount++;
+            print('OfflineAttendanceService: ✅ Successfully synced ${attendance.localId}');
           } else {
             errorCount++;
             errors.add('Failed to sync attendance ${attendance.localId}');
+            print('OfflineAttendanceService: ❌ Failed to sync ${attendance.localId}');
           }
         } catch (e) {
           errorCount++;
           errors.add('Error syncing attendance ${attendance.localId}: $e');
-          print('OfflineAttendanceService: Error syncing attendance ${attendance.localId}: $e');
+          print('OfflineAttendanceService: ❌ Error syncing attendance ${attendance.localId}: $e');
         }
       }
 
-      print('OfflineAttendanceService: Sync completed - Synced: $syncedCount, Errors: $errorCount');
+      print('OfflineAttendanceService: 🏁 Sync completed - Synced: $syncedCount, Errors: $errorCount');
+      if (errors.isNotEmpty) {
+        print('OfflineAttendanceService: Errors: ${errors.join(", ")}');
+      }
+      
       return SyncResult(
         success: errorCount == 0,
         syncedCount: syncedCount,
@@ -176,7 +187,7 @@ class OfflineAttendanceService {
         errors: errors,
       );
     } catch (e) {
-      print('OfflineAttendanceService: Error during sync: $e');
+      print('OfflineAttendanceService: ❌ Error during sync: $e');
       return SyncResult(
         success: false,
         syncedCount: 0,
@@ -249,6 +260,10 @@ class OfflineAttendanceService {
   /// Create new attendance on server
   Future<bool> _createServerAttendance(OfflineAttendance attendance) async {
     try {
+      print('OfflineAttendanceService: Creating server attendance for local ID: ${attendance.localId}');
+      print('OfflineAttendanceService: Member ID: ${attendance.memberId}, Event ID: ${attendance.eventId}');
+      print('OfflineAttendanceService: Status: ${attendance.status}, Notes: ${attendance.notes}');
+      
       final response = await _apiService.markAttendance(
         attendance.memberId,
         attendance.eventId,
@@ -257,6 +272,10 @@ class OfflineAttendanceService {
         isFirstTimer: attendance.isFirstTimer,
       );
 
+      print('OfflineAttendanceService: API response success: ${response.isSuccess}');
+      print('OfflineAttendanceService: API response data: ${response.data}');
+      print('OfflineAttendanceService: API response error: ${response.errorMessage}');
+
       if (response.isSuccess && response.data != null) {
         // Mark as synced
         await _databaseHelper.markOfflineAttendanceAsSynced(
@@ -264,14 +283,15 @@ class OfflineAttendanceService {
           response.data!.id,
           response.data!.version ?? 1,
         );
-        print('OfflineAttendanceService: Created server attendance for ${attendance.localId}');
+        print('OfflineAttendanceService: ✅ Created server attendance for ${attendance.localId} with server ID: ${response.data!.id}');
         return true;
       } else {
-        print('OfflineAttendanceService: Failed to create server attendance: ${response.errorMessage}');
+        print('OfflineAttendanceService: ❌ Failed to create server attendance: ${response.errorMessage}');
         return false;
       }
     } catch (e) {
-      print('OfflineAttendanceService: Error creating server attendance: $e');
+      print('OfflineAttendanceService: ❌ Error creating server attendance: $e');
+      print('OfflineAttendanceService: Error type: ${e.runtimeType}');
       return false;
     }
   }
