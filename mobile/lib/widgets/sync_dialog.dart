@@ -29,24 +29,32 @@ class _SyncDialogState extends State<SyncDialog> {
       total: 0,
       synced: 0,
       status: 'Waiting...',
+      currentPage: 1,
+      totalPages: 1,
     );
     _progressMap['Families'] = SyncProgress(
       category: 'Families',
       total: 0,
       synced: 0,
       status: 'Waiting...',
+      currentPage: 1,
+      totalPages: 1,
     );
     _progressMap['Members'] = SyncProgress(
       category: 'Members',
       total: 0,
       synced: 0,
       status: 'Waiting...',
+      currentPage: 1,
+      totalPages: 1,
     );
     _progressMap['Events'] = SyncProgress(
       category: 'Events',
       total: 0,
       synced: 0,
       status: 'Waiting...',
+      currentPage: 1,
+      totalPages: 1,
     );
   }
 
@@ -283,12 +291,25 @@ class _SyncDialogState extends State<SyncDialog> {
                 ),
               ),
               if (progress.total > 0)
-                Text(
-                  '${progress.synced}/${progress.total}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.mediumGray,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${progress.synced}/${progress.total}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.mediumGray,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if ((progress.totalPages ?? 1) > 1)
+                      Text(
+                        '${progress.totalPages ?? 1} pages',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.mediumGray,
+                          fontSize: 10,
+                        ),
+                      ),
+                  ],
                 ),
             ],
           ),
@@ -313,6 +334,18 @@ class _SyncDialogState extends State<SyncDialog> {
               color: hasError ? AppColors.error : AppColors.mediumGray,
             ),
           ),
+          
+          // Pagination info
+          if ((progress.totalPages ?? 1) > 1 && !hasError && !isComplete) ...[
+            const SizedBox(height: AppDimensions.paddingSmall),
+            Text(
+              'Page ${progress.currentPage ?? 1} of ${progress.totalPages ?? 1}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.mediumGray,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
           
           // Error message
           if (hasError && progress.error != null) ...[

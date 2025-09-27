@@ -13,6 +13,8 @@ class SyncProgress {
   final int synced;
   final String status;
   final String? error;
+  final int currentPage;
+  final int totalPages;
 
   SyncProgress({
     required this.category,
@@ -20,6 +22,8 @@ class SyncProgress {
     required this.synced,
     required this.status,
     this.error,
+    this.currentPage = 1,
+    this.totalPages = 1,
   });
 
   double get progress => total > 0 ? synced / total : 0.0;
@@ -77,7 +81,7 @@ class SyncService {
     return success;
   }
 
-  /// Sync groups from the server
+  /// Sync groups from the server with pagination
   Future<void> _syncGroups() async {
     try {
       print('SyncService: Starting groups sync...');
@@ -89,51 +93,79 @@ class SyncService {
         status: 'Fetching groups...',
       ));
 
-      final response = await _apiService.dio.get('/groups');
+      // First, get total count
+      final countResponse = await _apiService.dio.get('/groups', queryParameters: {
+        'per_page': 1,
+        'page': 1,
+      });
       
-      if (response.statusCode == 200) {
-        final responseData = response.data;
+      if (countResponse.statusCode == 200) {
+        final responseData = countResponse.data;
         final paginatedData = responseData['data'] as Map<String, dynamic>?;
+        final total = paginatedData?['total'] as int? ?? 0;
+        final totalPages = (total / 100).ceil();
         
-        if (paginatedData != null) {
-          final groupsList = paginatedData['data'] as List?;
-          
-          if (groupsList != null) {
-            final total = groupsList.length;
-            
-            _progressController.add(SyncProgress(
-              category: 'Groups',
-              total: total,
-              synced: 0,
-              status: 'Processing groups...',
-            ));
+        _progressController.add(SyncProgress(
+          category: 'Groups',
+          total: total,
+          synced: 0,
+          status: 'Processing groups...',
+          totalPages: totalPages,
+        ));
 
-            // Store groups in local database
-            for (int i = 0; i < groupsList.length; i++) {
-              final groupData = groupsList[i];
-              
-              // Store group data in settings table
-              await _databaseService.setSetting(
-                'group_${groupData['id']}', 
-                groupData.toString()
-              );
+        int syncedCount = 0;
+        
+        // Fetch all pages
+        for (int page = 1; page <= totalPages; page++) {
+          _progressController.add(SyncProgress(
+            category: 'Groups',
+            total: total,
+            synced: syncedCount,
+            status: 'Fetching page $page of $totalPages...',
+            currentPage: page,
+            totalPages: totalPages,
+          ));
+
+          final response = await _apiService.dio.get('/groups', queryParameters: {
+            'per_page': 100,
+            'page': page,
+          });
+          
+          if (response.statusCode == 200) {
+            final responseData = response.data;
+            final paginatedData = responseData['data'] as Map<String, dynamic>?;
+            final groupsList = paginatedData?['data'] as List?;
+            
+            if (groupsList != null) {
+              // Store groups in local database
+              for (final groupData in groupsList) {
+                await _databaseService.setSetting(
+                  'group_${groupData['id']}', 
+                  groupData.toString()
+                );
+                syncedCount++;
+              }
               
               _progressController.add(SyncProgress(
                 category: 'Groups',
                 total: total,
-                synced: i + 1,
+                synced: syncedCount,
                 status: 'Syncing groups...',
+                currentPage: page,
+                totalPages: totalPages,
               ));
             }
-
-            _progressController.add(SyncProgress(
-              category: 'Groups',
-              total: total,
-              synced: total,
-              status: 'Groups synced successfully',
-            ));
           }
         }
+
+        _progressController.add(SyncProgress(
+          category: 'Groups',
+          total: total,
+          synced: syncedCount,
+          status: 'Groups synced successfully',
+          currentPage: totalPages,
+          totalPages: totalPages,
+        ));
       }
     } catch (e) {
       print('SyncService: Error syncing groups: $e');
@@ -148,7 +180,7 @@ class SyncService {
     }
   }
 
-  /// Sync families from the server
+  /// Sync families from the server with pagination
   Future<void> _syncFamilies() async {
     try {
       print('SyncService: Starting families sync...');
@@ -160,51 +192,79 @@ class SyncService {
         status: 'Fetching families...',
       ));
 
-      final response = await _apiService.dio.get('/families');
+      // First, get total count
+      final countResponse = await _apiService.dio.get('/families', queryParameters: {
+        'per_page': 1,
+        'page': 1,
+      });
       
-      if (response.statusCode == 200) {
-        final responseData = response.data;
+      if (countResponse.statusCode == 200) {
+        final responseData = countResponse.data;
         final paginatedData = responseData['data'] as Map<String, dynamic>?;
+        final total = paginatedData?['total'] as int? ?? 0;
+        final totalPages = (total / 100).ceil();
         
-        if (paginatedData != null) {
-          final familiesList = paginatedData['data'] as List?;
-          
-          if (familiesList != null) {
-            final total = familiesList.length;
-            
-            _progressController.add(SyncProgress(
-              category: 'Families',
-              total: total,
-              synced: 0,
-              status: 'Processing families...',
-            ));
+        _progressController.add(SyncProgress(
+          category: 'Families',
+          total: total,
+          synced: 0,
+          status: 'Processing families...',
+          totalPages: totalPages,
+        ));
 
-            // Store families in local database
-            for (int i = 0; i < familiesList.length; i++) {
-              final familyData = familiesList[i];
-              
-              // Store family data in settings table
-              await _databaseService.setSetting(
-                'family_${familyData['id']}', 
-                familyData.toString()
-              );
+        int syncedCount = 0;
+        
+        // Fetch all pages
+        for (int page = 1; page <= totalPages; page++) {
+          _progressController.add(SyncProgress(
+            category: 'Families',
+            total: total,
+            synced: syncedCount,
+            status: 'Fetching page $page of $totalPages...',
+            currentPage: page,
+            totalPages: totalPages,
+          ));
+
+          final response = await _apiService.dio.get('/families', queryParameters: {
+            'per_page': 100,
+            'page': page,
+          });
+          
+          if (response.statusCode == 200) {
+            final responseData = response.data;
+            final paginatedData = responseData['data'] as Map<String, dynamic>?;
+            final familiesList = paginatedData?['data'] as List?;
+            
+            if (familiesList != null) {
+              // Store families in local database
+              for (final familyData in familiesList) {
+                await _databaseService.setSetting(
+                  'family_${familyData['id']}', 
+                  familyData.toString()
+                );
+                syncedCount++;
+              }
               
               _progressController.add(SyncProgress(
                 category: 'Families',
                 total: total,
-                synced: i + 1,
+                synced: syncedCount,
                 status: 'Syncing families...',
+                currentPage: page,
+                totalPages: totalPages,
               ));
             }
-
-            _progressController.add(SyncProgress(
-              category: 'Families',
-              total: total,
-              synced: total,
-              status: 'Families synced successfully',
-            ));
           }
         }
+
+        _progressController.add(SyncProgress(
+          category: 'Families',
+          total: total,
+          synced: syncedCount,
+          status: 'Families synced successfully',
+          currentPage: totalPages,
+          totalPages: totalPages,
+        ));
       }
     } catch (e) {
       print('SyncService: Error syncing families: $e');
@@ -219,7 +279,7 @@ class SyncService {
     }
   }
 
-  /// Sync members from the server
+  /// Sync members from the server with pagination
   Future<void> _syncMembers() async {
     try {
       print('SyncService: Starting members sync...');
@@ -231,58 +291,96 @@ class SyncService {
         status: 'Fetching members...',
       ));
 
-      final response = await _apiService.dio.get('/members');
+      // First, get total count
+      final countResponse = await _apiService.dio.get('/members', queryParameters: {
+        'per_page': 1,
+        'page': 1,
+      });
       
-      if (response.statusCode == 200) {
-        final responseData = response.data;
+      if (countResponse.statusCode == 200) {
+        final responseData = countResponse.data;
         final paginatedData = responseData['data'] as Map<String, dynamic>?;
+        final total = paginatedData?['total'] as int? ?? 0;
+        final totalPages = (total / 100).ceil();
         
-        if (paginatedData != null) {
-          final membersList = paginatedData['data'] as List?;
+        _progressController.add(SyncProgress(
+          category: 'Members',
+          total: total,
+          synced: 0,
+          status: 'Processing members...',
+          totalPages: totalPages,
+        ));
+
+        int syncedCount = 0;
+        final allMembers = <Member>[];
+        
+        // Fetch all pages
+        for (int page = 1; page <= totalPages; page++) {
+          _progressController.add(SyncProgress(
+            category: 'Members',
+            total: total,
+            synced: syncedCount,
+            status: 'Fetching page $page of $totalPages...',
+            currentPage: page,
+            totalPages: totalPages,
+          ));
+
+          final response = await _apiService.dio.get('/members', queryParameters: {
+            'per_page': 100,
+            'page': page,
+          });
           
-          if (membersList != null) {
-            final total = membersList.length;
+          if (response.statusCode == 200) {
+            final responseData = response.data;
+            final paginatedData = responseData['data'] as Map<String, dynamic>?;
+            final membersList = paginatedData?['data'] as List?;
             
-            _progressController.add(SyncProgress(
-              category: 'Members',
-              total: total,
-              synced: 0,
-              status: 'Processing members...',
-            ));
-
-            // Convert to Member objects and store in database
-            final members = <Member>[];
-            for (int i = 0; i < membersList.length; i++) {
-              final memberData = membersList[i];
-              
-              try {
-                final member = Member.fromJson(memberData);
-                members.add(member);
-                
-                _progressController.add(SyncProgress(
-                  category: 'Members',
-                  total: total,
-                  synced: i + 1,
-                  status: 'Syncing members...',
-                ));
-              } catch (e) {
-                print('SyncService: Error parsing member ${memberData['id']}: $e');
+            if (membersList != null) {
+              // Convert to Member objects
+              for (final memberData in membersList) {
+                try {
+                  final member = Member.fromJson(memberData);
+                  allMembers.add(member);
+                  syncedCount++;
+                } catch (e) {
+                  print('SyncService: Error parsing member ${memberData['id']}: $e');
+                }
               }
+              
+              _progressController.add(SyncProgress(
+                category: 'Members',
+                total: total,
+                synced: syncedCount,
+                status: 'Syncing members...',
+                currentPage: page,
+                totalPages: totalPages,
+              ));
             }
-
-            // Bulk insert members
-            if (members.isNotEmpty) {
-              await _databaseService.insertMembers(members);
-            }
-
-            _progressController.add(SyncProgress(
-              category: 'Members',
-              total: total,
-              synced: total,
-              status: 'Members synced successfully',
-            ));
           }
         }
+
+        // Bulk insert all members
+        if (allMembers.isNotEmpty) {
+          _progressController.add(SyncProgress(
+            category: 'Members',
+            total: total,
+            synced: syncedCount,
+            status: 'Saving members to database...',
+            currentPage: totalPages,
+            totalPages: totalPages,
+          ));
+          
+          await _databaseService.insertMembers(allMembers);
+        }
+
+        _progressController.add(SyncProgress(
+          category: 'Members',
+          total: total,
+          synced: syncedCount,
+          status: 'Members synced successfully',
+          currentPage: totalPages,
+          totalPages: totalPages,
+        ));
       }
     } catch (e) {
       print('SyncService: Error syncing members: $e');
