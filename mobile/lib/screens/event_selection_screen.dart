@@ -18,7 +18,9 @@ class EventSelectionScreen extends StatefulWidget {
 class _EventSelectionScreenState extends State<EventSelectionScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  bool _showOnlyActive = true;
+  bool _showOnlyActive = false;
+  bool _showOnlyToday = false;
+  bool _showOnlyEligible = true;
 
   @override
   void initState() {
@@ -48,12 +50,65 @@ class _EventSelectionScreenState extends State<EventSelectionScreen> {
   void _toggleFilter() {
     setState(() {
       _showOnlyActive = !_showOnlyActive;
+      _showOnlyToday = false; // Reset today filter when toggling active filter
+      _showOnlyEligible = false; // Reset eligible filter when toggling active filter
     });
+    
+    // Refresh events based on the new filter
+    if (_showOnlyActive) {
+      final eventProvider = Provider.of<EventProvider>(context, listen: false);
+      eventProvider.refreshAllEvents();
+    } else {
+      _loadEvents(); // Load eligible events by default
+    }
+  }
+
+  void _toggleTodayFilter() {
+    setState(() {
+      _showOnlyToday = !_showOnlyToday;
+      _showOnlyActive = false; // Reset active filter when toggling today filter
+      _showOnlyEligible = false; // Reset eligible filter when toggling today filter
+    });
+    
+    // Refresh events based on the new filter
+    if (_showOnlyToday) {
+      final eventProvider = Provider.of<EventProvider>(context, listen: false);
+      eventProvider.refreshAllEvents();
+    } else {
+      _loadEvents(); // Load eligible events by default
+    }
+  }
+
+  void _toggleEligibleFilter() {
+    setState(() {
+      _showOnlyEligible = !_showOnlyEligible;
+      _showOnlyActive = false; // Reset active filter when toggling eligible filter
+      _showOnlyToday = false; // Reset today filter when toggling eligible filter
+    });
+    
+    // Refresh events based on the new filter
+    if (_showOnlyEligible) {
+      _loadEvents();
+    } else {
+      // Load all events when eligible filter is turned off
+      final eventProvider = Provider.of<EventProvider>(context, listen: false);
+      eventProvider.refreshAllEvents();
+    }
   }
 
   List<Event> _getFilteredEvents() {
     final eventProvider = Provider.of<EventProvider>(context, listen: false);
-    List<Event> events = _showOnlyActive ? eventProvider.activeEvents : eventProvider.events;
+    List<Event> events;
+    
+    if (_showOnlyEligible) {
+      events = eventProvider.eligibleEvents;
+    } else if (_showOnlyToday) {
+      events = eventProvider.todayEvents;
+    } else if (_showOnlyActive) {
+      events = eventProvider.activeEvents;
+    } else {
+      events = eventProvider.events;
+    }
     
     if (_searchQuery.isNotEmpty) {
       events = events.where((event) {
@@ -174,10 +229,26 @@ class _EventSelectionScreenState extends State<EventSelectionScreen> {
         children: [
           FilterChip(
             label: Text(_showOnlyActive ? 'Active' : 'All'),
-            selected: true,
+            selected: _showOnlyActive && !_showOnlyToday && !_showOnlyEligible,
             onSelected: (_) => _toggleFilter(),
             selectedColor: AppColors.primaryBlue.withOpacity(0.2),
             checkmarkColor: AppColors.primaryBlue,
+          ),
+          const SizedBox(width: AppDimensions.paddingSmall),
+          FilterChip(
+            label: const Text('Today'),
+            selected: _showOnlyToday,
+            onSelected: (_) => _toggleTodayFilter(),
+            selectedColor: AppColors.gold.withOpacity(0.2),
+            checkmarkColor: AppColors.gold,
+          ),
+          const SizedBox(width: AppDimensions.paddingSmall),
+          FilterChip(
+            label: const Text('Eligible'),
+            selected: _showOnlyEligible,
+            onSelected: (_) => _toggleEligibleFilter(),
+            selectedColor: AppColors.success.withOpacity(0.2),
+            checkmarkColor: AppColors.success,
           ),
           const SizedBox(width: AppDimensions.paddingSmall),
           Consumer<EventProvider>(
