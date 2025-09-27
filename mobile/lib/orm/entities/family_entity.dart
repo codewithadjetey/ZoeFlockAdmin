@@ -1,5 +1,5 @@
 import '../base_entity.dart';
-import '../repository.dart';
+import '../base_repository.dart';
 import '../../utils/constants.dart';
 
 /// Family entity that extends BaseEntity for ORM functionality
@@ -23,7 +23,7 @@ class FamilyEntity extends BaseEntity {
   @override
   int? get id => _id;
 
-  const FamilyEntity({
+  FamilyEntity({
     int? id,
     required this.name,
     this.description,
@@ -216,8 +216,8 @@ class FamilyRepository extends BaseRepository<FamilyEntity> {
   }
 
   /// Search families by name, description, or address
-  Future<List<FamilyEntity>> search(String query) async {
-    return await search(query, ['name', 'description', 'address']);
+  Future<List<FamilyEntity>> search(String query, List<String> fields, {String? orderBy}) async {
+    return await super.search(query, fields, orderBy: orderBy);
   }
 
   /// Update member count for a family

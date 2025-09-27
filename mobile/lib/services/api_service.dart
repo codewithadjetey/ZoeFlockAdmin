@@ -438,8 +438,21 @@ class ApiService {
       
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          final List<dynamic> groupsData = data['data'];
+        if (data['success'] == true) {
+          // Check for both 'data' and 'groups' keys in the response
+          List<dynamic> groupsData = [];
+          if (data['data'] != null) {
+            groupsData = data['data'];
+          } else if (data['groups'] != null) {
+            // Handle paginated response structure
+            final groupsResponse = data['groups'];
+            if (groupsResponse['data'] != null) {
+              groupsData = groupsResponse['data'];
+            } else {
+              groupsData = groupsResponse;
+            }
+          }
+          
           final groups = groupsData.cast<Map<String, dynamic>>();
           print('🚀 ApiService: ✅ Successfully got ${groups.length} groups');
           return ApiResponse.success(groups);
@@ -469,8 +482,21 @@ class ApiService {
       
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          final List<dynamic> familiesData = data['data'];
+        if (data['success'] == true) {
+          // Check for both 'data' and 'families' keys in the response
+          List<dynamic> familiesData = [];
+          if (data['data'] != null) {
+            familiesData = data['data'];
+          } else if (data['families'] != null) {
+            // Handle paginated response structure
+            final familiesResponse = data['families'];
+            if (familiesResponse['data'] != null) {
+              familiesData = familiesResponse['data'];
+            } else {
+              familiesData = familiesResponse;
+            }
+          }
+          
           final families = familiesData.cast<Map<String, dynamic>>();
           print('🚀 ApiService: ✅ Successfully got ${families.length} families');
           return ApiResponse.success(families);

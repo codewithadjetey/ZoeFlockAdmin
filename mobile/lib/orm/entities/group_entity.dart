@@ -1,5 +1,5 @@
 import '../base_entity.dart';
-import '../repository.dart';
+import '../base_repository.dart';
 import '../../utils/constants.dart';
 
 /// Group entity that extends BaseEntity for ORM functionality
@@ -22,7 +22,7 @@ class GroupEntity extends BaseEntity {
   @override
   int? get id => _id;
 
-  const GroupEntity({
+  GroupEntity({
     int? id,
     required this.name,
     this.description,
@@ -208,8 +208,8 @@ class GroupRepository extends BaseRepository<GroupEntity> {
   }
 
   /// Search groups by name or description
-  Future<List<GroupEntity>> search(String query) async {
-    return await search(query, ['name', 'description']);
+  Future<List<GroupEntity>> search(String query, List<String> fields, {String? orderBy}) async {
+    return await super.search(query, fields, orderBy: orderBy);
   }
 
   /// Update member count for a group

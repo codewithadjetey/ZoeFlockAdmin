@@ -13,7 +13,7 @@ class DatabaseHelper {
   bool _isInitialized = false;
 
   // Current database version - increment this when you need to add migrations
-  static const int _currentVersion = 5;
+  static const int _currentVersion = 7;
 
   /// Initialize the database service
   Future<void> initialize() async {
@@ -310,6 +310,60 @@ class DatabaseHelper {
           print('DatabaseHelper: Error adding authentication fields: $e');
           // Continue anyway as columns might already exist
         }
+        
+        break;
+        
+      case 6:
+        // Migration for version 6 - Create groups table
+        print('DatabaseHelper: Running migration V6 - Creating groups table');
+        
+        await db.execute('''
+          CREATE TABLE groups (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            description TEXT,
+            color TEXT,
+            icon TEXT,
+            leader_id INTEGER,
+            leader_name TEXT,
+            member_count INTEGER NOT NULL DEFAULT 0,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            FOREIGN KEY (leader_id) REFERENCES users (id)
+          )
+        ''');
+
+        await db.execute('''
+          CREATE INDEX idx_groups_name ON groups (name)
+        ''');
+        
+        break;
+        
+      case 7:
+        // Migration for version 7 - Create families table
+        print('DatabaseHelper: Running migration V7 - Creating families table');
+        
+        await db.execute('''
+          CREATE TABLE families (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            description TEXT,
+            address TEXT,
+            phone TEXT,
+            email TEXT,
+            head_of_family_id INTEGER,
+            head_of_family_name TEXT,
+            member_count INTEGER NOT NULL DEFAULT 0,
+            is_active INTEGER NOT NULL DEFAULT 1,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+          )
+        ''');
+
+        await db.execute('''
+          CREATE INDEX idx_families_name ON families (name)
+        ''');
         
         break;
         
