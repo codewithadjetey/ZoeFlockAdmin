@@ -25,19 +25,20 @@ class EventProvider extends ChangeNotifier {
   List<Event> get activeEvents => _events.where((event) => event.isActive).toList();
   List<Event> get upcomingEvents => _events.where((event) => event.isUpcoming).toList();
   List<Event> get todayEvents => _events.where((event) => event.isToday).toList();
+  List<Event> get eligibleEvents => _events.where((event) => event.isEligibleForAttendance).toList();
 
   Future<void> initialize() async {
     await _loadEventsFromDatabase();
     await refreshEvents();
   }
 
-  Future<void> refreshEvents() async {
+  Future<void> refreshEvents({bool eligibleForAttendance = true}) async {
     _setLoading(true);
     _clearError();
     
     try {
       // Try to fetch from API first
-      final response = await _apiService.getEvents();
+      final response = await _apiService.getEvents(eligibleForAttendance: eligibleForAttendance);
       
       if (response.isSuccess && response.data != null) {
         _events = response.data!;
@@ -62,6 +63,10 @@ class EventProvider extends ChangeNotifier {
     } finally {
       _setLoading(false);
     }
+  }
+
+  Future<void> refreshAllEvents() async {
+    await refreshEvents(eligibleForAttendance: false);
   }
 
   Future<void> _loadEventsFromDatabase() async {
