@@ -49,12 +49,7 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
       final List<Member> allMembers = memberData.map((data) => Member.fromDatabase(data)).toList();
       
       // Get unique families
-      final families = <String>{};
-      for (final member in allMembers) {
-        if (member.family != null && member.family!.isNotEmpty) {
-          families.add(member.family!);
-        }
-      }
+      final List<String> families = await _databaseHelper.getUniqueFamilies();
       
       setState(() {
         _allMembers = allMembers;

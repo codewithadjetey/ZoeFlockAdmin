@@ -427,6 +427,99 @@ class ApiService {
     }
   }
 
+  /// Get all groups
+  Future<ApiResponse<List<Map<String, dynamic>>>> getAllGroups() async {
+    try {
+      print('🚀 ApiService: Getting all groups...');
+      final response = await _dio.get('/groups');
+      
+      print('✅ ApiService: Groups response status: ${response.statusCode}');
+      print('📊 ApiService: Groups response data: ${response.data}');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List<dynamic> groupsData = data['data'];
+          final groups = groupsData.cast<Map<String, dynamic>>();
+          print('🚀 ApiService: ✅ Successfully got ${groups.length} groups');
+          return ApiResponse.success(groups);
+        } else {
+          print('🚀 ApiService: ❌ Failed to get groups - API returned success: false');
+          return ApiResponse.error('Failed to get groups');
+        }
+      } else {
+        print('🚀 ApiService: ❌ Failed to get groups - Invalid response');
+        return ApiResponse.error('Failed to get groups');
+      }
+    } catch (e) {
+      print('🚀 ApiService: ❌ Failed to get groups');
+      print('Error getting groups: $e');
+      return ApiResponse.error('Failed to get groups');
+    }
+  }
+
+  /// Get all families
+  Future<ApiResponse<List<Map<String, dynamic>>>> getAllFamilies() async {
+    try {
+      print('🚀 ApiService: Getting all families...');
+      final response = await _dio.get('/families');
+      
+      print('✅ ApiService: Families response status: ${response.statusCode}');
+      print('📊 ApiService: Families response data: ${response.data}');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List<dynamic> familiesData = data['data'];
+          final families = familiesData.cast<Map<String, dynamic>>();
+          print('🚀 ApiService: ✅ Successfully got ${families.length} families');
+          return ApiResponse.success(families);
+        } else {
+          print('🚀 ApiService: ❌ Failed to get families - API returned success: false');
+          return ApiResponse.error('Failed to get families');
+        }
+      } else {
+        print('🚀 ApiService: ❌ Failed to get families - Invalid response');
+        return ApiResponse.error('Failed to get families');
+      }
+    } catch (e) {
+      print('🚀 ApiService: ❌ Failed to get families');
+      print('Error getting families: $e');
+      return ApiResponse.error('Failed to get families');
+    }
+  }
+
+  /// Get all first timers
+  Future<ApiResponse<List<Map<String, dynamic>>>> getAllFirstTimers() async {
+    try {
+      print('🚀 ApiService: Getting all first timers...');
+      final response = await _dio.get('/first-timers');
+      
+      print('✅ ApiService: First timers response status: ${response.statusCode}');
+      print('📊 ApiService: First timers response data: ${response.data}');
+      
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List<dynamic> firstTimersData = data['data'];
+          final firstTimers = firstTimersData.cast<Map<String, dynamic>>();
+          print('🚀 ApiService: ✅ Successfully got ${firstTimers.length} first timers');
+          return ApiResponse.success(firstTimers);
+        } else {
+          print('🚀 ApiService: ❌ Failed to get first timers - API returned success: false');
+          return ApiResponse.error('Failed to get first timers');
+        }
+      } else {
+        print('🚀 ApiService: ❌ Failed to get first timers - Invalid response');
+        return ApiResponse.error('Failed to get first timers');
+      }
+    } catch (e) {
+      print('🚀 ApiService: ❌ Failed to get first timers');
+      print('Error getting first timers: $e');
+      return ApiResponse.error('Failed to get first timers');
+    }
+  }
+
   // Attendance endpoints
   Future<ApiResponse<Attendance>> markAttendance(int memberId, int eventId, {
     String status = 'present',

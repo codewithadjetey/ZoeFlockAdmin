@@ -586,6 +586,20 @@ class DatabaseHelper {
     }
   }
 
+  /// Get unique families from members
+  Future<List<String>> getUniqueFamilies() async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.rawQuery(
+        'SELECT DISTINCT family FROM ${DatabaseConstants.membersTable} WHERE family IS NOT NULL AND family != "" ORDER BY family ASC',
+      );
+      return maps.map((map) => map['family'] as String).toList();
+    } catch (e) {
+      print('DatabaseHelper: Error getting unique families: $e');
+      return [];
+    }
+  }
+
   /// Get member count by status
   Future<Map<String, int>> getMemberCounts() async {
     final db = await database;
