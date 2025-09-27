@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/member.dart';
-import '../services/database_helper.dart';
+import '../services/database_service_orm.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
@@ -16,7 +16,7 @@ class MembersScreen extends StatefulWidget {
 }
 
 class _MembersScreenState extends State<MembersScreen> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final DatabaseService _databaseService = DatabaseService();
   final TextEditingController _searchController = TextEditingController();
   
   List<Member> _members = [];
@@ -30,6 +30,11 @@ class _MembersScreenState extends State<MembersScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeAndLoad();
+  }
+
+  Future<void> _initializeAndLoad() async {
+    await _databaseService.initialize();
     _loadMembers();
     _loadGroups();
   }
@@ -46,8 +51,7 @@ class _MembersScreenState extends State<MembersScreen> {
     });
 
     try {
-      final List<Map<String, dynamic>> memberData = await _databaseHelper.getAllMembers();
-      final List<Member> members = memberData.map((data) => Member.fromDatabase(data)).toList();
+      final List<Member> members = await _databaseService.getAllMembers();
       
       setState(() {
         _members = members;
@@ -68,7 +72,7 @@ class _MembersScreenState extends State<MembersScreen> {
 
   Future<void> _loadGroups() async {
     try {
-      final groups = await _databaseHelper.getUniqueGroups();
+      final groups = await _databaseService.getUniqueGroups();
       setState(() {
         _availableGroups = groups;
       });

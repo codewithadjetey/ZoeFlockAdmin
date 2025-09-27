@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/member.dart';
-import '../services/database_helper.dart';
+import '../services/database_service_orm.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
@@ -16,7 +16,7 @@ class FamiliesScreen extends StatefulWidget {
 }
 
 class _FamiliesScreenState extends State<FamiliesScreen> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final DatabaseService _databaseService = DatabaseService();
   final TextEditingController _searchController = TextEditingController();
   
   List<String> _families = [];
@@ -29,6 +29,11 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeAndLoad();
+  }
+
+  Future<void> _initializeAndLoad() async {
+    await _databaseService.initialize();
     _loadFamiliesAndMembers();
   }
 
@@ -45,11 +50,10 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
 
     try {
       // Load all members
-      final List<Map<String, dynamic>> memberData = await _databaseHelper.getAllMembers();
-      final List<Member> allMembers = memberData.map((data) => Member.fromDatabase(data)).toList();
+      final List<Member> allMembers = await _databaseService.getAllMembers();
       
       // Get unique families
-      final List<String> families = await _databaseHelper.getUniqueFamilies();
+      final List<String> families = await _databaseService.getUniqueFamilies();
       
       setState(() {
         _allMembers = allMembers;

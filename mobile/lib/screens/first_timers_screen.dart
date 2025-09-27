@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/member.dart';
-import '../services/database_helper.dart';
+import '../services/database_service_orm.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
@@ -16,7 +16,7 @@ class FirstTimersScreen extends StatefulWidget {
 }
 
 class _FirstTimersScreenState extends State<FirstTimersScreen> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final DatabaseService _databaseService = DatabaseService();
   final TextEditingController _searchController = TextEditingController();
   
   List<Member> _firstTimers = [];
@@ -27,6 +27,11 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
   @override
   void initState() {
     super.initState();
+    _initializeAndLoad();
+  }
+
+  Future<void> _initializeAndLoad() async {
+    await _databaseService.initialize();
     _loadFirstTimers();
   }
 
@@ -43,8 +48,7 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
 
     try {
       // Get all members and filter for first timers
-      final List<Map<String, dynamic>> memberData = await _databaseHelper.getAllMembers();
-      final List<Member> allMembers = memberData.map((data) => Member.fromDatabase(data)).toList();
+      final List<Member> allMembers = await _databaseService.getAllMembers();
       
       // Filter for first timers (members who are new or have special status)
       final firstTimers = allMembers.where((member) {
