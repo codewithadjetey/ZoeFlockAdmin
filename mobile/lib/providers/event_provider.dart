@@ -29,7 +29,6 @@ class EventProvider extends ChangeNotifier {
 
   Future<void> initialize() async {
     await _loadEventsFromDatabase();
-    await refreshEvents();
   }
 
   Future<void> refreshEvents({bool eligibleForAttendance = true}) async {
@@ -37,29 +36,63 @@ class EventProvider extends ChangeNotifier {
     _clearError();
     
     try {
-      // Try to fetch from API first
+      // Load from database first (offline data is primary)
+      await _loadEventsFromDatabase();
+      _isOffline = true;
+      
+      // Try to sync with API in background (optional)
+      _syncWithAPI(eligibleForAttendance);
+      
+    } catch (e) {
+      _events = [];
+      _setError('Failed to load events from database: ${e.toString()}');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  /// Sync with API in background (optional)
+  Future<void> _syncWithAPI(bool eligibleForAttendance) async {
+    try {
       final response = await _apiService.getEvents(eligibleForAttendance: eligibleForAttendance);
       
       if (response.isSuccess && response.data != null) {
-        _events = response.data!;
-        _isOffline = false;
-        
-        // Cache events in database
-        await _databaseService.insertEvents(_events);
-        
-        // Restore selected event if it exists
-        await _restoreSelectedEvent();
-      } else {
-        // API failed, use cached data
+        // Update local database with fresh data
+        await _databaseService.insertEvents(response.data!);
+        // Reload from database to get updated data
         await _loadEventsFromDatabase();
-        _isOffline = true;
-        _setError('Using offline data - ${response.errorMessage}');
+        _isOffline = false;
+        _clearError();
+        print('EventProvider: Events synced with API successfully');
       }
     } catch (e) {
-      // Error fetching from API, use cached data
-      await _loadEventsFromDatabase();
-      _isOffline = true;
-      _setError('Using offline data - ${e.toString()}');
+      // Keep using offline data, API sync failed
+      print('EventProvider: API sync failed, continuing with offline data: $e');
+    }
+  }
+
+  /// Manual sync with API (for sync dialog)
+  Future<bool> syncWithAPI({bool eligibleForAttendance = true}) async {
+    try {
+      _setLoading(true);
+      final response = await _apiService.getEvents(eligibleForAttendance: eligibleForAttendance);
+      
+      if (response.isSuccess && response.data != null) {
+        // Update local database with fresh data
+        await _databaseService.insertEvents(response.data!);
+        // Reload from database to get updated data
+        await _loadEventsFromDatabase();
+        _isOffline = false;
+        _clearError();
+        notifyListeners();
+        return true;
+      } else {
+        _setError('Sync failed: ${response.errorMessage}');
+        return false;
+      }
+    } catch (e) {
+      _setError('Sync failed: ${e.toString()}');
+      return false;
     } finally {
       _setLoading(false);
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../providers/event_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../models/event.dart';
@@ -8,6 +9,7 @@ import '../utils/helpers.dart';
 import '../widgets/event_card.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/sync_dialog.dart';
 
 class EventSelectionScreen extends StatefulWidget {
   const EventSelectionScreen({super.key});
@@ -18,16 +20,19 @@ class EventSelectionScreen extends StatefulWidget {
 
 class _EventSelectionScreenState extends State<EventSelectionScreen> {
   final _searchController = TextEditingController();
+  final Connectivity _connectivity = Connectivity();
   String _searchQuery = '';
   bool _showOnlyActive = false;
   bool _showOnlyToday = false;
   bool _showOnlyEligible = true;
+  bool _hasShownSyncPrompt = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadEvents();
+      _checkConnectivityAndPromptSync();
     });
   }
 
@@ -40,6 +45,57 @@ class _EventSelectionScreenState extends State<EventSelectionScreen> {
   Future<void> _loadEvents() async {
     final eventProvider = Provider.of<EventProvider>(context, listen: false);
     await eventProvider.refreshEvents();
+  }
+
+  Future<void> _checkConnectivityAndPromptSync() async {
+    if (_hasShownSyncPrompt) return;
+    
+    try {
+      final connectivityResult = await _connectivity.checkConnectivity();
+      final isOnline = connectivityResult != ConnectivityResult.none;
+      
+      if (isOnline && mounted) {
+        _hasShownSyncPrompt = true;
+        _showSyncPrompt();
+      }
+    } catch (e) {
+      print('Error checking connectivity: $e');
+    }
+  }
+
+  void _showSyncPrompt() {
+    final eventProvider = Provider.of<EventProvider>(context, listen: false);
+    
+    if (eventProvider.isOffline) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Internet Available'),
+          content: const Text('You have internet connection. Would you like to sync events data?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Later'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _showSyncDialog();
+              },
+              child: const Text('Sync Now'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Future<void> _showSyncDialog() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const SyncDialog(),
+    );
   }
 
   void _onSearchChanged(String query) {
@@ -153,6 +209,18 @@ class _EventSelectionScreenState extends State<EventSelectionScreen> {
       appBar: CustomAppBar(
         title: AppStrings.eventSelectionTitle,
         actions: [
+          Consumer<EventProvider>(
+            builder: (context, eventProvider, child) {
+              return IconButton(
+                icon: Icon(
+                  eventProvider.isOffline ? Icons.sync : Icons.cloud_done,
+                  color: eventProvider.isOffline ? Colors.orange : Colors.green,
+                ),
+                onPressed: () => _showSyncDialog(),
+                tooltip: eventProvider.isOffline ? 'Sync with server' : 'Data is synced',
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshEvents,
