@@ -6,6 +6,7 @@ import '../models/event.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
 import 'database_service.dart';
+import 'offline_attendance_service.dart';
 
 class SyncProgress {
   final String category;
@@ -38,6 +39,7 @@ class SyncService {
 
   final ApiService _apiService = ApiService();
   final DatabaseService _databaseService = DatabaseService();
+  final OfflineAttendanceService _offlineAttendanceService = OfflineAttendanceService();
   
   final StreamController<SyncProgress> _progressController = StreamController<SyncProgress>.broadcast();
   Stream<SyncProgress> get progressStream => _progressController.stream;
@@ -121,6 +123,11 @@ class SyncService {
       print('SyncService: Starting Events sync...');
       await _syncEvents();
       print('SyncService: Events sync completed');
+
+      // Sync Offline Attendance
+      print('SyncService: Starting Offline Attendance sync...');
+      await _syncOfflineAttendance();
+      print('SyncService: Offline Attendance sync completed');
 
       print('SyncService: Full data sync completed successfully');
     } catch (e) {
@@ -691,6 +698,51 @@ class SyncService {
         'groups': 0,
         'families': 0,
       };
+    }
+  }
+
+  /// Sync offline attendance to server
+  Future<void> _syncOfflineAttendance() async {
+    try {
+      print('SyncService: Starting offline attendance sync...');
+      
+      _progressController.add(SyncProgress(
+        category: 'Offline Attendance',
+        total: 0,
+        synced: 0,
+        status: 'Syncing offline attendance...',
+        currentPage: 1,
+        totalPages: 1,
+      ));
+
+      final syncResult = await _offlineAttendanceService.syncOfflineAttendance();
+      
+      _progressController.add(SyncProgress(
+        category: 'Offline Attendance',
+        total: syncResult.syncedCount + syncResult.errorCount,
+        synced: syncResult.syncedCount,
+        status: syncResult.success 
+            ? 'Offline attendance synced successfully' 
+            : 'Offline attendance sync completed with errors',
+        currentPage: 1,
+        totalPages: 1,
+      ));
+
+      if (!syncResult.success) {
+        print('SyncService: Offline attendance sync had errors: ${syncResult.errors}');
+      }
+
+      print('SyncService: Offline attendance sync completed - Synced: ${syncResult.syncedCount}, Errors: ${syncResult.errorCount}');
+    } catch (e) {
+      print('SyncService: Error syncing offline attendance: $e');
+      _progressController.add(SyncProgress(
+        category: 'Offline Attendance',
+        total: 0,
+        synced: 0,
+        status: 'Error syncing offline attendance',
+        error: e.toString(),
+      ));
+      rethrow;
     }
   }
 

@@ -102,6 +102,7 @@ class DatabaseConstants {
   static const String membersTable = 'members';
   static const String eventsTable = 'events';
   static const String attendanceTable = 'attendance';
+  static const String offlineAttendanceTable = 'offline_attendance';
   static const String settingsTable = 'settings';
 }
 

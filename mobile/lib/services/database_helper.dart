@@ -13,7 +13,7 @@ class DatabaseHelper {
   bool _isInitialized = false;
 
   // Current database version - increment this when you need to add migrations
-  static const int _currentVersion = 3;
+  static const int _currentVersion = 4;
 
   /// Initialize the database service
   Future<void> initialize() async {
@@ -183,6 +183,30 @@ class DatabaseHelper {
           )
         ''');
 
+        // Create offline attendance table for local storage and sync
+        await db.execute('''
+          CREATE TABLE ${DatabaseConstants.offlineAttendanceTable} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            local_id TEXT NOT NULL UNIQUE,
+            member_id INTEGER NOT NULL,
+            event_id INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            check_in_time INTEGER NOT NULL,
+            notes TEXT,
+            is_first_timer INTEGER DEFAULT 0,
+            is_synced INTEGER DEFAULT 0,
+            server_id INTEGER,
+            server_version INTEGER DEFAULT 0,
+            local_version INTEGER DEFAULT 1,
+            conflict_resolved INTEGER DEFAULT 0,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            synced_at INTEGER,
+            FOREIGN KEY (member_id) REFERENCES ${DatabaseConstants.membersTable} (id),
+            FOREIGN KEY (event_id) REFERENCES ${DatabaseConstants.eventsTable} (id)
+          )
+        ''');
+
         // Create settings table
         await db.execute('''
           CREATE TABLE ${DatabaseConstants.settingsTable} (
@@ -197,6 +221,57 @@ class DatabaseHelper {
           CREATE INDEX idx_attendance_member_event 
           ON ${DatabaseConstants.attendanceTable} (member_id, event_id)
         ''');
+
+        // Create index for offline attendance table
+        await db.execute('''
+          CREATE INDEX idx_offline_attendance_member_event 
+          ON ${DatabaseConstants.offlineAttendanceTable} (member_id, event_id)
+        ''');
+
+        await db.execute('''
+          CREATE INDEX idx_offline_attendance_sync 
+          ON ${DatabaseConstants.offlineAttendanceTable} (is_synced, synced_at)
+        ''');
+        break;
+        
+      case 4:
+        // Migration to version 4: Add offline attendance table
+        print('DatabaseHelper: Running migration to version 4 - Adding offline attendance table');
+        
+        await db.execute('''
+          CREATE TABLE ${DatabaseConstants.offlineAttendanceTable} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            local_id TEXT NOT NULL UNIQUE,
+            member_id INTEGER NOT NULL,
+            event_id INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            check_in_time INTEGER NOT NULL,
+            notes TEXT,
+            is_first_timer INTEGER DEFAULT 0,
+            is_synced INTEGER DEFAULT 0,
+            server_id INTEGER,
+            server_version INTEGER DEFAULT 0,
+            local_version INTEGER DEFAULT 1,
+            conflict_resolved INTEGER DEFAULT 0,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            synced_at INTEGER,
+            FOREIGN KEY (member_id) REFERENCES ${DatabaseConstants.membersTable} (id),
+            FOREIGN KEY (event_id) REFERENCES ${DatabaseConstants.eventsTable} (id)
+          )
+        ''');
+
+        // Create indexes for offline attendance table
+        await db.execute('''
+          CREATE INDEX idx_offline_attendance_member_event 
+          ON ${DatabaseConstants.offlineAttendanceTable} (member_id, event_id)
+        ''');
+
+        await db.execute('''
+          CREATE INDEX idx_offline_attendance_sync 
+          ON ${DatabaseConstants.offlineAttendanceTable} (is_synced, synced_at)
+        ''');
+        
         break;
         
       default:
@@ -519,6 +594,174 @@ class DatabaseHelper {
       print('DatabaseHelper: Bulk inserted ${members.length} members');
     } catch (e) {
       print('DatabaseHelper: Error bulk inserting members: $e');
+      rethrow;
+    }
+  }
+
+  // ========== OFFLINE ATTENDANCE METHODS ==========
+
+  /// Insert offline attendance record
+  Future<int> insertOfflineAttendance(Map<String, dynamic> attendance) async {
+    final db = await database;
+    try {
+      final id = await db.insert(
+        DatabaseConstants.offlineAttendanceTable,
+        attendance,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      print('DatabaseHelper: Offline attendance inserted with ID: $id');
+      return id;
+    } catch (e) {
+      print('DatabaseHelper: Error inserting offline attendance: $e');
+      rethrow;
+    }
+  }
+
+  /// Get all offline attendance records
+  Future<List<Map<String, dynamic>>> getAllOfflineAttendance() async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        DatabaseConstants.offlineAttendanceTable,
+        orderBy: 'created_at DESC',
+      );
+      return maps;
+    } catch (e) {
+      print('DatabaseHelper: Error getting offline attendance: $e');
+      return [];
+    }
+  }
+
+  /// Get unsynced offline attendance records
+  Future<List<Map<String, dynamic>>> getUnsyncedOfflineAttendance() async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        DatabaseConstants.offlineAttendanceTable,
+        where: 'is_synced = ?',
+        whereArgs: [0],
+        orderBy: 'created_at ASC',
+      );
+      return maps;
+    } catch (e) {
+      print('DatabaseHelper: Error getting unsynced offline attendance: $e');
+      return [];
+    }
+  }
+
+  /// Get offline attendance by local ID
+  Future<Map<String, dynamic>?> getOfflineAttendanceByLocalId(String localId) async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        DatabaseConstants.offlineAttendanceTable,
+        where: 'local_id = ?',
+        whereArgs: [localId],
+        limit: 1,
+      );
+      return maps.isNotEmpty ? maps.first : null;
+    } catch (e) {
+      print('DatabaseHelper: Error getting offline attendance by local ID: $e');
+      return null;
+    }
+  }
+
+  /// Update offline attendance record
+  Future<int> updateOfflineAttendance(Map<String, dynamic> attendance) async {
+    final db = await database;
+    try {
+      final id = attendance['id'] as int;
+      final count = await db.update(
+        DatabaseConstants.offlineAttendanceTable,
+        attendance,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      print('DatabaseHelper: Updated offline attendance with ID: $id');
+      return count;
+    } catch (e) {
+      print('DatabaseHelper: Error updating offline attendance: $e');
+      rethrow;
+    }
+  }
+
+  /// Mark offline attendance as synced
+  Future<int> markOfflineAttendanceAsSynced(String localId, int serverId, int serverVersion) async {
+    final db = await database;
+    try {
+      final count = await db.update(
+        DatabaseConstants.offlineAttendanceTable,
+        {
+          'is_synced': 1,
+          'server_id': serverId,
+          'server_version': serverVersion,
+          'synced_at': DateTime.now().millisecondsSinceEpoch,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'local_id = ?',
+        whereArgs: [localId],
+      );
+      print('DatabaseHelper: Marked offline attendance as synced: $localId');
+      return count;
+    } catch (e) {
+      print('DatabaseHelper: Error marking offline attendance as synced: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete offline attendance record
+  Future<int> deleteOfflineAttendance(int id) async {
+    final db = await database;
+    try {
+      final count = await db.delete(
+        DatabaseConstants.offlineAttendanceTable,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      print('DatabaseHelper: Deleted offline attendance with ID: $id');
+      return count;
+    } catch (e) {
+      print('DatabaseHelper: Error deleting offline attendance: $e');
+      rethrow;
+    }
+  }
+
+  /// Get offline attendance count
+  Future<int> getOfflineAttendanceCount() async {
+    final db = await database;
+    try {
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM ${DatabaseConstants.offlineAttendanceTable}',
+      );
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e) {
+      print('DatabaseHelper: Error getting offline attendance count: $e');
+      return 0;
+    }
+  }
+
+  /// Get unsynced offline attendance count
+  Future<int> getUnsyncedOfflineAttendanceCount() async {
+    final db = await database;
+    try {
+      final result = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM ${DatabaseConstants.offlineAttendanceTable} WHERE is_synced = 0',
+      );
+      return Sqflite.firstIntValue(result) ?? 0;
+    } catch (e) {
+      print('DatabaseHelper: Error getting unsynced offline attendance count: $e');
+      return 0;
+    }
+  }
+
+  /// Clear all offline attendance records
+  Future<void> clearAllOfflineAttendance() async {
+    final db = await database;
+    try {
+      await db.delete(DatabaseConstants.offlineAttendanceTable);
+      print('DatabaseHelper: All offline attendance cleared from database');
+    } catch (e) {
+      print('DatabaseHelper: Error clearing offline attendance: $e');
       rethrow;
     }
   }

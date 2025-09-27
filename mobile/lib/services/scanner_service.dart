@@ -6,12 +6,14 @@ import 'package:audioplayers/audioplayers.dart';
 import '../models/member.dart';
 import '../models/event.dart';
 import '../models/attendance.dart';
+import '../models/offline_attendance.dart';
 import '../models/api_response.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../utils/validators.dart';
 import 'api_service.dart';
 import 'database_service.dart';
+import 'offline_attendance_service.dart';
 
 class ScannerService {
   static final ScannerService _instance = ScannerService._internal();
@@ -20,6 +22,7 @@ class ScannerService {
 
   final ApiService _apiService = ApiService();
   final DatabaseService _databaseService = DatabaseService();
+  final OfflineAttendanceService _offlineAttendanceService = OfflineAttendanceService();
   final Connectivity _connectivity = Connectivity();
   
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
@@ -101,24 +104,41 @@ class ScannerService {
       // Clean the barcode (remove any non-digit characters for member ID)
       final cleanBarcode = barcode.replaceAll(RegExp(r'[^0-9]'), '');
 
-      // Always try online scan first (even if connectivity seems uncertain)
-      try {
-        print('🔍 ScannerService: Attempting online scan for member ID: $cleanBarcode, event: $eventId');
-        final response = await _scanOnline(cleanBarcode, eventId, notes);
-        if (response.isSuccess) {
-          print('✅ ScannerService: Online scan successful for ${response.data?.fullName}');
-          await _handleSuccessfulScan(response.data!);
-          return response;
-        } else {
-          // If online scan fails, try offline as fallback
-          print('❌ ScannerService: Online scan failed: ${response.errorMessage}, trying offline...');
-          return await _scanOffline(cleanBarcode, eventId, notes);
-        }
-      } catch (e) {
-        // Network error or other exception, try offline fallback
-        print('💥 ScannerService: Online scan exception: $e, trying offline...');
-        return await _scanOffline(cleanBarcode, eventId, notes);
+      // Get member from local database first
+      final member = await _databaseService.getMemberByIdentificationId(cleanBarcode);
+      if (member == null) {
+        return ApiResponse.error('Member not found in local database. Please sync data first.');
       }
+
+      // Check if member is already marked for this event
+      final alreadyMarked = await _offlineAttendanceService.isMemberAlreadyMarked(member.id, eventId);
+      if (alreadyMarked) {
+        return ApiResponse.error('Member has already been marked for this event');
+      }
+
+      // Get event from local database
+      final event = await _databaseService.getEventById(eventId);
+      if (event == null) {
+        return ApiResponse.error('Event not found in local database');
+      }
+
+      // Mark attendance offline
+      final offlineAttendance = await _offlineAttendanceService.markAttendanceOffline(
+        member: member,
+        event: event,
+        status: 'present',
+        notes: notes,
+        isFirstTimer: false,
+      );
+
+      // Add to recent scans
+      _addToRecentScans(member);
+
+      // Provide feedback
+      await _provideFeedback();
+
+      print('ScannerService: Member ${member.fullName} marked offline for event ${event.title}');
+      return ApiResponse.success(member, message: 'Attendance marked offline successfully');
     } catch (e) {
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
@@ -411,5 +431,42 @@ class ScannerService {
     } catch (e) {
       print('Error loading member to local database: $e');
     }
+  }
+
+  /// Add member to recent scans list
+  void _addToRecentScans(Member member) {
+    // Remove if already exists
+    _recentScans.removeWhere((m) => m.id == member.id);
+    
+    // Add to beginning
+    _recentScans.insert(0, member);
+    
+    // Keep only max recent scans
+    if (_recentScans.length > _maxRecentScans) {
+      _recentScans.removeRange(_maxRecentScans, _recentScans.length);
+    }
+  }
+
+  /// Provide feedback (vibration and sound)
+  Future<void> _provideFeedback() async {
+    try {
+      if (_enableVibration) {
+        await Vibration.vibrate(duration: 200);
+      }
+      
+      if (_enableSound) {
+        // Play success sound
+        final player = AudioPlayer();
+        await player.play(AssetSource('sounds/success.mp3'));
+      }
+    } catch (e) {
+      print('ScannerService: Error providing feedback: $e');
+    }
+  }
+
+  /// Handle successful scan (legacy method for compatibility)
+  Future<void> _handleSuccessfulScan(Member member) async {
+    _addToRecentScans(member);
+    await _provideFeedback();
   }
 }
