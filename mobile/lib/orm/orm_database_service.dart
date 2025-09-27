@@ -33,13 +33,7 @@ class OrmDatabaseService {
       return;
     }
     
-    // Force recreate database to ensure all tables are created
-    try {
-      await _ormService.forceRecreateDatabase();
-    } catch (e) {
-      print('OrmDatabaseService: Error recreating database: $e');
-    }
-    
+    // Initialize ORM service - migrations will handle table creation
     await _ormService.initialize();
     
     // Initialize repositories
