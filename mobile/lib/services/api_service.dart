@@ -354,6 +354,7 @@ class ApiService {
   // Scan member ID endpoint
   Future<ApiResponse<Member>> scanMemberId(String memberIdentificationId, int eventId) async {
     try {
+      print('🚀 ApiService: Scanning member ID: $memberIdentificationId for event: $eventId');
       final response = await _dio.post(
         ApiConstants.scanMemberEndpoint,
         data: {
@@ -366,14 +367,32 @@ class ApiService {
         
         // Handle scan member response structure
         final responseData = response.data;
-        final memberData = responseData['data'] as Map<String, dynamic>?;
+        final data = responseData['data'] as Map<String, dynamic>?;
         
-        if (memberData == null) {
+        if (data == null) {
           throw Exception('Invalid scan member response: missing data field');
         }
         
-        final member = Member.fromJson(memberData);
-        return ApiResponse.success(member);
+        // Extract member data from the response
+        final memberData = data['member'] as Map<String, dynamic>?;
+        if (memberData == null) {
+          throw Exception('Invalid scan member response: missing member field');
+        }
+        
+        // Create Member object from the member data
+        // Note: The backend returns limited member info, so we'll create a partial Member object
+        final member = Member(
+          id: memberData['id'] ?? 0,
+          firstName: memberData['name']?.split(' ').first ?? '',
+          lastName: memberData['name']?.split(' ').skip(1).join(' ') ?? '',
+          email: memberData['email'] ?? '',
+          memberIdentificationId: memberIdentificationId,
+          status: 'active', // Assume active since they're scanning attendance
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        
+        return ApiResponse.success(member, message: responseData['message'] ?? 'Attendance marked successfully');
       } else {
         return ApiResponse.error('Failed to scan member ID');
       }

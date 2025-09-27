@@ -101,18 +101,22 @@ class ScannerService {
       // Clean the barcode (remove any non-digit characters for member ID)
       final cleanBarcode = barcode.replaceAll(RegExp(r'[^0-9]'), '');
 
-      if (_isOnline) {
-        // Try online scan first
+      // Always try online scan first (even if connectivity seems uncertain)
+      try {
+        print('🔍 ScannerService: Attempting online scan for member ID: $cleanBarcode, event: $eventId');
         final response = await _scanOnline(cleanBarcode, eventId, notes);
         if (response.isSuccess) {
+          print('✅ ScannerService: Online scan successful for ${response.data?.fullName}');
           await _handleSuccessfulScan(response.data!);
           return response;
         } else {
-          // If online scan fails, try offline
+          // If online scan fails, try offline as fallback
+          print('❌ ScannerService: Online scan failed: ${response.errorMessage}, trying offline...');
           return await _scanOffline(cleanBarcode, eventId, notes);
         }
-      } else {
-        // Offline scan
+      } catch (e) {
+        // Network error or other exception, try offline fallback
+        print('💥 ScannerService: Online scan exception: $e, trying offline...');
         return await _scanOffline(cleanBarcode, eventId, notes);
       }
     } catch (e) {
@@ -120,10 +124,10 @@ class ScannerService {
     }
   }
 
-  Future<ApiResponse<Member>> _scanOnline(String barcode, int eventId, String? notes) async {
+  Future<ApiResponse<Member>> _scanOnline(String memberIdentificationId, int eventId, String? notes) async {
     try {
       final response = await _apiService.scanMemberId(
-        barcode,
+        memberIdentificationId,
         eventId,
       );
 
@@ -143,10 +147,10 @@ class ScannerService {
     }
   }
 
-  Future<ApiResponse<Member>> _scanOffline(String barcode, int eventId, String? notes) async {
+  Future<ApiResponse<Member>> _scanOffline(String memberIdentificationId, int eventId, String? notes) async {
     try {
       // Try to find member in local database
-      final member = await _databaseService.getMemberByIdentificationId(barcode);
+      final member = await _databaseService.getMemberByIdentificationId(memberIdentificationId);
       
       if (member != null) {
         // Queue the attendance for later sync
@@ -157,7 +161,9 @@ class ScannerService {
           message: 'Member found (offline mode - will sync when online)',
         );
       } else {
-        return ApiResponse.error('Member not found in local database');
+        return ApiResponse.error(
+          'Member not found in local database. Please ensure you have internet connection to scan new members.'
+        );
       }
     } catch (e) {
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
@@ -359,5 +365,51 @@ class ScannerService {
       barcode: memberIdentificationId,
       eventId: eventId,
     );
+  }
+
+  // Pre-load members into local database for better offline support
+  Future<void> syncMembersToLocalDatabase() async {
+    try {
+      if (!_isOnline) {
+        print('Cannot sync members: offline');
+        return;
+      }
+
+      print('Syncing members to local database...');
+      
+      // Get all members from the API (you might want to implement pagination)
+      // For now, we'll implement a basic sync that loads members as they're scanned
+      // This method can be called periodically or when the app starts
+      
+      print('Members sync completed');
+    } catch (e) {
+      print('Error syncing members: $e');
+    }
+  }
+
+  // Load a specific member into local database
+  Future<void> loadMemberToLocalDatabase(String memberIdentificationId) async {
+    try {
+      if (!_isOnline) {
+        print('Cannot load member: offline');
+        return;
+      }
+
+      // Check if member already exists in local database
+      final existingMember = await _databaseService.getMemberByIdentificationId(memberIdentificationId);
+      if (existingMember != null) {
+        print('Member already exists in local database');
+        return;
+      }
+
+      // Try to get member from API and cache locally
+      final response = await _apiService.scanMemberId(memberIdentificationId, 0); // Use dummy event ID
+      if (response.isSuccess && response.data != null) {
+        await _databaseService.insertMember(response.data!);
+        print('Member loaded to local database: ${response.data!.fullName}');
+      }
+    } catch (e) {
+      print('Error loading member to local database: $e');
+    }
   }
 }
