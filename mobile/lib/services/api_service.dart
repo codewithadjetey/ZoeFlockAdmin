@@ -34,21 +34,52 @@ class ApiService {
       // Add interceptors
       _dio.interceptors.add(InterceptorsWrapper(
         onRequest: (options, handler) {
-          print('ApiService: Request interceptor - Access token: $_accessToken');
+          // Log the complete request details
+          print('🚀 INTERCEPTOR ACTIVE - API REQUEST: ${options.method.toUpperCase()} ${options.uri}');
+          print('📋 Request Data: ${options.data}');
+          print('🔍 Query Parameters: ${options.queryParameters}');
+          print('📝 Request Headers: ${options.headers}');
+          print('🔑 Access token: ${_accessToken != null ? "Present" : "Not available"}');
+          if (_accessToken != null) {
+            print('🎫 Full Token: $_accessToken');
+          }
+          
           if (_accessToken != null) {
             options.headers['Authorization'] = 'Bearer $_accessToken';
-            print('ApiService: Authorization header added: Bearer $_accessToken');
-          } else {
-            print('ApiService: No access token available, skipping Authorization header');
           }
-          print('ApiService: Request headers: ${options.headers}');
+          
           handler.next(options);
         },
+        onResponse: (response, handler) {
+          // Log successful responses
+          print('✅ INTERCEPTOR ACTIVE - API RESPONSE: ${response.statusCode} ${response.requestOptions.uri}');
+          print('📊 Response Data: ${response.data}');
+          print('📝 Response Headers: ${response.headers}');
+          handler.next(response);
+        },
         onError: (error, handler) async {
+          // Log error responses
+          print('❌ INTERCEPTOR ACTIVE - API ERROR: ${error.response?.statusCode ?? "No status"} ${error.requestOptions.uri}');
+          print('💥 Error Message: ${error.message}');
+          print('🔍 Request Query Parameters: ${error.requestOptions.queryParameters}');
+          print('📝 Request Headers: ${error.requestOptions.headers}');
+          print('🔑 Access token: ${_accessToken != null ? "Present" : "Not available"}');
+          if (_accessToken != null) {
+            print('🎫 Full Token: $_accessToken');
+          }
+          if (error.response?.data != null) {
+            print('📊 Error Data: ${error.response?.data}');
+          }
+          if (error.response?.headers != null) {
+            print('📝 Error Response Headers: ${error.response?.headers}');
+          }
+          
           if (error.response?.statusCode == 401) {
+            print('🔄 Attempting token refresh...');
             // Try to refresh token
             final refreshed = await _refreshAccessToken();
             if (refreshed) {
+              print('✅ Token refreshed successfully, retrying request...');
               // Retry the original request
               final options = error.requestOptions;
               options.headers['Authorization'] = 'Bearer $_accessToken';
@@ -57,14 +88,17 @@ class ApiService {
                 handler.resolve(response);
                 return;
               } catch (e) {
+                print('❌ Retry failed: $e');
                 // Refresh failed, continue with error
               }
+            } else {
+              print('❌ Token refresh failed');
             }
           }
           handler.next(error);
         },
       ));
-      print('ApiService: Interceptors added successfully');
+      print('🚀 ApiService: Interceptors added successfully - URL logging is ACTIVE');
     } catch (e) {
       print('ApiService: Error during initialization: $e');
       rethrow;
@@ -110,7 +144,6 @@ class ApiService {
   // Authentication endpoints
   Future<ApiResponse<LoginResponse>> login(String email, String password) async {
     try {
-      print('ApiService: Making login request to ${ApiConstants.loginEndpoint}');
       final response = await _dio.post(
         ApiConstants.loginEndpoint,
         data: {
@@ -119,30 +152,16 @@ class ApiService {
         },
       );
 
-      print('ApiService: Login response received - Status: ${response.statusCode}');
-      print('ApiService: Response data: ${response.data}');
-
       if (response.statusCode == 200) {
-        print('ApiService: Parsing login response...');
-        print('ApiService: Response data structure: ${response.data}');
-        print('ApiService: Response data type: ${response.data.runtimeType}');
-        print('ApiService: Response data keys: ${response.data is Map ? (response.data as Map).keys.toList() : 'Not a Map'}');
-        
         // Extract the data field from the response which contains the actual login data
         final responseData = response.data;
         final loginData = responseData['data'] as Map<String, dynamic>?;
-        
-        print('ApiService: Extracted data for parsing: $responseData');
-        print('ApiService: Extracted data type: ${responseData.runtimeType}');
-        print('ApiService: Extracted data keys: ${responseData is Map ? (responseData as Map).keys.toList() : 'Not a Map'}');
-        print('ApiService: Login data: $loginData');
         
         if (loginData == null) {
           throw Exception('Invalid login response: missing data field');
         }
         
         final loginResponse = LoginResponse.fromJson(loginData);
-        print('ApiService: Login response parsed successfully');
         setTokens(loginResponse.accessToken, loginResponse.refreshToken);
         
         return ApiResponse.success(
@@ -157,16 +176,12 @@ class ApiService {
         );
       }
     } catch (e) {
-      print('ApiService: Login error caught: $e');
-      print('ApiService: Error type: ${e.runtimeType}');
-      print('ApiService: Stack trace: ${StackTrace.current}');
       
       // Handle DioError specifically to extract backend error messages
       if (e is DioException) {
         final statusCode = e.response?.statusCode;
         final responseData = e.response?.data;
         
-        print('Login API Error - Status: $statusCode, Data: $responseData');
         
         // Extract error message from backend response
         String errorMessage = 'Login failed';
@@ -213,13 +228,19 @@ class ApiService {
   }
 
   // Event endpoints
-  Future<ApiResponse<List<Event>>> getEvents() async {
+  Future<ApiResponse<List<Event>>> getEvents({bool eligibleForAttendance = false}) async {
     try {
-      final response = await _dio.get(ApiConstants.eventsEndpoint);
+      final queryParams = <String, dynamic>{};
+      if (eligibleForAttendance) {
+        queryParams['eligible_for_attendance'] = 'true';
+      }
+      
+      final response = await _dio.get(
+        ApiConstants.eventsEndpoint,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
 
       if (response.statusCode == 200) {
-        print('ApiService: Events response received - Status: ${response.statusCode}');
-        print('ApiService: Events response data: ${response.data}');
         
         // Handle paginated response structure
         final responseData = response.data;
@@ -238,15 +259,17 @@ class ApiService {
             .map((json) => Event.fromJson(json))
             .toList();
         
-        print('ApiService: Parsed ${events.length} events');
         return ApiResponse.success(events);
       } else {
         return ApiResponse.error('Failed to fetch events');
       }
     } catch (e) {
-      print('ApiService: Events error: $e');
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
+  }
+
+  Future<ApiResponse<List<Event>>> getEligibleEvents() async {
+    return getEvents(eligibleForAttendance: true);
   }
 
   Future<ApiResponse<Event>> getEvent(int id) async {
@@ -254,8 +277,6 @@ class ApiService {
       final response = await _dio.get('${ApiConstants.eventsEndpoint}/$id');
       
       if (response.statusCode == 200) {
-        print('ApiService: Single event response received - Status: ${response.statusCode}');
-        print('ApiService: Single event response data: ${response.data}');
         
         // Handle single event response structure
         final responseData = response.data;
@@ -271,7 +292,6 @@ class ApiService {
         return ApiResponse.error('Failed to fetch event');
       }
     } catch (e) {
-      print('ApiService: Single event error: $e');
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
@@ -282,8 +302,6 @@ class ApiService {
       final response = await _dio.get('${ApiConstants.memberEndpoint}/$id');
       
       if (response.statusCode == 200) {
-        print('ApiService: Member response received - Status: ${response.statusCode}');
-        print('ApiService: Member response data: ${response.data}');
         
         // Handle member response structure
         final responseData = response.data;
@@ -299,7 +317,6 @@ class ApiService {
         return ApiResponse.error('Failed to fetch member');
       }
     } catch (e) {
-      print('ApiService: Member error: $e');
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
@@ -345,8 +362,6 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        print('ApiService: Scan member response received - Status: ${response.statusCode}');
-        print('ApiService: Scan member response data: ${response.data}');
         
         // Handle scan member response structure
         final responseData = response.data;
@@ -362,7 +377,6 @@ class ApiService {
         return ApiResponse.error('Failed to scan member ID');
       }
     } catch (e) {
-      print('ApiService: Scan member error: $e');
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
