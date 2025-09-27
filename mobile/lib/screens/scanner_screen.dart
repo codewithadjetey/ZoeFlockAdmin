@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../providers/event_provider.dart';
 import '../providers/attendance_provider.dart';
 import '../models/member.dart';
@@ -19,8 +19,7 @@ class ScannerScreen extends StatefulWidget {
 }
 
 class _ScannerScreenState extends State<ScannerScreen> {
-  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
-  QRViewController? _controller;
+  MobileScannerController _controller = MobileScannerController();
   final TextEditingController _manualEntryController = TextEditingController();
   bool _isFlashOn = false;
   bool _isFrontCamera = false;
@@ -34,7 +33,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _controller.dispose();
     _manualEntryController.dispose();
     super.dispose();
   }
@@ -48,16 +47,13 @@ class _ScannerScreenState extends State<ScannerScreen> {
     }
   }
 
-  void _onQRViewCreated(QRViewController controller) {
-    setState(() {
-      _controller = controller;
-    });
-    
-    controller.scannedDataStream.listen((scanData) {
-      if (_isScanning && scanData.code != null) {
-        _handleQRScan(scanData.code!);
+  void _onDetect(BarcodeCapture capture) {
+    if (_isScanning && capture.barcodes.isNotEmpty) {
+      final barcode = capture.barcodes.first;
+      if (barcode.rawValue != null) {
+        _handleQRScan(barcode.rawValue!);
       }
-    });
+    }
   }
 
   Future<void> _handleQRScan(String code) async {
@@ -127,21 +123,17 @@ class _ScannerScreenState extends State<ScannerScreen> {
   }
 
   Future<void> _toggleFlash() async {
-    if (_controller != null) {
-      await _controller!.toggleFlash();
-      setState(() {
-        _isFlashOn = !_isFlashOn;
-      });
-    }
+    await _controller.toggleTorch();
+    setState(() {
+      _isFlashOn = !_isFlashOn;
+    });
   }
 
   Future<void> _toggleCamera() async {
-    if (_controller != null) {
-      await _controller!.flipCamera();
-      setState(() {
-        _isFrontCamera = !_isFrontCamera;
-      });
-    }
+    await _controller.switchCamera();
+    setState(() {
+      _isFrontCamera = !_isFrontCamera;
+    });
   }
 
   @override
@@ -242,16 +234,9 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Widget _buildScannerView() {
     return Stack(
       children: [
-        QRView(
-          key: qrKey,
-          onQRViewCreated: _onQRViewCreated,
-          overlay: QrScannerOverlayShape(
-            borderColor: AppColors.primaryBlue,
-            borderRadius: 10,
-            borderLength: 30,
-            borderWidth: 10,
-            cutOutSize: 250,
-          ),
+        MobileScanner(
+          controller: _controller,
+          onDetect: _onDetect,
         ),
         if (!_isScanning)
           Container(
@@ -279,6 +264,20 @@ class _ScannerScreenState extends State<ScannerScreen> {
                 fontSize: 16,
               ),
               textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+        // Custom overlay for scanning area
+        Center(
+          child: Container(
+            width: 250,
+            height: 250,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: AppColors.primaryBlue,
+                width: 3,
+              ),
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
         ),
