@@ -47,11 +47,11 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
 
     try {
       print('FirstTimersScreen: Loading first timers from local database...');
+      
       await _ormDatabaseService.initialize();
       final firstTimerEntities = await _ormDatabaseService.getAllFirstTimers();
-      
-      // Convert entities to models
       final firstTimers = firstTimerEntities.map((entity) => entity.toModel()).toList();
+      
       print('FirstTimersScreen: Loaded ${firstTimers.length} first timers from local database');
       
       setState(() {
@@ -59,6 +59,7 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
         _applyFilters();
         _isLoading = false;
       });
+      
     } catch (e) {
       print('FirstTimersScreen: Error loading first timers: $e');
       setState(() {

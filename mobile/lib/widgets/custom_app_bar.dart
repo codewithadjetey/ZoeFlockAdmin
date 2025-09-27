@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
+  final dynamic title; // Can be String or Widget
   final List<Widget>? actions;
   final Widget? leading;
   final Color? backgroundColor;
@@ -24,13 +24,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(
-        title,
-        style: TextStyle(
-          color: foregroundColor ?? Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+      title: title is String 
+          ? Text(
+              title,
+              style: TextStyle(
+                color: foregroundColor ?? Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          : title as Widget,
       actions: actions,
       leading: leading,
       backgroundColor: backgroundColor ?? AppColors.primaryBlue,
