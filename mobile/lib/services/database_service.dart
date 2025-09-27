@@ -304,6 +304,11 @@ class DatabaseService {
     await batch.commit();
   }
 
+  Future<void> clearAllMembers() async {
+    final db = await database;
+    await db.delete(DatabaseConstants.membersTable);
+  }
+
   Future<void> insertEvents(List<Event> events) async {
     final db = await database;
     final batch = db.batch();

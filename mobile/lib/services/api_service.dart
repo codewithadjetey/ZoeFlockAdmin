@@ -322,6 +322,75 @@ class ApiService {
     }
   }
 
+  /// Get all members for sync (with pagination support)
+  Future<ApiResponse<Map<String, dynamic>>> getAllMembers({
+    int page = 1,
+    int perPage = 100,
+    String? search,
+    String? status,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'per_page': perPage,
+      };
+      
+      if (search != null && search.isNotEmpty) {
+        queryParams['search'] = search;
+      }
+      
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+
+      print('ApiService: Getting members - page: $page, perPage: $perPage, queryParams: $queryParams');
+      print('ApiService: Member endpoint: ${ApiConstants.memberEndpoint}');
+
+      final response = await _dio.get(
+        ApiConstants.memberEndpoint,
+        queryParameters: queryParams,
+      );
+      
+      print('ApiService: Members response status: ${response.statusCode}');
+      print('ApiService: Members response data: ${response.data}');
+      
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        
+        // Check if response has success field (Laravel API format)
+        if (responseData is Map<String, dynamic>) {
+          if (responseData.containsKey('success') && responseData['success'] == true) {
+            // Check for members field first (backend specific format)
+            if (responseData.containsKey('members')) {
+              return ApiResponse.success(responseData['members']);
+            } else if (responseData.containsKey('data')) {
+              return ApiResponse.success(responseData['data']);
+            } else {
+              return ApiResponse.error('No data field found in response');
+            }
+          } else if (responseData.containsKey('data')) {
+            // Direct data response without success wrapper
+            return ApiResponse.success(responseData['data']);
+          } else if (responseData.containsKey('members')) {
+            // Direct members response without success wrapper
+            return ApiResponse.success(responseData['members']);
+          } else {
+            // Response might be the data directly
+            return ApiResponse.success(responseData);
+          }
+        } else {
+          return ApiResponse.error('Invalid response format');
+        }
+      } else {
+        return ApiResponse.error('Failed to get members: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('ApiService: Error getting members: $e');
+      print('ApiService: Error type: ${e.runtimeType}');
+      return ApiResponse.error('Failed to get members: ${e.toString()}');
+    }
+  }
+
   // Attendance endpoints
   Future<ApiResponse<Attendance>> markAttendance(int memberId, int eventId, {
     String status = 'present',

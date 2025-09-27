@@ -488,4 +488,38 @@ class DatabaseHelper {
       return {'active': 0, 'inactive': 0, 'total': 0};
     }
   }
+
+  /// Clear all members from database (for sync purposes)
+  Future<void> clearAllMembers() async {
+    final db = await database;
+    try {
+      await db.delete(DatabaseConstants.membersTable);
+      print('DatabaseHelper: All members cleared from database');
+    } catch (e) {
+      print('DatabaseHelper: Error clearing members: $e');
+      rethrow;
+    }
+  }
+
+  /// Bulk insert members (for sync purposes)
+  Future<void> bulkInsertMembers(List<Map<String, dynamic>> members) async {
+    final db = await database;
+    try {
+      final batch = db.batch();
+      
+      for (final memberData in members) {
+        batch.insert(
+          DatabaseConstants.membersTable,
+          memberData,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      
+      await batch.commit();
+      print('DatabaseHelper: Bulk inserted ${members.length} members');
+    } catch (e) {
+      print('DatabaseHelper: Error bulk inserting members: $e');
+      rethrow;
+    }
+  }
 }

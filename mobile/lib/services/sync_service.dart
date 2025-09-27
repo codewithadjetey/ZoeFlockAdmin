@@ -45,6 +45,50 @@ class SyncService {
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
 
+  /// Test member API connection
+  Future<void> testMemberApi() async {
+    try {
+      print('SyncService: Testing member API connection...');
+      final response = await _apiService.getAllMembers(page: 1, perPage: 1);
+      
+      print('SyncService: Test API response success: ${response.isSuccess}');
+      print('SyncService: Test API response error: ${response.errorMessage}');
+      print('SyncService: Test API response data: ${response.data}');
+      
+      if (response.isSuccess) {
+        print('SyncService: Member API test successful');
+      } else {
+        print('SyncService: Member API test failed: ${response.errorMessage}');
+      }
+    } catch (e) {
+      print('SyncService: Member API test error: $e');
+    }
+  }
+
+  /// Sync only members (for testing)
+  Future<bool> syncMembersOnly() async {
+    if (_isSyncing) {
+      print('SyncService: Sync already in progress');
+      return false;
+    }
+
+    _isSyncing = true;
+    bool success = true;
+
+    try {
+      print('SyncService: Starting members-only sync...');
+      await _syncMembers();
+      print('SyncService: Members-only sync completed successfully');
+    } catch (e) {
+      print('SyncService: Error during members-only sync: $e');
+      success = false;
+    } finally {
+      _isSyncing = false;
+    }
+
+    return success;
+  }
+
   /// Start the sync process for all data
   Future<bool> syncAllData() async {
     if (_isSyncing) {
@@ -304,21 +348,43 @@ class SyncService {
 
       // First, get total count
       print('SyncService: Getting members count...');
-      final countResponse = await _apiService.dio.get('/members', queryParameters: {
-        'per_page': 1,
-        'page': 1,
-      });
+      final countResponse = await _apiService.getAllMembers(page: 1, perPage: 1);
       
-      print('SyncService: Members count response status: ${countResponse.statusCode}');
+      print('SyncService: Members count response success: ${countResponse.isSuccess}');
+      print('SyncService: Members count error message: ${countResponse.errorMessage}');
+      print('SyncService: Members count response data: ${countResponse.data}');
       
-      if (countResponse.statusCode == 200) {
-        final responseData = countResponse.data;
-        print('SyncService: Members count response data: $responseData');
-        final paginatedData = responseData['data'] as Map<String, dynamic>?;
-        final total = paginatedData?['total'] as int? ?? 0;
+      if (countResponse.isSuccess && countResponse.data != null) {
+        final paginatedData = countResponse.data!;
+        print('SyncService: Members count response data: $paginatedData');
+        
+        // Handle different response structures
+        int total = 0;
+        if (paginatedData.containsKey('total')) {
+          total = paginatedData['total'] as int? ?? 0;
+        } else if (paginatedData.containsKey('last_page')) {
+          // Calculate total from last_page and per_page
+          final lastPage = paginatedData['last_page'] as int? ?? 1;
+          final perPage = paginatedData['per_page'] as int? ?? 100;
+          total = lastPage * perPage;
+        }
+        
         final totalPages = (total / 100).ceil();
         
         print('SyncService: Members total: $total, totalPages: $totalPages');
+        
+        if (total == 0) {
+          print('SyncService: No members found in backend');
+          _progressController.add(SyncProgress(
+            category: 'Members',
+            total: 0,
+            synced: 0,
+            status: 'No members found',
+            currentPage: 1,
+            totalPages: 1,
+          ));
+          return;
+        }
         
         _progressController.add(SyncProgress(
           category: 'Members',
@@ -342,15 +408,13 @@ class SyncService {
             totalPages: totalPages,
           ));
 
-          final response = await _apiService.dio.get('/members', queryParameters: {
-            'per_page': 100,
-            'page': page,
-          });
+          final response = await _apiService.getAllMembers(page: page, perPage: 100);
           
-          if (response.statusCode == 200) {
-            final responseData = response.data;
-            final paginatedData = responseData['data'] as Map<String, dynamic>?;
-            final membersList = paginatedData?['data'] as List?;
+          if (response.isSuccess && response.data != null) {
+            final paginatedData = response.data!;
+            final membersList = paginatedData['data'] as List?;
+            
+            print('SyncService: Page $page - Found ${membersList?.length ?? 0} members');
             
             if (membersList != null) {
               // Convert to Member objects
@@ -373,11 +437,25 @@ class SyncService {
                 totalPages: totalPages,
               ));
             }
+          } else {
+            print('SyncService: Error fetching members page $page: ${response.errorMessage}');
           }
         }
 
-        // Bulk insert all members
+        // Clear existing members and bulk insert new ones
         if (allMembers.isNotEmpty) {
+          _progressController.add(SyncProgress(
+            category: 'Members',
+            total: total,
+            synced: syncedCount,
+            status: 'Clearing existing members...',
+            currentPage: totalPages,
+            totalPages: totalPages,
+          ));
+          
+          // Clear existing members
+          await _databaseService.clearAllMembers();
+          
           _progressController.add(SyncProgress(
             category: 'Members',
             total: total,
@@ -387,6 +465,7 @@ class SyncService {
             totalPages: totalPages,
           ));
           
+          // Bulk insert new members
           await _databaseService.insertMembers(allMembers);
         }
 
@@ -398,6 +477,16 @@ class SyncService {
           currentPage: totalPages,
           totalPages: totalPages,
         ));
+      } else {
+        print('SyncService: Failed to get members count - API call failed');
+        _progressController.add(SyncProgress(
+          category: 'Members',
+          total: 0,
+          synced: 0,
+          status: 'Failed to fetch members',
+          error: countResponse.errorMessage ?? 'Unknown error',
+        ));
+        throw Exception('Failed to fetch members: ${countResponse.errorMessage}');
       }
     } catch (e) {
       print('SyncService: Error syncing members: $e');
