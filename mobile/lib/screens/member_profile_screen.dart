@@ -180,10 +180,8 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
             CircleAvatar(
               radius: 50,
               backgroundColor: AppColors.primaryBlue,
-              backgroundImage: widget.member.profileImagePath != null
-                  ? NetworkImage(AppHelpers.getImageUrl(widget.member.profileImagePath!))
-                  : null,
-              child: widget.member.profileImagePath == null
+              backgroundImage: _getProfileImageProvider(),
+              child: _getProfileImageProvider() == null
                   ? Text(
                       widget.member.initials,
                       style: const TextStyle(
@@ -394,5 +392,12 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         ),
       ],
     );
+  }
+
+  ImageProvider? _getProfileImageProvider() {
+    final imageUrl = AppHelpers.getImageUrl(widget.member.profileImagePath);
+    final hasValidImage = imageUrl.isNotEmpty && Uri.tryParse(imageUrl)?.hasAbsolutePath == true;
+    
+    return hasValidImage ? NetworkImage(imageUrl) : null;
   }
 }
