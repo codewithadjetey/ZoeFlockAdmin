@@ -94,6 +94,10 @@ class ScannerService {
         return ApiResponse.error(validationError);
       }
 
+      // Check if the event is eligible for attendance (today or past events only)
+      // Note: Event eligibility validation is handled at the UI level in member_profile_screen.dart
+      // This service-level validation is removed to avoid Provider context issues
+
       // Clean the barcode (remove any non-digit characters for member ID)
       final cleanBarcode = barcode.replaceAll(RegExp(r'[^0-9]'), '');
 

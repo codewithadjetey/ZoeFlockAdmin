@@ -48,6 +48,12 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
         return;
       }
 
+      // Check if the event is eligible for attendance (today or past events only)
+      if (!eventProvider.selectedEvent!.isEligibleForAttendance) {
+        AppHelpers.showErrorSnackBar(context, 'Cannot mark attendance for future events');
+        return;
+      }
+
       final response = await attendanceProvider.scanMemberId(
         barcode: widget.member.memberIdentificationId,
         eventId: eventProvider.selectedEvent!.id,

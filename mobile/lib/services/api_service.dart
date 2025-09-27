@@ -232,7 +232,8 @@ class ApiService {
     try {
       final queryParams = <String, dynamic>{};
       if (eligibleForAttendance) {
-        queryParams['eligible_for_attendance'] = 'true';
+        queryParams['for_attendance'] = true;
+        queryParams['status'] = 'published';
       }
       
       final response = await _dio.get(
