@@ -4,6 +4,10 @@ import '../providers/auth_provider.dart';
 import '../services/user_config_service.dart';
 import '../utils/constants.dart';
 import '../screens/members_screen.dart';
+import '../screens/first_timers_screen.dart';
+import '../screens/visitors_screen.dart';
+import '../screens/groups_screen.dart';
+import '../screens/families_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -206,30 +210,30 @@ class AppDrawer extends StatelessWidget {
         );
         break;
       case '/first-timers':
-        _showComingSoon(context, 'First Timers');
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const FirstTimersScreen()),
+        );
         break;
       case '/visitors':
-        _showComingSoon(context, 'Visitors');
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const VisitorsScreen()),
+        );
         break;
       case '/groups':
-        _showComingSoon(context, 'Groups');
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const GroupsScreen()),
+        );
         break;
       case '/families':
-        _showComingSoon(context, 'Families');
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const FamiliesScreen()),
+        );
         break;
       default:
         Navigator.of(context).pushNamed('/events');
     }
   }
 
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$feature feature coming soon!'),
-        backgroundColor: AppColors.primaryBlue,
-      ),
-    );
-  }
 
   void _showLogoutDialog(BuildContext context) {
     showDialog(
