@@ -520,14 +520,23 @@ class ApiService {
     try {
       print('🚀 ApiService: Getting all first timers...');
       final response = await _dio.get('/first-timers');
-      
+
       print('✅ ApiService: First timers response status: ${response.statusCode}');
       print('📊 ApiService: First timers response data: ${response.data}');
-      
+
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List<dynamic> firstTimersData = data['data'];
+          // Handle paginated response structure
+          List<dynamic> firstTimersData = [];
+          if (data['data']['data'] != null) {
+            // Paginated response: data.data.data
+            firstTimersData = data['data']['data'];
+          } else if (data['data'] is List) {
+            // Direct array response
+            firstTimersData = data['data'];
+          }
+
           final firstTimers = firstTimersData.cast<Map<String, dynamic>>();
           print('🚀 ApiService: ✅ Successfully got ${firstTimers.length} first timers');
           return ApiResponse.success(firstTimers);
