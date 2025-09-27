@@ -6,6 +6,7 @@ import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/first_timer_card.dart';
+import 'add_first_timer_screen.dart';
 
 class FirstTimersScreen extends StatefulWidget {
   const FirstTimersScreen({super.key});
@@ -119,6 +120,19 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
     await _loadFirstTimers();
   }
 
+  Future<void> _navigateToAddFirstTimer() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AddFirstTimerScreen(),
+      ),
+    );
+    
+    // Refresh the list if a first timer was successfully added
+    if (result == true) {
+      await _refreshFirstTimers();
+    }
+  }
+
   void _navigateToFirstTimerDetails(FirstTimer firstTimer) {
     showDialog(
       context: context,
@@ -195,6 +209,11 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
       appBar: CustomAppBar(
         title: 'First Timers',
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _navigateToAddFirstTimer,
+            tooltip: 'Add First Timer',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshFirstTimers,

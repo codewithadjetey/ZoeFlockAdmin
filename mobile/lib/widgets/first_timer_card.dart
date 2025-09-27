@@ -233,6 +233,26 @@ class FirstTimerCard extends StatelessWidget {
                   ],
                 ),
               ],
+
+              // Push Status
+              const SizedBox(height: AppDimensions.paddingSmall),
+              Row(
+                children: [
+                  Icon(
+                    _getPushStatusIcon(firstTimer),
+                    size: AppDimensions.iconSizeSmall,
+                    color: _getPushStatusColor(firstTimer),
+                  ),
+                  const SizedBox(width: AppDimensions.paddingSmall / 2),
+                  Text(
+                    'Sync: ${firstTimer.pushStatus}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _getPushStatusColor(firstTimer),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -259,6 +279,30 @@ class FirstTimerCard extends StatelessWidget {
         return Icons.people;
       case FirstTimerStatus.potentialMember:
         return Icons.star;
+    }
+  }
+
+  IconData _getPushStatusIcon(FirstTimer firstTimer) {
+    if (firstTimer.isPushedToServer) {
+      return Icons.cloud_done;
+    } else if (firstTimer.hasPushError) {
+      return Icons.cloud_off;
+    } else if (firstTimer.pushAttempts > 0) {
+      return Icons.cloud_sync;
+    } else {
+      return Icons.cloud_upload;
+    }
+  }
+
+  Color _getPushStatusColor(FirstTimer firstTimer) {
+    if (firstTimer.isPushedToServer) {
+      return AppColors.success;
+    } else if (firstTimer.hasPushError) {
+      return AppColors.error;
+    } else if (firstTimer.pushAttempts > 0) {
+      return AppColors.warning;
+    } else {
+      return AppColors.mediumGray;
     }
   }
 }

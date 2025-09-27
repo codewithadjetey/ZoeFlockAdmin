@@ -515,6 +515,35 @@ class ApiService {
     }
   }
 
+  /// Create a new first timer
+  Future<ApiResponse<Map<String, dynamic>>> createFirstTimer(Map<String, dynamic> firstTimerData) async {
+    try {
+      print('🚀 ApiService: Creating first timer...');
+      final response = await _dio.post('/first-timers', data: firstTimerData);
+      
+      print('✅ ApiService: Create first timer response status: ${response.statusCode}');
+      print('📊 ApiService: Create first timer response data: ${response.data}');
+      
+      if (response.statusCode == 201 && response.data != null) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          print('🚀 ApiService: ✅ Successfully created first timer');
+          return ApiResponse.success(data['data']);
+        } else {
+          print('🚀 ApiService: ❌ Failed to create first timer - API returned success: false');
+          return ApiResponse.error('Failed to create first timer');
+        }
+      } else {
+        print('🚀 ApiService: ❌ Failed to create first timer - Invalid response');
+        return ApiResponse.error('Failed to create first timer');
+      }
+    } catch (e) {
+      print('🚀 ApiService: ❌ Failed to create first timer');
+      print('Error creating first timer: $e');
+      return ApiResponse.error('Failed to create first timer: ${e.toString()}');
+    }
+  }
+
   /// Get all first timers
   Future<ApiResponse<List<Map<String, dynamic>>>> getAllFirstTimers() async {
     try {

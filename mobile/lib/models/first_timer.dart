@@ -17,6 +17,11 @@ class FirstTimer {
   final String? deviceFingerprint;
   final DateTime? lastSubmissionDate;
   final int eventId;
+  final bool isPushedToServer;
+  final DateTime? pushedAt;
+  final String? pushError;
+  final int pushAttempts;
+  final DateTime? lastPushAttempt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -39,6 +44,11 @@ class FirstTimer {
     this.deviceFingerprint,
     this.lastSubmissionDate,
     required this.eventId,
+    this.isPushedToServer = false,
+    this.pushedAt,
+    this.pushError,
+    this.pushAttempts = 0,
+    this.lastPushAttempt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -71,6 +81,20 @@ class FirstTimer {
   }
   
   String get visitCountDisplay => '$visitCount visit${visitCount != 1 ? 's' : ''}';
+  
+  bool get hasPushError => pushError != null && pushError!.isNotEmpty;
+  
+  String get pushStatus {
+    if (isPushedToServer) {
+      return 'Synced';
+    } else if (hasPushError) {
+      return 'Sync Failed';
+    } else if (pushAttempts > 0) {
+      return 'Syncing...';
+    } else {
+      return 'Pending Sync';
+    }
+  }
 
   factory FirstTimer.fromJson(Map<String, dynamic> json) {
     return FirstTimer(
@@ -94,6 +118,15 @@ class FirstTimer {
           ? DateTime.parse(json['last_submission_date'] as String)
           : null,
       eventId: json['event_id'] as int,
+      isPushedToServer: json['is_pushed_to_server'] as bool? ?? false,
+      pushedAt: json['pushed_at'] != null 
+          ? DateTime.parse(json['pushed_at'] as String)
+          : null,
+      pushError: json['push_error'] as String?,
+      pushAttempts: json['push_attempts'] as int? ?? 0,
+      lastPushAttempt: json['last_push_attempt'] != null 
+          ? DateTime.parse(json['last_push_attempt'] as String)
+          : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -119,6 +152,11 @@ class FirstTimer {
       'device_fingerprint': deviceFingerprint,
       'last_submission_date': lastSubmissionDate?.toIso8601String(),
       'event_id': eventId,
+      'is_pushed_to_server': isPushedToServer,
+      'pushed_at': pushedAt?.toIso8601String(),
+      'push_error': pushError,
+      'push_attempts': pushAttempts,
+      'last_push_attempt': lastPushAttempt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
