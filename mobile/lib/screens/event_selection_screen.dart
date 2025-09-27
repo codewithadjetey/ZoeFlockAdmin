@@ -7,6 +7,7 @@ import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/event_card.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/app_drawer.dart';
 
 class EventSelectionScreen extends StatefulWidget {
   const EventSelectionScreen({super.key});
@@ -148,6 +149,7 @@ class _EventSelectionScreenState extends State<EventSelectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      drawer: const AppDrawer(),
       appBar: CustomAppBar(
         title: AppStrings.eventSelectionTitle,
         actions: [
@@ -160,11 +162,6 @@ class _EventSelectionScreenState extends State<EventSelectionScreen> {
             icon: Icon(_showOnlyActive ? Icons.filter_list : Icons.filter_list_off),
             onPressed: _toggleFilter,
             tooltip: _showOnlyActive ? 'Show all events' : 'Show active events only',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(context).pushNamed('/settings'),
-            tooltip: 'Settings',
           ),
         ],
       ),

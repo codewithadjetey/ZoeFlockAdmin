@@ -6,6 +6,7 @@ import '../models/member.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/app_drawer.dart';
 
 class MemberProfileScreen extends StatefulWidget {
   final Member member;
@@ -140,6 +141,7 @@ class _MemberProfileScreenState extends State<MemberProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      drawer: const AppDrawer(),
       appBar: CustomAppBar(
         title: AppStrings.memberProfileTitle,
         actions: [

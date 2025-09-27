@@ -9,6 +9,7 @@ import '../utils/helpers.dart';
 import '../utils/validators.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/member_card.dart';
+import '../widgets/app_drawer.dart';
 import 'member_profile_screen.dart';
 
 class ScannerScreen extends StatefulWidget {
@@ -140,6 +141,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      drawer: const AppDrawer(),
       appBar: CustomAppBar(
         title: AppStrings.scannerTitle,
         backgroundColor: Colors.black,
