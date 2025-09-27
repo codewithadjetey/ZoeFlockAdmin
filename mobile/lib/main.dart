@@ -10,10 +10,14 @@ import 'screens/event_selection_screen.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/settings_screen.dart';
 import 'services/database_service.dart';
+import 'services/domain_config_service.dart';
 import 'utils/constants.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize services
+  await DomainConfigService.initialize();
   
   // Set preferred orientations
   SystemChrome.setPreferredOrientations([
@@ -63,11 +67,11 @@ class ChurchAttendanceApp extends StatelessWidget {
               ),
             ),
           ),
-          cardTheme: CardTheme(
+          cardTheme: const CardThemeData(
             elevation: 4,
-            color: const Color(0xFF2a2a2a),
+            color: Color(0xFF2a2a2a),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.all(Radius.circular(12)),
             ),
           ),
           inputDecorationTheme: InputDecorationTheme(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/domain_config_service.dart';
 
 class AppColors {
   static const Color primaryBlue = Color(0xFF3b82f6);
@@ -83,7 +84,7 @@ class AppDimensions {
 }
 
 class ApiConstants {
-  static const String baseUrl = 'http://zoeflockadmin.org/api/v1';
+  static String get baseUrl => DomainConfigService.baseUrl;
   static const String loginEndpoint = '/auth/login';
   static const String refreshEndpoint = '/auth/refresh';
   static const String eventsEndpoint = '/events';
