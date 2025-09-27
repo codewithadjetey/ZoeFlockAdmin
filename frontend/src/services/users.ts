@@ -94,4 +94,12 @@ export class UsersService {
     const response = await api.post(`/users/${id}/toggle-status`);
     return response.data as UserResponse;
   }
+
+  /**
+   * Mark user email as verified
+   */
+  static async markEmailAsVerified(id: number): Promise<UserResponse> {
+    const response = await api.post(`/users/${id}/verify-email`);
+    return response.data as UserResponse;
+  }
 }

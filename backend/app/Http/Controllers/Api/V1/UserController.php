@@ -26,6 +26,7 @@ class UserController extends Controller
         $this->middleware('permission:delete-users')->only(['destroy']);
         $this->middleware('permission:toggle-user-status')->only(['toggleStatus']);
         $this->middleware('permission:change-user-password')->only(['changePassword']);
+        $this->middleware('permission:verify-user-email')->only(['verifyEmail']);
     }
 
     /**
@@ -790,6 +791,73 @@ class UserController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error retrieving user statistics: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/users/{user}/verify-email",
+     *     summary="Mark user email as verified (Admin)",
+     *     tags={"Users"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="path",
+     *         required=true,
+     *         description="User ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Email marked as verified successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="data", type="object"),
+     *             @OA\Property(property="message", type="string", example="Email marked as verified successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Email is already verified"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User not found"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Error marking email as verified"
+     *     )
+     * )
+     */
+    public function verifyEmail(User $user)
+    {
+        try {
+            if ($user->email_verified_at) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email is already verified'
+                ], 400);
+            }
+
+            $user->update([
+                'email_verified_at' => now(),
+                'email_verification_token' => null,
+                'email_verification_expires_at' => null
+            ]);
+
+            $user->load(['roles', 'permissions']);
+
+            return response()->json([
+                'success' => true,
+                'data' => $user,
+                'message' => 'Email marked as verified successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error marking email as verified: ' . $e->getMessage()
             ], 500);
         }
     }

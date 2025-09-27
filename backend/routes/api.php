@@ -268,6 +268,7 @@ Route::prefix($apiVersion)->group(function () {
             Route::put('/{user}/password', [UserController::class, 'changePassword'])->middleware('permission:change-user-password');
             Route::put('/{user}/admin-password', [UserController::class, 'adminUpdatePassword'])->middleware('permission:change-user-password');
             Route::put('/{user}/toggle-status', [UserController::class, 'toggleStatus'])->middleware('permission:toggle-user-status');
+            Route::post('/{user}/verify-email', [UserController::class, 'verifyEmail'])->middleware('permission:verify-user-email');
         });
 
         // Role Management routes

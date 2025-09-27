@@ -106,6 +106,20 @@ const UsersPage = () => {
     }
   };
 
+  const handleMarkEmailAsVerified = async (userId: number) => {
+    if (window.confirm("Are you sure you want to mark this email as verified?")) {
+      try {
+        const response = await UsersService.markEmailAsVerified(userId);
+        if (response.success) {
+          toast.success("Email marked as verified successfully");
+          fetchUsers();
+        }
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || "Error marking email as verified");
+      }
+    }
+  };
+
   const columns = [
     {
       key: "name",
@@ -164,6 +178,21 @@ const UsersPage = () => {
       ),
     },
     {
+      key: "email_verified_at",
+      label: "Email Status",
+      render: (value: any, row: User) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            row.email_verified_at
+              ? "bg-green-100 text-green-800"
+              : "bg-yellow-100 text-yellow-800"
+          }`}
+        >
+          {row.email_verified_at ? "Verified" : "Unverified"}
+        </span>
+      ),
+    },
+    {
       key: "created_at",
       label: "Created",
       render: (value: any, row: User) => new Date(row.created_at).toLocaleDateString(),
@@ -173,38 +202,47 @@ const UsersPage = () => {
       label: "Actions",
       render: (value: any, row: User) => (
         <div className="flex items-center space-x-2">
-          <Button
-            size="sm"
-            variant="outline"
+          <button
+            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-xl border-2 border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             onClick={() => handleEditUser(row)}
+            title="Edit User"
           >
-            <i className="fas fa-edit mr-1"></i>
-            Edit
-          </Button>
-          <Button
-            size="sm"
-            variant="secondary"
+            <i className="fas fa-edit"></i>
+          </button>
+          <button
+            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-900 shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             onClick={() => handleUpdatePassword(row)}
+            title="Update Password"
           >
-            <i className="fas fa-key mr-1"></i>
-            Password
-          </Button>
-          <Button
-            size="sm"
-            variant={row.is_active ? "danger" : "primary"}
+            <i className="fas fa-key"></i>
+          </button>
+          {!row.email_verified_at && (
+            <button
+              className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              onClick={() => handleMarkEmailAsVerified(row.id)}
+              title="Mark Email as Verified"
+            >
+              <i className="fas fa-check-circle"></i>
+            </button>
+          )}
+          <button
+            className={`inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+              row.is_active 
+                ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white focus:ring-red-500" 
+                : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white focus:ring-primary-500"
+            }`}
             onClick={() => handleToggleStatus(row.id)}
+            title={row.is_active ? "Deactivate User" : "Activate User"}
           >
-            <i className={`fas fa-${row.is_active ? 'ban' : 'check'} mr-1`}></i>
-            {row.is_active ? "Deactivate" : "Activate"}
-          </Button>
-          <Button
-            size="sm"
-            variant="danger"
+            <i className={`fas fa-${row.is_active ? 'ban' : 'check'}`}></i>
+          </button>
+          <button
+            className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             onClick={() => handleDeleteUser(row.id)}
+            title="Delete User"
           >
-            <i className="fas fa-trash mr-1"></i>
-            Delete
-          </Button>
+            <i className="fas fa-trash"></i>
+          </button>
         </div>
       ),
     },

@@ -23,6 +23,7 @@ class RolePermissionSeeder extends Seeder
             'delete-users' => 'Delete Users',
             'toggle-user-status' => 'Toggle User Status',
             'change-user-password' => 'Change User Password',
+            'verify-user-email' => 'Verify User Email',
             
             // Member Management
             'view-members' => 'View Members',
@@ -291,7 +292,7 @@ class RolePermissionSeeder extends Seeder
                 'description' => 'Church pastor with limited administrative access',
                 'permissions' => [
                     // User Management - Limited
-                    'view-users', 'create-users', 'edit-users', 'toggle-user-status', 'change-user-password',
+                    'view-users', 'create-users', 'edit-users', 'toggle-user-status', 'change-user-password', 'verify-user-email',
                     
                     // Member Management
                     'view-members', 'create-members', 'edit-members', 'view-member-statistics', 'create-user-account', 'manage-member-groups', 'update-member-group-role',
