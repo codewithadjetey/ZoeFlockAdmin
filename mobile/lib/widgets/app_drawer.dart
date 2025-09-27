@@ -93,6 +93,11 @@ class AppDrawer extends StatelessWidget {
   Widget _buildMenuItems(BuildContext context) {
     final menuItems = [
       DrawerMenuItem(
+        icon: Icons.dashboard,
+        title: 'Dashboard',
+        route: '/dashboard',
+      ),
+      DrawerMenuItem(
         icon: Icons.event,
         title: 'Events',
         route: '/events',
@@ -204,6 +209,9 @@ class AppDrawer extends StatelessWidget {
       case '/events':
         Navigator.of(context).pushNamed('/events');
         break;
+      case '/dashboard':
+        Navigator.of(context).pushNamed('/dashboard');
+        break;
       case '/members':
         Navigator.of(context).push(
           MaterialPageRoute(builder: (context) => const MembersScreen()),
@@ -230,7 +238,7 @@ class AppDrawer extends StatelessWidget {
         );
         break;
       default:
-        Navigator.of(context).pushNamed('/events');
+        Navigator.of(context).pushNamed('/dashboard');
     }
   }
 

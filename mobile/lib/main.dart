@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'providers/auth_provider.dart';
 import 'providers/event_provider.dart';
 import 'providers/attendance_provider.dart';
+import 'providers/dashboard_provider.dart';
 import 'screens/login_screen.dart';
+import 'screens/dashboard_screen.dart';
 import 'screens/event_selection_screen.dart';
 import 'screens/scanner_screen.dart';
 import 'screens/settings_screen.dart';
@@ -38,6 +40,7 @@ class ChurchAttendanceApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => EventProvider()),
         ChangeNotifierProvider(create: (_) => AttendanceProvider()),
+        ChangeNotifierProvider(create: (_) => DashboardProvider()),
       ],
       child: MaterialApp(
         title: 'Church Attendance Scanner',
@@ -94,6 +97,7 @@ class ChurchAttendanceApp extends StatelessWidget {
         home: const AuthWrapper(),
         routes: {
           '/login': (context) => const LoginScreen(),
+          '/dashboard': (context) => const DashboardScreen(),
           '/events': (context) => const EventSelectionScreen(),
           '/scanner': (context) => const ScannerScreen(),
           '/settings': (context) => const SettingsScreen(),
@@ -182,8 +186,8 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
         
         if (authProvider.isAuthenticated) {
-          print('App: Showing EventSelectionScreen (authenticated)');
-          return const EventSelectionScreen();
+          print('App: Showing DashboardScreen (authenticated)');
+          return const DashboardScreen();
         }
         
         print('App: Showing LoginScreen (not authenticated)');
