@@ -46,6 +46,12 @@ class SyncService {
 
   bool _isSyncing = false;
   bool get isSyncing => _isSyncing;
+  
+  /// Force reset sync state (use with caution)
+  void resetSyncState() {
+    _isSyncing = false;
+    print('SyncService: Sync state force reset');
+  }
 
   /// Test member API connection
   Future<void> testMemberApi() async {
@@ -91,10 +97,10 @@ class SyncService {
     return success;
   }
 
-  /// Start the sync process for all data
-  Future<bool> syncAllData() async {
+  /// Pull data from server (Groups, Events, Families, Members)
+  Future<bool> pullData() async {
     if (_isSyncing) {
-      print('SyncService: Sync already in progress');
+      print('SyncService: Sync already in progress - rejecting pull data request');
       return false;
     }
 
@@ -102,7 +108,7 @@ class SyncService {
     bool success = true;
 
     try {
-      print('SyncService: Starting full data sync...');
+      print('SyncService: Starting pull data sync...');
 
       // Sync Groups
       print('SyncService: Starting Groups sync...');
@@ -124,21 +130,139 @@ class SyncService {
       await _syncEvents();
       print('SyncService: Events sync completed');
 
+      print('SyncService: Pull data sync completed successfully');
+    } catch (e) {
+      print('SyncService: Error during pull sync: $e');
+      print('SyncService: Stack trace: ${StackTrace.current}');
+      success = false;
+    } finally {
+      _isSyncing = false;
+      print('SyncService: Pull data sync finished - _isSyncing reset to false');
+    }
+
+    return success;
+  }
+
+  /// Push attendance data to server
+  Future<bool> pushAttendance() async {
+    if (_isSyncing) {
+      print('SyncService: Sync already in progress - rejecting push attendance request');
+      return false;
+    }
+
+    _isSyncing = true;
+    bool success = true;
+
+    try {
+      print('SyncService: Starting push attendance sync...');
+
       // Sync Offline Attendance
       print('SyncService: Starting Offline Attendance sync...');
       await _syncOfflineAttendance();
       print('SyncService: Offline Attendance sync completed');
 
-      print('SyncService: Full data sync completed successfully');
+      print('SyncService: Push attendance sync completed successfully');
     } catch (e) {
-      print('SyncService: Error during sync: $e');
+      print('SyncService: Error during push sync: $e');
       print('SyncService: Stack trace: ${StackTrace.current}');
       success = false;
     } finally {
       _isSyncing = false;
+      print('SyncService: Push attendance sync finished - _isSyncing reset to false');
     }
 
     return success;
+  }
+
+  /// Start the sync process for all data (legacy method)
+  Future<bool> syncAllData() async {
+    if (_isSyncing) {
+      print('SyncService: Sync already in progress - rejecting full sync request');
+      return false;
+    }
+
+    _isSyncing = true;
+    bool success = true;
+
+    try {
+      print('SyncService: Starting full data sync...');
+
+      // Pull all data first (using internal method to avoid double _isSyncing check)
+      final pullSuccess = await _pullDataInternal();
+      if (!pullSuccess) {
+        print('SyncService: Pull data failed during full sync');
+        throw Exception('Pull data failed');
+      }
+
+      // Then push attendance (using internal method to avoid double _isSyncing check)
+      final pushSuccess = await _pushAttendanceInternal();
+      if (!pushSuccess) {
+        print('SyncService: Push attendance failed during full sync');
+        throw Exception('Push attendance failed');
+      }
+
+      print('SyncService: Full data sync completed successfully');
+    } catch (e) {
+      print('SyncService: Error during full sync: $e');
+      print('SyncService: Stack trace: ${StackTrace.current}');
+      success = false;
+    } finally {
+      _isSyncing = false;
+      print('SyncService: Full data sync finished - _isSyncing reset to false');
+    }
+
+    return success;
+  }
+
+  /// Internal method for pull data (used by syncAllData)
+  Future<bool> _pullDataInternal() async {
+    try {
+      print('SyncService: Starting internal pull data sync...');
+
+      // Sync Groups
+      print('SyncService: Starting Groups sync...');
+      await _syncGroups();
+      print('SyncService: Groups sync completed');
+      
+      // Sync Families
+      print('SyncService: Starting Families sync...');
+      await _syncFamilies();
+      print('SyncService: Families sync completed');
+      
+      // Sync Members
+      print('SyncService: Starting Members sync...');
+      await _syncMembers();
+      print('SyncService: Members sync completed');
+      
+      // Sync Events
+      print('SyncService: Starting Events sync...');
+      await _syncEvents();
+      print('SyncService: Events sync completed');
+
+      print('SyncService: Internal pull data sync completed successfully');
+      return true;
+    } catch (e) {
+      print('SyncService: Error during internal pull sync: $e');
+      return false;
+    }
+  }
+
+  /// Internal method for push attendance (used by syncAllData)
+  Future<bool> _pushAttendanceInternal() async {
+    try {
+      print('SyncService: Starting internal push attendance sync...');
+
+      // Sync Offline Attendance
+      print('SyncService: Starting Offline Attendance sync...');
+      await _syncOfflineAttendance();
+      print('SyncService: Offline Attendance sync completed');
+
+      print('SyncService: Internal push attendance sync completed successfully');
+      return true;
+    } catch (e) {
+      print('SyncService: Error during internal push sync: $e');
+      return false;
+    }
   }
 
   /// Sync groups from the server with pagination

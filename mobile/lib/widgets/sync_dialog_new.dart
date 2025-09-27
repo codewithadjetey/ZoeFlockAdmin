@@ -93,11 +93,7 @@ class _SyncDialogState extends State<SyncDialog> {
   }
 
   Future<void> _startPullData() async {
-    if (_isSyncing || _syncService.isSyncing) {
-      print('SyncDialog: Cannot start pull data - sync already in progress');
-      AppHelpers.showErrorSnackBar(context, 'Sync operation already in progress');
-      return;
-    }
+    if (_isSyncing) return;
 
     setState(() {
       _isSyncing = true;
@@ -134,11 +130,7 @@ class _SyncDialogState extends State<SyncDialog> {
   }
 
   Future<void> _startPushAttendance() async {
-    if (_isSyncing || _syncService.isSyncing) {
-      print('SyncDialog: Cannot start push attendance - sync already in progress');
-      AppHelpers.showErrorSnackBar(context, 'Sync operation already in progress');
-      return;
-    }
+    if (_isSyncing) return;
 
     setState(() {
       _isSyncing = true;
@@ -175,11 +167,7 @@ class _SyncDialogState extends State<SyncDialog> {
   }
 
   Future<void> _startFullSync() async {
-    if (_isSyncing || _syncService.isSyncing) {
-      print('SyncDialog: Cannot start full sync - sync already in progress');
-      AppHelpers.showErrorSnackBar(context, 'Sync operation already in progress');
-      return;
-    }
+    if (_isSyncing) return;
 
     setState(() {
       _isSyncing = true;
@@ -349,15 +337,13 @@ class _SyncDialogState extends State<SyncDialog> {
   }
 
   Widget _buildSyncOperationButtons() {
-    final isAnySyncRunning = _isSyncing || _syncService.isSyncing;
-    
     return Column(
       children: [
         // Pull Data Button
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: isAnySyncRunning ? null : _startPullData,
+            onPressed: _startPullData,
             icon: const Icon(Icons.cloud_download),
             label: const Text('Pull Data'),
             style: ElevatedButton.styleFrom(
@@ -377,7 +363,7 @@ class _SyncDialogState extends State<SyncDialog> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: isAnySyncRunning ? null : _startPushAttendance,
+            onPressed: _startPushAttendance,
             icon: const Icon(Icons.cloud_upload),
             label: const Text('Push Attendance'),
             style: ElevatedButton.styleFrom(
@@ -397,7 +383,7 @@ class _SyncDialogState extends State<SyncDialog> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: isAnySyncRunning ? null : _startFullSync,
+            onPressed: _startFullSync,
             icon: const Icon(Icons.sync),
             label: const Text('Full Sync (Pull + Push)'),
             style: OutlinedButton.styleFrom(

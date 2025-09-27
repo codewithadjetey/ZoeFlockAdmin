@@ -238,39 +238,55 @@ class DatabaseHelper {
         // Migration to version 4: Add offline attendance table
         print('DatabaseHelper: Running migration to version 4 - Adding offline attendance table');
         
-        await db.execute('''
-          CREATE TABLE ${DatabaseConstants.offlineAttendanceTable} (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            local_id TEXT NOT NULL UNIQUE,
-            member_id INTEGER NOT NULL,
-            event_id INTEGER NOT NULL,
-            status TEXT NOT NULL,
-            check_in_time INTEGER NOT NULL,
-            notes TEXT,
-            is_first_timer INTEGER DEFAULT 0,
-            is_synced INTEGER DEFAULT 0,
-            server_id INTEGER,
-            server_version INTEGER DEFAULT 0,
-            local_version INTEGER DEFAULT 1,
-            conflict_resolved INTEGER DEFAULT 0,
-            created_at INTEGER NOT NULL,
-            updated_at INTEGER NOT NULL,
-            synced_at INTEGER,
-            FOREIGN KEY (member_id) REFERENCES ${DatabaseConstants.membersTable} (id),
-            FOREIGN KEY (event_id) REFERENCES ${DatabaseConstants.eventsTable} (id)
-          )
-        ''');
+        try {
+          await db.execute('''
+            CREATE TABLE ${DatabaseConstants.offlineAttendanceTable} (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              local_id TEXT NOT NULL UNIQUE,
+              member_id INTEGER NOT NULL,
+              event_id INTEGER NOT NULL,
+              status TEXT NOT NULL,
+              check_in_time INTEGER NOT NULL,
+              notes TEXT,
+              is_first_timer INTEGER DEFAULT 0,
+              is_synced INTEGER DEFAULT 0,
+              server_id INTEGER,
+              server_version INTEGER DEFAULT 0,
+              local_version INTEGER DEFAULT 1,
+              conflict_resolved INTEGER DEFAULT 0,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              synced_at INTEGER,
+              FOREIGN KEY (member_id) REFERENCES ${DatabaseConstants.membersTable} (id),
+              FOREIGN KEY (event_id) REFERENCES ${DatabaseConstants.eventsTable} (id)
+            )
+          ''');
+          print('DatabaseHelper: Offline attendance table created successfully');
+        } catch (e) {
+          print('DatabaseHelper: Offline attendance table might already exist: $e');
+          // Continue anyway as table might already exist
+        }
 
         // Create indexes for offline attendance table
-        await db.execute('''
-          CREATE INDEX idx_offline_attendance_member_event 
-          ON ${DatabaseConstants.offlineAttendanceTable} (member_id, event_id)
-        ''');
+        try {
+          await db.execute('''
+            CREATE INDEX idx_offline_attendance_member_event 
+            ON ${DatabaseConstants.offlineAttendanceTable} (member_id, event_id)
+          ''');
+          print('DatabaseHelper: Offline attendance member_event index created');
+        } catch (e) {
+          print('DatabaseHelper: Offline attendance member_event index might already exist: $e');
+        }
 
-        await db.execute('''
-          CREATE INDEX idx_offline_attendance_sync 
-          ON ${DatabaseConstants.offlineAttendanceTable} (is_synced, synced_at)
-        ''');
+        try {
+          await db.execute('''
+            CREATE INDEX idx_offline_attendance_sync 
+            ON ${DatabaseConstants.offlineAttendanceTable} (is_synced, synced_at)
+          ''');
+          print('DatabaseHelper: Offline attendance sync index created');
+        } catch (e) {
+          print('DatabaseHelper: Offline attendance sync index might already exist: $e');
+        }
         
         break;
         
