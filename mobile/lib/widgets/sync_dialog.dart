@@ -115,7 +115,10 @@ class _SyncDialogState extends State<SyncDialog> {
         borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
       ),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 400, maxHeight: 600),
+        constraints: BoxConstraints(
+          maxWidth: 400,
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
         padding: const EdgeInsets.all(AppDimensions.paddingLarge),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -169,8 +172,14 @@ class _SyncDialogState extends State<SyncDialog> {
             
             const SizedBox(height: AppDimensions.paddingLarge),
             
-            // Progress items
-            ..._progressMap.values.map((progress) => _buildProgressItem(progress)),
+            // Progress items - make scrollable
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: _progressMap.values.map((progress) => _buildProgressItem(progress)).toList(),
+                ),
+              ),
+            ),
             
             const SizedBox(height: AppDimensions.paddingLarge),
             

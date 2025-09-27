@@ -6,12 +6,14 @@ import '../models/member.dart';
 import '../models/event.dart';
 import '../models/attendance.dart';
 import '../utils/constants.dart';
+import 'database_helper.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
   DatabaseService._internal();
 
+  final DatabaseHelper _dbHelper = DatabaseHelper();
   Database? _database;
   bool _isInitialized = false;
 
@@ -22,12 +24,9 @@ class DatabaseService {
     try {
       print('DatabaseService: Initializing database...');
       
-      // For mobile platforms, sqflite works out of the box
-      // For desktop platforms, we would need sqflite_common_ffi
-      // Since this is a mobile app, we'll use the standard sqflite
-      
-      // Test database initialization
-      await _initDatabase();
+      // Initialize the database helper
+      await _dbHelper.initialize();
+      _database = await _dbHelper.database;
       _isInitialized = true;
       print('DatabaseService: Database initialized successfully');
     } catch (e) {
@@ -44,128 +43,11 @@ class DatabaseService {
     }
     
     if (_database != null) return _database!;
-    _database = await _initDatabase();
+    _database = await _dbHelper.database;
     return _database!;
   }
 
-  Future<Database> _initDatabase() async {
-    try {
-      print('DatabaseService: Getting databases path...');
-      final databasesPath = await getDatabasesPath();
-      final path = join(databasesPath, DatabaseConstants.databaseName);
-      
-      print('DatabaseService: Opening database at path: $path');
-      final database = await openDatabase(
-        path,
-        version: DatabaseConstants.databaseVersion,
-        onCreate: _onCreate,
-        onUpgrade: _onUpgrade,
-      );
-      
-      print('DatabaseService: Database opened successfully');
-      return database;
-    } catch (e) {
-      print('DatabaseService: Error opening database: $e');
-      print('DatabaseService: Error type: ${e.runtimeType}');
-      
-      // If we're on a platform that doesn't support sqflite, 
-      // we'll throw a more descriptive error
-      if (e.toString().contains('databaseFactory not initialized')) {
-        throw Exception('Database not supported on this platform. This app requires a mobile device.');
-      }
-      
-      rethrow;
-    }
-  }
-
-  Future<void> _onCreate(Database db, int version) async {
-    // Create members table
-    await db.execute('''
-      CREATE TABLE ${DatabaseConstants.membersTable} (
-        id INTEGER PRIMARY KEY,
-        first_name TEXT NOT NULL,
-        last_name TEXT NOT NULL,
-        email TEXT NOT NULL,
-        profile_image_path TEXT,
-        member_identification_id TEXT NOT NULL UNIQUE,
-        group_name TEXT,
-        family TEXT,
-        gender TEXT,
-        phone TEXT,
-        date_of_birth INTEGER,
-        status TEXT NOT NULL,
-        last_attendance_date INTEGER,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      )
-    ''');
-
-    // Create events table
-    await db.execute('''
-      CREATE TABLE ${DatabaseConstants.eventsTable} (
-        id INTEGER PRIMARY KEY,
-        title TEXT NOT NULL,
-        description TEXT,
-        start_date INTEGER NOT NULL,
-        end_date INTEGER,
-        location TEXT,
-        time TEXT,
-        status TEXT NOT NULL,
-        attendance_count INTEGER DEFAULT 0,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      )
-    ''');
-
-    // Create attendance table
-    await db.execute('''
-      CREATE TABLE ${DatabaseConstants.attendanceTable} (
-        id INTEGER PRIMARY KEY,
-        member_id INTEGER NOT NULL,
-        event_id INTEGER NOT NULL,
-        status TEXT NOT NULL,
-        check_in_time INTEGER NOT NULL,
-        notes TEXT,
-        is_first_timer INTEGER DEFAULT 0,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL,
-        FOREIGN KEY (member_id) REFERENCES ${DatabaseConstants.membersTable} (id),
-        FOREIGN KEY (event_id) REFERENCES ${DatabaseConstants.eventsTable} (id)
-      )
-    ''');
-
-    // Create settings table
-    await db.execute('''
-      CREATE TABLE ${DatabaseConstants.settingsTable} (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL,
-        updated_at INTEGER NOT NULL
-      )
-    ''');
-
-    // Create indexes for better performance
-    await db.execute('''
-      CREATE INDEX idx_members_identification_id 
-      ON ${DatabaseConstants.membersTable} (member_identification_id)
-    ''');
-
-    await db.execute('''
-      CREATE INDEX idx_attendance_member_event 
-      ON ${DatabaseConstants.attendanceTable} (member_id, event_id)
-    ''');
-
-    await db.execute('''
-      CREATE INDEX idx_events_start_date 
-      ON ${DatabaseConstants.eventsTable} (start_date)
-    ''');
-  }
-
-  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle database upgrades here
-    if (oldVersion < 2) {
-      // Add new columns or tables for version 2
-    }
-  }
+  // Database initialization is now handled by DatabaseHelper
 
   // Member operations
   Future<int> insertMember(Member member) async {
@@ -473,11 +355,9 @@ class DatabaseService {
   }
 
   Future<void> close() async {
-    final db = _database;
-    if (db != null) {
-      await db.close();
-      _database = null;
-    }
+    await _dbHelper.close();
+    _database = null;
+    _isInitialized = false;
   }
 
   // Additional methods needed by the app
@@ -492,5 +372,31 @@ class DatabaseService {
     // For now, we'll just log it
     print('Marking attendance $attendanceId as synced');
   }
+
+  // Database helper methods
+  Future<Map<String, dynamic>> getDatabaseInfo() async {
+    return await _dbHelper.getDatabaseInfo();
+  }
+
+  Future<void> resetDatabase() async {
+    await _dbHelper.resetDatabase();
+    _database = await _dbHelper.database;
+  }
+
+  Future<void> forceRecreateDatabase() async {
+    await _dbHelper.forceRecreateDatabase();
+    _database = await _dbHelper.database;
+  }
+
+  Future<String> backupDatabase() async {
+    return await _dbHelper.backupDatabase();
+  }
+
+  Future<void> restoreDatabase(String backupPath) async {
+    await _dbHelper.restoreDatabase(backupPath);
+    _database = await _dbHelper.database;
+  }
+
+  int get currentVersion => _dbHelper.currentVersion;
 }
 
