@@ -30,25 +30,65 @@ class UserConfigService {
   /// Initialize the user config service
   Future<void> initialize() async {
     try {
+      print('UserConfigService: Starting initialization...');
       _prefs = await SharedPreferences.getInstance();
+      print('UserConfigService: SharedPreferences obtained');
+      
+      // Test storage access
+      await _testStorageAccess();
+      
       await _loadCachedUserInfo();
       print('UserConfigService: Initialized successfully');
     } catch (e) {
       print('UserConfigService: Error during initialization: $e');
+      print('UserConfigService: Error stack trace: ${StackTrace.current}');
+    }
+  }
+
+  /// Test storage access to ensure it's working
+  Future<void> _testStorageAccess() async {
+    try {
+      print('UserConfigService: Testing storage access...');
+      
+      // Test SharedPreferences
+      if (_prefs != null) {
+        final testKey = 'test_key_${DateTime.now().millisecondsSinceEpoch}';
+        await _prefs!.setString(testKey, 'test_value');
+        final testValue = _prefs!.getString(testKey);
+        await _prefs!.remove(testKey);
+        print('UserConfigService: SharedPreferences test - ${testValue == 'test_value' ? "PASSED" : "FAILED"}');
+      } else {
+        print('UserConfigService: SharedPreferences is null!');
+      }
+      
+      // Test FlutterSecureStorage
+      final secureTestKey = 'secure_test_key_${DateTime.now().millisecondsSinceEpoch}';
+      await _secureStorage.write(key: secureTestKey, value: 'secure_test_value');
+      final secureTestValue = await _secureStorage.read(key: secureTestKey);
+      await _secureStorage.delete(key: secureTestKey);
+      print('UserConfigService: FlutterSecureStorage test - ${secureTestValue == 'secure_test_value' ? "PASSED" : "FAILED"}');
+      
+    } catch (e) {
+      print('UserConfigService: Storage test error: $e');
     }
   }
 
   /// Load cached user information from storage
   Future<void> _loadCachedUserInfo() async {
     try {
+      print('UserConfigService: Loading cached user info...');
+      
       // Load token
       _cachedToken = await _secureStorage.read(key: StorageKeys.authToken);
+      print('UserConfigService: Token loaded: ${_cachedToken != null ? "Yes" : "No"}');
       
       // Load user information
       final userId = await _getStoredValue(StorageKeys.userId);
       final firstName = await _getStoredValue(StorageKeys.userFirstName);
       final lastName = await _getStoredValue(StorageKeys.userLastName);
       final email = await _getStoredValue(StorageKeys.userEmail);
+      
+      print('UserConfigService: User data - userId: $userId, firstName: $firstName, lastName: $lastName, email: $email');
       
       if (userId != null && firstName != null && lastName != null && email != null) {
         _cachedUser = Member(
@@ -67,7 +107,9 @@ class UserConfigService {
           createdAt: await _getStoredDateValue(StorageKeys.userCreatedAt) ?? DateTime.now(),
           updatedAt: await _getStoredDateValue(StorageKeys.userUpdatedAt) ?? DateTime.now(),
         );
-        print('UserConfigService: Cached user info loaded - ${_cachedUser?.fullName}');
+        print('UserConfigService: Cached user info loaded successfully - ${_cachedUser?.fullName}');
+      } else {
+        print('UserConfigService: Incomplete user data, cannot load cached user');
       }
     } catch (e) {
       print('UserConfigService: Error loading cached user info: $e');

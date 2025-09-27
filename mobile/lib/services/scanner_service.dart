@@ -433,40 +433,4 @@ class ScannerService {
     }
   }
 
-  /// Add member to recent scans list
-  void _addToRecentScans(Member member) {
-    // Remove if already exists
-    _recentScans.removeWhere((m) => m.id == member.id);
-    
-    // Add to beginning
-    _recentScans.insert(0, member);
-    
-    // Keep only max recent scans
-    if (_recentScans.length > _maxRecentScans) {
-      _recentScans.removeRange(_maxRecentScans, _recentScans.length);
-    }
-  }
-
-  /// Provide feedback (vibration and sound)
-  Future<void> _provideFeedback() async {
-    try {
-      if (_enableVibration) {
-        await Vibration.vibrate(duration: 200);
-      }
-      
-      if (_enableSound) {
-        // Play success sound
-        final player = AudioPlayer();
-        await player.play(AssetSource('sounds/success.mp3'));
-      }
-    } catch (e) {
-      print('ScannerService: Error providing feedback: $e');
-    }
-  }
-
-  /// Handle successful scan (legacy method for compatibility)
-  Future<void> _handleSuccessfulScan(Member member) async {
-    _addToRecentScans(member);
-    await _provideFeedback();
-  }
 }

@@ -121,29 +121,46 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   Future<void> _initializeApp() async {
     try {
+      print('App: Starting app initialization...');
+      
       print('App: Initializing database service...');
       await DatabaseService().initialize();
       print('App: Database service initialized');
       
-      print('App: Initializing auth provider...');
+      print('App: Getting auth provider...');
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      print('App: Auth provider obtained');
+      
+      print('App: Initializing auth provider...');
       await authProvider.initialize();
       print('App: Auth provider initialized');
+      
+      print('App: Checking final auth state...');
+      print('App: isAuthenticated: ${authProvider.isAuthenticated}');
+      print('App: isLoading: ${authProvider.isLoading}');
+      print('App: currentUser: ${authProvider.currentUser?.fullName}');
+      
     } catch (e) {
       print('App: Error initializing app: $e');
       print('App: Error type: ${e.runtimeType}');
+      print('App: Error stack trace: ${StackTrace.current}');
     } finally {
+      print('App: Setting initialization complete...');
       if (mounted) {
         setState(() {
           _isInitialized = true;
         });
+        print('App: Initialization complete flag set');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    print('App: Build method called - _isInitialized: $_isInitialized');
+    
     if (!_isInitialized) {
+      print('App: Showing loading screen (not initialized)');
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -153,7 +170,10 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
+        print('App: Consumer builder called - isLoading: ${authProvider.isLoading}, isAuthenticated: ${authProvider.isAuthenticated}');
+        
         if (authProvider.isLoading) {
+          print('App: Showing loading screen (auth provider loading)');
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
@@ -162,9 +182,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
         }
         
         if (authProvider.isAuthenticated) {
+          print('App: Showing EventSelectionScreen (authenticated)');
           return const EventSelectionScreen();
         }
         
+        print('App: Showing LoginScreen (not authenticated)');
         return const LoginScreen();
       },
     );

@@ -13,7 +13,7 @@ class DatabaseHelper {
   bool _isInitialized = false;
 
   // Current database version - increment this when you need to add migrations
-  static const int _currentVersion = 4;
+  static const int _currentVersion = 5;
 
   /// Initialize the database service
   Future<void> initialize() async {
@@ -274,6 +274,29 @@ class DatabaseHelper {
         
         break;
         
+      case 5:
+        // Migration to version 5: Add authentication fields to config table
+        print('DatabaseHelper: Running migration to version 5 - Adding authentication fields to config table');
+        
+        try {
+          // Add new columns to config table
+          await db.execute('ALTER TABLE config ADD COLUMN username TEXT');
+          await db.execute('ALTER TABLE config ADD COLUMN password TEXT');
+          await db.execute('ALTER TABLE config ADD COLUMN auth_token TEXT');
+          await db.execute('ALTER TABLE config ADD COLUMN refresh_token TEXT');
+          await db.execute('ALTER TABLE config ADD COLUMN user_id INTEGER');
+          await db.execute('ALTER TABLE config ADD COLUMN user_name TEXT');
+          await db.execute('ALTER TABLE config ADD COLUMN user_email TEXT');
+          await db.execute('ALTER TABLE config ADD COLUMN is_authenticated INTEGER DEFAULT 0');
+          
+          print('DatabaseHelper: Authentication fields added to config table');
+        } catch (e) {
+          print('DatabaseHelper: Error adding authentication fields: $e');
+          // Continue anyway as columns might already exist
+        }
+        
+        break;
+        
       default:
         print('DatabaseHelper: No migration found for version $version');
         break;
@@ -282,18 +305,26 @@ class DatabaseHelper {
 
   /// Create initial database schema
   Future<void> _createInitialSchema(Database db) async {
-    // Create config table - this is the only table in initial schema
-    await db.execute('''
-      CREATE TABLE config (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        endpoint_url TEXT NOT NULL,
-        version TEXT NOT NULL,
-        app_name TEXT NOT NULL,
-        encryption_key TEXT,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      )
-    ''');
+        // Create config table - this is the only table in initial schema
+        await db.execute('''
+          CREATE TABLE config (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            endpoint_url TEXT NOT NULL,
+            version TEXT NOT NULL,
+            app_name TEXT NOT NULL,
+            encryption_key TEXT,
+            username TEXT,
+            password TEXT,
+            auth_token TEXT,
+            refresh_token TEXT,
+            user_id INTEGER,
+            user_name TEXT,
+            user_email TEXT,
+            is_authenticated INTEGER DEFAULT 0,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+          )
+        ''');
 
     // Insert default config values
     await db.execute('''
@@ -764,5 +795,103 @@ class DatabaseHelper {
       print('DatabaseHelper: Error clearing offline attendance: $e');
       rethrow;
     }
+  }
+
+  // ========== AUTHENTICATION CREDENTIALS METHODS ==========
+
+  /// Store authentication credentials in config table
+  Future<void> storeAuthCredentials({
+    required String username,
+    required String password,
+    required String authToken,
+    String? refreshToken,
+    required int userId,
+    required String userName,
+    required String userEmail,
+  }) async {
+    final db = await database;
+    try {
+      await db.update(
+        'config',
+        {
+          'username': username,
+          'password': password,
+          'auth_token': authToken,
+          'refresh_token': refreshToken,
+          'user_id': userId,
+          'user_name': userName,
+          'user_email': userEmail,
+          'is_authenticated': 1,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'app_name = ?',
+        whereArgs: ['Church Attendance Scanner'],
+      );
+      print('DatabaseHelper: Authentication credentials stored');
+    } catch (e) {
+      print('DatabaseHelper: Error storing authentication credentials: $e');
+      rethrow;
+    }
+  }
+
+  /// Get authentication credentials from config table
+  Future<Map<String, dynamic>?> getAuthCredentials() async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> result = await db.query(
+        'config',
+        where: 'app_name = ? AND is_authenticated = ?',
+        whereArgs: ['Church Attendance Scanner', 1],
+        limit: 1,
+      );
+      
+      if (result.isNotEmpty) {
+        final credentials = result.first;
+        print('DatabaseHelper: Authentication credentials found - user: ${credentials['user_name']}');
+        return credentials;
+      } else {
+        print('DatabaseHelper: No authentication credentials found');
+        return null;
+      }
+    } catch (e) {
+      print('DatabaseHelper: Error getting authentication credentials: $e');
+      return null;
+    }
+  }
+
+  /// Clear authentication credentials from config table
+  Future<void> clearAuthCredentials() async {
+    final db = await database;
+    try {
+      await db.update(
+        'config',
+        {
+          'username': null,
+          'password': null,
+          'auth_token': null,
+          'refresh_token': null,
+          'user_id': null,
+          'user_name': null,
+          'user_email': null,
+          'is_authenticated': 0,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        },
+        where: 'app_name = ?',
+        whereArgs: ['Church Attendance Scanner'],
+      );
+      print('DatabaseHelper: Authentication credentials cleared');
+    } catch (e) {
+      print('DatabaseHelper: Error clearing authentication credentials: $e');
+      rethrow;
+    }
+  }
+
+  /// Check if user is authenticated based on config table
+  Future<bool> isUserAuthenticated() async {
+    final credentials = await getAuthCredentials();
+    return credentials != null && 
+           credentials['is_authenticated'] == 1 &&
+           credentials['auth_token'] != null &&
+           credentials['auth_token'].toString().isNotEmpty;
   }
 }
