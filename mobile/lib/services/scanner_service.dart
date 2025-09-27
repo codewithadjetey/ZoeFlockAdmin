@@ -12,7 +12,7 @@ import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../utils/validators.dart';
 import 'api_service.dart';
-import 'database_service.dart';
+import 'database_service_orm.dart';
 import 'offline_attendance_service.dart';
 
 class ScannerService {

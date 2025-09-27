@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import '../models/member.dart';
-import '../services/database_helper.dart';
+import '../models/first_timer.dart';
+import '../orm/orm_database_service.dart';
+import '../orm/entities/first_timer_entity.dart';
+import '../services/first_timer_push_service.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/app_drawer.dart';
-import '../widgets/member_card.dart';
-import 'member_profile_screen.dart';
+import '../widgets/first_timer_card.dart';
+import 'add_first_timer_screen.dart';
 
 class FirstTimersScreen extends StatefulWidget {
   const FirstTimersScreen({super.key});
@@ -16,13 +18,15 @@ class FirstTimersScreen extends StatefulWidget {
 }
 
 class _FirstTimersScreenState extends State<FirstTimersScreen> {
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final OrmDatabaseService _ormDatabaseService = OrmDatabaseService();
+  final FirstTimerPushService _pushService = FirstTimerPushService();
   final TextEditingController _searchController = TextEditingController();
   
-  List<Member> _firstTimers = [];
-  List<Member> _filteredFirstTimers = [];
+  List<FirstTimer> _firstTimers = [];
+  List<FirstTimer> _filteredFirstTimers = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  FirstTimerStatus? _selectedStatus;
 
   @override
   void initState() {
@@ -42,25 +46,22 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
     });
 
     try {
-      // Get all members and filter for first timers
-      final List<Map<String, dynamic>> memberData = await _databaseHelper.getAllMembers();
-      final List<Member> allMembers = memberData.map((data) => Member.fromDatabase(data)).toList();
+      print('FirstTimersScreen: Loading first timers from local database...');
       
-      // Filter for first timers (members who are new or have special status)
-      final firstTimers = allMembers.where((member) {
-        // You can adjust this logic based on your first timer criteria
-        // For now, we'll consider members with recent creation date or specific status
-        final daysSinceCreation = DateTime.now().difference(member.createdAt).inDays;
-        return daysSinceCreation <= 30; // Members created within last 30 days
-      }).toList();
+      await _ormDatabaseService.initialize();
+      final firstTimerEntities = await _ormDatabaseService.getAllFirstTimers();
+      final firstTimers = firstTimerEntities.map((entity) => entity.toModel()).toList();
+      
+      print('FirstTimersScreen: Loaded ${firstTimers.length} first timers from local database');
       
       setState(() {
         _firstTimers = firstTimers;
         _applyFilters();
         _isLoading = false;
       });
+      
     } catch (e) {
-      print('Error loading first timers: $e');
+      print('FirstTimersScreen: Error loading first timers: $e');
       setState(() {
         _isLoading = false;
       });
@@ -71,20 +72,25 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
   }
 
   void _applyFilters() {
-    List<Member> filtered = List.from(_firstTimers);
+    List<FirstTimer> filtered = List.from(_firstTimers);
 
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((member) {
-        final fullName = member.fullName.toLowerCase();
-        final email = member.email.toLowerCase();
-        final memberId = member.memberIdentificationId.toLowerCase();
+      filtered = filtered.where((firstTimer) {
+        final name = firstTimer.name.toLowerCase();
+        final phone = firstTimer.primaryMobileNumber.toLowerCase();
+        final location = (firstTimer.location ?? '').toLowerCase();
         final query = _searchQuery.toLowerCase();
         
-        return fullName.contains(query) ||
-               email.contains(query) ||
-               memberId.contains(query);
+        return name.contains(query) ||
+               phone.contains(query) ||
+               location.contains(query);
       }).toList();
+    }
+
+    // Apply status filter
+    if (_selectedStatus != null) {
+      filtered = filtered.where((firstTimer) => firstTimer.status == _selectedStatus).toList();
     }
 
     setState(() {
@@ -99,14 +105,111 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
     _applyFilters();
   }
 
+  void _onStatusFilterChanged(FirstTimerStatus? status) {
+    setState(() {
+      _selectedStatus = status;
+    });
+    _applyFilters();
+  }
+
   Future<void> _refreshFirstTimers() async {
     await _loadFirstTimers();
   }
 
-  void _navigateToMemberProfile(Member member) {
-    Navigator.of(context).push(
+  Future<void> _navigateToAddFirstTimer() async {
+    final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => MemberProfileScreen(member: member),
+        builder: (context) => const AddFirstTimerScreen(),
+      ),
+    );
+    
+    // Refresh the list if a first timer was successfully added
+    if (result == true) {
+      await _refreshFirstTimers();
+    }
+  }
+
+  Future<void> _syncToServer() async {
+    try {
+      print('FirstTimersScreen: Starting sync to server...');
+      await _pushService.pushUnpushedFirstTimers();
+      
+      if (mounted) {
+        AppHelpers.showSuccessSnackBar(context, 'Sync completed! Check sync status on cards.');
+        await _refreshFirstTimers(); // Refresh to show updated sync status
+      }
+    } catch (e) {
+      print('FirstTimersScreen: Error syncing to server: $e');
+      if (mounted) {
+        AppHelpers.showErrorSnackBar(context, 'Sync failed: $e');
+      }
+    }
+  }
+
+  void _navigateToFirstTimerDetails(FirstTimer firstTimer) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(firstTimer.name),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDetailRow('Status', firstTimer.statusDisplayName),
+              _buildDetailRow('Visit Count', firstTimer.visitCountDisplay),
+              _buildDetailRow('Primary Phone', firstTimer.primaryMobileNumber),
+              if (firstTimer.hasSecondaryPhone)
+                _buildDetailRow('Secondary Phone', firstTimer.secondaryPhone),
+              if (firstTimer.location != null && firstTimer.location!.isNotEmpty)
+                _buildDetailRow('Location', firstTimer.location!),
+              if (firstTimer.invitedBy != null && firstTimer.invitedBy!.isNotEmpty)
+                _buildDetailRow('Invited By', firstTimer.invitedBy!),
+              if (firstTimer.howWasService != null && firstTimer.howWasService!.isNotEmpty)
+                _buildDetailRow('Service Feedback', firstTimer.howWasService!),
+              if (firstTimer.wouldLikeToStay != null)
+                _buildDetailRow('Would Like to Stay', firstTimer.wouldLikeToStay! ? 'Yes' : 'No'),
+              _buildDetailRow('Registration Date', AppHelpers.formatDate(firstTimer.createdAt)),
+              if (firstTimer.lastSubmissionDate != null)
+                _buildDetailRow('Last Visit', AppHelpers.formatDate(firstTimer.lastSubmissionDate!)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.paddingSmall),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: AppColors.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.onSurface,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -120,6 +223,16 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
         title: 'First Timers',
         actions: [
           IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _navigateToAddFirstTimer,
+            tooltip: 'Add First Timer',
+          ),
+          IconButton(
+            icon: const Icon(Icons.cloud_upload),
+            onPressed: _syncToServer,
+            tooltip: 'Sync to Server',
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshFirstTimers,
             tooltip: 'Refresh',
@@ -129,6 +242,7 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
       body: Column(
         children: [
           _buildSearchBar(),
+          _buildStatusFilters(),
           Expanded(
             child: _buildFirstTimersList(),
           ),
@@ -144,7 +258,7 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
         controller: _searchController,
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
-          hintText: 'Search first timers...',
+          hintText: 'Search first timers by name, phone, or location...',
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -170,6 +284,62 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
     );
   }
 
+  Widget _buildStatusFilters() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingMedium),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // All filter
+            FilterChip(
+              label: const Text('All'),
+              selected: _selectedStatus == null,
+              onSelected: (selected) {
+                if (selected) {
+                  _onStatusFilterChanged(null);
+                }
+              },
+            ),
+            const SizedBox(width: AppDimensions.paddingSmall),
+            // First Timer filter
+            FilterChip(
+              label: const Text('First Timer'),
+              selected: _selectedStatus == FirstTimerStatus.firstTimer,
+              onSelected: (selected) {
+                if (selected) {
+                  _onStatusFilterChanged(FirstTimerStatus.firstTimer);
+                }
+              },
+            ),
+            const SizedBox(width: AppDimensions.paddingSmall),
+            // Visitor filter
+            FilterChip(
+              label: const Text('Visitor'),
+              selected: _selectedStatus == FirstTimerStatus.visitor,
+              onSelected: (selected) {
+                if (selected) {
+                  _onStatusFilterChanged(FirstTimerStatus.visitor);
+                }
+              },
+            ),
+            const SizedBox(width: AppDimensions.paddingSmall),
+            // Potential Member filter
+            FilterChip(
+              label: const Text('Potential Member'),
+              selected: _selectedStatus == FirstTimerStatus.potentialMember,
+              onSelected: (selected) {
+                if (selected) {
+                  _onStatusFilterChanged(FirstTimerStatus.potentialMember);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFirstTimersList() {
     if (_isLoading) {
       return const Center(
@@ -189,8 +359,8 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
             ),
             const SizedBox(height: AppDimensions.paddingMedium),
             Text(
-              _searchQuery.isNotEmpty 
-                  ? 'No first timers found matching your search'
+              _searchQuery.isNotEmpty || _selectedStatus != null
+                  ? 'No first timers found matching your filters'
                   : 'No first timers found',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: AppColors.mediumGray,
@@ -198,9 +368,9 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
             ),
             const SizedBox(height: AppDimensions.paddingSmall),
             Text(
-              _searchQuery.isNotEmpty 
-                  ? 'Try adjusting your search terms'
-                  : 'New members will appear here',
+              _searchQuery.isNotEmpty || _selectedStatus != null
+                  ? 'Try adjusting your search terms or filters'
+                  : 'First timers will appear here when they register',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.mediumGray,
               ),
@@ -216,13 +386,10 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
         padding: const EdgeInsets.all(AppDimensions.paddingMedium),
         itemCount: _filteredFirstTimers.length,
         itemBuilder: (context, index) {
-          final member = _filteredFirstTimers[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: AppDimensions.paddingMedium),
-            child: MemberCard(
-              member: member,
-              onTap: () => _navigateToMemberProfile(member),
-            ),
+          final firstTimer = _filteredFirstTimers[index];
+          return FirstTimerCard(
+            firstTimer: firstTimer,
+            onTap: () => _navigateToFirstTimerDetails(firstTimer),
           );
         },
       ),

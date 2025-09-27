@@ -208,6 +208,10 @@ class _EventSelectionScreenState extends State<EventSelectionScreen> {
       drawer: const AppDrawer(),
       appBar: CustomAppBar(
         title: AppStrings.eventSelectionTitle,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pushNamed('/dashboard'),
+        ),
         actions: [
           Consumer<EventProvider>(
             builder: (context, eventProvider, child) {

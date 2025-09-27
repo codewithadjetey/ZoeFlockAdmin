@@ -438,8 +438,21 @@ class ApiService {
       
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          final List<dynamic> groupsData = data['data'];
+        if (data['success'] == true) {
+          // Check for both 'data' and 'groups' keys in the response
+          List<dynamic> groupsData = [];
+          if (data['data'] != null) {
+            groupsData = data['data'];
+          } else if (data['groups'] != null) {
+            // Handle paginated response structure
+            final groupsResponse = data['groups'];
+            if (groupsResponse['data'] != null) {
+              groupsData = groupsResponse['data'];
+            } else {
+              groupsData = groupsResponse;
+            }
+          }
+          
           final groups = groupsData.cast<Map<String, dynamic>>();
           print('🚀 ApiService: ✅ Successfully got ${groups.length} groups');
           return ApiResponse.success(groups);
@@ -469,8 +482,21 @@ class ApiService {
       
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          final List<dynamic> familiesData = data['data'];
+        if (data['success'] == true) {
+          // Check for both 'data' and 'families' keys in the response
+          List<dynamic> familiesData = [];
+          if (data['data'] != null) {
+            familiesData = data['data'];
+          } else if (data['families'] != null) {
+            // Handle paginated response structure
+            final familiesResponse = data['families'];
+            if (familiesResponse['data'] != null) {
+              familiesData = familiesResponse['data'];
+            } else {
+              familiesData = familiesResponse;
+            }
+          }
+          
           final families = familiesData.cast<Map<String, dynamic>>();
           print('🚀 ApiService: ✅ Successfully got ${families.length} families');
           return ApiResponse.success(families);
@@ -489,19 +515,57 @@ class ApiService {
     }
   }
 
+  /// Create a new first timer
+  Future<ApiResponse<Map<String, dynamic>>> createFirstTimer(Map<String, dynamic> firstTimerData) async {
+    try {
+      print('🚀 ApiService: Creating first timer...');
+      final response = await _dio.post('/first-timers', data: firstTimerData);
+      
+      print('✅ ApiService: Create first timer response status: ${response.statusCode}');
+      print('📊 ApiService: Create first timer response data: ${response.data}');
+      
+      if (response.statusCode == 201 && response.data != null) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          print('🚀 ApiService: ✅ Successfully created first timer');
+          return ApiResponse.success(data['data']);
+        } else {
+          print('🚀 ApiService: ❌ Failed to create first timer - API returned success: false');
+          return ApiResponse.error('Failed to create first timer');
+        }
+      } else {
+        print('🚀 ApiService: ❌ Failed to create first timer - Invalid response');
+        return ApiResponse.error('Failed to create first timer');
+      }
+    } catch (e) {
+      print('🚀 ApiService: ❌ Failed to create first timer');
+      print('Error creating first timer: $e');
+      return ApiResponse.error('Failed to create first timer: ${e.toString()}');
+    }
+  }
+
   /// Get all first timers
   Future<ApiResponse<List<Map<String, dynamic>>>> getAllFirstTimers() async {
     try {
       print('🚀 ApiService: Getting all first timers...');
       final response = await _dio.get('/first-timers');
-      
+
       print('✅ ApiService: First timers response status: ${response.statusCode}');
       print('📊 ApiService: First timers response data: ${response.data}');
-      
+
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          final List<dynamic> firstTimersData = data['data'];
+          // Handle paginated response structure
+          List<dynamic> firstTimersData = [];
+          if (data['data']['data'] != null) {
+            // Paginated response: data.data.data
+            firstTimersData = data['data']['data'];
+          } else if (data['data'] is List) {
+            // Direct array response
+            firstTimersData = data['data'];
+          }
+
           final firstTimers = firstTimersData.cast<Map<String, dynamic>>();
           print('🚀 ApiService: ✅ Successfully got ${firstTimers.length} first timers');
           return ApiResponse.success(firstTimers);

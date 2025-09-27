@@ -21,6 +21,7 @@
 - Add a progress bar for visitors
 - Follow up with visitors and first timers (Track Activities)
 - COnvert Visitor to Member
+- Add a feature where invited guest can receive a qr code and when the ushers scan the qr code, the guest will be marked as a visitor knowing his name
 
 
 ### Church Certifications
@@ -33,8 +34,8 @@
  - Moving In and Out
  - Possible add who donates to the church
 
- 
 
-### 
+
+### UdsrtAdmin
 
 

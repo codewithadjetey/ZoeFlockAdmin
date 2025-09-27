@@ -5,8 +5,12 @@ import '../models/member.dart';
 import '../models/event.dart';
 import '../utils/constants.dart';
 import 'api_service.dart';
-import 'database_service.dart';
+import 'database_service_orm.dart';
 import 'offline_attendance_service.dart';
+import '../orm/orm_database_service.dart';
+import '../orm/entities/group_entity.dart';
+import '../orm/entities/family_entity.dart';
+import 'dart:convert';
 
 class SyncProgress {
   final String category;
@@ -40,6 +44,7 @@ class SyncService {
   final ApiService _apiService = ApiService();
   final DatabaseService _databaseService = DatabaseService();
   final OfflineAttendanceService _offlineAttendanceService = OfflineAttendanceService();
+  final OrmDatabaseService _ormDatabaseService = OrmDatabaseService();
   
   final StreamController<SyncProgress> _progressController = StreamController<SyncProgress>.broadcast();
   Stream<SyncProgress> get progressStream => _progressController.stream;
@@ -277,12 +282,14 @@ class SyncService {
         status: 'Fetching groups...',
       ));
 
+      // ORM service will initialize automatically when needed
+
       // Use the new API service method
       final response = await _apiService.getAllGroups();
       
       if (response.isSuccess && response.data != null) {
-        final groups = response.data!;
-        final total = groups.length;
+        final groupsData = response.data!;
+        final total = groupsData.length;
         
         _progressController.add(SyncProgress(
           category: 'Groups',
@@ -291,32 +298,34 @@ class SyncService {
           status: 'Processing groups...',
         ));
 
-        int syncedCount = 0;
+        // Clear existing groups
+        await _ormDatabaseService.clearAllGroups();
         
-        // Store groups in local database
-        for (final groupData in groups) {
-          await _databaseService.setSetting(
-            'group_${groupData['id']}', 
-            groupData.toString()
-          );
-          syncedCount++;
-          
-          _progressController.add(SyncProgress(
-            category: 'Groups',
-            total: total,
-            synced: syncedCount,
-            status: 'Syncing groups...',
-          ));
+        final groups = <GroupEntity>[];
+        
+        // Convert API data to GroupEntity objects
+        for (final groupData in groupsData) {
+          try {
+            final group = GroupEntity.fromJson(groupData);
+            groups.add(group);
+          } catch (e) {
+            print('SyncService: Error parsing group ${groupData['id']}: $e');
+          }
+        }
+
+        // Bulk insert groups
+        if (groups.isNotEmpty) {
+          await _ormDatabaseService.insertGroups(groups);
         }
 
         _progressController.add(SyncProgress(
           category: 'Groups',
           total: total,
-          synced: syncedCount,
+          synced: groups.length,
           status: 'Groups synced successfully',
         ));
         
-        print('SyncService: Groups sync completed - $syncedCount groups synced');
+        print('SyncService: Groups sync completed - ${groups.length} groups synced');
       } else {
         print('SyncService: Groups sync failed - ${response.errorMessage}');
         _progressController.add(SyncProgress(
@@ -352,12 +361,14 @@ class SyncService {
         status: 'Fetching families...',
       ));
 
+      // ORM service will initialize automatically when needed
+
       // Use the new API service method
       final response = await _apiService.getAllFamilies();
       
       if (response.isSuccess && response.data != null) {
-        final families = response.data!;
-        final total = families.length;
+        final familiesData = response.data!;
+        final total = familiesData.length;
         
         _progressController.add(SyncProgress(
           category: 'Families',
@@ -366,32 +377,34 @@ class SyncService {
           status: 'Processing families...',
         ));
 
-        int syncedCount = 0;
+        // Clear existing families
+        await _ormDatabaseService.clearAllFamilies();
         
-        // Store families in local database
-        for (final familyData in families) {
-          await _databaseService.setSetting(
-            'family_${familyData['id']}', 
-            familyData.toString()
-          );
-          syncedCount++;
-          
-          _progressController.add(SyncProgress(
-            category: 'Families',
-            total: total,
-            synced: syncedCount,
-            status: 'Syncing families...',
-          ));
+        final families = <FamilyEntity>[];
+        
+        // Convert API data to FamilyEntity objects
+        for (final familyData in familiesData) {
+          try {
+            final family = FamilyEntity.fromJson(familyData);
+            families.add(family);
+          } catch (e) {
+            print('SyncService: Error parsing family ${familyData['id']}: $e');
+          }
+        }
+
+        // Bulk insert families
+        if (families.isNotEmpty) {
+          await _ormDatabaseService.insertFamilies(families);
         }
 
         _progressController.add(SyncProgress(
           category: 'Families',
           total: total,
-          synced: syncedCount,
+          synced: families.length,
           status: 'Families synced successfully',
         ));
         
-        print('SyncService: Families sync completed - $syncedCount families synced');
+        print('SyncService: Families sync completed - ${families.length} families synced');
       } else {
         print('SyncService: Families sync failed - ${response.errorMessage}');
         _progressController.add(SyncProgress(
@@ -663,25 +676,9 @@ class SyncService {
   }
 
   /// Get synced groups from local storage
-  Future<List<Map<String, dynamic>>> getSyncedGroups() async {
+  Future<List<GroupEntity>> getSyncedGroups() async {
     try {
-      final settings = await _databaseService.getAllSettings();
-      final groups = <Map<String, dynamic>>[];
-      
-      for (final entry in settings.entries) {
-        if (entry.key.startsWith('group_')) {
-          // Parse the stored group data
-          // Note: This is a simplified approach. In a real app, you'd want proper JSON serialization
-          try {
-            // For now, we'll return empty list as we need proper JSON handling
-            // groups.add(jsonDecode(entry.value));
-          } catch (e) {
-            print('SyncService: Error parsing group data: $e');
-          }
-        }
-      }
-      
-      return groups;
+      return await _ormDatabaseService.getAllGroups();
     } catch (e) {
       print('SyncService: Error getting synced groups: $e');
       return [];
@@ -689,25 +686,9 @@ class SyncService {
   }
 
   /// Get synced families from local storage
-  Future<List<Map<String, dynamic>>> getSyncedFamilies() async {
+  Future<List<FamilyEntity>> getSyncedFamilies() async {
     try {
-      final settings = await _databaseService.getAllSettings();
-      final families = <Map<String, dynamic>>[];
-      
-      for (final entry in settings.entries) {
-        if (entry.key.startsWith('family_')) {
-          // Parse the stored family data
-          // Note: This is a simplified approach. In a real app, you'd want proper JSON serialization
-          try {
-            // For now, we'll return empty list as we need proper JSON handling
-            // families.add(jsonDecode(entry.value));
-          } catch (e) {
-            print('SyncService: Error parsing family data: $e');
-          }
-        }
-      }
-      
-      return families;
+      return await _ormDatabaseService.getAllFamilies();
     } catch (e) {
       print('SyncService: Error getting synced families: $e');
       return [];
@@ -750,21 +731,15 @@ class SyncService {
     try {
       final members = await _databaseService.getAllMembers();
       final events = await _databaseService.getAllEvents();
-      final settings = await _databaseService.getAllSettings();
       
-      int groupsCount = 0;
-      int familiesCount = 0;
-      
-      for (final key in settings.keys) {
-        if (key.startsWith('group_')) groupsCount++;
-        if (key.startsWith('family_')) familiesCount++;
-      }
+      final groups = await _ormDatabaseService.getAllGroups();
+      final families = await _ormDatabaseService.getAllFamilies();
       
       return {
         'members': members.length,
         'events': events.length,
-        'groups': groupsCount,
-        'families': familiesCount,
+        'groups': groups.length,
+        'families': families.length,
       };
     } catch (e) {
       print('SyncService: Error getting sync status: $e');
