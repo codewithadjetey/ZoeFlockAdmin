@@ -6,6 +6,9 @@ import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/member_card.dart';
+import '../widgets/family_card.dart';
+import '../orm/orm_database_service.dart';
+import '../orm/entities/family_entity.dart';
 import 'member_profile_screen.dart';
 
 class FamiliesScreen extends StatefulWidget {
@@ -17,14 +20,14 @@ class FamiliesScreen extends StatefulWidget {
 
 class _FamiliesScreenState extends State<FamiliesScreen> {
   final DatabaseService _databaseService = DatabaseService();
+  final OrmDatabaseService _ormDatabaseService = OrmDatabaseService();
   final TextEditingController _searchController = TextEditingController();
   
-  List<String> _families = [];
-  List<Member> _allMembers = [];
-  String? _selectedFamily;
-  List<Member> _filteredMembers = [];
+  List<FamilyEntity> _families = [];
+  List<FamilyEntity> _filteredFamilies = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  bool _showFamiliesView = true; // Toggle between families view and members view
 
   @override
   void initState() {
@@ -34,7 +37,8 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
 
   Future<void> _initializeAndLoad() async {
     await _databaseService.initialize();
-    _loadFamiliesAndMembers();
+    await _ormDatabaseService.initialize();
+    _loadFamilies();
   }
 
   @override
@@ -43,21 +47,18 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
     super.dispose();
   }
 
-  Future<void> _loadFamiliesAndMembers() async {
+  Future<void> _loadFamilies() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Load all members
-      final List<Member> allMembers = await _databaseService.getAllMembers();
-      
-      // Get unique families
-      final List<String> families = await _databaseService.getUniqueFamilies();
+      // Load all families from ORM service
+      final List<FamilyEntity> families = await _ormDatabaseService.getAllFamilies();
       
       setState(() {
-        _allMembers = allMembers;
-        _families = families.toList()..sort();
+        _families = families;
+        _applyFilters();
         _isLoading = false;
       });
     } catch (e) {
@@ -71,39 +72,27 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
     }
   }
 
-  void _selectFamily(String? family) {
-    setState(() {
-      _selectedFamily = family;
-    });
-    _applyFilters();
-  }
-
   void _applyFilters() {
-    List<Member> filtered = List.from(_allMembers);
-
-    // Apply family filter
-    if (_selectedFamily != null && _selectedFamily!.isNotEmpty) {
-      filtered = filtered.where((member) {
-        return member.family == _selectedFamily;
-      }).toList();
-    }
+    List<FamilyEntity> filtered = List.from(_families);
 
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((member) {
-        final fullName = member.fullName.toLowerCase();
-        final email = member.email.toLowerCase();
-        final memberId = member.memberIdentificationId.toLowerCase();
+      filtered = filtered.where((family) {
+        final name = family.name.toLowerCase();
+        final description = family.description?.toLowerCase() ?? '';
+        final address = family.address?.toLowerCase() ?? '';
+        final headOfFamily = family.headOfFamilyName?.toLowerCase() ?? '';
         final query = _searchQuery.toLowerCase();
         
-        return fullName.contains(query) ||
-               email.contains(query) ||
-               memberId.contains(query);
+        return name.contains(query) ||
+               description.contains(query) ||
+               address.contains(query) ||
+               headOfFamily.contains(query);
       }).toList();
     }
 
     setState(() {
-      _filteredMembers = filtered;
+      _filteredFamilies = filtered;
     });
   }
 
@@ -115,19 +104,49 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
   }
 
   Future<void> _refreshFamilies() async {
-    await _loadFamiliesAndMembers();
+    await _loadFamilies();
   }
 
-  void _navigateToMemberProfile(Member member) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => MemberProfileScreen(member: member),
+  void _navigateToFamilyDetails(FamilyEntity family) {
+    // TODO: Implement family details screen
+    // For now, show a dialog with family information
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(family.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (family.description != null) ...[
+              Text('Description: ${family.description}'),
+              const SizedBox(height: 8),
+            ],
+            Text('Members: ${family.memberCount}'),
+            if (family.headOfFamilyName != null) ...[
+              const SizedBox(height: 8),
+              Text('Head of Family: ${family.headOfFamilyName}'),
+            ],
+            if (family.address != null) ...[
+              const SizedBox(height: 8),
+              Text('Address: ${family.address}'),
+            ],
+            if (family.phone != null) ...[
+              const SizedBox(height: 8),
+              Text('Phone: ${family.phone}'),
+            ],
+            const SizedBox(height: 8),
+            Text('Status: ${family.isActive ? 'Active' : 'Inactive'}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
-  }
-
-  int _getFamilyMemberCount(String family) {
-    return _allMembers.where((member) => member.family == family).length;
   }
 
   @override
@@ -147,7 +166,7 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
       ),
       body: Column(
         children: [
-          _buildFamilySelector(),
+          _buildViewToggle(),
           _buildSearchBar(),
           Expanded(
             child: _buildContent(),
@@ -157,56 +176,52 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
     );
   }
 
-  Widget _buildFamilySelector() {
-    if (_families.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-        child: Text(
-          'No families found',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.mediumGray,
-          ),
-        ),
-      );
-    }
-
+  Widget _buildViewToggle() {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
           Text(
-            'Select Family',
+            'View:',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppDimensions.paddingSmall),
-          Wrap(
-            spacing: AppDimensions.paddingSmall,
-            children: [
-              // All Families option
-              FilterChip(
-                label: Text('All Families (${_allMembers.length})'),
-                selected: _selectedFamily == null,
-                onSelected: (selected) => _selectFamily(null),
-                backgroundColor: AppColors.surfaceContainer,
-                selectedColor: AppColors.primaryBlue,
-                checkmarkColor: AppColors.white,
-              ),
-              // Individual families
-              ..._families.map((family) {
-                final count = _getFamilyMemberCount(family);
-                return FilterChip(
-                  label: Text('$family ($count)'),
-                  selected: _selectedFamily == family,
-                  onSelected: (selected) => _selectFamily(selected ? family : null),
-                  backgroundColor: AppColors.surfaceContainer,
-                  selectedColor: AppColors.primaryBlue,
-                  checkmarkColor: AppColors.white,
-                );
-              }).toList(),
-            ],
+          const SizedBox(width: AppDimensions.paddingSmall),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilterChip(
+                    label: const Text('Families'),
+                    selected: _showFamiliesView,
+                    onSelected: (selected) {
+                      setState(() {
+                        _showFamiliesView = true;
+                      });
+                    },
+                    backgroundColor: AppColors.surfaceContainer,
+                    selectedColor: AppColors.primaryBlue,
+                    checkmarkColor: AppColors.white,
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.paddingSmall),
+                Expanded(
+                  child: FilterChip(
+                    label: const Text('Members by Family'),
+                    selected: !_showFamiliesView,
+                    onSelected: (selected) {
+                      setState(() {
+                        _showFamiliesView = false;
+                      });
+                    },
+                    backgroundColor: AppColors.surfaceContainer,
+                    selectedColor: AppColors.primaryBlue,
+                    checkmarkColor: AppColors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -220,7 +235,7 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
         controller: _searchController,
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
-          hintText: 'Search family members...',
+          hintText: _showFamiliesView ? 'Search families...' : 'Search family members...',
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -253,21 +268,29 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
       );
     }
 
-    if (_filteredMembers.isEmpty) {
+    if (_showFamiliesView) {
+      return _buildFamiliesList();
+    } else {
+      return _buildMembersByFamilyList();
+    }
+  }
+
+  Widget _buildFamiliesList() {
+    if (_filteredFamilies.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _selectedFamily == null ? Icons.family_restroom : Icons.family_restroom,
+              Icons.family_restroom,
               size: 64,
               color: AppColors.mediumGray,
             ),
             const SizedBox(height: AppDimensions.paddingMedium),
             Text(
-              _selectedFamily == null 
-                  ? 'No family members found'
-                  : 'No members found in $_selectedFamily family',
+              _searchQuery.isNotEmpty 
+                  ? 'No families found matching your search'
+                  : 'No families found',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: AppColors.mediumGray,
               ),
@@ -276,7 +299,7 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
             Text(
               _searchQuery.isNotEmpty 
                   ? 'Try adjusting your search terms'
-                  : 'Family members will appear here when available',
+                  : 'Families will appear here when synced',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.mediumGray,
               ),
@@ -290,17 +313,52 @@ class _FamiliesScreenState extends State<FamiliesScreen> {
       onRefresh: _refreshFamilies,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-        itemCount: _filteredMembers.length,
+        itemCount: _filteredFamilies.length,
         itemBuilder: (context, index) {
-          final member = _filteredMembers[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: AppDimensions.paddingMedium),
-            child: MemberCard(
-              member: member,
-              onTap: () => _navigateToMemberProfile(member),
-            ),
+          final family = _filteredFamilies[index];
+          return FamilyCard(
+            name: family.name,
+            description: family.description,
+            address: family.address,
+            phone: family.phone,
+            email: family.email,
+            headOfFamilyName: family.headOfFamilyName,
+            memberCount: family.memberCount,
+            isActive: family.isActive,
+            onTap: () => _navigateToFamilyDetails(family),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildMembersByFamilyList() {
+    // TODO: Implement members by family view
+    // For now, show a placeholder
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.people,
+            size: 64,
+            color: AppColors.mediumGray,
+          ),
+          const SizedBox(height: AppDimensions.paddingMedium),
+          Text(
+            'Members by Family View',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: AppColors.mediumGray,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.paddingSmall),
+          Text(
+            'This view will show members filtered by families',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.mediumGray,
+            ),
+          ),
+        ],
       ),
     );
   }

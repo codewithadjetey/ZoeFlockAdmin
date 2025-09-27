@@ -6,6 +6,9 @@ import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/member_card.dart';
+import '../widgets/group_card.dart';
+import '../orm/orm_database_service.dart';
+import '../orm/entities/group_entity.dart';
 import 'member_profile_screen.dart';
 
 class GroupsScreen extends StatefulWidget {
@@ -17,14 +20,14 @@ class GroupsScreen extends StatefulWidget {
 
 class _GroupsScreenState extends State<GroupsScreen> {
   final DatabaseService _databaseService = DatabaseService();
+  final OrmDatabaseService _ormDatabaseService = OrmDatabaseService();
   final TextEditingController _searchController = TextEditingController();
   
-  List<String> _groups = [];
-  List<Member> _allMembers = [];
-  String? _selectedGroup;
-  List<Member> _filteredMembers = [];
+  List<GroupEntity> _groups = [];
+  List<GroupEntity> _filteredGroups = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  bool _showGroupsView = true; // Toggle between groups view and members view
 
   @override
   void initState() {
@@ -34,7 +37,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
   Future<void> _initializeAndLoad() async {
     await _databaseService.initialize();
-    _loadGroupsAndMembers();
+    await _ormDatabaseService.initialize();
+    _loadGroups();
   }
 
   @override
@@ -43,21 +47,18 @@ class _GroupsScreenState extends State<GroupsScreen> {
     super.dispose();
   }
 
-  Future<void> _loadGroupsAndMembers() async {
+  Future<void> _loadGroups() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Load all members
-      final List<Member> allMembers = await _databaseService.getAllMembers();
-      
-      // Get unique groups
-      final List<String> groups = await _databaseService.getUniqueGroups();
+      // Load all groups from ORM service
+      final List<GroupEntity> groups = await _ormDatabaseService.getAllGroups();
       
       setState(() {
-        _allMembers = allMembers;
-        _groups = groups.where((group) => group.isNotEmpty).toList()..sort();
+        _groups = groups;
+        _applyFilters();
         _isLoading = false;
       });
     } catch (e) {
@@ -71,39 +72,25 @@ class _GroupsScreenState extends State<GroupsScreen> {
     }
   }
 
-  void _selectGroup(String? group) {
-    setState(() {
-      _selectedGroup = group;
-    });
-    _applyFilters();
-  }
-
   void _applyFilters() {
-    List<Member> filtered = List.from(_allMembers);
-
-    // Apply group filter
-    if (_selectedGroup != null && _selectedGroup!.isNotEmpty) {
-      filtered = filtered.where((member) {
-        return member.group == _selectedGroup;
-      }).toList();
-    }
+    List<GroupEntity> filtered = List.from(_groups);
 
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((member) {
-        final fullName = member.fullName.toLowerCase();
-        final email = member.email.toLowerCase();
-        final memberId = member.memberIdentificationId.toLowerCase();
+      filtered = filtered.where((group) {
+        final name = group.name.toLowerCase();
+        final description = group.description?.toLowerCase() ?? '';
+        final leaderName = group.leaderName?.toLowerCase() ?? '';
         final query = _searchQuery.toLowerCase();
         
-        return fullName.contains(query) ||
-               email.contains(query) ||
-               memberId.contains(query);
+        return name.contains(query) ||
+               description.contains(query) ||
+               leaderName.contains(query);
       }).toList();
     }
 
     setState(() {
-      _filteredMembers = filtered;
+      _filteredGroups = filtered;
     });
   }
 
@@ -115,19 +102,41 @@ class _GroupsScreenState extends State<GroupsScreen> {
   }
 
   Future<void> _refreshGroups() async {
-    await _loadGroupsAndMembers();
+    await _loadGroups();
   }
 
-  void _navigateToMemberProfile(Member member) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => MemberProfileScreen(member: member),
+  void _navigateToGroupDetails(GroupEntity group) {
+    // TODO: Implement group details screen
+    // For now, show a dialog with group information
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(group.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (group.description != null) ...[
+              Text('Description: ${group.description}'),
+              const SizedBox(height: 8),
+            ],
+            Text('Members: ${group.memberCount}'),
+            if (group.leaderName != null) ...[
+              const SizedBox(height: 8),
+              Text('Leader: ${group.leaderName}'),
+            ],
+            const SizedBox(height: 8),
+            Text('Status: ${group.isActive ? 'Active' : 'Inactive'}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
-  }
-
-  int _getGroupMemberCount(String group) {
-    return _allMembers.where((member) => member.group == group).length;
   }
 
   @override
@@ -147,7 +156,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
       ),
       body: Column(
         children: [
-          _buildGroupSelector(),
+          _buildViewToggle(),
           _buildSearchBar(),
           Expanded(
             child: _buildContent(),
@@ -157,56 +166,52 @@ class _GroupsScreenState extends State<GroupsScreen> {
     );
   }
 
-  Widget _buildGroupSelector() {
-    if (_groups.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-        child: Text(
-          'No groups found',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.mediumGray,
-          ),
-        ),
-      );
-    }
-
+  Widget _buildViewToggle() {
     return Container(
       padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
           Text(
-            'Select Group',
+            'View:',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppDimensions.paddingSmall),
-          Wrap(
-            spacing: AppDimensions.paddingSmall,
-            children: [
-              // All Groups option
-              FilterChip(
-                label: Text('All Groups (${_allMembers.length})'),
-                selected: _selectedGroup == null,
-                onSelected: (selected) => _selectGroup(null),
-                backgroundColor: AppColors.surfaceContainer,
-                selectedColor: AppColors.primaryBlue,
-                checkmarkColor: AppColors.white,
-              ),
-              // Individual groups
-              ..._groups.map((group) {
-                final count = _getGroupMemberCount(group);
-                return FilterChip(
-                  label: Text('$group ($count)'),
-                  selected: _selectedGroup == group,
-                  onSelected: (selected) => _selectGroup(selected ? group : null),
-                  backgroundColor: AppColors.surfaceContainer,
-                  selectedColor: AppColors.primaryBlue,
-                  checkmarkColor: AppColors.white,
-                );
-              }).toList(),
-            ],
+          const SizedBox(width: AppDimensions.paddingSmall),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilterChip(
+                    label: const Text('Groups'),
+                    selected: _showGroupsView,
+                    onSelected: (selected) {
+                      setState(() {
+                        _showGroupsView = true;
+                      });
+                    },
+                    backgroundColor: AppColors.surfaceContainer,
+                    selectedColor: AppColors.primaryBlue,
+                    checkmarkColor: AppColors.white,
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.paddingSmall),
+                Expanded(
+                  child: FilterChip(
+                    label: const Text('Members by Group'),
+                    selected: !_showGroupsView,
+                    onSelected: (selected) {
+                      setState(() {
+                        _showGroupsView = false;
+                      });
+                    },
+                    backgroundColor: AppColors.surfaceContainer,
+                    selectedColor: AppColors.primaryBlue,
+                    checkmarkColor: AppColors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -220,7 +225,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
         controller: _searchController,
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
-          hintText: 'Search members...',
+          hintText: _showGroupsView ? 'Search groups...' : 'Search members...',
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -253,21 +258,29 @@ class _GroupsScreenState extends State<GroupsScreen> {
       );
     }
 
-    if (_filteredMembers.isEmpty) {
+    if (_showGroupsView) {
+      return _buildGroupsList();
+    } else {
+      return _buildMembersByGroupList();
+    }
+  }
+
+  Widget _buildGroupsList() {
+    if (_filteredGroups.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _selectedGroup == null ? Icons.groups : Icons.group,
+              Icons.groups,
               size: 64,
               color: AppColors.mediumGray,
             ),
             const SizedBox(height: AppDimensions.paddingMedium),
             Text(
-              _selectedGroup == null 
-                  ? 'No members found'
-                  : 'No members found in ${_selectedGroup}',
+              _searchQuery.isNotEmpty 
+                  ? 'No groups found matching your search'
+                  : 'No groups found',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: AppColors.mediumGray,
               ),
@@ -276,7 +289,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
             Text(
               _searchQuery.isNotEmpty 
                   ? 'Try adjusting your search terms'
-                  : 'Members will appear here when available',
+                  : 'Groups will appear here when synced',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: AppColors.mediumGray,
               ),
@@ -290,17 +303,51 @@ class _GroupsScreenState extends State<GroupsScreen> {
       onRefresh: _refreshGroups,
       child: ListView.builder(
         padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-        itemCount: _filteredMembers.length,
+        itemCount: _filteredGroups.length,
         itemBuilder: (context, index) {
-          final member = _filteredMembers[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: AppDimensions.paddingMedium),
-            child: MemberCard(
-              member: member,
-              onTap: () => _navigateToMemberProfile(member),
-            ),
+          final group = _filteredGroups[index];
+          return GroupCard(
+            name: group.name,
+            description: group.description,
+            color: group.color,
+            icon: group.icon,
+            leaderName: group.leaderName,
+            memberCount: group.memberCount,
+            isActive: group.isActive,
+            onTap: () => _navigateToGroupDetails(group),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildMembersByGroupList() {
+    // TODO: Implement members by group view
+    // For now, show a placeholder
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.people,
+            size: 64,
+            color: AppColors.mediumGray,
+          ),
+          const SizedBox(height: AppDimensions.paddingMedium),
+          Text(
+            'Members by Group View',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: AppColors.mediumGray,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.paddingSmall),
+          Text(
+            'This view will show members filtered by groups',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.mediumGray,
+            ),
+          ),
+        ],
       ),
     );
   }
