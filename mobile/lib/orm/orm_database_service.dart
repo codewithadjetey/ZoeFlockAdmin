@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'orm_service.dart';
+import 'repository.dart';
 import 'entities/member_entity.dart';
 import 'entities/event_entity.dart';
 import 'entities/attendance_entity.dart';
@@ -74,7 +75,7 @@ class OrmDatabaseService {
 
   /// Search members
   Future<List<Member>> searchMembers(String query) async {
-    final entities = await _memberRepository.search(query);
+    final entities = await _memberRepository.search(query, ['first_name', 'last_name', 'email', 'member_identification_id']);
     return entities.map((entity) => _convertEntityToMember(entity)).toList();
   }
 
@@ -173,7 +174,7 @@ class OrmDatabaseService {
 
   /// Search events
   Future<List<Event>> searchEvents(String query) async {
-    final entities = await _eventRepository.search(query);
+    final entities = await _eventRepository.search(query, ['title', 'description', 'location']);
     return entities.map((entity) => _convertEntityToEvent(entity)).toList();
   }
 
@@ -389,4 +390,9 @@ class OrmDatabaseService {
 
   /// Check if service is initialized
   bool get isInitialized => _ormService.isInitialized;
+
+  /// Get repository by type
+  T getRepository<T extends Repository>() {
+    return _ormService.getRepository<T>();
+  }
 }

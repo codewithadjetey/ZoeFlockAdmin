@@ -1,5 +1,5 @@
 import '../base_entity.dart';
-import '../repository.dart';
+import '../base_repository.dart';
 import '../../utils/constants.dart';
 
 /// Event entity that extends BaseEntity for ORM functionality
@@ -22,7 +22,7 @@ class EventEntity extends BaseEntity {
   @override
   int? get id => _id;
 
-  const EventEntity({
+  EventEntity({
     int? id,
     required this.title,
     this.description,
@@ -272,8 +272,8 @@ class EventRepository extends BaseRepository<EventEntity> {
   }
 
   /// Search events by title, description, or location
-  Future<List<EventEntity>> search(String query) async {
-    return await search(query, ['title', 'description', 'location']);
+  Future<List<EventEntity>> search(String query, List<String> fields, {String? orderBy}) async {
+    return await super.search(query, fields, orderBy: orderBy);
   }
 
   /// Get events with pagination

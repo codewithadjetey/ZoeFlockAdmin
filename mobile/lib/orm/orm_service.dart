@@ -58,7 +58,7 @@ class OrmService {
 
   /// Register repository
   void registerRepository<T extends Repository>(T repository) {
-    _repositories[T] = repository;
+    _repositories[repository.runtimeType] = repository;
   }
 
   /// Check if ORM is initialized

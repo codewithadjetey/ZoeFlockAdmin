@@ -1,5 +1,5 @@
 import '../base_entity.dart';
-import '../repository.dart';
+import '../base_repository.dart';
 import '../../utils/constants.dart';
 
 /// Attendance entity that extends BaseEntity for ORM functionality
@@ -21,7 +21,7 @@ class AttendanceEntity extends BaseEntity {
   @override
   int? get id => _id;
 
-  const AttendanceEntity({
+  AttendanceEntity({
     int? id,
     required this.memberId,
     required this.eventId,

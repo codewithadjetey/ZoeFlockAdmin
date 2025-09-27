@@ -18,7 +18,10 @@ abstract class BaseEntity {
   Map<String, dynamic> toDatabaseJson();
   
   /// Create entity from database JSON
-  static BaseEntity fromDatabase(Map<String, dynamic> json);
+  /// Must be implemented by subclasses
+  static BaseEntity fromDatabase(Map<String, dynamic> json) {
+    throw UnimplementedError('fromDatabase must be implemented by subclasses');
+  }
   
   /// Get database instance
   Future<Database> get _database async {

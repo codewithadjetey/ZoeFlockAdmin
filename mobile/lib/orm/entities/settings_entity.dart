@@ -1,5 +1,5 @@
 import '../base_entity.dart';
-import '../repository.dart';
+import '../base_repository.dart';
 import '../../utils/constants.dart';
 
 /// Settings entity that extends BaseEntity for ORM functionality
@@ -19,7 +19,7 @@ class SettingsEntity extends BaseEntity {
   @override
   int? get id => _id;
 
-  const SettingsEntity({
+  SettingsEntity({
     int? id,
     required this.key,
     required this.value,

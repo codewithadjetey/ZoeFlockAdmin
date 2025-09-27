@@ -285,6 +285,18 @@ class DatabaseService {
 
   /// Check if service is initialized
   bool get isInitialized => _ormService.isInitialized;
+
+  /// Get unique groups from members
+  Future<List<String>> getUniqueGroups() async {
+    final memberRepo = _ormService.getRepository<MemberRepository>();
+    return await memberRepo.getUniqueGroups();
+  }
+
+  /// Get unique families from members
+  Future<List<String>> getUniqueFamilies() async {
+    final memberRepo = _ormService.getRepository<MemberRepository>();
+    return await memberRepo.getUniqueFamilies();
+  }
 }
 
 /// Mock database class for compatibility with existing code

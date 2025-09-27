@@ -1,5 +1,5 @@
 import '../base_entity.dart';
-import '../repository.dart';
+import '../base_repository.dart';
 import '../../utils/constants.dart';
 
 /// Member entity that extends BaseEntity for ORM functionality
@@ -26,7 +26,7 @@ class MemberEntity extends BaseEntity {
   @override
   int? get id => _id;
 
-  const MemberEntity({
+  MemberEntity({
     int? id,
     required this.firstName,
     required this.lastName,
@@ -272,8 +272,8 @@ class MemberRepository extends BaseRepository<MemberEntity> {
   }
 
   /// Search members by name, email, or identification ID
-  Future<List<MemberEntity>> search(String query) async {
-    return await search(query, ['first_name', 'last_name', 'email', 'member_identification_id']);
+  Future<List<MemberEntity>> search(String query, List<String> fields, {String? orderBy}) async {
+    return await super.search(query, fields, orderBy: orderBy);
   }
 
   /// Get unique groups
