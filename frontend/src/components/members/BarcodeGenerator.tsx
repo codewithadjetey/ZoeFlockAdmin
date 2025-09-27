@@ -5,6 +5,7 @@ import { Button, Card, TextInput, FormField } from '@/components/ui';
 import { toast } from 'react-toastify';
 import { AttendanceService } from '@/services/attendance';
 import type { Member } from '@/services/members';
+import QRCodeDisplay from './QRCodeDisplay';
 
 interface BarcodeGeneratorProps {
   member: Member;
@@ -15,13 +16,14 @@ const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({ member, onBarcodeGe
   const [barcode, setBarcode] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [showQRCode, setShowQRCode] = useState(false);
 
   useEffect(() => {
-    // Check if member has barcode property (it might not exist in the interface)
-    if ((member as any).barcode) {
-      setBarcode((member as any).barcode);
+    // Use member identification ID if available
+    if (member.member_identification_id) {
+      setBarcode(member.member_identification_id);
     }
-  }, [(member as any).barcode]);
+  }, [member.member_identification_id]);
 
   const getMemberBarcode = async () => {
     setLoading(true);
@@ -118,34 +120,60 @@ const BarcodeGenerator: React.FC<BarcodeGeneratorProps> = ({ member, onBarcodeGe
 
       {barcode ? (
         <div className="space-y-4">
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Barcode
-                </label>
-                <div className="font-mono text-lg tracking-wider bg-white dark:bg-gray-900 px-3 py-2 rounded border">
-                  {barcode}
+          {/* Toggle between text and QR code view */}
+          <div className="flex justify-center space-x-4 mb-4">
+            <Button
+              onClick={() => setShowQRCode(false)}
+              variant={!showQRCode ? "primary" : "outline"}
+              size="sm"
+            >
+              <i className="fas fa-text-width mr-2"></i>
+              Text Barcode
+            </Button>
+            <Button
+              onClick={() => setShowQRCode(true)}
+              variant={showQRCode ? "primary" : "outline"}
+              size="sm"
+            >
+              <i className="fas fa-qrcode mr-2"></i>
+              QR Code
+            </Button>
+          </div>
+
+          {showQRCode ? (
+            <QRCodeDisplay member={{ ...member, member_identification_id: barcode }} showPrintButton={false} />
+          ) : (
+            <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Member ID (Text Format)
+                  </label>
+                  <div className="font-mono text-lg tracking-wider bg-white dark:bg-gray-900 px-3 py-2 rounded border">
+                    {barcode}
+                  </div>
+                </div>
+                <div className="ml-4 flex space-x-2">
+                  <Button
+                    onClick={copyBarcode}
+                    variant="outline"
+                    size="sm"
+                    title="Copy to clipboard"
+                  >
+                    <i className="fas fa-copy"></i>
+                  </Button>
+                  <Button
+                    onClick={downloadBarcode}
+                    variant="outline"
+                    size="sm"
+                    title="Download as text file"
+                  >
+                    <i className="fas fa-download"></i>
+                  </Button>
                 </div>
               </div>
-              <div className="ml-4 flex space-x-2">
-                <Button
-                  onClick={copyBarcode}
-                  variant="outline"
-                  size="sm"
-                >
-                  <i className="fas fa-copy"></i>
-                </Button>
-                <Button
-                  onClick={downloadBarcode}
-                  variant="outline"
-                  size="sm"
-                >
-                  <i className="fas fa-download"></i>
-                </Button>
-              </div>
             </div>
-          </div>
+          )}
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-start">
