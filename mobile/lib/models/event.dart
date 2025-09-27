@@ -34,6 +34,14 @@ class Event {
     final eventDate = DateTime(startDate.year, startDate.month, startDate.day);
     return today == eventDate;
   }
+  bool get isEligibleForAttendance {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final eventDate = DateTime(startDate.year, startDate.month, startDate.day);
+    
+    // Event is eligible if it's today or in the past
+    return eventDate.isBefore(today) || eventDate.isAtSameMomentAs(today);
+  }
 
   String get formattedDate {
     final now = DateTime.now();
