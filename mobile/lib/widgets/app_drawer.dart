@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/constants.dart';
+import '../screens/members_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -198,13 +199,14 @@ class AppDrawer extends StatelessWidget {
   }
 
   void _navigateToRoute(BuildContext context, String route) {
-    // For now, we'll show a placeholder message for routes that don't exist yet
     switch (route) {
       case '/events':
         Navigator.of(context).pushNamed('/events');
         break;
       case '/members':
-        _showComingSoon(context, 'Members');
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const MembersScreen()),
+        );
         break;
       case '/first-timers':
         _showComingSoon(context, 'First Timers');

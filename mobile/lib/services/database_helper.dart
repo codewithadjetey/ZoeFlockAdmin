@@ -349,4 +349,143 @@ class DatabaseHelper {
     _database = await _initDatabase();
     print('DatabaseHelper: Database restored from $backupPath');
   }
+
+  // ===== MEMBER OPERATIONS =====
+
+  /// Get all members from the database
+  Future<List<Map<String, dynamic>>> getAllMembers() async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        DatabaseConstants.membersTable,
+        orderBy: 'first_name ASC, last_name ASC',
+      );
+      return maps;
+    } catch (e) {
+      print('DatabaseHelper: Error getting all members: $e');
+      return [];
+    }
+  }
+
+  /// Get members with search functionality
+  Future<List<Map<String, dynamic>>> searchMembers(String query) async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        DatabaseConstants.membersTable,
+        where: 'first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR member_identification_id LIKE ?',
+        whereArgs: ['%$query%', '%$query%', '%$query%', '%$query%'],
+        orderBy: 'first_name ASC, last_name ASC',
+      );
+      return maps;
+    } catch (e) {
+      print('DatabaseHelper: Error searching members: $e');
+      return [];
+    }
+  }
+
+  /// Get members by status (active/inactive)
+  Future<List<Map<String, dynamic>>> getMembersByStatus(String status) async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        DatabaseConstants.membersTable,
+        where: 'status = ?',
+        whereArgs: [status],
+        orderBy: 'first_name ASC, last_name ASC',
+      );
+      return maps;
+    } catch (e) {
+      print('DatabaseHelper: Error getting members by status: $e');
+      return [];
+    }
+  }
+
+  /// Get members by group
+  Future<List<Map<String, dynamic>>> getMembersByGroup(String group) async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        DatabaseConstants.membersTable,
+        where: 'group_name = ?',
+        whereArgs: [group],
+        orderBy: 'first_name ASC, last_name ASC',
+      );
+      return maps;
+    } catch (e) {
+      print('DatabaseHelper: Error getting members by group: $e');
+      return [];
+    }
+  }
+
+  /// Get member by ID
+  Future<Map<String, dynamic>?> getMemberById(int id) async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        DatabaseConstants.membersTable,
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      return maps.isNotEmpty ? maps.first : null;
+    } catch (e) {
+      print('DatabaseHelper: Error getting member by ID: $e');
+      return null;
+    }
+  }
+
+  /// Get member by identification ID
+  Future<Map<String, dynamic>?> getMemberByIdentificationId(String identificationId) async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        DatabaseConstants.membersTable,
+        where: 'member_identification_id = ?',
+        whereArgs: [identificationId],
+      );
+      return maps.isNotEmpty ? maps.first : null;
+    } catch (e) {
+      print('DatabaseHelper: Error getting member by identification ID: $e');
+      return null;
+    }
+  }
+
+  /// Get unique groups from members
+  Future<List<String>> getUniqueGroups() async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.rawQuery(
+        'SELECT DISTINCT group_name FROM ${DatabaseConstants.membersTable} WHERE group_name IS NOT NULL AND group_name != "" ORDER BY group_name ASC',
+      );
+      return maps.map((map) => map['group_name'] as String).toList();
+    } catch (e) {
+      print('DatabaseHelper: Error getting unique groups: $e');
+      return [];
+    }
+  }
+
+  /// Get member count by status
+  Future<Map<String, int>> getMemberCounts() async {
+    final db = await database;
+    try {
+      final activeResult = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM ${DatabaseConstants.membersTable} WHERE status = "active"',
+      );
+      final inactiveResult = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM ${DatabaseConstants.membersTable} WHERE status = "inactive"',
+      );
+      final totalResult = await db.rawQuery(
+        'SELECT COUNT(*) as count FROM ${DatabaseConstants.membersTable}',
+      );
+
+      return {
+        'active': activeResult.first['count'] as int,
+        'inactive': inactiveResult.first['count'] as int,
+        'total': totalResult.first['count'] as int,
+      };
+    } catch (e) {
+      print('DatabaseHelper: Error getting member counts: $e');
+      return {'active': 0, 'inactive': 0, 'total': 0};
+    }
+  }
 }
