@@ -6,9 +6,11 @@ import 'entities/event_entity.dart';
 import 'entities/attendance_entity.dart';
 import 'entities/group_entity.dart';
 import 'entities/family_entity.dart';
+import 'entities/first_timer_entity.dart';
 import '../models/member.dart';
 import '../models/event.dart';
 import '../models/attendance.dart';
+import '../models/first_timer.dart';
 import '../utils/constants.dart';
 
 /// ORM Database Service that provides a clean interface for database operations
@@ -24,6 +26,7 @@ class OrmDatabaseService {
   AttendanceRepository? _attendanceRepository;
   GroupRepository? _groupRepository;
   FamilyRepository? _familyRepository;
+  FirstTimerRepository? _firstTimerRepository;
   bool _isInitialized = false;
 
   /// Initialize the ORM database service
@@ -42,13 +45,15 @@ class OrmDatabaseService {
     _attendanceRepository = AttendanceRepository();
     _groupRepository = GroupRepository();
     _familyRepository = FamilyRepository();
-    
+    _firstTimerRepository = FirstTimerRepository();
+
     // Register repositories with ORM service
     _ormService.registerRepository<MemberRepository>(_memberRepository!);
     _ormService.registerRepository<EventRepository>(_eventRepository!);
     _ormService.registerRepository<AttendanceRepository>(_attendanceRepository!);
     _ormService.registerRepository<GroupRepository>(_groupRepository!);
     _ormService.registerRepository<FamilyRepository>(_familyRepository!);
+    _ormService.registerRepository<FirstTimerRepository>(_firstTimerRepository!);
     
     _isInitialized = true;
     print('OrmDatabaseService: Initialized successfully');
@@ -592,7 +597,84 @@ class OrmDatabaseService {
   /// Clear all families
   Future<void> clearAllFamilies() async {
     await _ensureInitialized();
-    await _ensureInitialized();
     await _familyRepository!.deleteAll();
+  }
+
+  // ========== FIRST TIMER OPERATIONS ==========
+
+  /// Create a new first timer
+  Future<int> createFirstTimer(FirstTimerEntity firstTimer) async {
+    await _ensureInitialized();
+    return await _firstTimerRepository!.createFirstTimer(firstTimer);
+  }
+
+  /// Get all first timers
+  Future<List<FirstTimerEntity>> getAllFirstTimers() async {
+    await _ensureInitialized();
+    return await _firstTimerRepository!.findAll(orderBy: 'created_at DESC');
+  }
+
+  /// Get first timer by ID
+  Future<FirstTimerEntity?> getFirstTimerById(int id) async {
+    await _ensureInitialized();
+    return await _firstTimerRepository!.findById(id);
+  }
+
+  /// Get first timers by status
+  Future<List<FirstTimerEntity>> getFirstTimersByStatus(FirstTimerStatus status) async {
+    await _ensureInitialized();
+    return await _firstTimerRepository!.getByStatus(status);
+  }
+
+  /// Get first timers by event
+  Future<List<FirstTimerEntity>> getFirstTimersByEvent(int eventId) async {
+    await _ensureInitialized();
+    return await _firstTimerRepository!.getByEvent(eventId);
+  }
+
+  /// Get unpushed first timers
+  Future<List<FirstTimerEntity>> getUnpushedFirstTimers() async {
+    await _ensureInitialized();
+    return await _firstTimerRepository!.getUnpushedFirstTimers();
+  }
+
+  /// Search first timers
+  Future<List<FirstTimerEntity>> searchFirstTimers(String query) async {
+    await _ensureInitialized();
+    return await _firstTimerRepository!.search(query, ['name', 'primary_mobile_number', 'location']);
+  }
+
+  /// Update first timer
+  Future<int> updateFirstTimer(FirstTimerEntity firstTimer) async {
+    await _ensureInitialized();
+    return await _firstTimerRepository!.update(firstTimer);
+  }
+
+  /// Delete first timer
+  Future<int> deleteFirstTimer(int id) async {
+    await _ensureInitialized();
+    final firstTimer = await _firstTimerRepository!.findById(id);
+    if (firstTimer != null) {
+      return await _firstTimerRepository!.delete(firstTimer);
+    }
+    return 0;
+  }
+
+  /// Update first timer with server ID
+  Future<void> updateFirstTimerWithServerId(int localId, int serverId) async {
+    await _ensureInitialized();
+    await _firstTimerRepository!.updateWithServerId(localId, serverId);
+  }
+
+  /// Update first timer push error
+  Future<void> updateFirstTimerPushError(int localId, String error) async {
+    await _ensureInitialized();
+    await _firstTimerRepository!.updatePushError(localId, error);
+  }
+
+  /// Clear all first timers
+  Future<void> clearAllFirstTimers() async {
+    await _ensureInitialized();
+    await _firstTimerRepository!.deleteAll();
   }
 }

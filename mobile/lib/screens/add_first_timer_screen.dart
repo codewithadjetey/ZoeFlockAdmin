@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import '../models/first_timer.dart';
 import '../models/event.dart';
-import '../services/api_service.dart';
+import '../models/member.dart';
 import '../services/database_service_orm.dart';
+import '../orm/orm_database_service.dart';
+import '../orm/entities/first_timer_entity.dart';
+import '../services/first_timer_push_service.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
@@ -16,8 +19,9 @@ class AddFirstTimerScreen extends StatefulWidget {
 
 class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _apiService = ApiService();
   final _databaseService = DatabaseService();
+  final _ormDatabaseService = OrmDatabaseService();
+  final _pushService = FirstTimerPushService();
   
   // Form controllers
   final _nameController = TextEditingController();
@@ -33,6 +37,8 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
   bool? _wouldLikeToStay;
   Event? _selectedEvent;
   List<Event> _events = [];
+  List<Member> _members = [];
+  Member? _selectedMember;
   bool _isLoading = false;
   bool _isSubmitting = false;
 
@@ -40,6 +46,7 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
   void initState() {
     super.initState();
     _loadEvents();
+    _loadMembers();
   }
 
   @override
@@ -62,6 +69,8 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
       await _databaseService.initialize();
       final events = await _databaseService.getAllEvents();
       
+      print('Loaded ${events.length} events from database');
+      
       // Filter for active events or today's events
       final today = DateTime.now();
       final activeEvents = events.where((event) {
@@ -69,13 +78,20 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
         final isToday = eventDate.year == today.year &&
                        eventDate.month == today.month &&
                        eventDate.day == today.day;
-        return event.isActive || isToday;
+        final isActive = event.isActive;
+        print('Event: ${event.title}, Date: $eventDate, IsToday: $isToday, IsActive: $isActive');
+        return isActive || isToday;
       }).toList();
+      
+      print('Filtered to ${activeEvents.length} active/today events');
       
       setState(() {
         _events = activeEvents;
         if (_events.isNotEmpty) {
           _selectedEvent = _events.first;
+          print('Selected event: ${_selectedEvent!.title}');
+        } else {
+          print('No events available for selection');
         }
         _isLoading = false;
       });
@@ -86,6 +102,25 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
       });
       if (mounted) {
         AppHelpers.showErrorSnackBar(context, 'Failed to load events: $e');
+      }
+    }
+  }
+
+  Future<void> _loadMembers() async {
+    try {
+      await _databaseService.initialize();
+      final members = await _databaseService.getAllMembers();
+      
+      // Filter for active members only
+      final activeMembers = members.where((member) => member.status.toLowerCase() == 'active').toList();
+      
+      setState(() {
+        _members = activeMembers;
+      });
+    } catch (e) {
+      print('Error loading members: $e');
+      if (mounted) {
+        AppHelpers.showErrorSnackBar(context, 'Failed to load members: $e');
       }
     }
   }
@@ -105,36 +140,45 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
     });
 
     try {
-      final firstTimerData = {
-        'name': _nameController.text.trim(),
-        'location': _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
-        'primary_mobile_number': _primaryPhoneController.text.trim(),
-        'secondary_mobile_number': _secondaryPhoneController.text.trim().isEmpty ? null : _secondaryPhoneController.text.trim(),
-        'how_was_service': _howWasServiceController.text.trim().isEmpty ? null : _howWasServiceController.text.trim(),
-        'is_first_time': _isFirstTime,
-        'has_permanent_place_of_worship': _hasPermanentPlaceOfWorship,
-        'invited_by': _invitedByController.text.trim().isEmpty ? null : _invitedByController.text.trim(),
-        'would_like_to_stay': _wouldLikeToStay,
-        'event_id': _selectedEvent!.id,
-        'self_registered': false, // This is admin registration
-      };
+      // Create FirstTimerEntity for local storage
+      final firstTimerEntity = FirstTimerEntity(
+        id: 0, // Will be set by database
+        name: _nameController.text.trim(),
+        location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
+        primaryMobileNumber: _primaryPhoneController.text.trim(),
+        secondaryMobileNumber: _secondaryPhoneController.text.trim().isEmpty ? null : _secondaryPhoneController.text.trim(),
+        howWasService: _howWasServiceController.text.trim().isEmpty ? null : _howWasServiceController.text.trim(),
+        isFirstTime: _isFirstTime,
+        hasPermanentPlaceOfWorship: _hasPermanentPlaceOfWorship,
+        invitedBy: _invitedByController.text.trim().isEmpty ? null : _invitedByController.text.trim(),
+        invitedByMemberId: _selectedMember?.id,
+        wouldLikeToStay: _wouldLikeToStay,
+        eventId: _selectedEvent!.id,
+        selfRegistered: false, // This is admin registration
+        status: FirstTimerStatus.firstTimer,
+        visitCount: 1,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
 
-      print('Submitting first timer data: $firstTimerData');
+      print('Creating first timer locally: ${firstTimerEntity.name}');
       
-      final response = await _apiService.createFirstTimer(firstTimerData);
+      // Save to local database first
+      await _ormDatabaseService.initialize();
+      final localId = await _ormDatabaseService.createFirstTimer(firstTimerEntity);
       
-      if (response.isSuccess && response.data != null) {
-        if (mounted) {
-          AppHelpers.showSuccessSnackBar(context, 'First timer registered successfully!');
-          Navigator.of(context).pop(true); // Return true to indicate success
-        }
-      } else {
-        if (mounted) {
-          AppHelpers.showErrorSnackBar(context, 'Failed to register first timer: ${response.message}');
-        }
+      print('First timer saved locally with ID: $localId');
+      
+      if (mounted) {
+        AppHelpers.showSuccessSnackBar(context, 'First timer registered locally! Will sync when online.');
+        
+        // Try to push to server in background
+        _pushService.pushUnpushedFirstTimers();
+        
+        Navigator.of(context).pop(true); // Return true to indicate success
       }
     } catch (e) {
-      print('Error submitting first timer: $e');
+      print('Error creating first timer: $e');
       if (mounted) {
         AppHelpers.showErrorSnackBar(context, 'Failed to register first timer: $e');
       }
@@ -193,6 +237,8 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
                     const SizedBox(height: AppDimensions.paddingLarge),
                     _buildServiceFeedbackSection(),
                     const SizedBox(height: AppDimensions.paddingLarge),
+                    _buildMemberSelectionSection(),
+                    const SizedBox(height: AppDimensions.paddingLarge),
                     _buildAdditionalInfoSection(),
                     const SizedBox(height: AppDimensions.paddingXLarge),
                     _buildSubmitButton(),
@@ -219,24 +265,51 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
             const SizedBox(height: AppDimensions.paddingSmall),
             DropdownButtonFormField<Event>(
               value: _selectedEvent,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
                 labelText: 'Select Event',
+                helperText: _events.isEmpty 
+                    ? 'No events available. Create an event first or check if today\'s events exist.'
+                    : 'Select the event for this first timer',
               ),
-              items: _events.map((event) {
-                return DropdownMenuItem(
-                  value: event,
-                  child: Text(event.title),
-                );
-              }).toList(),
-              onChanged: (Event? newValue) {
-                setState(() {
-                  _selectedEvent = newValue;
-                });
-              },
+              items: _events.isEmpty 
+                  ? [
+                      const DropdownMenuItem<Event>(
+                        value: null,
+                        child: Text('No events available'),
+                      )
+                    ]
+                  : _events.map((event) {
+                      return DropdownMenuItem(
+                        value: event,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(event.title),
+                            Text(
+                              '${event.formattedDate} ${event.time ?? ''}'.trim(),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+              onChanged: _events.isEmpty 
+                  ? null 
+                  : (Event? newValue) {
+                      setState(() {
+                        _selectedEvent = newValue;
+                      });
+                    },
               validator: (value) {
-                if (value == null) {
+                if (value == null && _events.isNotEmpty) {
                   return 'Please select an event';
+                }
+                if (_events.isEmpty) {
+                  return 'No events available. Please create an event first.';
                 }
                 return null;
               },
@@ -364,6 +437,58 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
                 labelText: 'Who invited you?',
                 border: OutlineInputBorder(),
                 hintText: 'Member name or relationship',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMemberSelectionSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Member Selection (Optional)',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.paddingMedium),
+            DropdownButtonFormField<Member>(
+              value: _selectedMember,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Select Member Who Invited',
+                hintText: 'Choose a member (optional)',
+              ),
+              items: [
+                const DropdownMenuItem<Member>(
+                  value: null,
+                  child: Text('No member selected'),
+                ),
+                ..._members.map((member) {
+                  return DropdownMenuItem<Member>(
+                    value: member,
+                    child: Text('${member.firstName} ${member.lastName}'),
+                  );
+                }).toList(),
+              ],
+              onChanged: (Member? newValue) {
+                setState(() {
+                  _selectedMember = newValue;
+                });
+              },
+            ),
+            const SizedBox(height: AppDimensions.paddingSmall),
+            Text(
+              'Select the member who invited this first timer (optional). This helps track who brought new visitors.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.onSurfaceVariant,
               ),
             ),
           ],

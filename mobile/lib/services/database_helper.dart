@@ -13,7 +13,7 @@ class DatabaseHelper {
   bool _isInitialized = false;
 
   // Current database version - increment this when you need to add migrations
-  static const int _currentVersion = 7;
+  static const int _currentVersion = 8;
 
   /// Initialize the database service
   Future<void> initialize() async {
@@ -365,6 +365,67 @@ class DatabaseHelper {
           CREATE INDEX idx_families_name ON families (name)
         ''');
         
+        break;
+        
+      case 8:
+        // Migration for version 8 - Create first_timers table
+        print('DatabaseHelper: Running migration V8 - Creating first_timers table');
+
+        await db.execute('''
+          CREATE TABLE first_timers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            temp_id TEXT UNIQUE, -- Temporary ID for offline records
+            server_id INTEGER, -- Server ID after successful push
+            name TEXT NOT NULL,
+            location TEXT,
+            primary_mobile_number TEXT NOT NULL,
+            secondary_mobile_number TEXT,
+            how_was_service TEXT,
+            is_first_time INTEGER NOT NULL DEFAULT 1,
+            has_permanent_place_of_worship INTEGER,
+            invited_by TEXT,
+            invited_by_member_id INTEGER,
+            would_like_to_stay INTEGER,
+            visit_count INTEGER NOT NULL DEFAULT 1,
+            status TEXT NOT NULL DEFAULT 'first_timer',
+            self_registered INTEGER NOT NULL DEFAULT 0,
+            assigned_member_id INTEGER,
+            device_fingerprint TEXT,
+            last_submission_date TEXT,
+            event_id INTEGER NOT NULL,
+            is_pushed_to_server INTEGER NOT NULL DEFAULT 0,
+            pushed_at TEXT,
+            push_error TEXT,
+            push_attempts INTEGER NOT NULL DEFAULT 0,
+            last_push_attempt TEXT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            FOREIGN KEY (event_id) REFERENCES events (id),
+            FOREIGN KEY (invited_by_member_id) REFERENCES members (id),
+            FOREIGN KEY (assigned_member_id) REFERENCES members (id)
+          )
+        ''');
+
+        await db.execute('''
+          CREATE INDEX idx_first_timers_temp_id ON first_timers (temp_id)
+        ''');
+
+        await db.execute('''
+          CREATE INDEX idx_first_timers_server_id ON first_timers (server_id)
+        ''');
+
+        await db.execute('''
+          CREATE INDEX idx_first_timers_is_pushed ON first_timers (is_pushed_to_server)
+        ''');
+
+        await db.execute('''
+          CREATE INDEX idx_first_timers_status ON first_timers (status)
+        ''');
+
+        await db.execute('''
+          CREATE INDEX idx_first_timers_primary_phone ON first_timers (primary_mobile_number)
+        ''');
+
         break;
         
       default:

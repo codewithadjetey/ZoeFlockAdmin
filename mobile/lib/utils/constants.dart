@@ -104,6 +104,7 @@ class DatabaseConstants {
   static const String attendanceTable = 'attendance';
   static const String offlineAttendanceTable = 'offline_attendance';
   static const String settingsTable = 'settings';
+  static const String firstTimersTable = 'first_timers';
 }
 
 class StorageKeys {

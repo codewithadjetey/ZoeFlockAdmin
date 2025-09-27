@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/first_timer.dart';
-import '../services/api_service.dart';
+import '../orm/orm_database_service.dart';
+import '../orm/entities/first_timer_entity.dart';
+import '../services/first_timer_push_service.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
@@ -16,7 +18,8 @@ class FirstTimersScreen extends StatefulWidget {
 }
 
 class _FirstTimersScreenState extends State<FirstTimersScreen> {
-  final ApiService _apiService = ApiService();
+  final OrmDatabaseService _ormDatabaseService = OrmDatabaseService();
+  final FirstTimerPushService _pushService = FirstTimerPushService();
   final TextEditingController _searchController = TextEditingController();
   
   List<FirstTimer> _firstTimers = [];
@@ -43,27 +46,19 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
     });
 
     try {
-      print('FirstTimersScreen: Loading first timers from API...');
-      final response = await _apiService.getAllFirstTimers();
+      print('FirstTimersScreen: Loading first timers from local database...');
+      await _ormDatabaseService.initialize();
+      final firstTimerEntities = await _ormDatabaseService.getAllFirstTimers();
       
-      if (response.isSuccess && response.data != null) {
-        final firstTimers = response.data!.map((json) => FirstTimer.fromJson(json)).toList();
-        print('FirstTimersScreen: Loaded ${firstTimers.length} first timers');
-        
-        setState(() {
-          _firstTimers = firstTimers;
-          _applyFilters();
-          _isLoading = false;
-        });
-      } else {
-        print('FirstTimersScreen: Failed to load first timers: ${response.message}');
-        setState(() {
-          _isLoading = false;
-        });
-        if (mounted) {
-          AppHelpers.showErrorSnackBar(context, 'Failed to load first timers: ${response.message}');
-        }
-      }
+      // Convert entities to models
+      final firstTimers = firstTimerEntities.map((entity) => entity.toModel()).toList();
+      print('FirstTimersScreen: Loaded ${firstTimers.length} first timers from local database');
+      
+      setState(() {
+        _firstTimers = firstTimers;
+        _applyFilters();
+        _isLoading = false;
+      });
     } catch (e) {
       print('FirstTimersScreen: Error loading first timers: $e');
       setState(() {
@@ -130,6 +125,23 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
     // Refresh the list if a first timer was successfully added
     if (result == true) {
       await _refreshFirstTimers();
+    }
+  }
+
+  Future<void> _syncToServer() async {
+    try {
+      print('FirstTimersScreen: Starting sync to server...');
+      await _pushService.pushUnpushedFirstTimers();
+      
+      if (mounted) {
+        AppHelpers.showSuccessSnackBar(context, 'Sync completed! Check sync status on cards.');
+        await _refreshFirstTimers(); // Refresh to show updated sync status
+      }
+    } catch (e) {
+      print('FirstTimersScreen: Error syncing to server: $e');
+      if (mounted) {
+        AppHelpers.showErrorSnackBar(context, 'Sync failed: $e');
+      }
     }
   }
 
@@ -213,6 +225,11 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
             icon: const Icon(Icons.add),
             onPressed: _navigateToAddFirstTimer,
             tooltip: 'Add First Timer',
+          ),
+          IconButton(
+            icon: const Icon(Icons.cloud_upload),
+            onPressed: _syncToServer,
+            tooltip: 'Sync to Server',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
