@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/attendance_provider.dart';
+import '../services/sync_service.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/sync_dialog.dart';
 import '../widgets/tappable_version_widget.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -19,11 +21,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _enableSound = true;
   bool _enableFlash = false;
   bool _enableAutoFocus = true;
+  final SyncService _syncService = SyncService();
+  Map<String, int> _syncStatus = {
+    'members': 0,
+    'events': 0,
+    'groups': 0,
+    'families': 0,
+  };
 
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _loadSyncStatus();
   }
 
   Future<void> _loadSettings() async {
@@ -35,6 +45,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _enableFlash = attendanceProvider.enableFlash;
       _enableAutoFocus = attendanceProvider.enableAutoFocus;
     });
+  }
+
+  Future<void> _loadSyncStatus() async {
+    try {
+      final status = await _syncService.getSyncStatus();
+      if (mounted) {
+        setState(() {
+          _syncStatus = status;
+        });
+      }
+    } catch (e) {
+      print('Error loading sync status: $e');
+    }
   }
 
   Future<void> _saveSettings() async {
@@ -79,10 +102,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (confirmed == true) {
       final attendanceProvider = Provider.of<AttendanceProvider>(context, listen: false);
       await attendanceProvider.clearOfflineQueue();
+      await _syncService.clearSyncedData();
+      await _loadSyncStatus();
       
       if (mounted) {
         AppHelpers.showSuccessSnackBar(context, 'Data cleared successfully');
       }
+    }
+  }
+
+  Future<void> _showSyncDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const SyncDialog(),
+    );
+    
+    if (result == true || result == null) {
+      // Refresh sync status after dialog closes
+      await _loadSyncStatus();
     }
   }
 
@@ -97,6 +135,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(AppDimensions.paddingMedium),
         children: [
           _buildScannerSettings(),
+          const SizedBox(height: AppDimensions.paddingMedium),
+          _buildSyncSettings(),
           const SizedBox(height: AppDimensions.paddingMedium),
           _buildDataSettings(),
           const SizedBox(height: AppDimensions.paddingMedium),
@@ -182,6 +222,102 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSyncSettings() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Data Sync',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryBlue,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.paddingMedium),
+            
+            // Sync status summary
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+              decoration: BoxDecoration(
+                color: AppColors.lightGray,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildSyncStatusItem('Members', _syncStatus['members'] ?? 0),
+                      _buildSyncStatusItem('Events', _syncStatus['events'] ?? 0),
+                      _buildSyncStatusItem('Groups', _syncStatus['groups'] ?? 0),
+                      _buildSyncStatusItem('Families', _syncStatus['families'] ?? 0),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: AppDimensions.paddingMedium),
+            
+            // Sync button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _syncService.isSyncing ? null : _showSyncDialog,
+                icon: _syncService.isSyncing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.sync),
+                label: Text(_syncService.isSyncing ? 'Syncing...' : 'Sync Data'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingMedium),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSyncStatusItem(String label, int count) {
+    return Column(
+      children: [
+        Text(
+          count.toString(),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppColors.primaryBlue,
+          ),
+        ),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.mediumGray,
+          ),
+        ),
+      ],
     );
   }
 

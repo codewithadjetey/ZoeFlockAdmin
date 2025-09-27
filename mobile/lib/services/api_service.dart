@@ -415,4 +415,7 @@ class ApiService {
       return ApiResponse.error(AppHelpers.getErrorMessage(e));
     }
   }
+
+  // Get Dio instance for custom requests
+  Dio get dio => _dio;
 }
