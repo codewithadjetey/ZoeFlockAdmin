@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/user_config_service.dart';
 import '../utils/constants.dart';
 import '../screens/members_screen.dart';
 
@@ -23,69 +24,65 @@ class AppDrawer extends StatelessWidget {
   }
 
   Widget _buildUserHeader(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        final user = authProvider.currentUser;
-        
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(
-            AppDimensions.paddingMedium,
-            AppDimensions.paddingLarge,
-            AppDimensions.paddingMedium,
-            AppDimensions.paddingMedium,
-          ),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primaryBlue,
-                AppColors.primaryBlue.withOpacity(0.8),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    final userConfigService = UserConfigService();
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        AppDimensions.paddingMedium,
+        AppDimensions.paddingLarge,
+        AppDimensions.paddingMedium,
+        AppDimensions.paddingMedium,
+      ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primaryBlue,
+            AppColors.primaryBlue.withOpacity(0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar
+          CircleAvatar(
+            radius: 40,
+            backgroundColor: AppColors.white,
+            child: Text(
+              userConfigService.userInitials,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryBlue,
+              ),
             ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Avatar
-              CircleAvatar(
-                radius: 40,
-                backgroundColor: AppColors.white,
-                child: Text(
-                  _getInitials(user?.firstName ?? 'User', user?.lastName ?? ''),
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryBlue,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppDimensions.paddingMedium),
-              
-              // User name
-              Text(
-                _getFullName(user?.firstName ?? 'User', user?.lastName ?? ''),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.white,
-                ),
-              ),
-              const SizedBox(height: AppDimensions.paddingSmall),
-              
-              // User email
-              Text(
-                user?.email ?? 'user@example.com',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.white.withOpacity(0.8),
-                ),
-              ),
-            ],
+          const SizedBox(height: AppDimensions.paddingMedium),
+          
+          // User name
+          Text(
+            userConfigService.userFullName,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.white,
+            ),
           ),
-        );
-      },
+          const SizedBox(height: AppDimensions.paddingSmall),
+          
+          // User email
+          Text(
+            userConfigService.userEmail,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.white.withOpacity(0.8),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -279,18 +276,6 @@ class AppDrawer extends StatelessWidget {
     );
   }
 
-  String _getInitials(String firstName, String lastName) {
-    final firstInitial = firstName.isNotEmpty ? firstName[0].toUpperCase() : 'U';
-    final lastInitial = lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
-    return firstInitial + lastInitial;
-  }
-
-  String _getFullName(String firstName, String lastName) {
-    if (firstName.isEmpty && lastName.isEmpty) {
-      return 'User';
-    }
-    return '$firstName $lastName'.trim();
-  }
 }
 
 class DrawerMenuItem {

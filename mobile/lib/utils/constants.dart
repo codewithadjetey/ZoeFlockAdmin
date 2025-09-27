@@ -112,6 +112,22 @@ class StorageKeys {
   static const String rememberMe = 'remember_me';
   static const String lastEventId = 'last_event_id';
   static const String settings = 'app_settings';
+  
+  // User information storage
+  static const String userId = 'user_id';
+  static const String userName = 'user_name';
+  static const String userFirstName = 'user_first_name';
+  static const String userLastName = 'user_last_name';
+  static const String userProfileImage = 'user_profile_image';
+  static const String userMemberId = 'user_member_id';
+  static const String userStatus = 'user_status';
+  static const String userGroup = 'user_group';
+  static const String userFamily = 'user_family';
+  static const String userPhone = 'user_phone';
+  static const String userGender = 'user_gender';
+  static const String userDateOfBirth = 'user_date_of_birth';
+  static const String userCreatedAt = 'user_created_at';
+  static const String userUpdatedAt = 'user_updated_at';
 }
 
 class AppSettings {
