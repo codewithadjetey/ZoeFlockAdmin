@@ -3,6 +3,7 @@
 *.log
 *.pyc
 *.swp
+*.swo
 .DS_Store
 .atom/
 .buildlog/
@@ -41,3 +42,37 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android specific
+android/.gradle/
+android/build/
+android/local.properties
+android/app/src/main/java/io/flutter/app/
+
+# iOS specific
+ios/Flutter/ephemeral/
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/Generated.xcconfig
+ios/Runner/GeneratedPluginRegistrant.h
+ios/Runner/GeneratedPluginRegistrant.m
+
+# Web specific
+web/favicon.png
+
+# Build outputs
+*.apk
+*.aab
+*.ipa
+*.dmg
+*.exe
+
+# Generated files
+*.g.dart
+*.freezed.dart
+*.gr.dart
+*.config.dart
+
+# Temporary files
+*.tmp
+*.temp
+*.lock
