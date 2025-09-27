@@ -4,6 +4,7 @@ import '../providers/auth_provider.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../utils/validators.dart';
+import '../widgets/tappable_version_widget.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -333,9 +334,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildFooter() {
     return Column(
       children: [
-        Text(
-          'Version 1.0.0',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        TappableVersionWidget(
+          version: 'Version 1.0.0',
+          textStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: AppColors.mediumGray,
           ),
         ),

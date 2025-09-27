@@ -5,6 +5,7 @@ import '../providers/attendance_provider.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/tappable_version_widget.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -300,7 +301,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: AppDimensions.paddingMedium),
             
-            _buildInfoRow('Version', '1.0.0'),
+            _buildTappableInfoRow('Version', '1.0.0'),
             _buildInfoRow('Build', '1'),
             _buildInfoRow('Platform', 'Flutter'),
             _buildInfoRow('Developer', 'Church Development Team'),
@@ -358,6 +359,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(
               value,
               style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTappableInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.paddingSmall),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+                color: AppColors.mediumGray,
+              ),
+            ),
+          ),
+          Expanded(
+            child: TappableVersionWidget(
+              version: value,
+              textStyle: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
         ],
