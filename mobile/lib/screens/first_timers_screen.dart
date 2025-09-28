@@ -129,6 +129,19 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
     }
   }
 
+  Future<void> _navigateToEditFirstTimer(FirstTimer firstTimer) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddFirstTimerScreen(firstTimerToEdit: firstTimer),
+      ),
+    );
+    
+    // Refresh the list if a first timer was successfully updated
+    if (result == true) {
+      await _refreshFirstTimers();
+    }
+  }
+
   Future<void> _syncToServer() async {
     try {
       print('FirstTimersScreen: Starting sync to server...');
@@ -176,6 +189,14 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
           ),
         ),
         actions: [
+          if (!firstTimer.isPushedToServer)
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _navigateToEditFirstTimer(firstTimer);
+              },
+              child: const Text('Edit'),
+            ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Close'),
@@ -390,6 +411,9 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
           return FirstTimerCard(
             firstTimer: firstTimer,
             onTap: () => _navigateToFirstTimerDetails(firstTimer),
+            onEdit: !firstTimer.isPushedToServer 
+                ? () => _navigateToEditFirstTimer(firstTimer)
+                : null,
           );
         },
       ),

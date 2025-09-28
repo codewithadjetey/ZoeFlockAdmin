@@ -12,7 +12,9 @@ import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
 
 class AddFirstTimerScreen extends StatefulWidget {
-  const AddFirstTimerScreen({super.key});
+  final FirstTimer? firstTimerToEdit;
+  
+  const AddFirstTimerScreen({super.key, this.firstTimerToEdit});
 
   @override
   State<AddFirstTimerScreen> createState() => _AddFirstTimerScreenState();
@@ -42,6 +44,9 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
   Member? _selectedMember;
   bool _isLoading = false;
   bool _isSubmitting = false;
+  bool _formDataInitialized = false;
+  bool _eventsLoaded = false;
+  bool _membersLoaded = false;
 
   @override
   void initState() {
@@ -89,13 +94,29 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
       setState(() {
         _events = activeEvents;
         if (_events.isNotEmpty) {
-          _selectedEvent = _events.first;
+          // If editing, try to find the original event, otherwise use first available
+          if (widget.firstTimerToEdit != null) {
+            try {
+              _selectedEvent = _events.firstWhere(
+                (event) => event.id == widget.firstTimerToEdit!.eventId,
+              );
+            } catch (e) {
+              // Original event not found in active events, use first available
+              _selectedEvent = _events.first;
+            }
+          } else {
+            _selectedEvent = _events.first;
+          }
           print('Selected event: ${_selectedEvent!.title}');
         } else {
           print('No events available for selection');
         }
         _isLoading = false;
+        _eventsLoaded = true;
       });
+      
+      // Try to initialize form data if both events and members are loaded
+      _tryInitializeFormData();
     } catch (e) {
       print('Error loading events: $e');
       setState(() {
@@ -117,12 +138,62 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
       
       setState(() {
         _members = activeMembers;
+        _membersLoaded = true;
       });
+      
+      print('Loaded ${_members.length} active members');
+      if (_members.isNotEmpty) {
+        print('First member: ID=${_members.first.id}, Name=${_members.first.firstName} ${_members.first.lastName}');
+      }
+      
+      // Try to initialize form data if both events and members are loaded
+      _tryInitializeFormData();
     } catch (e) {
       print('Error loading members: $e');
       if (mounted) {
         AppHelpers.showErrorSnackBar(context, 'Failed to load members: $e');
       }
+    }
+  }
+
+  void _tryInitializeFormData() {
+    if (widget.firstTimerToEdit != null && !_formDataInitialized && _eventsLoaded && _membersLoaded) {
+      _initializeFormData();
+    }
+  }
+
+  void _initializeFormData() {
+    if (widget.firstTimerToEdit != null && !_formDataInitialized) {
+      final firstTimer = widget.firstTimerToEdit!;
+      _nameController.text = firstTimer.name;
+      _locationController.text = firstTimer.location ?? '';
+      _primaryPhoneController.text = firstTimer.primaryMobileNumber;
+      _secondaryPhoneController.text = firstTimer.secondaryMobileNumber ?? '';
+      _howWasServiceController.text = firstTimer.howWasService ?? '';
+      _invitedByController.text = firstTimer.invitedBy ?? '';
+      _isFirstTime = firstTimer.isFirstTime;
+      _hasPermanentPlaceOfWorship = firstTimer.hasPermanentPlaceOfWorship;
+      _wouldLikeToStay = firstTimer.wouldLikeToStay;
+      
+      // Find and set the selected member if invitedByMemberId exists
+      if (firstTimer.invitedByMemberId != null && _members.isNotEmpty) {
+        print('Looking for member with ID: ${firstTimer.invitedByMemberId}');
+        print('Available members: ${_members.map((m) => '${m.id}: ${m.firstName} ${m.lastName}').join(', ')}');
+        try {
+          _selectedMember = _members.firstWhere(
+            (member) => member.id == firstTimer.invitedByMemberId,
+          );
+          print('Found member: ${_selectedMember!.firstName} ${_selectedMember!.lastName}');
+        } catch (e) {
+          // Member not found, leave _selectedMember as null
+          print('Member not found: $e');
+          _selectedMember = null;
+        }
+      } else {
+        print('No member ID or members list is empty. Member ID: ${firstTimer.invitedByMemberId}, Members count: ${_members.length}');
+      }
+      
+      _formDataInitialized = true;
     }
   }
 
@@ -141,47 +212,19 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
     });
 
     try {
-      // Create FirstTimerEntity for local storage
-      final firstTimerEntity = FirstTimerEntity(
-        id: 0, // Will be set by database
-        name: _nameController.text.trim(),
-        location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
-        primaryMobileNumber: _primaryPhoneController.text.trim(),
-        secondaryMobileNumber: _secondaryPhoneController.text.trim().isEmpty ? null : _secondaryPhoneController.text.trim(),
-        howWasService: _howWasServiceController.text.trim().isEmpty ? null : _howWasServiceController.text.trim(),
-        isFirstTime: _isFirstTime,
-        hasPermanentPlaceOfWorship: _hasPermanentPlaceOfWorship,
-        invitedBy: _invitedByController.text.trim().isEmpty ? null : _invitedByController.text.trim(),
-        invitedByMemberId: _selectedMember?.id,
-        wouldLikeToStay: _wouldLikeToStay,
-        eventId: _selectedEvent!.id,
-        selfRegistered: false, // This is admin registration
-        status: FirstTimerStatus.firstTimer,
-        visitCount: 1,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-
-      print('Creating first timer locally: ${firstTimerEntity.name}');
-      
-      // Save to local database first
       await _ormDatabaseService.initialize();
-      final localId = await _ormDatabaseService.createFirstTimer(firstTimerEntity);
       
-      print('First timer saved locally with ID: $localId');
-      
-      if (mounted) {
-        AppHelpers.showSuccessSnackBar(context, 'First timer registered locally! Will sync when online.');
-        
-        // Try to push to server in background
-        _pushService.pushUnpushedFirstTimers();
-        
-        Navigator.of(context).pop(true); // Return true to indicate success
+      if (widget.firstTimerToEdit != null) {
+        // Update existing first timer
+        await _updateFirstTimer();
+      } else {
+        // Create new first timer
+        await _createFirstTimer();
       }
     } catch (e) {
-      print('Error creating first timer: $e');
+      print('Error ${widget.firstTimerToEdit != null ? 'updating' : 'creating'} first timer: $e');
       if (mounted) {
-        AppHelpers.showErrorSnackBar(context, 'Failed to register first timer: $e');
+        AppHelpers.showErrorSnackBar(context, 'Failed to ${widget.firstTimerToEdit != null ? 'update' : 'register'} first timer: $e');
       }
     } finally {
       if (mounted) {
@@ -189,6 +232,89 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
           _isSubmitting = false;
         });
       }
+    }
+  }
+
+  Future<void> _createFirstTimer() async {
+    // Create FirstTimerEntity for local storage
+    final firstTimerEntity = FirstTimerEntity(
+      id: 0, // Will be set by database
+      name: _nameController.text.trim(),
+      location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
+      primaryMobileNumber: _primaryPhoneController.text.trim(),
+      secondaryMobileNumber: _secondaryPhoneController.text.trim().isEmpty ? null : _secondaryPhoneController.text.trim(),
+      howWasService: _howWasServiceController.text.trim().isEmpty ? null : _howWasServiceController.text.trim(),
+      isFirstTime: _isFirstTime,
+      hasPermanentPlaceOfWorship: _hasPermanentPlaceOfWorship,
+      invitedBy: _invitedByController.text.trim().isEmpty ? null : _invitedByController.text.trim(),
+      invitedByMemberId: _selectedMember?.id,
+      wouldLikeToStay: _wouldLikeToStay,
+      eventId: _selectedEvent!.id,
+      selfRegistered: false, // This is admin registration
+      status: FirstTimerStatus.firstTimer,
+      visitCount: 1,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    print('Creating first timer locally: ${firstTimerEntity.name}');
+    
+    // Save to local database first
+    final localId = await _ormDatabaseService.createFirstTimer(firstTimerEntity);
+    
+    print('First timer saved locally with ID: $localId');
+    
+    if (mounted) {
+      AppHelpers.showSuccessSnackBar(context, 'First timer registered locally! Will sync when online.');
+      
+      // Try to push to server in background
+      _pushService.pushUnpushedFirstTimers();
+      
+      Navigator.of(context).pop(true); // Return true to indicate success
+    }
+  }
+
+  Future<void> _updateFirstTimer() async {
+    final existingFirstTimer = widget.firstTimerToEdit!;
+    
+    // Create updated FirstTimerEntity
+    final updatedFirstTimerEntity = FirstTimerEntity(
+      id: existingFirstTimer.id, // Keep the existing ID
+      name: _nameController.text.trim(),
+      location: _locationController.text.trim().isEmpty ? null : _locationController.text.trim(),
+      primaryMobileNumber: _primaryPhoneController.text.trim(),
+      secondaryMobileNumber: _secondaryPhoneController.text.trim().isEmpty ? null : _secondaryPhoneController.text.trim(),
+      howWasService: _howWasServiceController.text.trim().isEmpty ? null : _howWasServiceController.text.trim(),
+      isFirstTime: _isFirstTime,
+      hasPermanentPlaceOfWorship: _hasPermanentPlaceOfWorship,
+      invitedBy: _invitedByController.text.trim().isEmpty ? null : _invitedByController.text.trim(),
+      invitedByMemberId: _selectedMember?.id,
+      wouldLikeToStay: _wouldLikeToStay,
+      eventId: _selectedEvent!.id,
+      selfRegistered: existingFirstTimer.selfRegistered,
+      status: existingFirstTimer.status,
+      visitCount: existingFirstTimer.visitCount,
+      createdAt: existingFirstTimer.createdAt,
+      updatedAt: DateTime.now(),
+      // Preserve sync-related fields
+      isPushedToServer: existingFirstTimer.isPushedToServer,
+      pushedAt: existingFirstTimer.pushedAt,
+      pushError: existingFirstTimer.pushError,
+      pushAttempts: existingFirstTimer.pushAttempts,
+      lastPushAttempt: existingFirstTimer.lastPushAttempt,
+    );
+
+    print('Updating first timer: ${updatedFirstTimerEntity.name}');
+    
+    // Update in local database
+    await _ormDatabaseService.updateFirstTimer(updatedFirstTimerEntity);
+    
+    print('First timer updated successfully');
+    
+    if (mounted) {
+      AppHelpers.showSuccessSnackBar(context, 'First timer updated successfully!');
+      
+      Navigator.of(context).pop(true); // Return true to indicate success
     }
   }
 
@@ -207,7 +333,7 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
-        title: 'Add First Timer',
+        title: widget.firstTimerToEdit != null ? 'Edit First Timer' : 'Add First Timer',
         actions: [
           TextButton(
             onPressed: _isSubmitting ? null : _submitForm,
@@ -217,7 +343,7 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Save'),
+                : Text(widget.firstTimerToEdit != null ? 'Update' : 'Save'),
           ),
         ],
       ),
@@ -609,19 +735,19 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
           padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingMedium),
         ),
         child: _isSubmitting
-            ? const Row(
+            ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
-                  SizedBox(width: AppDimensions.paddingSmall),
-                  Text('Registering...'),
+                  const SizedBox(width: AppDimensions.paddingSmall),
+                  Text(widget.firstTimerToEdit != null ? 'Updating...' : 'Registering...'),
                 ],
               )
-            : const Text('Register First Timer'),
+            : Text(widget.firstTimerToEdit != null ? 'Update First Timer' : 'Register First Timer'),
       ),
     );
   }

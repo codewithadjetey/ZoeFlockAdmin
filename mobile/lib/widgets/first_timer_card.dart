@@ -5,11 +5,13 @@ import '../utils/constants.dart';
 class FirstTimerCard extends StatelessWidget {
   final FirstTimer firstTimer;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
 
   const FirstTimerCard({
     super.key,
     required this.firstTimer,
     required this.onTap,
+    this.onEdit,
   });
 
   @override
@@ -49,6 +51,16 @@ class FirstTimerCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Edit button (only for unsynchronized records)
+                  if (onEdit != null && !firstTimer.isPushedToServer) ...[
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: AppColors.white),
+                      onPressed: onEdit,
+                      tooltip: 'Edit first timer',
+                      iconSize: AppDimensions.iconSizeSmall,
+                    ),
+                    const SizedBox(width: AppDimensions.paddingSmall / 2),
+                  ],
                   // Status Badge
                   Container(
                     padding: const EdgeInsets.symmetric(
