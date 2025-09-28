@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import '../models/first_timer.dart';
 import '../models/event.dart';
 import '../models/member.dart';
@@ -263,40 +264,36 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
               ),
             ),
             const SizedBox(height: AppDimensions.paddingSmall),
-            DropdownButtonFormField<Event>(
-              value: _selectedEvent,
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                labelText: 'Select Event',
-                helperText: _events.isEmpty 
-                    ? 'No events available. Create an event first or check if today\'s events exist.'
-                    : 'Select the event for this first timer',
+            DropdownSearch<Event>(
+              selectedItem: _selectedEvent,
+              items: _events,
+              itemAsString: (Event event) => '${event.title} - ${event.formattedDate} ${event.time ?? ''}'.trim(),
+              dropdownDecoratorProps: DropDownDecoratorProps(
+                dropdownSearchDecoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  labelText: 'Select Event',
+                  helperText: _events.isEmpty 
+                      ? 'No events available. Create an event first or check if today\'s events exist.'
+                      : 'Search and select the event for this first timer',
+                ),
               ),
-              items: _events.isEmpty 
-                  ? [
-                      const DropdownMenuItem<Event>(
-                        value: null,
-                        child: Text('No events available'),
-                      )
-                    ]
-                  : _events.map((event) {
-                      return DropdownMenuItem(
-                        value: event,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(event.title),
-                            Text(
-                              '${event.formattedDate} ${event.time ?? ''}'.trim(),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+              popupProps: PopupProps.menu(
+                showSearchBox: true,
+                searchFieldProps: TextFieldProps(
+                  decoration: const InputDecoration(
+                    hintText: 'Search events...',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                ),
+                emptyBuilder: (context, searchEntry) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('No events found'),
+                    ),
+                  );
+                },
+              ),
               onChanged: _events.isEmpty 
                   ? null 
                   : (Event? newValue) {
@@ -313,6 +310,7 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
                 }
                 return null;
               },
+              enabled: _events.isNotEmpty,
             ),
           ],
         ),
@@ -459,30 +457,43 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
               ),
             ),
             const SizedBox(height: AppDimensions.paddingMedium),
-            DropdownButtonFormField<Member>(
-              value: _selectedMember,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Select Member Who Invited',
-                hintText: 'Choose a member (optional)',
-              ),
-              items: [
-                const DropdownMenuItem<Member>(
-                  value: null,
-                  child: Text('No member selected'),
+            DropdownSearch<Member>(
+              selectedItem: _selectedMember,
+              items: _members,
+              itemAsString: (Member member) => '${member.firstName} ${member.lastName}',
+              dropdownDecoratorProps: DropDownDecoratorProps(
+                dropdownSearchDecoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Select Member Who Invited',
+                  hintText: 'Search and choose a member (optional)',
                 ),
-                ..._members.map((member) {
-                  return DropdownMenuItem<Member>(
-                    value: member,
-                    child: Text('${member.firstName} ${member.lastName}'),
+              ),
+              popupProps: PopupProps.menu(
+                showSearchBox: true,
+                searchFieldProps: TextFieldProps(
+                  decoration: const InputDecoration(
+                    hintText: 'Search members...',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                ),
+                emptyBuilder: (context, searchEntry) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text('No members found'),
+                    ),
                   );
-                }).toList(),
-              ],
+                },
+              ),
               onChanged: (Member? newValue) {
                 setState(() {
                   _selectedMember = newValue;
                 });
               },
+              clearButtonProps: const ClearButtonProps(
+                isVisible: true,
+                icon: Icon(Icons.clear),
+              ),
             ),
             const SizedBox(height: AppDimensions.paddingSmall),
             Text(
