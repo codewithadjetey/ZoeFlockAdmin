@@ -332,11 +332,23 @@ class FirstTimerRepository extends BaseRepository<FirstTimerEntity> {
   /// Update push error
   Future<void> updatePushError(int localId, String error) async {
     final db = await database;
+    
+    // Get current push attempts count
+    final result = await db.query(
+      tableName,
+      columns: ['push_attempts'],
+      where: 'id = ?',
+      whereArgs: [localId],
+      limit: 1,
+    );
+    
+    final currentAttempts = result.isNotEmpty ? (result.first['push_attempts'] as int? ?? 0) : 0;
+    
     await db.update(
       tableName,
       {
         'push_error': error,
-        'push_attempts': db.rawQuery('SELECT push_attempts FROM $tableName WHERE id = ?', [localId]).then((result) => (result.first['push_attempts'] as int) + 1),
+        'push_attempts': currentAttempts + 1,
         'last_push_attempt': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },

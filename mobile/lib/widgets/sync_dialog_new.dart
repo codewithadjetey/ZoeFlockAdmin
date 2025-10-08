@@ -67,6 +67,14 @@ class _SyncDialogState extends State<SyncDialog> {
       currentPage: 1,
       totalPages: 1,
     );
+    _progressMap['First Timers'] = SyncProgress(
+      category: 'First Timers',
+      total: 0,
+      synced: 0,
+      status: 'Waiting...',
+      currentPage: 1,
+      totalPages: 1,
+    );
   }
 
   void _onProgressUpdate(SyncProgress progress) {

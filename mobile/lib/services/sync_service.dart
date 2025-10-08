@@ -7,9 +7,11 @@ import '../utils/constants.dart';
 import 'api_service.dart';
 import 'database_service_orm.dart';
 import 'offline_attendance_service.dart';
+import 'first_timer_push_service.dart';
 import '../orm/orm_database_service.dart';
 import '../orm/entities/group_entity.dart';
 import '../orm/entities/family_entity.dart';
+import '../orm/entities/first_timer_entity.dart';
 import 'dart:convert';
 
 class SyncProgress {
@@ -44,6 +46,7 @@ class SyncService {
   final ApiService _apiService = ApiService();
   final DatabaseService _databaseService = DatabaseService();
   final OfflineAttendanceService _offlineAttendanceService = OfflineAttendanceService();
+  final FirstTimerPushService _firstTimerPushService = FirstTimerPushService();
   final OrmDatabaseService _ormDatabaseService = OrmDatabaseService();
   
   final StreamController<SyncProgress> _progressController = StreamController<SyncProgress>.broadcast();
@@ -166,6 +169,11 @@ class SyncService {
       await _syncOfflineAttendance();
       print('SyncService: Offline Attendance sync completed');
 
+      // Sync First Timers
+      print('SyncService: Starting First Timers sync...');
+      await _syncFirstTimers();
+      print('SyncService: First Timers sync completed');
+
       print('SyncService: Push attendance sync completed successfully');
     } catch (e) {
       print('SyncService: Error during push sync: $e');
@@ -261,6 +269,11 @@ class SyncService {
       print('SyncService: Starting Offline Attendance sync...');
       await _syncOfflineAttendance();
       print('SyncService: Offline Attendance sync completed');
+
+      // Sync First Timers
+      print('SyncService: Starting First Timers sync...');
+      await _syncFirstTimers();
+      print('SyncService: First Timers sync completed');
 
       print('SyncService: Internal push attendance sync completed successfully');
       return true;
@@ -735,11 +748,19 @@ class SyncService {
       final groups = await _ormDatabaseService.getAllGroups();
       final families = await _ormDatabaseService.getAllFamilies();
       
+      // Get first timers count
+      await _ormDatabaseService.initialize();
+      final firstTimerRepository = _ormDatabaseService.getRepository<FirstTimerRepository>();
+      final firstTimers = firstTimerRepository != null 
+          ? await firstTimerRepository.findAll()
+          : <FirstTimerEntity>[];
+      
       return {
         'members': members.length,
         'events': events.length,
         'groups': groups.length,
         'families': families.length,
+        'first_timers': firstTimers.length,
       };
     } catch (e) {
       print('SyncService: Error getting sync status: $e');
@@ -748,6 +769,7 @@ class SyncService {
         'events': 0,
         'groups': 0,
         'families': 0,
+        'first_timers': 0,
       };
     }
   }
@@ -793,6 +815,96 @@ class SyncService {
         status: 'Error syncing offline attendance',
         error: e.toString(),
       ));
+      rethrow;
+    }
+  }
+
+  /// Sync first timers to server
+  Future<void> _syncFirstTimers() async {
+    try {
+      print('SyncService: Starting first timers sync...');
+
+      // Emit progress update
+      _progressController.add(SyncProgress(
+        category: 'First Timers',
+        total: 0,
+        synced: 0,
+        status: 'Syncing first timers...',
+        currentPage: 1,
+        totalPages: 1,
+      ));
+
+      // Get count of unpushed first timers
+      await _ormDatabaseService.initialize();
+      final repository = _ormDatabaseService.getRepository<FirstTimerRepository>();
+      
+      if (repository == null) {
+        print('SyncService: FirstTimerRepository not found');
+        _progressController.add(SyncProgress(
+          category: 'First Timers',
+          total: 0,
+          synced: 0,
+          status: 'First timers sync skipped - repository not found',
+          currentPage: 1,
+          totalPages: 1,
+        ));
+        return;
+      }
+
+      final unpushedFirstTimers = await repository.getUnpushedFirstTimers();
+      final totalCount = unpushedFirstTimers.length;
+      
+      print('SyncService: Found $totalCount unpushed first timers');
+
+      if (totalCount == 0) {
+        _progressController.add(SyncProgress(
+          category: 'First Timers',
+          total: 0,
+          synced: 0,
+          status: 'No first timers to sync',
+          currentPage: 1,
+          totalPages: 1,
+        ));
+        return;
+      }
+
+      // Emit progress with total count
+      _progressController.add(SyncProgress(
+        category: 'First Timers',
+        total: totalCount,
+        synced: 0,
+        status: 'Syncing first timers...',
+        currentPage: 1,
+        totalPages: 1,
+      ));
+
+      // Push first timers using the existing service
+      await _firstTimerPushService.pushUnpushedFirstTimers();
+
+      // Emit completion progress
+      _progressController.add(SyncProgress(
+        category: 'First Timers',
+        total: totalCount,
+        synced: totalCount,
+        status: 'First timers synced successfully',
+        currentPage: 1,
+        totalPages: 1,
+      ));
+
+      print('SyncService: First timers sync completed - Synced: $totalCount');
+    } catch (e) {
+      print('SyncService: Error syncing first timers: $e');
+      
+      _progressController.add(SyncProgress(
+        category: 'First Timers',
+        total: 0,
+        synced: 0,
+        status: 'Error syncing first timers',
+        error: e.toString(),
+        currentPage: 1,
+        totalPages: 1,
+      ));
+      
       rethrow;
     }
   }

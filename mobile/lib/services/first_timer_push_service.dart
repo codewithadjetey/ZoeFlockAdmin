@@ -28,8 +28,16 @@ class FirstTimerPushService {
       final unpushedFirstTimers = await repository.getUnpushedFirstTimers();
       print('FirstTimerPushService: Found ${unpushedFirstTimers.length} unpushed first timers');
 
-      for (final firstTimerEntity in unpushedFirstTimers) {
+      for (int i = 0; i < unpushedFirstTimers.length; i++) {
+        final firstTimerEntity = unpushedFirstTimers[i];
+        print('FirstTimerPushService: Processing first timer ${i + 1}/${unpushedFirstTimers.length}');
         await _pushSingleFirstTimer(repository, firstTimerEntity);
+        
+        // Add delay between requests to avoid rate limiting (429 errors)
+        if (i < unpushedFirstTimers.length - 1) {
+          print('FirstTimerPushService: Waiting 1 second before next request...');
+          await Future.delayed(const Duration(seconds: 1));
+        }
       }
 
       print('FirstTimerPushService: Completed pushing first timers');
@@ -51,8 +59,8 @@ class FirstTimerPushService {
       
       print('FirstTimerPushService: Sending data to API: $apiData');
       
-      // Call API to create first timer
-      final response = await _apiService.createFirstTimer(apiData);
+      // Call API to create first timer with retry logic for rate limiting
+      final response = await _createFirstTimerWithRetry(apiData);
       
       if (response.isSuccess && response.data != null) {
         // Extract server ID from response
@@ -71,6 +79,35 @@ class FirstTimerPushService {
       print('FirstTimerPushService: Error pushing single first timer: $e');
       await repository.updatePushError(firstTimerEntity.id, e.toString());
     }
+  }
+
+  /// Create first timer with retry logic for rate limiting
+  Future<dynamic> _createFirstTimerWithRetry(Map<String, dynamic> apiData, {int maxRetries = 3}) async {
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        print('FirstTimerPushService: Attempting to create first timer (attempt $attempt/$maxRetries)');
+        final response = await _apiService.createFirstTimer(apiData);
+        print('FirstTimerPushService: Successfully created first timer on attempt $attempt');
+        return response;
+      } catch (e) {
+        print('FirstTimerPushService: Attempt $attempt failed: $e');
+        
+        // Check if it's a rate limiting error (429)
+        if (e.toString().contains('429') && attempt < maxRetries) {
+          final delay = Duration(seconds: attempt * 2); // Exponential backoff
+          print('FirstTimerPushService: Rate limited (429), retrying in ${delay.inSeconds}s (attempt $attempt/$maxRetries)');
+          await Future.delayed(delay);
+          continue;
+        }
+        
+        // If it's the last attempt or not a 429 error, re-throw
+        if (attempt == maxRetries) {
+          print('FirstTimerPushService: Max retries ($maxRetries) exceeded for first timer creation');
+        }
+        rethrow;
+      }
+    }
+    throw Exception('Max retries exceeded for first timer creation');
   }
 
   /// Convert FirstTimerEntity to API format
