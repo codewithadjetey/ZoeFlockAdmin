@@ -62,6 +62,10 @@ class AppHelpers {
     showSnackBar(context, message, color: Colors.green);
   }
   
+  static void showWarningSnackBar(BuildContext context, String message) {
+    showSnackBar(context, message, color: Colors.orange);
+  }
+  
   static void showInfoSnackBar(BuildContext context, String message) {
     showSnackBar(context, message, color: Colors.blue);
   }

@@ -265,11 +265,7 @@ class _AddFirstTimerScreenState extends State<AddFirstTimerScreen> {
     print('First timer saved locally with ID: $localId');
     
     if (mounted) {
-      AppHelpers.showSuccessSnackBar(context, 'First timer registered locally! Will sync when online.');
-      
-      // Try to push to server in background
-      _pushService.pushUnpushedFirstTimers();
-      
+      AppHelpers.showSuccessSnackBar(context, 'First timer registered successfully! Use sync to upload to server.');
       Navigator.of(context).pop(true); // Return true to indicate success
     }
   }
