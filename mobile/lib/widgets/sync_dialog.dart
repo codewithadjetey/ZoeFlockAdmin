@@ -16,6 +16,7 @@ class _SyncDialogState extends State<SyncDialog> {
   bool _isSyncing = false;
   String _overallStatus = 'Choose sync operation';
   String? _currentOperation;
+  int _currentStep = 0; // 0 = selection, 1 = pull, 2 = push
 
   @override
   void initState() {
@@ -110,6 +111,7 @@ class _SyncDialogState extends State<SyncDialog> {
     setState(() {
       _isSyncing = true;
       _currentOperation = 'pull';
+      _currentStep = 1; // Move to pull view
       _overallStatus = 'Starting pull data...';
       _initializeProgress();
     });
@@ -121,6 +123,15 @@ class _SyncDialogState extends State<SyncDialog> {
         if (success) {
           _overallStatus = 'Pull data completed successfully';
           AppHelpers.showSuccessSnackBar(context, 'Data pulled successfully');
+          
+          // After pull completes, wait a moment then move to push view
+          await Future.delayed(const Duration(seconds: 1));
+          if (mounted) {
+            setState(() {
+              _currentStep = 2; // Move to push view
+              _overallStatus = 'Ready to push data';
+            });
+          }
         } else {
           _overallStatus = 'Pull data failed';
           AppHelpers.showErrorSnackBar(context, 'Pull data failed. Please try again.');
@@ -151,6 +162,9 @@ class _SyncDialogState extends State<SyncDialog> {
     setState(() {
       _isSyncing = true;
       _currentOperation = 'push';
+      if (_currentStep != 2) {
+        _currentStep = 2; // Move to push view if not already there
+      }
       _overallStatus = 'Starting push attendance...';
       _initializeProgress();
     });
@@ -189,36 +203,14 @@ class _SyncDialogState extends State<SyncDialog> {
       return;
     }
 
-    setState(() {
-      _isSyncing = true;
-      _currentOperation = 'full';
-      _overallStatus = 'Starting full sync...';
-      _initializeProgress();
-    });
-
-    try {
-      final success = await _syncService.syncAllData();
-      
+    // Start with pull data
+    await _startPullData();
+    
+    // After pull completes, if successful, automatically start push
+    if (mounted && _currentStep == 2) {
+      await Future.delayed(const Duration(milliseconds: 500));
       if (mounted) {
-        if (success) {
-          _overallStatus = 'Full sync completed successfully';
-          AppHelpers.showSuccessSnackBar(context, 'Full sync completed successfully');
-        } else {
-          _overallStatus = 'Full sync failed';
-          AppHelpers.showErrorSnackBar(context, 'Full sync failed. Please try again.');
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        _overallStatus = 'Full sync failed: ${e.toString()}';
-        AppHelpers.showErrorSnackBar(context, 'Full sync failed: ${e.toString()}');
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSyncing = false;
-          _currentOperation = null;
-        });
+        await _startPushAttendance();
       }
     }
   }
@@ -249,14 +241,16 @@ class _SyncDialogState extends State<SyncDialog> {
             Row(
               children: [
                 Icon(
-                  Icons.sync,
+                  _currentStep == 1 ? Icons.cloud_download : 
+                  _currentStep == 2 ? Icons.cloud_upload : Icons.sync,
                   color: AppColors.primaryBlue,
                   size: 28,
                 ),
                 const SizedBox(width: AppDimensions.paddingMedium),
                 Expanded(
                   child: Text(
-                    'Sync Operations',
+                    _currentStep == 1 ? 'Pull Data' :
+                    _currentStep == 2 ? 'Push Data' : 'Sync Operations',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: AppColors.primaryBlue,
@@ -293,63 +287,107 @@ class _SyncDialogState extends State<SyncDialog> {
             
             const SizedBox(height: AppDimensions.paddingLarge),
             
-            if (!_isSyncing) ...[
-              // Sync operation buttons
+            // Step 0: Selection view
+            if (_currentStep == 0) ...[
               _buildSyncOperationButtons(),
               const SizedBox(height: AppDimensions.paddingLarge),
             ],
             
-            // Progress items - make scrollable
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Pull Data Section
-                    if (_currentOperation == null || _currentOperation == 'pull' || _currentOperation == 'full')
-                      _buildSectionHeader('Pull Data', 'Download latest data from server', Icons.cloud_download),
-                    
-                    if (_currentOperation == null || _currentOperation == 'pull' || _currentOperation == 'full') ...[
+            // Step 1: Pull view
+            if (_currentStep == 1) ...[
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader('Pull Data', 'Downloading latest data from server', Icons.cloud_download),
                       _buildProgressItem(_progressMap['Groups']!),
                       _buildProgressItem(_progressMap['Families']!),
                       _buildProgressItem(_progressMap['Members']!),
                       _buildProgressItem(_progressMap['Events']!),
                     ],
-                    
-                    if (_currentOperation == null || _currentOperation == 'push' || _currentOperation == 'full') ...[
-                      const SizedBox(height: AppDimensions.paddingMedium),
-                      
-                      // Push Data Section
-                      _buildSectionHeader('Push Data', 'Upload attendance records to server', Icons.cloud_upload),
-                      _buildProgressItem(_progressMap['Offline Attendance']!),
-                    ],
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
             
-            const SizedBox(height: AppDimensions.paddingLarge),
+            // Step 2: Push view
+            if (_currentStep == 2) ...[
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader('Push Data', 'Uploading attendance records to server', Icons.cloud_upload),
+                      _buildProgressItem(_progressMap['Offline Attendance']!),
+                      _buildProgressItem(_progressMap['First Timers']!),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppDimensions.paddingLarge),
+              if (!_isSyncing) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _startPushAttendance,
+                    icon: const Icon(Icons.cloud_upload),
+                    label: const Text('Start Push'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.gold,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
             
-            // Action buttons
-            if (_isSyncing) ...[
-              Row(
-                children: [
-                  const SizedBox(width: AppDimensions.paddingMedium),
+            const SizedBox(height: AppDimensions.paddingMedium),
+            
+            // Navigation and action buttons
+            Row(
+              children: [
+                if (_currentStep > 0 && !_isSyncing)
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: _closeDialog,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _currentStep = _currentStep - 1;
+                          _overallStatus = _currentStep == 0 ? 'Choose sync operation' : 'Ready';
+                          _initializeProgress();
+                        });
+                      },
+                      icon: const Icon(Icons.arrow_back),
+                      label: const Text('Back'),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: AppColors.mediumGray),
+                        foregroundColor: AppColors.mediumGray,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
                         ),
                       ),
-                      child: const Text('Close'),
                     ),
                   ),
-                ],
-              ),
-            ],
+                if (_currentStep > 0 && !_isSyncing)
+                  const SizedBox(width: AppDimensions.paddingMedium),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _closeDialog,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.mediumGray),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                      ),
+                    ),
+                    child: const Text('Close'),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

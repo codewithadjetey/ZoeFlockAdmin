@@ -822,14 +822,16 @@ class SyncService {
   /// Sync first timers to server
   Future<void> _syncFirstTimers() async {
     try {
+      print('\n========================================');
       print('SyncService: Starting first timers sync...');
+      print('========================================');
 
       // Emit progress update
       _progressController.add(SyncProgress(
         category: 'First Timers',
         total: 0,
         synced: 0,
-        status: 'Syncing first timers...',
+        status: 'Checking for unpushed first timers...',
         currentPage: 1,
         totalPages: 1,
       ));
@@ -839,12 +841,14 @@ class SyncService {
       final repository = _ormDatabaseService.getRepository<FirstTimerRepository>();
       
       if (repository == null) {
-        print('SyncService: FirstTimerRepository not found');
+        final errorMsg = 'FirstTimerRepository not found';
+        print('SyncService: ❌ ERROR - $errorMsg');
         _progressController.add(SyncProgress(
           category: 'First Timers',
           total: 0,
           synced: 0,
-          status: 'First timers sync skipped - repository not found',
+          status: 'Sync failed',
+          error: errorMsg,
           currentPage: 1,
           totalPages: 1,
         ));
@@ -857,6 +861,7 @@ class SyncService {
       print('SyncService: Found $totalCount unpushed first timers');
 
       if (totalCount == 0) {
+        print('SyncService: ✅ No first timers to sync');
         _progressController.add(SyncProgress(
           category: 'First Timers',
           total: 0,
@@ -873,34 +878,72 @@ class SyncService {
         category: 'First Timers',
         total: totalCount,
         synced: 0,
-        status: 'Syncing first timers...',
+        status: 'Syncing $totalCount first timer(s)...',
         currentPage: 1,
         totalPages: 1,
       ));
 
       // Push first timers using the existing service
+      print('SyncService: Calling FirstTimerPushService...');
       await _firstTimerPushService.pushUnpushedFirstTimers();
 
-      // Emit completion progress
-      _progressController.add(SyncProgress(
-        category: 'First Timers',
-        total: totalCount,
-        synced: totalCount,
-        status: 'First timers synced successfully',
-        currentPage: 1,
-        totalPages: 1,
-      ));
+      // Check how many were actually synced successfully
+      final remainingUnpushed = await repository.getUnpushedFirstTimers();
+      final syncedCount = totalCount - remainingUnpushed.length;
+      final failedCount = remainingUnpushed.length;
 
-      print('SyncService: First timers sync completed - Synced: $totalCount');
-    } catch (e) {
-      print('SyncService: Error syncing first timers: $e');
+      print('SyncService: Sync completed - Success: $syncedCount, Failed: $failedCount');
+
+      if (failedCount > 0) {
+        // Get error details from failed records
+        final errorMessages = <String>[];
+        for (var entity in remainingUnpushed) {
+          if (entity.pushError != null) {
+            errorMessages.add('${entity.name}: ${entity.pushError}');
+          }
+        }
+        
+        final errorSummary = errorMessages.isEmpty 
+            ? '$failedCount record(s) failed to sync'
+            : errorMessages.join('; ');
+        
+        print('SyncService: ⚠️ Partial success - Error details: $errorSummary');
+        
+        _progressController.add(SyncProgress(
+          category: 'First Timers',
+          total: totalCount,
+          synced: syncedCount,
+          status: 'Partially synced ($syncedCount/$totalCount)',
+          error: errorSummary,
+          currentPage: 1,
+          totalPages: 1,
+        ));
+      } else {
+        print('SyncService: ✅ All first timers synced successfully');
+        _progressController.add(SyncProgress(
+          category: 'First Timers',
+          total: totalCount,
+          synced: totalCount,
+          status: 'First timers synced successfully',
+          currentPage: 1,
+          totalPages: 1,
+        ));
+      }
+
+      print('========================================');
+      print('SyncService: First timers sync completed');
+      print('========================================\n');
+    } catch (e, stackTrace) {
+      final errorMsg = e.toString();
+      print('SyncService: ❌ FATAL ERROR syncing first timers: $errorMsg');
+      print('SyncService: ❌ Stack trace: $stackTrace');
       
       _progressController.add(SyncProgress(
         category: 'First Timers',
         total: 0,
         synced: 0,
         status: 'Error syncing first timers',
-        error: e.toString(),
+        error: errorMsg,
         currentPage: 1,
         totalPages: 1,
       ));

@@ -300,8 +300,11 @@ class FirstTimerRepository extends BaseRepository<FirstTimerEntity> {
   }
 
   /// Get all first timers that haven't been pushed to server
+  /// Selects records where is_pushed_to_server = 0
   Future<List<FirstTimerEntity>> getUnpushedFirstTimers() async {
     final db = await database;
+    print('FirstTimerRepository: Querying first timers WHERE is_pushed_to_server = 0');
+    
     final List<Map<String, dynamic>> maps = await db.query(
       tableName,
       where: 'is_pushed_to_server = ?',
@@ -309,6 +312,7 @@ class FirstTimerRepository extends BaseRepository<FirstTimerEntity> {
       orderBy: 'created_at ASC',
     );
 
+    print('FirstTimerRepository: Found ${maps.length} unpushed first timers (is_pushed_to_server = 0)');
     return List.generate(maps.length, (i) => FirstTimerEntity.fromMap(maps[i]));
   }
 
@@ -327,6 +331,24 @@ class FirstTimerRepository extends BaseRepository<FirstTimerEntity> {
       where: 'id = ?',
       whereArgs: [localId],
     );
+    print('FirstTimerRepository: ✅ Updated first timer $localId - is_pushed_to_server set to 1 with serverId: $serverId');
+  }
+
+  /// Mark first timer as pushed (without server ID - for duplicates)
+  Future<void> markAsPushed(int localId) async {
+    final db = await database;
+    await db.update(
+      tableName,
+      {
+        'is_pushed_to_server': 1,
+        'pushed_at': DateTime.now().toIso8601String(),
+        'push_error': null,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [localId],
+    );
+    print('FirstTimerRepository: ✅ Marked first timer $localId as pushed - is_pushed_to_server set to 1');
   }
 
   /// Update push error

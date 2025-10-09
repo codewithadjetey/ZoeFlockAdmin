@@ -310,6 +310,7 @@ class _SyncDialogState extends State<SyncDialog> {
                       // Push Data Section
                       _buildSectionHeader('Push Data', 'Upload attendance records to server', Icons.cloud_upload),
                       _buildProgressItem(_progressMap['Offline Attendance']!),
+                      _buildProgressItem(_progressMap['First Timers']!),
                     ],
                   ],
                 ),
