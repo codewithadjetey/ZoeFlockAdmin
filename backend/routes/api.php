@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\PartnershipCategoryController;
 use App\Http\Controllers\Api\V1\ReportsController;
 use App\Http\Controllers\Api\V1\TithePaymentController;
+use App\Http\Controllers\Api\InvitationController;
 
 // Get the API version from config
 $apiVersion = config('app.version', 'v1');
@@ -67,6 +68,12 @@ Route::prefix($apiVersion)->group(function () {
 
     // Settings routes (public)
     Route::get("/settings", [\App\Http\Controllers\Api\V1\SettingsController::class, "getSettings"]);
+
+    // Public invitation routes (no authentication required)
+    Route::prefix('invitations')->group(function () {
+        Route::get('/token/{token}', [InvitationController::class, 'getInvitationByToken']);
+        Route::post('/token/{token}/respond', [InvitationController::class, 'submitResponse']);
+    });
 
     // Protected routes (authentication required)
     Route::middleware('auth:sanctum')->group(function () {
@@ -247,6 +254,17 @@ Route::prefix($apiVersion)->group(function () {
             Route::get('/analytics', [GeneralAttendanceController::class, 'getAttendanceAnalytics'])->middleware('permission:get-attendance-analytics');
             Route::get('/summary', [GeneralAttendanceController::class, 'getGeneralAttendanceSummary'])->middleware('permission:get-general-attendance-summary');
             Route::get('/statistics', [GeneralAttendanceController::class, 'getStatistics'])->middleware('permission:get-general-attendance-statistics');
+        });
+
+        // Event invitation management routes (protected)
+        Route::prefix('invitations')->group(function () {
+            Route::post('/create', [InvitationController::class, 'createInvitations'])->middleware('permission:create-event-invitations');
+            Route::get('/events/{eventId}/analytics', [InvitationController::class, 'getEventAnalytics'])->middleware('permission:view-event-invitations');
+            Route::get('/events/{eventId}/responses', [InvitationController::class, 'getEventResponses'])->middleware('permission:view-event-invitations');
+            Route::get('/members/{memberId}/stats', [InvitationController::class, 'getMemberStats'])->middleware('permission:view-event-invitations');
+            Route::put('/{invitationId}/deactivate', [InvitationController::class, 'deactivateInvitation'])->middleware('permission:manage-event-invitations');
+            Route::put('/{invitationId}/reactivate', [InvitationController::class, 'reactivateInvitation'])->middleware('permission:manage-event-invitations');
+            Route::put('/responses/{responseId}/status', [InvitationController::class, 'updateResponseStatus'])->middleware('permission:manage-event-invitations');
         });
 
           // Individual attendance statistics (should be inside the group if versioned)
