@@ -6,10 +6,12 @@ import {
   Button,
   StatCard,
   DataTable,
+  DataGrid,
   SelectInput,
   ContentCard,
   StatusBadge,
   TabNavigation,
+  ViewToggle,
 } from "@/components/ui";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import invitationService from "@/services/invitations";
@@ -33,6 +35,10 @@ export default function EventInvitationsPage() {
   const [responses, setResponses] = useState<InvitationResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "invitations" | "responses">("overview");
+  
+  // View mode states
+  const [invitationsViewMode, setInvitationsViewMode] = useState<"grid" | "table">("table");
+  const [responsesViewMode, setResponsesViewMode] = useState<"grid" | "table">("table");
   
   // Filter states
   const [filterType, setFilterType] = useState<"church" | "family" | "member">("church");
@@ -305,6 +311,116 @@ export default function EventInvitationsPage() {
     },
   ];
 
+  // Card renderers for grid view
+  const renderInvitationCard = (invitation: any) => (
+    <div className="rounded-3xl shadow-xl p-6 bg-white dark:bg-gray-800 hover:shadow-2xl transition-shadow">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            {invitation.member.name}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{invitation.member.email}</p>
+        </div>
+        <StatusBadge status={invitation.is_active ? "active" : "inactive"}>
+          {invitation.is_active ? "Active" : "Inactive"}
+        </StatusBadge>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{invitation.clicks}</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">Clicks</div>
+        </div>
+        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-3">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{invitation.responses}</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">Responses</div>
+        </div>
+        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{invitation.total_guests}</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">Total Guests</div>
+        </div>
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3">
+          <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{invitation.confirmed_guests}</div>
+          <div className="text-xs text-gray-600 dark:text-gray-400">Confirmed</div>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => handleCopyLink(invitation.invitation_url)}
+          className="flex-1"
+        >
+          <i className="fas fa-copy mr-1"></i>
+          Copy Link
+        </Button>
+        <Button
+          variant={invitation.is_active ? "danger" : "primary"}
+          size="sm"
+          onClick={() => handleToggleInvitation(invitation.id, invitation.is_active)}
+          className="flex-1"
+        >
+          {invitation.is_active ? "Deactivate" : "Activate"}
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderResponseCard = (response: any) => (
+    <div className="rounded-3xl shadow-xl p-6 bg-white dark:bg-gray-800 hover:shadow-2xl transition-shadow">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+            {response.guest_name}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {response.guest_email || response.guest_phone || "No contact info"}
+          </p>
+        </div>
+        <StatusBadge status={response.status}>{response.status}</StatusBadge>
+      </div>
+
+      <div className="space-y-2 mb-4">
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600 dark:text-gray-400">Number of Guests:</span>
+          <span className="font-semibold text-gray-900 dark:text-white">{response.number_of_guests}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-600 dark:text-gray-400">Invited By:</span>
+          <span className="font-semibold text-gray-900 dark:text-white">
+            {response.invited_by?.name || "Unknown"}
+          </span>
+        </div>
+        {response.notes && (
+          <div className="text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Notes:</span>
+            <p className="text-gray-900 dark:text-white mt-1 text-xs">{response.notes}</p>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Update Status:</label>
+        <SelectInput
+          value={response.status}
+          onChange={(e) =>
+            handleUpdateResponseStatus(
+              response.id,
+              e.target.value as "pending" | "confirmed" | "declined" | "attended"
+            )
+          }
+          options={[
+            { value: "pending", label: "Pending" },
+            { value: "confirmed", label: "Confirmed" },
+            { value: "declined", label: "Declined" },
+            { value: "attended", label: "Attended" },
+          ]}
+        />
+      </div>
+    </div>
+  );
+
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "invitations", label: "Invitations" },
@@ -510,17 +626,55 @@ export default function EventInvitationsPage() {
             </div>
           </ContentCard>
 
-          {/* Invitations Table */}
-          <ContentCard title="All Invitations">
-            <DataTable data={analytics.invitations} columns={invitationsColumns} />
-          </ContentCard>
+          {/* View Toggle and Invitations List */}
+          <div className="space-y-4">
+            <ViewToggle
+              value={invitationsViewMode}
+              onChange={(v) => setInvitationsViewMode(v as any)}
+              options={[
+                { value: "table", label: "Table", icon: "fas fa-table" },
+                { value: "grid", label: "Grid", icon: "fas fa-th" },
+              ]}
+              count={analytics.invitations.length}
+              countLabel="invitations"
+            />
+
+            {invitationsViewMode === "table" ? (
+              <ContentCard title="All Invitations">
+                <DataTable data={analytics.invitations} columns={invitationsColumns} />
+              </ContentCard>
+            ) : (
+              <DataGrid
+                data={analytics.invitations}
+                renderCard={renderInvitationCard}
+                columns={4}
+              />
+            )}
+          </div>
         </div>
       )}
 
       {activeTab === "responses" && (
-        <ContentCard title="All Responses">
-          <DataTable data={responses} columns={responsesColumns} />
-        </ContentCard>
+        <div className="space-y-4">
+          <ViewToggle
+            value={responsesViewMode}
+            onChange={(v) => setResponsesViewMode(v as any)}
+            options={[
+              { value: "table", label: "Table", icon: "fas fa-table" },
+              { value: "grid", label: "Grid", icon: "fas fa-th" },
+            ]}
+            count={responses.length}
+            countLabel="responses"
+          />
+
+          {responsesViewMode === "table" ? (
+            <ContentCard title="All Responses">
+              <DataTable data={responses} columns={responsesColumns} />
+            </ContentCard>
+          ) : (
+            <DataGrid data={responses} renderCard={renderResponseCard} columns={4} />
+          )}
+        </div>
       )}
     </div>
   );
