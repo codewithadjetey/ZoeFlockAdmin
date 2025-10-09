@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
+import '../utils/responsive_size.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final dynamic title; // Can be String or Widget
@@ -23,6 +24,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final responsive = ResponsiveSize(context);
+    
     return AppBar(
       title: title is String 
           ? Text(
@@ -30,7 +33,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               style: TextStyle(
                 color: foregroundColor ?? Colors.white,
                 fontWeight: FontWeight.bold,
+                fontSize: responsive.fontSizeXLarge,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             )
           : title as Widget,
       actions: actions,
@@ -39,15 +45,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       foregroundColor: foregroundColor ?? Colors.white,
       centerTitle: centerTitle,
       elevation: elevation,
-      shape: const RoundedRectangleBorder(
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(AppDimensions.radiusLarge),
+          bottom: Radius.circular(responsive.radiusLarge),
         ),
       ),
+      toolbarHeight: responsive.scale(kToolbarHeight),
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(kToolbarHeight);
 }
 

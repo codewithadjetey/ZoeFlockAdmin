@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/user_config_service.dart';
 import '../utils/constants.dart';
+import '../utils/responsive_size.dart';
 import '../screens/members_screen.dart';
 import '../screens/first_timers_screen.dart';
 import '../screens/visitors_screen.dart';
@@ -16,6 +17,11 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: AppColors.surface,
+      width: ResponsiveSize(context).byDevice(
+        mobile: ResponsiveSize(context).wp(75),
+        tablet: ResponsiveSize(context).wp(60),
+        desktop: 300,
+      ),
       child: Column(
         children: [
           _buildUserHeader(context),
@@ -29,14 +35,15 @@ class AppDrawer extends StatelessWidget {
 
   Widget _buildUserHeader(BuildContext context) {
     final userConfigService = UserConfigService();
+    final responsive = ResponsiveSize(context);
     
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        AppDimensions.paddingMedium,
-        AppDimensions.paddingLarge,
-        AppDimensions.paddingMedium,
-        AppDimensions.paddingMedium,
+      padding: EdgeInsets.fromLTRB(
+        responsive.paddingMedium,
+        responsive.paddingLarge + MediaQuery.of(context).padding.top,
+        responsive.paddingMedium,
+        responsive.paddingMedium,
       ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -50,40 +57,45 @@ class AppDrawer extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Avatar
           CircleAvatar(
-            radius: 40,
+            radius: responsive.scale(38),
             backgroundColor: AppColors.white,
             child: Text(
               userConfigService.userInitials,
-              style: const TextStyle(
-                fontSize: 24,
+              style: TextStyle(
+                fontSize: responsive.fontSizeXLarge,
                 fontWeight: FontWeight.bold,
                 color: AppColors.primaryBlue,
               ),
             ),
           ),
-          const SizedBox(height: AppDimensions.paddingMedium),
+          SizedBox(height: responsive.paddingMedium),
           
           // User name
           Text(
             userConfigService.userFullName,
-            style: const TextStyle(
-              fontSize: 20,
+            style: TextStyle(
+              fontSize: responsive.fontSizeLarge,
               fontWeight: FontWeight.bold,
               color: AppColors.white,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: AppDimensions.paddingSmall),
+          SizedBox(height: responsive.paddingSmall),
           
           // User email
           Text(
             userConfigService.userEmail,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: responsive.fontSizeMedium,
               color: AppColors.white.withOpacity(0.8),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -91,6 +103,8 @@ class AppDrawer extends StatelessWidget {
   }
 
   Widget _buildMenuItems(BuildContext context) {
+    final responsive = ResponsiveSize(context);
+    
     final menuItems = [
       DrawerMenuItem(
         icon: Icons.dashboard,
@@ -131,7 +145,7 @@ class AppDrawer extends StatelessWidget {
 
     return Expanded(
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingSmall),
+        padding: EdgeInsets.symmetric(vertical: responsive.paddingSmall),
         itemCount: menuItems.length,
         itemBuilder: (context, index) {
           final item = menuItems[index];
@@ -142,17 +156,22 @@ class AppDrawer extends StatelessWidget {
   }
 
   Widget _buildMenuItem(BuildContext context, DrawerMenuItem item) {
+    final responsive = ResponsiveSize(context);
+    
     return ListTile(
       leading: Icon(
         item.icon,
         color: AppColors.onSurface,
+        size: responsive.iconSizeMedium,
       ),
       title: Text(
         item.title,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.onSurface,
-          fontSize: 16,
+          fontSize: responsive.fontSizeMedium,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
       onTap: () {
         Navigator.of(context).pop(); // Close drawer
@@ -163,22 +182,28 @@ class AppDrawer extends StatelessWidget {
   }
 
   Widget _buildFooter(BuildContext context) {
+    final responsive = ResponsiveSize(context);
+    
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+      padding: EdgeInsets.all(responsive.paddingMedium),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           const Divider(color: AppColors.onSurfaceVariant),
           ListTile(
-            leading: const Icon(
+            leading: Icon(
               Icons.settings,
               color: AppColors.onSurface,
+              size: responsive.iconSizeMedium,
             ),
-            title: const Text(
+            title: Text(
               'Settings',
               style: TextStyle(
                 color: AppColors.onSurface,
-                fontSize: 16,
+                fontSize: responsive.fontSizeMedium,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             onTap: () {
               Navigator.of(context).pop(); // Close drawer
@@ -186,16 +211,19 @@ class AppDrawer extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(
+            leading: Icon(
               Icons.logout,
               color: AppColors.error,
+              size: responsive.iconSizeMedium,
             ),
-            title: const Text(
+            title: Text(
               'Logout',
               style: TextStyle(
                 color: AppColors.error,
-                fontSize: 16,
+                fontSize: responsive.fontSizeMedium,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             onTap: () => _showLogoutDialog(context),
           ),
@@ -244,25 +272,39 @@ class AppDrawer extends StatelessWidget {
 
 
   void _showLogoutDialog(BuildContext context) {
+    final responsive = ResponsiveSize(context);
+    
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: AppColors.surface,
-          title: const Text(
-            'Logout',
-            style: TextStyle(color: AppColors.onSurface),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(responsive.radiusLarge),
           ),
-          content: const Text(
+          title: Text(
+            'Logout',
+            style: TextStyle(
+              color: AppColors.onSurface,
+              fontSize: responsive.fontSizeXLarge,
+            ),
+          ),
+          content: Text(
             'Are you sure you want to logout?',
-            style: TextStyle(color: AppColors.onSurface),
+            style: TextStyle(
+              color: AppColors.onSurface,
+              fontSize: responsive.fontSizeMedium,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
+              child: Text(
                 'Cancel',
-                style: TextStyle(color: AppColors.onSurfaceVariant),
+                style: TextStyle(
+                  color: AppColors.onSurfaceVariant,
+                  fontSize: responsive.fontSizeMedium,
+                ),
               ),
             ),
             TextButton(
@@ -277,9 +319,12 @@ class AppDrawer extends StatelessWidget {
                   Navigator.of(context).pushReplacementNamed('/login');
                 }
               },
-              child: const Text(
+              child: Text(
                 'Logout',
-                style: TextStyle(color: AppColors.error),
+                style: TextStyle(
+                  color: AppColors.error,
+                  fontSize: responsive.fontSizeMedium,
+                ),
               ),
             ),
           ],

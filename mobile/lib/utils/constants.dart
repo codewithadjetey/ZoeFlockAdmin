@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/domain_config_service.dart';
+import 'responsive_size.dart';
 
 class AppColors {
   static const Color primaryBlue = Color(0xFF3b82f6);
@@ -81,6 +82,55 @@ class AppDimensions {
   static const double iconSizeMedium = 24.0;
   static const double iconSizeLarge = 32.0;
   static const double iconSizeXLarge = 48.0;
+}
+
+/// Responsive dimensions that adapt to screen size
+/// Usage: ResponsiveDimensions(context).paddingMedium
+class ResponsiveDimensions {
+  final ResponsiveSize _responsive;
+
+  ResponsiveDimensions(BuildContext context) : _responsive = ResponsiveSize(context);
+
+  // Padding
+  double get paddingSmall => _responsive.paddingSmall;
+  double get paddingMedium => _responsive.paddingMedium;
+  double get paddingLarge => _responsive.paddingLarge;
+  double get paddingXLarge => _responsive.paddingXLarge;
+
+  // Radius
+  double get radiusSmall => _responsive.radiusSmall;
+  double get radiusMedium => _responsive.radiusMedium;
+  double get radiusLarge => _responsive.radiusLarge;
+  double get radiusXLarge => _responsive.radiusXLarge;
+
+  // Icon sizes
+  double get iconSizeSmall => _responsive.iconSizeSmall;
+  double get iconSizeMedium => _responsive.iconSizeMedium;
+  double get iconSizeLarge => _responsive.iconSizeLarge;
+  double get iconSizeXLarge => _responsive.iconSizeXLarge;
+
+  // Font sizes
+  double get fontSizeSmall => _responsive.fontSizeSmall;
+  double get fontSizeMedium => _responsive.fontSizeMedium;
+  double get fontSizeLarge => _responsive.fontSizeLarge;
+  double get fontSizeXLarge => _responsive.fontSizeXLarge;
+  double get fontSizeXXLarge => _responsive.fontSizeXXLarge;
+  double get fontSizeTitle => _responsive.fontSizeTitle;
+  double get fontSizeHeading => _responsive.fontSizeHeading;
+
+  // Button heights
+  double get buttonHeightSmall => _responsive.buttonHeightSmall;
+  double get buttonHeightMedium => _responsive.buttonHeightMedium;
+  double get buttonHeightLarge => _responsive.buttonHeightLarge;
+
+  // Screen percentage helpers
+  double wp(double percentage) => _responsive.wp(percentage);
+  double hp(double percentage) => _responsive.hp(percentage);
+
+  // Device type checks
+  bool get isMobile => _responsive.isMobile;
+  bool get isTablet => _responsive.isTablet;
+  bool get isDesktop => _responsive.isDesktop;
 }
 
 class ApiConstants {

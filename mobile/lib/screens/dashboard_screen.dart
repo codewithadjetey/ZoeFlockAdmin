@@ -6,6 +6,7 @@ import '../providers/event_provider.dart';
 import '../providers/dashboard_provider.dart';
 import '../services/user_config_service.dart';
 import '../utils/constants.dart';
+import '../utils/responsive_size.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/custom_app_bar.dart';
 import 'event_selection_screen.dart';
@@ -66,47 +67,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
           }
 
           if (dashboardProvider.errorMessage != null) {
+            final responsive = ResponsiveSize(context);
+            
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: AppColors.error,
-                  ),
-                  const SizedBox(height: AppDimensions.paddingMedium),
-                  Text(
-                    dashboardProvider.errorMessage!,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              child: Padding(
+                padding: EdgeInsets.all(responsive.paddingLarge),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: responsive.scale(64),
                       color: AppColors.error,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppDimensions.paddingMedium),
-                  ElevatedButton(
-                    onPressed: () => _initializeDashboard(),
-                    child: const Text('Retry'),
-                  ),
-                ],
+                    SizedBox(height: responsive.paddingMedium),
+                    Text(
+                      dashboardProvider.errorMessage!,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: AppColors.error,
+                        fontSize: responsive.fontSizeLarge,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: responsive.paddingMedium),
+                    ElevatedButton(
+                      onPressed: () => _initializeDashboard(),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: Size(
+                          responsive.wp(40),
+                          responsive.buttonHeightMedium,
+                        ),
+                      ),
+                      child: Text(
+                        'Retry',
+                        style: TextStyle(fontSize: responsive.fontSizeMedium),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           }
 
+          final responsive = ResponsiveSize(context);
+          
           return RefreshIndicator(
               onRefresh: _initializeDashboard,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+                padding: EdgeInsets.all(responsive.paddingMedium),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildWelcomeCard(),
-                    const SizedBox(height: AppDimensions.paddingLarge),
+                    SizedBox(height: responsive.paddingLarge),
                     _buildStatisticsSection(),
-                    const SizedBox(height: AppDimensions.paddingLarge),
+                    SizedBox(height: responsive.paddingLarge),
                     _buildQuickActionsSection(),
-                    const SizedBox(height: AppDimensions.paddingLarge),
+                    SizedBox(height: responsive.paddingLarge),
                     _buildRecentActivitySection(),
                   ],
                 ),
@@ -118,6 +136,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildWelcomeCard() {
+    final responsive = ResponsiveSize(context);
     final currentHour = DateTime.now().hour;
     String greeting;
     
@@ -131,7 +150,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppDimensions.paddingLarge),
+      padding: EdgeInsets.all(responsive.paddingLarge),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -141,53 +160,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+        borderRadius: BorderRadius.circular(responsive.radiusLarge),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryBlue.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: responsive.scale(20),
+            offset: Offset(0, responsive.scale(10)),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               CircleAvatar(
-                radius: 30,
+                radius: responsive.scale(28),
                 backgroundColor: AppColors.white,
                 child: Text(
                   _userConfigService.userInitials,
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: responsive.fontSizeLarge,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primaryBlue,
                   ),
                 ),
               ),
-              const SizedBox(width: AppDimensions.paddingMedium),
+              SizedBox(width: responsive.paddingMedium),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       greeting,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: responsive.fontSizeMedium,
                         color: AppColors.white.withOpacity(0.9),
                         fontWeight: FontWeight.w500,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: responsive.scale(4)),
                     Text(
                       _userConfigService.userFullName,
-                      style: const TextStyle(
-                        fontSize: 20,
+                      style: TextStyle(
+                        fontSize: responsive.fontSizeLarge,
                         fontWeight: FontWeight.bold,
                         color: AppColors.white,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -195,25 +220,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Icon(
                 Icons.church,
                 color: AppColors.white.withOpacity(0.8),
-                size: 32,
+                size: responsive.iconSizeLarge,
               ),
             ],
           ),
-          const SizedBox(height: AppDimensions.paddingMedium),
+          SizedBox(height: responsive.paddingMedium),
           Text(
             'Welcome to Zoe Flock Admin',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: responsive.fontSizeMedium,
               color: AppColors.white.withOpacity(0.9),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: responsive.scale(4)),
           Text(
             'Manage your church community with ease',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: responsive.fontSizeSmall,
               color: AppColors.white.withOpacity(0.7),
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -221,6 +250,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildStatisticsSection() {
+    final responsive = ResponsiveSize(context);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -229,18 +260,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.bold,
+            fontSize: responsive.fontSizeXLarge,
           ),
         ),
-        const SizedBox(height: AppDimensions.paddingMedium),
+        SizedBox(height: responsive.paddingMedium),
         Consumer<DashboardProvider>(
           builder: (context, dashboardProvider, child) {
             return GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: AppDimensions.paddingMedium,
-              mainAxisSpacing: AppDimensions.paddingMedium,
-              childAspectRatio: 1.2,
+              crossAxisCount: responsive.gridColumnCount,
+              crossAxisSpacing: responsive.paddingMedium,
+              mainAxisSpacing: responsive.paddingMedium,
+              childAspectRatio: responsive.byDevice(
+                mobile: 1.3,
+                tablet: 1.4,
+                desktop: 1.5,
+              ),
               children: [
                 _buildStatCard(
                   icon: Icons.event,
@@ -291,14 +327,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final responsive = ResponsiveSize(context);
+    
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+      borderRadius: BorderRadius.circular(responsive.radiusLarge),
       child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+        padding: EdgeInsets.all(responsive.paddingMedium),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+          borderRadius: BorderRadius.circular(responsive.radiusLarge),
           border: Border.all(
             color: AppColors.surfaceContainer,
             width: 1,
@@ -306,44 +344,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              blurRadius: responsive.scale(8),
+              offset: Offset(0, responsive.scale(4)),
             ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(responsive.scale(10)),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                borderRadius: BorderRadius.circular(responsive.radiusMedium),
               ),
               child: Icon(
                 icon,
                 color: color,
-                size: 28,
+                size: responsive.iconSizeMedium,
               ),
             ),
-            const SizedBox(height: AppDimensions.paddingMedium),
-            Text(
-              count.toString(),
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.onSurface,
+            SizedBox(height: responsive.paddingSmall),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                count.toString(),
+                style: TextStyle(
+                  fontSize: responsive.fontSizeXLarge,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.onSurface,
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
+            SizedBox(height: responsive.scale(2)),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: responsive.fontSizeMedium,
+                  color: AppColors.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -352,6 +399,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildQuickActionsSection() {
+    final responsive = ResponsiveSize(context);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -360,9 +409,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.bold,
+            fontSize: responsive.fontSizeXLarge,
           ),
         ),
-        const SizedBox(height: AppDimensions.paddingMedium),
+        SizedBox(height: responsive.paddingMedium),
         Row(
           children: [
             Expanded(
@@ -374,7 +424,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () => Navigator.of(context).pushNamed('/events'),
               ),
             ),
-            const SizedBox(width: AppDimensions.paddingMedium),
+            SizedBox(width: responsive.paddingMedium),
             Expanded(
               child: _buildActionCard(
                 icon: Icons.person_add,
@@ -394,7 +444,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: AppDimensions.paddingMedium),
+        SizedBox(height: responsive.paddingMedium),
         Row(
           children: [
             Expanded(
@@ -414,7 +464,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 },
               ),
             ),
-            const SizedBox(width: AppDimensions.paddingMedium),
+            SizedBox(width: responsive.paddingMedium),
             Expanded(
               child: _buildActionCard(
                 icon: Icons.analytics,
@@ -445,14 +495,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final responsive = ResponsiveSize(context);
+    
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+      borderRadius: BorderRadius.circular(responsive.radiusLarge),
       child: Container(
-        padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+        padding: EdgeInsets.all(responsive.paddingMedium),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+          borderRadius: BorderRadius.circular(responsive.radiusLarge),
           border: Border.all(
             color: AppColors.surfaceContainer,
             width: 1,
@@ -460,35 +512,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(responsive.scale(8)),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusSmall),
+                borderRadius: BorderRadius.circular(responsive.radiusSmall),
               ),
               child: Icon(
                 icon,
                 color: color,
-                size: 20,
+                size: responsive.iconSizeSmall,
               ),
             ),
-            const SizedBox(height: AppDimensions.paddingSmall),
+            SizedBox(height: responsive.paddingSmall),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: responsive.fontSizeMedium,
                 fontWeight: FontWeight.bold,
                 color: AppColors.onSurface,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 2),
+            SizedBox(height: responsive.scale(2)),
             Text(
               subtitle,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: responsive.fontSizeSmall,
                 color: AppColors.onSurfaceVariant,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -497,6 +554,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildRecentActivitySection() {
+    final responsive = ResponsiveSize(context);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -505,41 +564,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             color: AppColors.onSurface,
             fontWeight: FontWeight.bold,
+            fontSize: responsive.fontSizeXLarge,
           ),
         ),
-        const SizedBox(height: AppDimensions.paddingMedium),
+        SizedBox(height: responsive.paddingMedium),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(AppDimensions.paddingLarge),
+          padding: EdgeInsets.all(responsive.paddingLarge),
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+            borderRadius: BorderRadius.circular(responsive.radiusLarge),
             border: Border.all(
               color: AppColors.surfaceContainer,
               width: 1,
             ),
           ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 Icons.history,
                 color: AppColors.onSurfaceVariant,
-                size: 48,
+                size: responsive.iconSizeXLarge,
               ),
-              const SizedBox(height: AppDimensions.paddingMedium),
+              SizedBox(height: responsive.paddingMedium),
               Text(
                 'No recent activity',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: responsive.fontSizeLarge,
                   color: AppColors.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: responsive.scale(4)),
               Text(
                 'Your recent actions will appear here',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: responsive.fontSizeMedium,
                   color: AppColors.onSurfaceVariant.withOpacity(0.7),
                 ),
                 textAlign: TextAlign.center,
