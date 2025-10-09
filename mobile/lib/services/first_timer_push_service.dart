@@ -107,16 +107,50 @@ class FirstTimerPushService {
       print('  - data: ${response.data}');
       
       if (response.isSuccess) {
-        // Check if it's an "already registered" response
         final message = response.message ?? '';
+        
+        // Check if it's an "already registered" response
         if (message.contains('already registered') || message.contains('Already registered')) {
           print('FirstTimerPushService: ℹ️ First timer already exists on server');
+          print('FirstTimerPushService: 📝 Message: $message');
           
           // Mark as pushed without server ID since it already exists
           // is_pushed_to_server will be set to 1
           await repository.markAsPushed(firstTimerEntity.id);
           
           print('FirstTimerPushService: ✅ Marked as pushed (already exists on server) - is_pushed_to_server = 1');
+          
+          // Verify the update
+          final verifyEntity = await repository.findById(firstTimerEntity.id);
+          if (verifyEntity != null) {
+            print('FirstTimerPushService: ✅ VERIFIED - is_pushed_to_server: ${verifyEntity.isPushedToServer ? "1 ✓" : "0 ✗"}');
+          }
+          
+          return true;
+        }
+        
+        // Check if it's a "visit updated" response
+        if (message.contains('Visit updated')) {
+          print('FirstTimerPushService: ℹ️ First timer visit count updated');
+          print('FirstTimerPushService: 📝 Message: $message');
+          
+          // Extract server ID from response data if available
+          final serverId = response.data?['id'] as int?;
+          if (serverId != null) {
+            print('FirstTimerPushService: ✅ Visit updated with server ID: $serverId');
+            await repository.updateWithServerId(firstTimerEntity.id, serverId);
+          } else {
+            // Mark as pushed even without server ID
+            print('FirstTimerPushService: ✅ Visit updated, marking as pushed');
+            await repository.markAsPushed(firstTimerEntity.id);
+          }
+          
+          // Verify the update
+          final verifyEntity = await repository.findById(firstTimerEntity.id);
+          if (verifyEntity != null) {
+            print('FirstTimerPushService: ✅ VERIFIED - is_pushed_to_server: ${verifyEntity.isPushedToServer ? "1 ✓" : "0 ✗"}');
+          }
+          
           return true;
         }
         
@@ -127,6 +161,7 @@ class FirstTimerPushService {
             final errorMsg = 'Server did not return an ID';
             print('FirstTimerPushService: ❌ FAILED - $errorMsg');
             print('FirstTimerPushService: ❌ Full response data: ${response.data}');
+            print('FirstTimerPushService: ❌ Message: $message');
             await repository.updatePushError(firstTimerEntity.id, errorMsg);
             return false;
           }
@@ -143,6 +178,9 @@ class FirstTimerPushService {
             print('FirstTimerPushService: ✅ Database verified - is_pushed_to_server: ${updatedEntity.isPushedToServer ? "1 ✓" : "0 ✗"}, serverId: ${updatedEntity.serverId}');
             if (!updatedEntity.isPushedToServer) {
               print('FirstTimerPushService: ⚠️ WARNING - is_pushed_to_server is still 0 after update!');
+              print('FirstTimerPushService: 🔍 Debug - Attempting manual update...');
+              // Try updating again manually
+              await repository.markAsPushed(firstTimerEntity.id);
             }
             return true;
           } else {
@@ -150,11 +188,20 @@ class FirstTimerPushService {
             return true; // Still consider it success since API call worked
           }
         } else {
-          // Success response but no data
-          final errorMsg = 'Success response but no data returned';
-          print('FirstTimerPushService: ❌ FAILED - $errorMsg');
-          await repository.updatePushError(firstTimerEntity.id, errorMsg);
-          return false;
+          // Success response but no data - might be "already registered" without proper structure
+          print('FirstTimerPushService: ⚠️ Success response but no data field');
+          print('FirstTimerPushService: 📝 Message: $message');
+          
+          // Mark as pushed anyway since API returned success
+          await repository.markAsPushed(firstTimerEntity.id);
+          
+          // Verify the update
+          final verifyEntity = await repository.findById(firstTimerEntity.id);
+          if (verifyEntity != null) {
+            print('FirstTimerPushService: ✅ VERIFIED - is_pushed_to_server: ${verifyEntity.isPushedToServer ? "1 ✓" : "0 ✗"}');
+          }
+          
+          return true;
         }
         
       } else {
