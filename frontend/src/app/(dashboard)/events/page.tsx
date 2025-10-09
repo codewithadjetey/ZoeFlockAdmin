@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { 
   PageHeader, 
   SearchInput, 
@@ -21,6 +22,7 @@ import EventModal from "@/components/events/EventModal";
 import { toast } from 'react-toastify';
 
 export default function EventsPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<"grid" | "calendar" | "table">("table");
   const [searchTerm, setSearchTerm] = useState("");
@@ -267,6 +269,15 @@ export default function EventsPage() {
             <i className="fas fa-edit"></i>
           </button>
           
+          {/* Invitations Button */}
+          <button 
+            className="text-indigo-600 hover:text-indigo-700 text-sm p-1 rounded hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+            onClick={() => router.push(`/events/invitations/${event.id}`)}
+            title="Manage Invitations"
+          >
+            <i className="fas fa-envelope"></i>
+          </button>
+
           {/* Scan Codes Button - Only show for published events */}
           {event.status === 'published' && (
             <button 
