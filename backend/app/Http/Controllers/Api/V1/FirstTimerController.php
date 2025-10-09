@@ -120,7 +120,7 @@ class FirstTimerController extends Controller
 
         $alreadyRegistered = FirstTimer::where('primary_mobile_number', $data['primary_mobile_number'])->where('event_id', $data['event_id'])->first();
         if ($alreadyRegistered) {
-            return response()->json(['message' => 'First Timer already registered for this event.'], 429);
+            return response()->json(['message' => 'First Timer already registered for this event.'], 200);
         }
 
         // Check if primary_mobile_number already exists
