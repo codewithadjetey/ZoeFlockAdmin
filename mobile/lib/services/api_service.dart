@@ -524,17 +524,39 @@ class ApiService {
       print('✅ ApiService: Create first timer response status: ${response.statusCode}');
       print('📊 ApiService: Create first timer response data: ${response.data}');
       
-      if (response.statusCode == 201 && response.data != null) {
+      // Accept both 200 and 201 status codes
+      if ((response.statusCode == 200 || response.statusCode == 201) && response.data != null) {
         final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
+        final message = data['message'] ?? '';
+        
+        // Check if it's an "already registered" response (200 with just message)
+        if (message.contains('already registered') || message.contains('Already registered')) {
+          print('🚀 ApiService: ℹ️ First timer already registered for this event');
+          return ApiResponse.success(
+            {'message': message},
+            message: message,
+          );
+        }
+        
+        // Check for visit updated response (200 with data)
+        if (message.contains('Visit updated')) {
+          print('🚀 ApiService: ℹ️ First timer visit count updated');
+          return ApiResponse.success(
+            data['data'] ?? {'message': message},
+            message: message,
+          );
+        }
+        
+        // Normal create response (201 with data)
+        if (data['data'] != null) {
           print('🚀 ApiService: ✅ Successfully created first timer');
-          return ApiResponse.success(data['data']);
+          return ApiResponse.success(data['data'], message: message);
         } else {
-          print('🚀 ApiService: ❌ Failed to create first timer - API returned success: false');
-          return ApiResponse.error('Failed to create first timer');
+          print('🚀 ApiService: ❌ Failed to create first timer - No data in response');
+          return ApiResponse.error(message.isNotEmpty ? message : 'Failed to create first timer');
         }
       } else {
-        print('🚀 ApiService: ❌ Failed to create first timer - Invalid response');
+        print('🚀 ApiService: ❌ Failed to create first timer - Invalid response status: ${response.statusCode}');
         return ApiResponse.error('Failed to create first timer');
       }
     } catch (e) {

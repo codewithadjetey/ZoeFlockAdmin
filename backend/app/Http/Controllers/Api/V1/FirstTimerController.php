@@ -120,19 +120,19 @@ class FirstTimerController extends Controller
 
         $alreadyRegistered = FirstTimer::where('primary_mobile_number', $data['primary_mobile_number'])->where('event_id', $data['event_id'])->first();
         if ($alreadyRegistered) {
-            return response()->json(['message' => 'First Timer already registered for this event.'], 429);
+            return response()->json(['message' => 'First Timer already registered for this event.'], 200);
         }
 
         // Check if primary_mobile_number already exists
-        $firstTimer = FirstTimer::where('primary_mobile_number', $data['primary_mobile_number'])->first();
+        $firstTimer = FirstTimer::where('primary_mobile_number', $data['primary_mobile_number'])
+        ->where('event_id', '!=', $data['event_id'])
+        ->first();
         if ($firstTimer) {
-            // Update visit count and status
             $firstTimer->visit_count += 1;
             if ($firstTimer->visit_count == 2) {
                 $firstTimer->status = 'visitor';
             } elseif ($firstTimer->visit_count == 3) {
                 $firstTimer->status = 'potential_member';
-                // TODO: Trigger admin notification here
             }
             $firstTimer->last_submission_date = $today;
             $firstTimer->fill($data);

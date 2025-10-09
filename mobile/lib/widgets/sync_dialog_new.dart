@@ -67,6 +67,14 @@ class _SyncDialogState extends State<SyncDialog> {
       currentPage: 1,
       totalPages: 1,
     );
+    _progressMap['First Timers'] = SyncProgress(
+      category: 'First Timers',
+      total: 0,
+      synced: 0,
+      status: 'Waiting...',
+      currentPage: 1,
+      totalPages: 1,
+    );
   }
 
   void _onProgressUpdate(SyncProgress progress) {
@@ -302,6 +310,7 @@ class _SyncDialogState extends State<SyncDialog> {
                       // Push Data Section
                       _buildSectionHeader('Push Data', 'Upload attendance records to server', Icons.cloud_upload),
                       _buildProgressItem(_progressMap['Offline Attendance']!),
+                      _buildProgressItem(_progressMap['First Timers']!),
                     ],
                   ],
                 ),

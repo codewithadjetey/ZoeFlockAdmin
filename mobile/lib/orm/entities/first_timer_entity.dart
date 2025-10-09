@@ -300,8 +300,11 @@ class FirstTimerRepository extends BaseRepository<FirstTimerEntity> {
   }
 
   /// Get all first timers that haven't been pushed to server
+  /// Selects records where is_pushed_to_server = 0
   Future<List<FirstTimerEntity>> getUnpushedFirstTimers() async {
     final db = await database;
+    print('FirstTimerRepository: Querying first timers WHERE is_pushed_to_server = 0');
+    
     final List<Map<String, dynamic>> maps = await db.query(
       tableName,
       where: 'is_pushed_to_server = ?',
@@ -309,13 +312,37 @@ class FirstTimerRepository extends BaseRepository<FirstTimerEntity> {
       orderBy: 'created_at ASC',
     );
 
+    print('FirstTimerRepository: Found ${maps.length} unpushed first timers (is_pushed_to_server = 0)');
     return List.generate(maps.length, (i) => FirstTimerEntity.fromMap(maps[i]));
   }
 
   /// Update first timer with server ID after successful push
   Future<void> updateWithServerId(int localId, int serverId) async {
     final db = await database;
-    await db.update(
+    
+    // Check current state BEFORE update
+    final beforeMaps = await db.query(
+      tableName,
+      where: 'id = ?',
+      whereArgs: [localId],
+      limit: 1,
+    );
+    
+    if (beforeMaps.isEmpty) {
+      print('FirstTimerRepository: ❌ ERROR - First timer with ID $localId not found in database!');
+      return;
+    }
+    
+    final beforeState = beforeMaps.first;
+    print('FirstTimerRepository: 📋 BEFORE UPDATE - ID: $localId');
+    print('  - is_pushed_to_server: ${beforeState['is_pushed_to_server']}');
+    print('  - server_id: ${beforeState['server_id']}');
+    print('  - name: ${beforeState['name']}');
+    
+    print('FirstTimerRepository: 🔄 Updating first timer $localId with server ID $serverId');
+    print('FirstTimerRepository: 🔄 Setting is_pushed_to_server = 1');
+    
+    final rowsAffected = await db.update(
       tableName,
       {
         'server_id': serverId,
@@ -327,16 +354,128 @@ class FirstTimerRepository extends BaseRepository<FirstTimerEntity> {
       where: 'id = ?',
       whereArgs: [localId],
     );
+    
+    print('FirstTimerRepository: ✅ Update completed - Rows affected: $rowsAffected');
+    
+    if (rowsAffected == 0) {
+      print('FirstTimerRepository: ⚠️ WARNING - No rows updated! ID $localId might not exist.');
+    } else {
+      // Check state AFTER update
+      final afterMaps = await db.query(
+        tableName,
+        where: 'id = ?',
+        whereArgs: [localId],
+        limit: 1,
+      );
+      
+      if (afterMaps.isNotEmpty) {
+        final afterState = afterMaps.first;
+        print('FirstTimerRepository: 📋 AFTER UPDATE - ID: $localId');
+        print('  - is_pushed_to_server: ${afterState['is_pushed_to_server']} (should be 1)');
+        print('  - server_id: ${afterState['server_id']} (should be $serverId)');
+        print('  - pushed_at: ${afterState['pushed_at']}');
+        print('  - push_error: ${afterState['push_error']}');
+        
+        if (afterState['is_pushed_to_server'] == 1) {
+          print('FirstTimerRepository: ✅✅✅ CONFIRMED - is_pushed_to_server is NOW 1!');
+        } else {
+          print('FirstTimerRepository: ❌❌❌ PROBLEM - is_pushed_to_server is STILL ${afterState['is_pushed_to_server']}!');
+        }
+      }
+      
+      print('FirstTimerRepository: ✅ Successfully updated first timer $localId - is_pushed_to_server set to 1, serverId: $serverId');
+    }
+  }
+
+  /// Mark first timer as pushed (without server ID - for duplicates)
+  Future<void> markAsPushed(int localId) async {
+    final db = await database;
+    
+    // Check current state BEFORE update
+    final beforeMaps = await db.query(
+      tableName,
+      where: 'id = ?',
+      whereArgs: [localId],
+      limit: 1,
+    );
+    
+    if (beforeMaps.isEmpty) {
+      print('FirstTimerRepository: ❌ ERROR - First timer with ID $localId not found in database!');
+      return;
+    }
+    
+    final beforeState = beforeMaps.first;
+    print('FirstTimerRepository: 📋 BEFORE UPDATE - ID: $localId');
+    print('  - is_pushed_to_server: ${beforeState['is_pushed_to_server']}');
+    print('  - name: ${beforeState['name']}');
+    print('  - temp_id: ${beforeState['temp_id']}');
+    
+    print('FirstTimerRepository: 🔄 Marking first timer $localId as pushed');
+    print('FirstTimerRepository: 🔄 Setting is_pushed_to_server = 1');
+    
+    final rowsAffected = await db.update(
+      tableName,
+      {
+        'is_pushed_to_server': 1,
+        'pushed_at': DateTime.now().toIso8601String(),
+        'push_error': null,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [localId],
+    );
+    
+    print('FirstTimerRepository: ✅ Update completed - Rows affected: $rowsAffected');
+    
+    if (rowsAffected == 0) {
+      print('FirstTimerRepository: ⚠️ WARNING - No rows updated! ID $localId might not exist.');
+    } else {
+      // Check state AFTER update
+      final afterMaps = await db.query(
+        tableName,
+        where: 'id = ?',
+        whereArgs: [localId],
+        limit: 1,
+      );
+      
+      if (afterMaps.isNotEmpty) {
+        final afterState = afterMaps.first;
+        print('FirstTimerRepository: 📋 AFTER UPDATE - ID: $localId');
+        print('  - is_pushed_to_server: ${afterState['is_pushed_to_server']} (should be 1)');
+        print('  - pushed_at: ${afterState['pushed_at']}');
+        print('  - push_error: ${afterState['push_error']}');
+        
+        if (afterState['is_pushed_to_server'] == 1) {
+          print('FirstTimerRepository: ✅✅✅ CONFIRMED - is_pushed_to_server is NOW 1!');
+        } else {
+          print('FirstTimerRepository: ❌❌❌ PROBLEM - is_pushed_to_server is STILL ${afterState['is_pushed_to_server']}!');
+        }
+      }
+      
+      print('FirstTimerRepository: ✅ Successfully marked first timer $localId as pushed - is_pushed_to_server set to 1');
+    }
   }
 
   /// Update push error
   Future<void> updatePushError(int localId, String error) async {
     final db = await database;
+    
+    // Get current push attempts count
+    final result = await db.query(
+      tableName,
+      columns: ['push_attempts'],
+      where: 'id = ?',
+      whereArgs: [localId],
+      limit: 1,
+    );
+    
+    final currentAttempts = result.isNotEmpty ? (result.first['push_attempts'] as int? ?? 0) : 0;
+    
     await db.update(
       tableName,
       {
         'push_error': error,
-        'push_attempts': db.rawQuery('SELECT push_attempts FROM $tableName WHERE id = ?', [localId]).then((result) => (result.first['push_attempts'] as int) + 1),
+        'push_attempts': currentAttempts + 1,
         'last_push_attempt': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },

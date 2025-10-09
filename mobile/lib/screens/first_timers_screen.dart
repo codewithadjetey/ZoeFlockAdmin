@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/first_timer.dart';
 import '../orm/orm_database_service.dart';
 import '../orm/entities/first_timer_entity.dart';
-import '../services/first_timer_push_service.dart';
 import '../utils/constants.dart';
 import '../utils/helpers.dart';
 import '../widgets/custom_app_bar.dart';
@@ -17,9 +16,8 @@ class FirstTimersScreen extends StatefulWidget {
   State<FirstTimersScreen> createState() => _FirstTimersScreenState();
 }
 
-class _FirstTimersScreenState extends State<FirstTimersScreen> {
+class _FirstTimersScreenState extends State<FirstTimersScreen> with WidgetsBindingObserver, RouteAware {
   final OrmDatabaseService _ormDatabaseService = OrmDatabaseService();
-  final FirstTimerPushService _pushService = FirstTimerPushService();
   final TextEditingController _searchController = TextEditingController();
   
   List<FirstTimer> _firstTimers = [];
@@ -27,20 +25,45 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
   bool _isLoading = true;
   String _searchQuery = '';
   FirstTimerStatus? _selectedStatus;
+  DateTime? _lastLoadTime;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadFirstTimers();
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh data when app comes back to foreground
+    if (state == AppLifecycleState.resumed && mounted) {
+      print('FirstTimersScreen: App resumed, refreshing data...');
+      _loadFirstTimers();
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     super.dispose();
   }
 
+  // Force refresh whenever the page comes into view
+  void _autoRefreshIfNeeded() {
+    // Refresh if more than 2 seconds have passed since last load
+    if (_lastLoadTime == null || 
+        DateTime.now().difference(_lastLoadTime!) > const Duration(seconds: 2)) {
+      print('FirstTimersScreen: Auto-refreshing data (last load: $_lastLoadTime)...');
+      _loadFirstTimers();
+    }
+  }
+
   Future<void> _loadFirstTimers() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoading = true;
     });
@@ -54,18 +77,29 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
       
       print('FirstTimersScreen: Loaded ${firstTimers.length} first timers from local database');
       
-      setState(() {
-        _firstTimers = firstTimers;
-        _applyFilters();
-        _isLoading = false;
-      });
+      // Debug: Print sync status of first few records
+      if (firstTimers.isNotEmpty) {
+        for (var i = 0; i < (firstTimers.length > 3 ? 3 : firstTimers.length); i++) {
+          final ft = firstTimers[i];
+          print('FirstTimersScreen: Record ${i + 1} - isPushed: ${ft.isPushedToServer}, pushError: ${ft.pushError}, status: ${ft.pushStatus}');
+        }
+      }
+      
+      if (mounted) {
+        setState(() {
+          _firstTimers = firstTimers;
+          _applyFilters();
+          _isLoading = false;
+          _lastLoadTime = DateTime.now();
+        });
+      }
       
     } catch (e) {
       print('FirstTimersScreen: Error loading first timers: $e');
-      setState(() {
-        _isLoading = false;
-      });
       if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
         AppHelpers.showErrorSnackBar(context, 'Failed to load first timers: $e');
       }
     }
@@ -129,20 +163,16 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
     }
   }
 
-  Future<void> _syncToServer() async {
-    try {
-      print('FirstTimersScreen: Starting sync to server...');
-      await _pushService.pushUnpushedFirstTimers();
-      
-      if (mounted) {
-        AppHelpers.showSuccessSnackBar(context, 'Sync completed! Check sync status on cards.');
-        await _refreshFirstTimers(); // Refresh to show updated sync status
-      }
-    } catch (e) {
-      print('FirstTimersScreen: Error syncing to server: $e');
-      if (mounted) {
-        AppHelpers.showErrorSnackBar(context, 'Sync failed: $e');
-      }
+  Future<void> _navigateToEditFirstTimer(FirstTimer firstTimer) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddFirstTimerScreen(firstTimerToEdit: firstTimer),
+      ),
+    );
+    
+    // Refresh the list if a first timer was successfully updated
+    if (result == true) {
+      await _refreshFirstTimers();
     }
   }
 
@@ -176,6 +206,14 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
           ),
         ),
         actions: [
+          if (!firstTimer.isPushedToServer)
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _navigateToEditFirstTimer(firstTimer);
+              },
+              child: const Text('Edit'),
+            ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Close'),
@@ -216,6 +254,11 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Auto-refresh if needed when widget rebuilds
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _autoRefreshIfNeeded();
+    });
+    
     return Scaffold(
       backgroundColor: AppColors.background,
       drawer: const AppDrawer(),
@@ -226,11 +269,6 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
             icon: const Icon(Icons.add),
             onPressed: _navigateToAddFirstTimer,
             tooltip: 'Add First Timer',
-          ),
-          IconButton(
-            icon: const Icon(Icons.cloud_upload),
-            onPressed: _syncToServer,
-            tooltip: 'Sync to Server',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -380,19 +418,19 @@ class _FirstTimersScreenState extends State<FirstTimersScreen> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _refreshFirstTimers,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(AppDimensions.paddingMedium),
-        itemCount: _filteredFirstTimers.length,
-        itemBuilder: (context, index) {
-          final firstTimer = _filteredFirstTimers[index];
-          return FirstTimerCard(
-            firstTimer: firstTimer,
-            onTap: () => _navigateToFirstTimerDetails(firstTimer),
-          );
-        },
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppDimensions.paddingMedium),
+      itemCount: _filteredFirstTimers.length,
+      itemBuilder: (context, index) {
+        final firstTimer = _filteredFirstTimers[index];
+        return FirstTimerCard(
+          firstTimer: firstTimer,
+          onTap: () => _navigateToFirstTimerDetails(firstTimer),
+          onEdit: !firstTimer.isPushedToServer 
+              ? () => _navigateToEditFirstTimer(firstTimer)
+              : null,
+        );
+      },
     );
   }
 }

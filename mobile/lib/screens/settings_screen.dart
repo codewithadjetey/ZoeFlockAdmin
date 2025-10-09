@@ -265,6 +265,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       _buildSyncStatusItem('Families', _syncStatus['families'] ?? 0),
                     ],
                   ),
+                  const SizedBox(height: AppDimensions.paddingSmall),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildSyncStatusItem('First Timers', _syncStatus['first_timers'] ?? 0),
+                    ],
+                  ),
                 ],
               ),
             ),
