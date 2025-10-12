@@ -516,7 +516,6 @@ export default function EventInvitationsPage() {
 
           {/* Top Performers */}
           {analytics.top_performers.length > 0 && (
-            <ContentCard title="Top Performers">
               <DataTable
                 data={analytics.top_performers}
                 columns={[
@@ -527,11 +526,9 @@ export default function EventInvitationsPage() {
                   { key: "confirmed_guests", label: "Confirmed" },
                 ]}
               />
-            </ContentCard>
           )}
 
           {/* Filters */}
-          <ContentCard title="Filter Analytics">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <SelectInput
                 label="Filter By"
@@ -572,7 +569,6 @@ export default function EventInvitationsPage() {
                 />
               )}
             </div>
-          </ContentCard>
         </div>
       )}
 
@@ -653,9 +649,7 @@ export default function EventInvitationsPage() {
             />
 
             {invitationsViewMode === "table" ? (
-              <ContentCard title="All Invitations">
                 <DataTable data={analytics.invitations} columns={invitationsColumns} />
-              </ContentCard>
             ) : (
               <DataGrid
                 data={analytics.invitations}
@@ -681,9 +675,7 @@ export default function EventInvitationsPage() {
           />
 
           {responsesViewMode === "table" ? (
-            <ContentCard title="All Responses">
               <DataTable data={responses} columns={responsesColumns} />
-            </ContentCard>
           ) : (
             <DataGrid data={responses} renderCard={renderResponseCard} columns={4} />
           )}
