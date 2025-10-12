@@ -16,8 +16,7 @@ import {
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import invitationService from "@/services/invitations";
 import { EventsService } from "@/services/events";
-import { FamiliesService } from "@/services/families";
-import { MembersService } from "@/services/members";
+import { EntitiesService } from "@/services/entities";
 import { toast } from "react-toastify";
 import {
   InvitationAnalytics,
@@ -54,8 +53,7 @@ export default function EventInvitationsPage() {
 
   useEffect(() => {
     loadData();
-    loadFamilies();
-    loadMembers();
+    loadEntities();
   }, [eventId]);
 
   useEffect(() => {
@@ -100,25 +98,15 @@ export default function EventInvitationsPage() {
     }
   };
 
-  const loadFamilies = async () => {
+  const loadEntities = async () => {
     try {
-      const response = await FamiliesService.getFamilies({ per_page: 1000 });
-      if (response.success && response.families) {
-        setFamilies(response.families.data);
+      const response = await EntitiesService.getEntities('families,members', true);
+      if (response.success && response.data) {
+        setFamilies(response.data.families || []);
+        setMembers(response.data.members || []);
       }
     } catch (error) {
-      console.error("Error loading families:", error);
-    }
-  };
-
-  const loadMembers = async () => {
-    try {
-      const response = await MembersService.getMembers({ per_page: 1000 });
-      if (response.success && response.members) {
-        setMembers(response.members.data);
-      }
-    } catch (error) {
-      console.error("Error loading members:", error);
+      console.error("Error loading entities:", error);
     }
   };
 
@@ -564,7 +552,7 @@ export default function EventInvitationsPage() {
                     { value: "", label: "Select a member" },
                     ...members.map((m) => ({
                       value: m.id.toString(),
-                      label: `${m.first_name} ${m.last_name}`,
+                      label: m.name,
                     })),
                   ]}
                 />
