@@ -529,7 +529,7 @@ export default function EventInvitationsPage() {
           )}
 
           {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <SelectInput
                 label="Filter By"
                 value={filterType}
@@ -568,7 +568,7 @@ export default function EventInvitationsPage() {
                   ]}
                 />
               )}
-            </div>
+            </div> */}
         </div>
       )}
 
