@@ -176,6 +176,12 @@ const allMenuItems = [
         icon: "fas fa-tags", 
         href: "/event-categories",
         requiredPermissions: ["view-event-categories"]
+      },
+      { 
+        label: "Event Invitations", 
+        icon: "fas fa-envelope", 
+        href: "/events",
+        requiredPermissions: ["view-event-invitations"]
       }
     ]
   },

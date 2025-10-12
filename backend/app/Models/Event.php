@@ -116,6 +116,22 @@ class Event extends Model
     }
 
     /**
+     * Get the invitations for this event
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(EventInvitation::class);
+    }
+
+    /**
+     * Get active invitations for this event
+     */
+    public function activeInvitations(): HasMany
+    {
+        return $this->hasMany(EventInvitation::class)->active();
+    }
+
+    /**
      * Scope for active events (not cancelled or deleted)
      */
     public function scopeActive($query)
