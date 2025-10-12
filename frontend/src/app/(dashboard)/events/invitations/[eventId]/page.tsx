@@ -16,8 +16,7 @@ import {
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import invitationService from "@/services/invitations";
 import { EventsService } from "@/services/events";
-import { FamiliesService } from "@/services/families";
-import { MembersService } from "@/services/members";
+import { EntitiesService } from "@/services/entities";
 import { toast } from "react-toastify";
 import {
   InvitationAnalytics,
@@ -54,8 +53,7 @@ export default function EventInvitationsPage() {
 
   useEffect(() => {
     loadData();
-    loadFamilies();
-    loadMembers();
+    loadEntities();
   }, [eventId]);
 
   useEffect(() => {
@@ -100,25 +98,15 @@ export default function EventInvitationsPage() {
     }
   };
 
-  const loadFamilies = async () => {
+  const loadEntities = async () => {
     try {
-      const response = await FamiliesService.getFamilies({ per_page: 1000 });
-      if (response.success && response.families) {
-        setFamilies(response.families.data);
+      const response = await EntitiesService.getEntities('families,members', true);
+      if (response.success && response.data) {
+        setFamilies(response.data.families || []);
+        setMembers(response.data.members || []);
       }
     } catch (error) {
-      console.error("Error loading families:", error);
-    }
-  };
-
-  const loadMembers = async () => {
-    try {
-      const response = await MembersService.getMembers({ per_page: 1000 });
-      if (response.success && response.members) {
-        setMembers(response.members.data);
-      }
-    } catch (error) {
-      console.error("Error loading members:", error);
+      console.error("Error loading entities:", error);
     }
   };
 
@@ -438,6 +426,7 @@ export default function EventInvitationsPage() {
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={(tab) => setActiveTab(tab as any)}
+        orientation="horizontal"
       />
 
       {activeTab === "overview" && (
@@ -529,7 +518,7 @@ export default function EventInvitationsPage() {
           )}
 
           {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <SelectInput
                 label="Filter By"
                 value={filterType}
@@ -547,7 +536,7 @@ export default function EventInvitationsPage() {
                 <SelectInput
                   label="Select Family"
                   value={filterId?.toString() || ""}
-                  onChange={(e) => setFilterId(parseInt(e.target.value))}
+                  onChange={(value) => setFilterId(parseInt(value))}
                   options={[
                     { value: "", label: "Select a family" },
                     ...families.map((f) => ({ value: f.id.toString(), label: f.name })),
@@ -558,17 +547,17 @@ export default function EventInvitationsPage() {
                 <SelectInput
                   label="Select Member"
                   value={filterId?.toString() || ""}
-                  onChange={(e) => setFilterId(parseInt(e.target.value))}
+                  onChange={(value) => setFilterId(parseInt(value))}
                   options={[
                     { value: "", label: "Select a member" },
                     ...members.map((m) => ({
                       value: m.id.toString(),
-                      label: `${m.first_name} ${m.last_name}`,
+                      label: m.name,
                     })),
                   ]}
                 />
               )}
-            </div>
+            </div> */}
         </div>
       )}
 
@@ -581,7 +570,7 @@ export default function EventInvitationsPage() {
                 <SelectInput
                   label="Create For"
                   value={createType}
-                  onChange={(e) => setCreateType(e.target.value as any)}
+                  onChange={(value) => setCreateType(value as any)}
                   options={[
                     { value: "church", label: "Entire Church" },
                     { value: "family", label: "Specific Family" },
@@ -592,7 +581,7 @@ export default function EventInvitationsPage() {
                   <SelectInput
                     label="Select Family"
                     value={selectedFamily?.toString() || ""}
-                    onChange={(e) => setSelectedFamily(parseInt(e.target.value))}
+                    onChange={(value) => setSelectedFamily(parseInt(value))}
                     options={[
                       { value: "", label: "Select a family" },
                       ...families.map((f) => ({ value: f.id.toString(), label: f.name })),

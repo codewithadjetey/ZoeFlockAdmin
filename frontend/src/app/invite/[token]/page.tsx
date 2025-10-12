@@ -305,7 +305,7 @@ export default function PublicInvitationPage() {
         {/* Footer */}
         <div className="text-center mt-6 text-gray-600">
           <p className="text-sm">
-            This invitation was sent by {invited_by.name} ({invited_by.email})
+            This invitation was sent by {invited_by.name}
           </p>
         </div>
       </div>
