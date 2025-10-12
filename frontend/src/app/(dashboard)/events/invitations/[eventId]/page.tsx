@@ -201,8 +201,8 @@ export default function EventInvitationsPage() {
 
   const invitationsColumns = [
     {
-      header: "Member",
-      accessor: "member" as const,
+      key: "member",
+      label: "Member",
       render: (value: any) => (
         <div>
           <div className="font-medium">{value.name}</div>
@@ -211,24 +211,24 @@ export default function EventInvitationsPage() {
       ),
     },
     {
-      header: "Clicks",
-      accessor: "clicks" as const,
+      key: "clicks",
+      label: "Clicks",
     },
     {
-      header: "Responses",
-      accessor: "responses" as const,
+      key: "responses",
+      label: "Responses",
     },
     {
-      header: "Total Guests",
-      accessor: "total_guests" as const,
+      key: "total_guests",
+      label: "Total Guests",
     },
     {
-      header: "Confirmed",
-      accessor: "confirmed_guests" as const,
+      key: "confirmed_guests",
+      label: "Confirmed",
     },
     {
-      header: "Status",
-      accessor: "is_active" as const,
+      key: "is_active",
+      label: "Status",
       render: (value: boolean) => (
         <StatusBadge status={value ? "active" : "inactive"}>
           {value ? "Active" : "Inactive"}
@@ -236,8 +236,8 @@ export default function EventInvitationsPage() {
       ),
     },
     {
-      header: "Actions",
-      accessor: "id" as const,
+      key: "id",
+      label: "Actions",
       render: (value: number, row: any) => (
         <div className="flex gap-2">
           <Button
@@ -261,36 +261,36 @@ export default function EventInvitationsPage() {
 
   const responsesColumns = [
     {
-      header: "Guest Name",
-      accessor: "guest_name" as const,
+      key: "guest_name",
+      label: "Guest Name",
     },
     {
-      header: "Email",
-      accessor: "guest_email" as const,
+      key: "guest_email",
+      label: "Email",
       render: (value: string | null) => value || "N/A",
     },
     {
-      header: "Phone",
-      accessor: "guest_phone" as const,
+      key: "guest_phone",
+      label: "Phone",
       render: (value: string | null) => value || "N/A",
     },
     {
-      header: "Guests",
-      accessor: "number_of_guests" as const,
+      key: "number_of_guests",
+      label: "Guests",
     },
     {
-      header: "Status",
-      accessor: "status" as const,
+      key: "status",
+      label: "Status",
       render: (value: string) => <StatusBadge status={value}>{value}</StatusBadge>,
     },
     {
-      header: "Invited By",
-      accessor: "invited_by" as const,
+      key: "invited_by",
+      label: "Invited By",
       render: (value: any) => value?.name || "Unknown",
     },
     {
-      header: "Actions",
-      accessor: "id" as const,
+      key: "id",
+      label: "Actions",
       render: (value: number, row: any) => (
         <SelectInput
           value={row.status}
@@ -422,24 +422,22 @@ export default function EventInvitationsPage() {
   );
 
   const tabs = [
-    { id: "overview", label: "Overview" },
-    { id: "invitations", label: "Invitations" },
-    { id: "responses", label: "Responses" },
+    { id: "overview", label: "Overview", icon: "fas fa-chart-pie" },
+    { id: "invitations", label: "Invitations", icon: "fas fa-envelope" },
+    { id: "responses", label: "Responses", icon: "fas fa-reply-all" },
   ];
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={`Event Invitations: ${event.title}`}
-        subtitle="Manage and track event invitations"
-      >
-        <Button onClick={() => router.back()}>Back to Events</Button>
-      </PageHeader>
+        description="Manage and track event invitations"
+      />
 
       <TabNavigation
         tabs={tabs}
         activeTab={activeTab}
-        onChange={(tab) => setActiveTab(tab as any)}
+        onTabChange={(tab) => setActiveTab(tab as any)}
       />
 
       {activeTab === "overview" && (
@@ -507,11 +505,11 @@ export default function EventInvitationsPage() {
               <DataTable
                 data={analytics.top_performers}
                 columns={[
-                  { header: "Member", accessor: "member_name" as const },
-                  { header: "Clicks", accessor: "clicks" as const },
-                  { header: "Responses", accessor: "responses" as const },
-                  { header: "Guests", accessor: "guests" as const },
-                  { header: "Confirmed", accessor: "confirmed_guests" as const },
+                  { key: "member_name", label: "Member" },
+                  { key: "clicks", label: "Clicks" },
+                  { key: "responses", label: "Responses" },
+                  { key: "guests", label: "Guests" },
+                  { key: "confirmed_guests", label: "Confirmed" },
                 ]}
               />
             </ContentCard>
