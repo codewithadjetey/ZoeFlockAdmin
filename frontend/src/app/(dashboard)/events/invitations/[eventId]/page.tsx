@@ -438,6 +438,7 @@ export default function EventInvitationsPage() {
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={(tab) => setActiveTab(tab as any)}
+        orientation="horizontal"
       />
 
       {activeTab === "overview" && (
