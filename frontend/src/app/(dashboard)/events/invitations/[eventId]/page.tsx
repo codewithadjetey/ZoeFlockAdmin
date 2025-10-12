@@ -548,7 +548,7 @@ export default function EventInvitationsPage() {
                 <SelectInput
                   label="Select Family"
                   value={filterId?.toString() || ""}
-                  onChange={(e) => setFilterId(parseInt(e.target.value))}
+                  onChange={(value) => setFilterId(parseInt(value))}
                   options={[
                     { value: "", label: "Select a family" },
                     ...families.map((f) => ({ value: f.id.toString(), label: f.name })),
@@ -559,7 +559,7 @@ export default function EventInvitationsPage() {
                 <SelectInput
                   label="Select Member"
                   value={filterId?.toString() || ""}
-                  onChange={(e) => setFilterId(parseInt(e.target.value))}
+                  onChange={(value) => setFilterId(parseInt(value))}
                   options={[
                     { value: "", label: "Select a member" },
                     ...members.map((m) => ({
@@ -582,7 +582,7 @@ export default function EventInvitationsPage() {
                 <SelectInput
                   label="Create For"
                   value={createType}
-                  onChange={(e) => setCreateType(e.target.value as any)}
+                  onChange={(value) => setCreateType(value as any)}
                   options={[
                     { value: "church", label: "Entire Church" },
                     { value: "family", label: "Specific Family" },
@@ -593,7 +593,7 @@ export default function EventInvitationsPage() {
                   <SelectInput
                     label="Select Family"
                     value={selectedFamily?.toString() || ""}
-                    onChange={(e) => setSelectedFamily(parseInt(e.target.value))}
+                    onChange={(value) => setSelectedFamily(parseInt(value))}
                     options={[
                       { value: "", label: "Select a family" },
                       ...families.map((f) => ({ value: f.id.toString(), label: f.name })),
