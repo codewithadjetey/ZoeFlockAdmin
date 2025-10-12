@@ -447,25 +447,34 @@ export default function EventInvitationsPage() {
             <StatCard
               title="Total Invitations"
               value={analytics.summary.total_invitations}
-              icon="📧"
+              description="Sent"
+              icon="fas fa-envelope"
+              iconColor="text-blue-600"
+              iconBgColor="bg-blue-100 dark:bg-blue-900"
             />
             <StatCard
               title="Total Clicks"
               value={analytics.summary.total_clicks}
-              subtitle={`${analytics.summary.click_through_rate}% CTR`}
-              icon="👆"
+              description={`${analytics.summary.click_through_rate}% CTR`}
+              icon="fas fa-mouse-pointer"
+              iconColor="text-purple-600"
+              iconBgColor="bg-purple-100 dark:bg-purple-900"
             />
             <StatCard
               title="Total Responses"
               value={analytics.summary.total_responses}
-              subtitle={`${analytics.summary.response_rate}% Response Rate`}
-              icon="✅"
+              description={`${analytics.summary.response_rate}% Response Rate`}
+              icon="fas fa-check-circle"
+              iconColor="text-green-600"
+              iconBgColor="bg-green-100 dark:bg-green-900"
             />
             <StatCard
               title="Confirmed Guests"
               value={analytics.summary.confirmed_guests}
-              subtitle={`of ${analytics.summary.total_guests} total`}
-              icon="👥"
+              description={`of ${analytics.summary.total_guests} total`}
+              icon="fas fa-users"
+              iconColor="text-indigo-600"
+              iconBgColor="bg-indigo-100 dark:bg-indigo-900"
             />
           </div>
 
