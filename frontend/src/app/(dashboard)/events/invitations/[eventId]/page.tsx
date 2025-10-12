@@ -479,34 +479,40 @@ export default function EventInvitationsPage() {
           </div>
 
           {/* Responses Breakdown */}
-          <ContentCard title="Responses Breakdown">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">
-                  {analytics.responses_breakdown.confirmed}
-                </div>
-                <div className="text-sm text-gray-600">Confirmed</div>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">
-                  {analytics.responses_breakdown.declined}
-                </div>
-                <div className="text-sm text-gray-600">Declined</div>
-              </div>
-              <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {analytics.responses_breakdown.pending}
-                </div>
-                <div className="text-sm text-gray-600">Pending</div>
-              </div>
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">
-                  {analytics.responses_breakdown.attended}
-                </div>
-                <div className="text-sm text-gray-600">Attended</div>
-              </div>
+              <StatCard
+                title="Confirmed"
+                value={analytics.responses_breakdown.confirmed}
+                description="Guests confirmed"
+                icon="fas fa-check-circle"
+                iconColor="text-green-600"
+                iconBgColor="bg-green-100 dark:bg-green-900"
+              />
+              <StatCard
+                title="Declined"
+                value={analytics.responses_breakdown.declined}
+                description="Guests declined"
+                icon="fas fa-times-circle"
+                iconColor="text-red-600"
+                iconBgColor="bg-red-100 dark:bg-red-900"
+              />
+              <StatCard
+                title="Pending"
+                value={analytics.responses_breakdown.pending}
+                description="Awaiting response"
+                icon="fas fa-clock"
+                iconColor="text-yellow-600"
+                iconBgColor="bg-yellow-100 dark:bg-yellow-900"
+              />
+              <StatCard
+                title="Attended"
+                value={analytics.responses_breakdown.attended}
+                description="Actually attended"
+                icon="fas fa-user-check"
+                iconColor="text-blue-600"
+                iconBgColor="bg-blue-100 dark:bg-blue-900"
+              />
             </div>
-          </ContentCard>
 
           {/* Top Performers */}
           {analytics.top_performers.length > 0 && (
