@@ -218,9 +218,7 @@ export default function EventInvitationsPage() {
       key: "is_active",
       label: "Status",
       render: (value: boolean) => (
-        <StatusBadge status={value ? "active" : "inactive"}>
-          {value ? "Active" : "Inactive"}
-        </StatusBadge>
+        <StatusBadge status={value ? "active" : "inactive"} />
       ),
     },
     {
@@ -269,7 +267,7 @@ export default function EventInvitationsPage() {
     {
       key: "status",
       label: "Status",
-      render: (value: string) => <StatusBadge status={value}>{value}</StatusBadge>,
+      render: (value: string) => <StatusBadge status={value} />,
     },
     {
       key: "invited_by",
@@ -282,10 +280,10 @@ export default function EventInvitationsPage() {
       render: (value: number, row: any) => (
         <SelectInput
           value={row.status}
-          onChange={(e) =>
+          onChange={(status) =>
             handleUpdateResponseStatus(
               value,
-              e.target.value as "pending" | "confirmed" | "declined" | "attended"
+              status as "pending" | "confirmed" | "declined" | "attended"
             )
           }
           options={[
@@ -309,9 +307,7 @@ export default function EventInvitationsPage() {
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">{invitation.member.email}</p>
         </div>
-        <StatusBadge status={invitation.is_active ? "active" : "inactive"}>
-          {invitation.is_active ? "Active" : "Inactive"}
-        </StatusBadge>
+        <StatusBadge status={invitation.is_active ? "active" : "inactive"} />
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
@@ -366,7 +362,7 @@ export default function EventInvitationsPage() {
             {response.guest_email || response.guest_phone || "No contact info"}
           </p>
         </div>
-        <StatusBadge status={response.status}>{response.status}</StatusBadge>
+        <StatusBadge status={response.status} />
       </div>
 
       <div className="space-y-2 mb-4">
@@ -392,10 +388,10 @@ export default function EventInvitationsPage() {
         <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">Update Status:</label>
         <SelectInput
           value={response.status}
-          onChange={(e) =>
+          onChange={(status) =>
             handleUpdateResponseStatus(
               response.id,
-              e.target.value as "pending" | "confirmed" | "declined" | "attended"
+              status as "pending" | "confirmed" | "declined" | "attended"
             )
           }
           options={[
@@ -564,7 +560,8 @@ export default function EventInvitationsPage() {
       {activeTab === "invitations" && (
         <div className="space-y-6">
           {/* Create Invitations */}
-          <ContentCard title="Create New Invitations">
+          <ContentCard>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create New Invitations</h2>
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <SelectInput

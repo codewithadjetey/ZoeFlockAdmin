@@ -245,7 +245,7 @@ export default function PublicInvitationPage() {
             <SelectInput
               label="Will you attend? *"
               value={status}
-              onChange={(e) => setStatus(e.target.value as "confirmed" | "declined")}
+              onChange={(value) => setStatus(value as "confirmed" | "declined")}
               options={[
                 { value: "confirmed", label: "Yes, I'll be there!" },
                 { value: "declined", label: "Sorry, I can't make it" },

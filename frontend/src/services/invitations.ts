@@ -15,7 +15,7 @@ const invitationService = {
    */
   createInvitations: async (data: CreateInvitationRequest): Promise<{ invitations: EventInvitation[]; count: number }> => {
     const response = await api.post('/invitations/create', data);
-    return response.data.data;
+    return (response.data as any).data;
   },
 
   /**
@@ -23,7 +23,7 @@ const invitationService = {
    */
   getInvitationByToken: async (token: string): Promise<PublicInvitationData> => {
     const response = await api.get(`/invitations/token/${token}`);
-    return response.data.data;
+    return (response.data as any).data;
   },
 
   /**
@@ -31,7 +31,7 @@ const invitationService = {
    */
   submitResponse: async (token: string, data: SubmitResponseRequest): Promise<InvitationResponse> => {
     const response = await api.post(`/invitations/token/${token}/respond`, data);
-    return response.data.data;
+    return (response.data as any).data;
   },
 
   /**
@@ -47,7 +47,7 @@ const invitationService = {
     if (filterId) params.append('filter_id', filterId.toString());
 
     const response = await api.get(`/invitations/events/${eventId}/analytics?${params.toString()}`);
-    return response.data.data;
+    return (response.data as any).data;
   },
 
   /**
@@ -56,7 +56,7 @@ const invitationService = {
   getEventResponses: async (eventId: number, status?: string): Promise<InvitationResponse[]> => {
     const params = status ? `?status=${status}` : '';
     const response = await api.get(`/invitations/events/${eventId}/responses${params}`);
-    return response.data.data;
+    return (response.data as any).data;
   },
 
   /**
@@ -64,7 +64,7 @@ const invitationService = {
    */
   getMemberStats: async (memberId: number): Promise<MemberInvitationStats> => {
     const response = await api.get(`/invitations/members/${memberId}/stats`);
-    return response.data.data;
+    return (response.data as any).data;
   },
 
   /**
@@ -89,7 +89,7 @@ const invitationService = {
     status: 'pending' | 'confirmed' | 'declined' | 'attended'
   ): Promise<InvitationResponse> => {
     const response = await api.put(`/invitations/responses/${responseId}/status`, { status });
-    return response.data.data;
+    return (response.data as any).data;
   },
 };
 
