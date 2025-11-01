@@ -267,6 +267,37 @@ class RolePermissionSeeder extends Seeder
             'send-verification-email' => 'Send Verification Email',
             'verify-email' => 'Verify Email',
             'resend-verification-email' => 'Resend Verification Email',
+            
+            // CMS - Pages Management
+            'view-cms-pages' => 'View CMS Pages',
+            'create-cms-pages' => 'Create CMS Pages',
+            'edit-cms-pages' => 'Edit CMS Pages',
+            'delete-cms-pages' => 'Delete CMS Pages',
+            'publish-cms-pages' => 'Publish CMS Pages',
+            
+            // CMS - Menus Management
+            'view-cms-menus' => 'View CMS Menus',
+            'create-cms-menus' => 'Create CMS Menus',
+            'edit-cms-menus' => 'Edit CMS Menus',
+            'delete-cms-menus' => 'Delete CMS Menus',
+            
+            // Sermons Management
+            'view-sermons' => 'View Sermons',
+            'create-sermons' => 'Create Sermons',
+            'edit-sermons' => 'Edit Sermons',
+            'delete-sermons' => 'Delete Sermons',
+            'publish-sermons' => 'Publish Sermons',
+            
+            // Announcements Management
+            'view-announcements' => 'View Announcements',
+            'create-announcements' => 'Create Announcements',
+            'edit-announcements' => 'Edit Announcements',
+            'delete-announcements' => 'Delete Announcements',
+            
+            // Media Library
+            'view-media-library' => 'View Media Library',
+            'upload-media' => 'Upload Media',
+            'delete-media' => 'Delete Media',
         ];
 
         // Create permissions
@@ -416,6 +447,33 @@ class RolePermissionSeeder extends Seeder
                     'view-tithes', 'create-tithe-payments', 'view-tithe-statistics', 'view-monthly-trends', 'view-member-performance', 'view-frequency-analysis', 'view-recent-activity',
                     'view-reports', 'get-dashboard-summary', 'get-recent-activity',
                     'view-dashboard', 'get-dashboard-data',
+                    'logout', 'view-profile', 'edit-profile', 'change-password', 'resend-verification-email',
+                ],
+            ],
+            'website-manager' => [
+                'display_name' => 'Website Manager',
+                'description' => 'Manages church website content including pages, sermons, and announcements',
+                'permissions' => [
+                    // CMS - Full access
+                    'view-cms-pages', 'create-cms-pages', 'edit-cms-pages', 'delete-cms-pages', 'publish-cms-pages',
+                    'view-cms-menus', 'create-cms-menus', 'edit-cms-menus', 'delete-cms-menus',
+                    
+                    // Sermons - Full access
+                    'view-sermons', 'create-sermons', 'edit-sermons', 'delete-sermons', 'publish-sermons',
+                    
+                    // Announcements - Full access
+                    'view-announcements', 'create-announcements', 'edit-announcements', 'delete-announcements',
+                    
+                    // Media Library - Full access
+                    'view-media-library', 'upload-media', 'delete-media',
+                    
+                    // File Management - Upload capabilities
+                    'view-files', 'create-files', 'edit-files', 'upload-files', 'upload-multiple-files', 'get-files-by-model',
+                    
+                    // Dashboard
+                    'view-dashboard', 'get-dashboard-data',
+                    
+                    // Authentication
                     'logout', 'view-profile', 'edit-profile', 'change-password', 'resend-verification-email',
                 ],
             ],
