@@ -29,6 +29,11 @@ use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\PartnershipCategoryController;
 use App\Http\Controllers\Api\V1\ReportsController;
 use App\Http\Controllers\Api\V1\TithePaymentController;
+use App\Http\Controllers\Api\V1\CmsPageController;
+use App\Http\Controllers\Api\V1\CmsMenuController;
+use App\Http\Controllers\Api\V1\SermonController;
+use App\Http\Controllers\Api\V1\SermonSeriesController;
+use App\Http\Controllers\Api\V1\AnnouncementController;
 use App\Http\Controllers\Api\InvitationController;
 
 // Get the API version from config
@@ -397,6 +402,64 @@ Route::prefix($apiVersion)->group(function () {
     // Dashboard routes
     Route::prefix('dashboard')->group(function () {
         Route::get('/data', [DashboardController::class, 'getDashboardData']);
+    });
+
+    // CMS Pages routes
+    Route::prefix('cms/pages')->group(function () {
+        Route::get('/', [CmsPageController::class, 'index']);
+        Route::post('/', [CmsPageController::class, 'store']);
+        Route::get('/{id}', [CmsPageController::class, 'show']);
+        Route::put('/{id}', [CmsPageController::class, 'update']);
+        Route::delete('/{id}', [CmsPageController::class, 'destroy']);
+        Route::post('/{id}/publish', [CmsPageController::class, 'publish']);
+    });
+
+    // CMS Menus routes
+    Route::prefix('cms/menus')->group(function () {
+        Route::get('/', [CmsMenuController::class, 'index']);
+        Route::post('/', [CmsMenuController::class, 'store']);
+        Route::get('/{id}', [CmsMenuController::class, 'show']);
+        Route::put('/{id}', [CmsMenuController::class, 'update']);
+        Route::delete('/{id}', [CmsMenuController::class, 'destroy']);
+        
+        // Menu items routes
+        Route::post('/{id}/items', [CmsMenuController::class, 'addItem']);
+        Route::put('/{id}/items/reorder', [CmsMenuController::class, 'reorderItems']);
+        Route::put('/{id}/items/{itemId}', [CmsMenuController::class, 'updateItem']);
+        Route::delete('/{id}/items/{itemId}', [CmsMenuController::class, 'deleteItem']);
+    });
+
+    // Sermons routes
+    Route::prefix('sermons')->group(function () {
+        Route::get('/', [SermonController::class, 'index']);
+        Route::post('/', [SermonController::class, 'store']);
+        Route::get('/{id}', [SermonController::class, 'show']);
+        Route::put('/{id}', [SermonController::class, 'update']);
+        Route::delete('/{id}', [SermonController::class, 'destroy']);
+        Route::post('/{id}/publish', [SermonController::class, 'publish']);
+        
+        // Media routes
+        Route::post('/{id}/media', [SermonController::class, 'addMedia']);
+        Route::put('/{id}/media/{mediaId}', [SermonController::class, 'updateMedia']);
+        Route::delete('/{id}/media/{mediaId}', [SermonController::class, 'deleteMedia']);
+    });
+
+    // Sermon Series routes
+    Route::prefix('sermons/series')->group(function () {
+        Route::get('/', [SermonSeriesController::class, 'index']);
+        Route::post('/', [SermonSeriesController::class, 'store']);
+        Route::get('/{id}', [SermonSeriesController::class, 'show']);
+        Route::put('/{id}', [SermonSeriesController::class, 'update']);
+        Route::delete('/{id}', [SermonSeriesController::class, 'destroy']);
+    });
+
+    // Announcements routes
+    Route::prefix('announcements')->group(function () {
+        Route::get('/', [AnnouncementController::class, 'index']);
+        Route::post('/', [AnnouncementController::class, 'store']);
+        Route::get('/{id}', [AnnouncementController::class, 'show']);
+        Route::put('/{id}', [AnnouncementController::class, 'update']);
+        Route::delete('/{id}', [AnnouncementController::class, 'destroy']);
     });
 
     // Backup management routes
