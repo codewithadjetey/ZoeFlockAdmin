@@ -106,9 +106,9 @@ export default function CmsPagesPage() {
     {
       key: 'status',
       label: 'Status',
-      render: (page: CmsPage) => (
+      render: (value: any, page: CmsPage) => (
         <StatusBadge 
-          status={page.status} 
+          status={page.status || 'draft'} 
           className="capitalize"
         />
       )
@@ -116,14 +116,14 @@ export default function CmsPagesPage() {
     {
       key: 'created_at',
       label: 'Created',
-      render: (page: CmsPage) => (
+      render: (value: any, page: CmsPage) => (
         page.created_at ? new Date(page.created_at).toLocaleDateString() : '-'
       )
     },
     {
       key: 'actions',
       label: 'Actions',
-      render: (page: CmsPage) => (
+      render: (value: any, page: CmsPage) => (
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -132,7 +132,7 @@ export default function CmsPagesPage() {
           >
             Edit
           </Button>
-          {page.status !== 'published' && (
+          {page.status && page.status !== 'published' && (
             <Button
               variant="outline"
               size="sm"
@@ -158,6 +158,11 @@ export default function CmsPagesPage() {
     { value: "draft", label: "Draft" },
     { value: "published", label: "Published" },
     { value: "scheduled", label: "Scheduled" }
+  ];
+
+  const viewToggleOptions = [
+    { value: "grid", label: "Grid", icon: "fas fa-th" },
+    { value: "table", label: "Table", icon: "fas fa-table" },
   ];
 
   return (
@@ -187,8 +192,9 @@ export default function CmsPagesPage() {
           className="w-[150px]"
         />
         <ViewToggle
-          viewMode={viewMode}
+          value={viewMode}
           onChange={setViewMode}
+          options={viewToggleOptions}
         />
       </div>
 
