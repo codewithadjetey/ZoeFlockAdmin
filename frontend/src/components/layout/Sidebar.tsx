@@ -215,6 +215,41 @@ const allMenuItems = [
     ]
   },
   
+  // Website CMS parent with sub menus
+  { 
+    label: "Website CMS", 
+    icon: "fas fa-globe", 
+    href: "/cms", 
+    type: "parent",
+    requiredPermissions: ["view-cms-pages", "view-cms-menus", "view-sermons", "view-announcements"],
+    subMenus: [
+      { 
+        label: "Pages", 
+        icon: "fas fa-file-alt", 
+        href: "/cms/pages",
+        requiredPermissions: ["view-cms-pages"]
+      },
+      { 
+        label: "Menus", 
+        icon: "fas fa-bars", 
+        href: "/cms/menus",
+        requiredPermissions: ["view-cms-menus"]
+      },
+      { 
+        label: "Sermons", 
+        icon: "fas fa-microphone", 
+        href: "/sermons",
+        requiredPermissions: ["view-sermons"]
+      },
+      { 
+        label: "Announcements", 
+        icon: "fas fa-bullhorn", 
+        href: "/announcements",
+        requiredPermissions: ["view-announcements"]
+      }
+    ]
+  },
+  
   // Admin parent with sub menus
   { 
     label: "Admin", 
