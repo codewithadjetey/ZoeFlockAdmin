@@ -24,7 +24,7 @@ export interface Announcement {
 export interface AnnouncementsResponse {
   success: boolean;
   message: string;
-  data: Paginated<Announcement>;
+  announcements: Paginated<Announcement>;
 }
 
 export interface AnnouncementResponse {

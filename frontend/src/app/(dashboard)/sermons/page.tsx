@@ -36,12 +36,12 @@ export default function SermonsPage() {
       });
       
       if (response.success) {
-        setSermons(response.data.data);
+        setSermons(response.sermons.data);
         setPagination({
-          current_page: response.data.current_page,
-          last_page: response.data.last_page,
-          per_page: response.data.per_page,
-          total: response.data.total
+          current_page: response.sermons.current_page,
+          last_page: response.sermons.last_page,
+          per_page: response.sermons.per_page,
+          total: response.sermons.total
         });
       }
     } catch (error) {

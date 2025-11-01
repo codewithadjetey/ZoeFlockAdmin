@@ -27,7 +27,7 @@ export default function CmsMenusPage() {
       });
       
       if (response.success) {
-        setMenus(response.data);
+        setMenus(response.menus);
       }
     } catch (error) {
       console.error('Error loading menus:', error);

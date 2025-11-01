@@ -68,7 +68,7 @@ class AnnouncementController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Announcements retrieved successfully',
-            'data' => $announcements
+            'announcements' => $announcements
         ]);
     }
 

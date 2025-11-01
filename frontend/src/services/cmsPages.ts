@@ -26,7 +26,7 @@ export interface CmsPage {
 export interface CmsPagesResponse {
   success: boolean;
   message: string;
-  data: Paginated<CmsPage>;
+  pages: Paginated<CmsPage>;
 }
 
 export interface CmsPageResponse {

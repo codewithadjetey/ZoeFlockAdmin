@@ -38,12 +38,12 @@ export default function CmsPagesPage() {
       });
       
       if (response.success) {
-        setPages(response.data.data);
+        setPages(response.pages.data);
         setPagination({
-          current_page: response.data.current_page,
-          last_page: response.data.last_page,
-          per_page: response.data.per_page,
-          total: response.data.total
+          current_page: response.pages.current_page,
+          last_page: response.pages.last_page,
+          per_page: response.pages.per_page,
+          total: response.pages.total
         });
       }
     } catch (error) {

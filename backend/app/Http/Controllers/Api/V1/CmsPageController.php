@@ -58,7 +58,7 @@ class CmsPageController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Pages retrieved successfully',
-            'data' => $pages
+            'pages' => $pages
         ]);
     }
 

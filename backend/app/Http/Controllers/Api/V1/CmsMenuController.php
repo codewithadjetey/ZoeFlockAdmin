@@ -42,7 +42,7 @@ class CmsMenuController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Menus retrieved successfully',
-            'data' => $menus
+            'menus' => $menus
         ]);
     }
 

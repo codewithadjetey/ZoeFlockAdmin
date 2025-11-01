@@ -35,7 +35,7 @@ export interface CmsMenu {
 export interface CmsMenusResponse {
   success: boolean;
   message: string;
-  data: CmsMenu[];
+  menus: CmsMenu[];
 }
 
 export interface CmsMenuResponse {

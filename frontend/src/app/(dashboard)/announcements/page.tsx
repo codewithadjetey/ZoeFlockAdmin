@@ -36,12 +36,12 @@ export default function AnnouncementsPage() {
       });
       
       if (response.success) {
-        setAnnouncements(response.data.data);
+        setAnnouncements(response.announcements.data);
         setPagination({
-          current_page: response.data.current_page,
-          last_page: response.data.last_page,
-          per_page: response.data.per_page,
-          total: response.data.total
+          current_page: response.announcements.current_page,
+          last_page: response.announcements.last_page,
+          per_page: response.announcements.per_page,
+          total: response.announcements.total
         });
       }
     } catch (error) {

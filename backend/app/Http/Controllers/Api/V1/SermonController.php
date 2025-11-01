@@ -68,7 +68,7 @@ class SermonController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Sermons retrieved successfully',
-            'data' => $sermons
+            'sermons' => $sermons
         ]);
     }
 

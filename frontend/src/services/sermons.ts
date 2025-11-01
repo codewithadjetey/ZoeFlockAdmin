@@ -42,7 +42,7 @@ export interface Sermon {
 export interface SermonsResponse {
   success: boolean;
   message: string;
-  data: Paginated<Sermon>;
+  sermons: Paginated<Sermon>;
 }
 
 export interface SermonResponse {
